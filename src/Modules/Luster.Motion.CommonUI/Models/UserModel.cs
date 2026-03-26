@@ -104,9 +104,16 @@ namespace Luster.Motion.CommonUI.Models
                 new UserModel()
                 {
                     Id=2,
-                    UserName=SystemRole.Sustaining.ToString(),
-                    UserRole=SystemRole.Sustaining,
-                    Password="Engineer",
+                    UserName=SystemRole.Integrator.ToString(),
+                    UserRole=SystemRole.Integrator,
+                    Password="Integrator",
+                },
+                new UserModel()
+                {
+                    Id=2,
+                    UserName=SystemRole.Maintenance.ToString(),
+                    UserRole=SystemRole.Maintenance,
+                    Password="Maintenance",
                 },
                 new UserModel()
                 {

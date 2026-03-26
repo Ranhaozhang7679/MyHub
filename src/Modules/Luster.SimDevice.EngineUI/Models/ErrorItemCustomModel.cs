@@ -44,13 +44,13 @@ namespace Luster.SimDevice.EngineUI.Models
         public string AlarmCode
         {
             get { return _alarmCode; }
-            set
-            {
+            set 
+            { 
                 if (_alarmCode != value) // 当值未发生变化时，防止设置OldAlarmCode
                 {
                     OldAlarmCode = _alarmCode;
                 }
-                SetProperty(ref _alarmCode, value);
+                SetProperty(ref _alarmCode, value); 
             }
         }
 

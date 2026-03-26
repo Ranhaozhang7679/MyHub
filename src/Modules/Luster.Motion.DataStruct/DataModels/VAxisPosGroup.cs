@@ -25,6 +25,11 @@ namespace Luster.Motion.DataStruct.DataModels
         public string Name { get; set; }
 
         /// <summary>
+        /// 所属模组
+        /// </summary>
+        public string Module { get; set; }
+
+        /// <summary>
         /// X点位
         /// </summary>
         public double X
@@ -95,12 +100,12 @@ namespace Luster.Motion.DataStruct.DataModels
         /// <summary>
         /// V点位
         /// </summary>
-        public double V
+        public double U2
         {
             get
             {
                 double x = double.NaN;
-                var position = this.FirstOrDefault(u => u.Axis != null && u.Axis.AxisType == Enums.AxisType.V);
+                var position = this.FirstOrDefault(u => u.Axis != null && u.Axis.AxisType == Enums.AxisType.U2);
                 if (position != null)
                 {
                     x = position.Position;
@@ -112,12 +117,12 @@ namespace Luster.Motion.DataStruct.DataModels
         /// <summary>
         /// W点位
         /// </summary>
-        public double W
+        public double Z2
         {
             get
             {
                 double x = double.NaN;
-                var position = this.FirstOrDefault(u => u.Axis != null && u.Axis.AxisType == Enums.AxisType.W);
+                var position = this.FirstOrDefault(u => u.Axis != null && u.Axis.AxisType == Enums.AxisType.Z2);
                 if (position != null)
                 {
                     x = position.Position;
@@ -149,6 +154,7 @@ namespace Luster.Motion.DataStruct.DataModels
         {
             XElement xPos = new XElement(Name);
             xPos.SetAttributeValue("Key", Key);
+            xPos.SetAttributeValue("Module", Module);
             foreach (var item in this)
             {
                 xPos.Add(item.ExportXml());
@@ -170,6 +176,11 @@ namespace Luster.Motion.DataStruct.DataModels
             xElement.GetAttribute("Key", key =>
             {
                 Key = Guid.Parse(key);
+            });
+
+            xElement.GetAttribute("Module", module =>
+            {
+                Module = module;
             });
 
             this.Clear();
@@ -200,5 +211,10 @@ namespace Luster.Motion.DataStruct.DataModels
             }
         }
         #endregion
+
+        public override string ToString()
+        {
+            return $"VAxisPosGroup (Key: {Key}, Name: {Name}, Module: {Module}, AxisCount: {this.Count})";
+        }
     }
 }

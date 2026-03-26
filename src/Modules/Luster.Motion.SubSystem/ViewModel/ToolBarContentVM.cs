@@ -88,6 +88,7 @@ using static Luster.Common.Tools.SharedMemory.CircularBuffer;
 using ZXing.QrCode.Internal;
 using ZXing.QrCode;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using Color = System.Windows.Media.Color;
 
 namespace Luster.Motion.SubSystem.ViewModel
 {
@@ -559,12 +560,21 @@ namespace Luster.Motion.SubSystem.ViewModel
                 //用户登录成功
                 bus.GetEvent<UserInfoEvent>().Subscribe(userInfo =>
                 {
-                    ForeColor = System.Windows.Media.Brushes.Black;
+                    ForeColor = System.Windows.Media.Brushes.White;
+                    //if (userInfo.Role == SystemRole.Admin || userInfo.Role == SystemRole.Integrator)
+                    //{
+                    //    ForeColor = System.Windows.Media.Brushes.White;
+                    //}
                     BackColor = userInfo.Role switch
                     {
-                        SystemRole.Operator => System.Windows.Media.Brushes.ForestGreen,
-                        SystemRole.Sustaining => System.Windows.Media.Brushes.Yellow,
-                        SystemRole.Admin => System.Windows.Media.Brushes.IndianRed,
+                        //SystemRole.Operator => new SolidColorBrush(Color.FromArgb(128, 128, 128, 128)),
+                        //SystemRole.Maintenance => new SolidColorBrush(Color.FromArgb(240, 238, 235, 88)),
+                        //SystemRole.Integrator => new SolidColorBrush(Color.FromArgb(64, 0, 0, 255)),
+                        //SystemRole.Admin => new SolidColorBrush(Color.FromArgb(64, 128, 0, 128)),
+                        SystemRole.Operator => new SolidColorBrush(Color.FromArgb(128, 128, 128, 128)), // (128, 214, 214, 214)看不见启动按钮三个图标
+                        SystemRole.Maintenance => new SolidColorBrush(Color.FromArgb(240, 255, 218, 90)),
+                        SystemRole.Integrator => new SolidColorBrush(Color.FromArgb(64, 81, 143, 255)),
+                        SystemRole.Admin => new SolidColorBrush(Color.FromArgb(64, 66, 51, 166)),
                         _ => System.Windows.Media.Brushes.ForestGreen
                     };
                     UserMsg = string.Concat(userInfo.Name, "-", userInfo.Company, "-", userInfo.Level);
@@ -803,12 +813,12 @@ namespace Luster.Motion.SubSystem.ViewModel
                             string errCode = "";
                             if (a.AlarmCode.Contains('@')) errCode = a.AlarmCode.Split('@')[0];
                             else errCode = a.AlarmCode;
-                            GenerateQr(webConfig.StationId + "+" + webConfig.Product + "+" + webConfig.VendorName + "+" + errCode);
+                            GenerateQr(webConfig.StationId + "+" + webConfig.Product + "+" + webConfig.VendorName?.ToUpper() + "+" + errCode);
                         }
                         else if (a.AlarmType == AlarmType.RetryAlarm || a.AlarmType == AlarmType.ManuOperationAlarm)
                         {
                             //禁止按钮
-                            useHiveDialog = true;
+                            //useHiveDialog = true;
                             Commands[0].SetEnabled(false);
                             Commands[0].EnableRecoveryButton();
                             Commands[0].ClearCmdButton();
@@ -817,7 +827,7 @@ namespace Luster.Motion.SubSystem.ViewModel
                             _dialogService.ShowAlarmNew(a, _HiveStartDialog2Part2_Opend, res =>
                             {
                                 //恢复按钮
-                                useHiveDialog = false;
+                                //useHiveDialog = false;
                                 Commands[0].ChangeButton(new StatusChanged(mController.MachineStatus, mController.MachineStatus));
 
                                 // 1.记录开始时间
@@ -1250,7 +1260,7 @@ namespace Luster.Motion.SubSystem.ViewModel
                     mController.FileConfig.IsCardEnd = false;
                     useHiveDialog = true;
                     Commands[0].SetEnabled(false);
-                    GenerateQr(webConfig.StationId + "+" + webConfig.Product + "+" + webConfig.VendorName + "+" + "F9999OOOO-20");
+                    GenerateQr(webConfig.StationId + "+" + webConfig.Product + "+" + webConfig.VendorName?.ToUpper() + "+" + "F99OOOO-20");
                     _dialogService.ShowSelectTip((webConfig.HiveEnabled && (mController.GetCurrentMode().Contains("生产") || mController.GetCurrentMode().Contains("空跑"))), command.Key, (r) =>
                     {
                         //string ss = r.Result.ToString(); // ss = "OK"
@@ -1309,7 +1319,7 @@ namespace Luster.Motion.SubSystem.ViewModel
                         {
                             if (r.Parameters.TryGetValue<string>("QrErrorCode", out string qrErrCode))
                             {
-                                GenerateQr(webConfig.StationId + "+" + webConfig.Product + "+" + webConfig.VendorName + "+" + qrErrCode);
+                                GenerateQr(webConfig.StationId + "+" + webConfig.Product + "+" + webConfig.VendorName?.ToUpper() + "+" + qrErrCode);
 
                             }
                         }

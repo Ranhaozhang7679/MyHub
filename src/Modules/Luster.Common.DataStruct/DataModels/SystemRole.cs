@@ -18,11 +18,23 @@ namespace Luster.Common.DataStruct
         [Description("管理员")]
         Admin,
 
+        ///// <summary>
+        ///// 工程师
+        ///// </summary>
+        //[Description("工程师")]
+        //Sustaining,
+
         /// <summary>
-        /// 工程师
+        /// 整合员
         /// </summary>
-        [Description("工程师")]
-        Sustaining,
+        [Description("整合员")]
+        Integrator,
+
+        /// <summary>
+        /// 维修员
+        /// </summary>
+        [Description("维修员")]
+        Maintenance,
 
         /// <summary>
         /// 操作员

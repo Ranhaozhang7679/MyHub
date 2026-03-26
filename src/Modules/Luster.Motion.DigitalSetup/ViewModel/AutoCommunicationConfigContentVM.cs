@@ -14,6 +14,7 @@ using Luster.Motion.EditorUI;
 using Luster.SimDevice.Adapter;
 using Prism.Commands;
 using Prism.Regions;
+using Prism.Services.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -38,6 +39,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         // 新增3个按钮和1个进度条的定义
         private double _progressValue;
         readonly IDeviceEngine _deviceEngine;
+        private const string PageName = "Communications";
         public ICommand EndCommand { get; private set; }
         public ICommand OneKeyCheckCommand { get; private set; }
         public ICommand UpdateItemsCommand { get; private set; }
@@ -47,14 +49,19 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             set { SetProperty(ref _progressValue, value); }
         }
         public AutoCommunicationConfigContentVM(IRepository repository,
-                                                IRegionManager regionManager, ICommonBus commonBus, CSVHelper cSVHelper, IDeviceEngine deviceEngine,FlowBus flowBus) : base(repository, regionManager, commonBus, cSVHelper, flowBus)
+                                                IRegionManager regionManager, ICommonBus commonBus, CSVHelper cSVHelper, IDeviceEngine deviceEngine, FlowBus flowBus, IDialogService dialogService)
+            : base(repository, regionManager, commonBus, cSVHelper, flowBus, dialogService)
         {
             Pages = new ObservableCollection<CommonPageModel>();
             //注释电脑网卡配置页面，用不到，0718
             //Pages.Add(new CommonPageModel() { Name = "ConfigComputerNet", IsSelected = true, Region = "", ViewType = typeof(AssTbConfigComputerNet) });
-            Pages.Add(new CommonPageModel() { Name = "ConfigSoftwareNet", IsSelected = true, Region = "", ViewType = typeof(AssTbConfigSoftwareNet) });
-            Pages.Add(new CommonPageModel() { Name = "ConfigSoftwareCom", IsSelected = true, Region = "", ViewType = typeof(AssTbConfigSoftwareCom) });
+            Pages.Add(new CommonPageModel() { Name = "ConfigSoftwareNet", IsSelected = false, Region = "", ViewType = typeof(AssTbConfigSoftwareNet) });
+            Pages.Add(new CommonPageModel() { Name = "ConfigSoftwareCom", IsSelected = false, Region = "", ViewType = typeof(AssTbConfigSoftwareCom) });
             //Pages.Add(new CommonPageModel() { Name = "CommunicationTest", IsSelected = true, Region = "", ViewType = typeof(AssTbCommunicationTest) });
+
+            // 注册子页面到DigitalAssPageModel
+            DigitalAssPageModel.RegisterSubPages("AutoCommunicationConfigContent", Pages);
+
             SelectedReportPage = Pages.Where(x => x.IsSelected).FirstOrDefault();
             _deviceEngine = deviceEngine;
             InitModels();
@@ -62,6 +69,44 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             EndCommand = new DelegateCommand(OnEnd);
             OneKeyCheckCommand = new DelegateCommand<object>(OnOneKeyCheck);
             UpdateItemsCommand = new DelegateCommand(OnUpdateItems);
+            LoadCheckConfirmMessages();
+
+        }
+
+        /// <summary>
+        /// 获取页面整体状态
+        /// </summary>
+        private string GetOverallStatus()
+        {
+            if (ItemModels == null || ItemModels.Count == 0)
+                return "未点检";
+
+            bool hasNG = false;
+            bool hasOK = false;
+
+            foreach (var item in ItemModels)
+            {
+                string status = "";
+                if (item is AssTbConfigSoftwareNet netItem)
+                    status = netItem.状态;
+                else if (item is AssTbConfigSoftwareCom comItem)
+                    status = comItem.状态;
+
+                if (status == "NG")
+                {
+                    hasNG = true;
+                    break;  // 只要有一个NG，整体就是NG，直接退出
+                }
+                else if (status == "OK")
+                {
+                    hasOK = true;
+                }
+                // 其他状态（未点检、格式错误等）忽略
+            }
+
+            if (hasNG) return "NG";
+            if (hasOK) return "OK";
+            return "未点检";
         }
 
         private void OnUpdateItems()
@@ -73,34 +118,98 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 switch (SelectedReportPage.Name)
                 {
                     case "ConfigComputerNet":
-
                         break;
                     case "ConfigSoftwareNet":
-                        long totalCount = 0;
-                        var items = _csvHelper.GetAllDataNew1<AssTbConfigSoftwareNet>(0, 0, out totalCount);
-                        foreach (var item in items)
                         {
-                            item.实测 = "";
-                            item.状态 = "";
-                            ItemModels.Add(item);
+                            long totalCount = 0;
+                            var items = _csvHelper.GetAllDataNew1<AssTbConfigSoftwareNet>(0, 0, out totalCount);
+                            foreach (var item in items)
+                            {
+                                // 清理纯空壳数据：如果项次和标准都为空，说明是无意义的残留占位符，不应该被视作真实数据
+                                if (string.IsNullOrWhiteSpace(item.项次) && string.IsNullOrWhiteSpace(item.标准))
+                                {
+                                    continue;
+                                }
+
+                                item.实测 = "";
+                                item.状态 = "";
+                                ItemModels.Add(item);
+                            }
+
+                            // CSV读取失败或无实质数据时，再从设备引擎获取数据（备用逻辑）
+                            if (ItemModels.Count == 0 && Commus != null)
+                            {
+                                int idx = 0;
+                                foreach (var comm in Commus.OfType<VCommuncation>())
+                                {
+                                    if (comm.Communication is CommTCP) // 网口通信
+                                    {
+                                        var socket = comm.Communication as CommTCP;
+                                        var newItem = new AssTbConfigSoftwareNet()
+                                        {
+                                            项序 = idx++,
+                                            项次 = comm.Name,
+                                            标准 = socket.Network != null ? socket.Network.Ip + ":" + socket.Network.Port : "",
+                                            实测 = "",
+                                            状态 = "未点检",
+                                            完成时间 = DateTime.Now
+                                        };
+                                        ItemModels.Add(newItem);
+                                    }
+                                }
+                            }
                         }
                         break;
                     case "ConfigSoftwareCom":
-                        long comTotalCount = 0;
-                        var comItems = _csvHelper.GetAllDataNew1<AssTbConfigSoftwareCom>(0, 0, out comTotalCount);
-                        foreach (var item in comItems)
                         {
-                            item.实测 = "";
-                            item.状态 = "";
-                            ItemModels.Add(item);
+                            long comTotalCount = 0;
+                            var comItems = _csvHelper.GetAllDataNew1<AssTbConfigSoftwareCom>(0, 0, out comTotalCount);
+                            foreach (var item in comItems)
+                            {
+                                // 清理纯空壳数据
+                                if (string.IsNullOrWhiteSpace(item.项次) && string.IsNullOrWhiteSpace(item.标准))
+                                {
+                                    continue;
+                                }
+
+                                item.实测 = "";
+                                item.状态 = "";
+                                ItemModels.Add(item);
+                            }
+
+                            // CSV读取失败或无实质数据时，再从设备引擎获取数据（备用逻辑）
+                            if (ItemModels.Count == 0 && Commus != null)
+                            {
+                                int idx = 0;
+                                foreach (var comm in Commus.OfType<VCommuncation>())
+                                {
+                                    if (comm.Communication is CommSerial) // 串口通信
+                                    {
+                                        var serial = comm.Communication as CommSerial;
+                                        // 标准通常包含格式: "COM1 / 9600 / 8 / One / None" 等信息
+                                        string standardStr = $"{serial.PortName} / {serial.BaudRate} / {serial.Databits} / {serial.StopBits} / {serial.Parity}";
+
+                                        var newItem = new AssTbConfigSoftwareCom()
+                                        {
+                                            项序 = idx++,
+                                            项次 = comm.Name,
+                                            标准 = standardStr,
+                                            实测 = "",
+                                            状态 = "未点检",
+                                            完成时间 = DateTime.Now
+                                        };
+                                        ItemModels.Add(newItem);
+                                    }
+                                }
+                            }
                         }
+                        PageStatusService.Instance.UpdateStatus(PageName, "未点检");
                         break;
                 }
-
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
+                _commonbus.OnLog(new LogInfo() { LogType = LogType.Warning, LogMessage = $"获取列表失败: {ex.Message}" });
             }
         }
 
@@ -131,6 +240,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     processedCount++;
                     ProgressValue = processedCount * 100 / count;
                 }
+                PageStatusService.Instance.UpdateStatus(PageName, GetOverallStatus());
             }
             catch (Exception)
             {
@@ -243,8 +353,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                                     }
                                     else
                                     {
-                                         if (targetDevice == null) softwareNet.实测 = "设备未找到";
-                                         else softwareNet.实测 = "配置为空";
+                                        if (targetDevice == null) softwareNet.实测 = "设备未找到";
+                                        else softwareNet.实测 = "配置为空";
                                     }
                                 }
                             });
@@ -257,10 +367,10 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
                             // 3. 比较逻辑 (无需UI线程)
                             if (string.IsNullOrEmpty(actualConfig)) actualConfig = "";
-                            
+
                             bool isMatch = false;
                             string[] actualParts = actualConfig.Split(new[] { '/', '\\', ':' }, StringSplitOptions.RemoveEmptyEntries);
-                            
+
                             if (actualParts.Length >= 2)
                             {
                                 if (actualParts[0].Trim() == stdIp && actualParts[1].Trim() == stdPort)
@@ -283,14 +393,14 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     }
                     catch (Exception ex)
                     {
-                         System.Windows.Application.Current.Dispatcher.Invoke(() => 
-                         {
-                             if (item is AssTbConfigSoftwareNet sn)
-                             {
-                                 sn.状态 = "Error";
-                                 sn.实测 = "异常"; // 简化错误信息防止字符异常
-                             }
-                         });
+                        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            if (item is AssTbConfigSoftwareNet sn)
+                            {
+                                sn.状态 = "Error";
+                                sn.实测 = "异常"; // 简化错误信息防止字符异常
+                            }
+                        });
                     }
                     break;
                 case "ConfigSoftwareCom":
@@ -327,8 +437,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                                     }
                                     else
                                     {
-                                         if (targetDevice == null) comItem.实测 = "设备未找到";
-                                         else comItem.实测 = "配置为空";
+                                        if (targetDevice == null) comItem.实测 = "设备未找到";
+                                        else comItem.实测 = "配置为空";
                                     }
                                 }
                             });
@@ -355,14 +465,14 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     }
                     catch (Exception ex)
                     {
-                         System.Windows.Application.Current.Dispatcher.Invoke(() => 
-                         {
-                             if (item is AssTbConfigSoftwareCom ci)
-                             {
-                                 ci.状态 = "Error";
-                                 ci.实测 = "异常";
-                             }
-                         });
+                        System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            if (item is AssTbConfigSoftwareCom ci)
+                            {
+                                ci.状态 = "Error";
+                                ci.实测 = "异常";
+                            }
+                        });
                     }
                     break;
             }
@@ -550,8 +660,9 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         }
 
         // 修改后的 OnOneKeyCheck 方法
-        public override void OnOneKeyCheck(object obj)
+        public override async void OnOneKeyCheck(object obj)
         {
+            await base.OnOneKeyCheckAsync(obj);
             try
             {
                 StartAsync();
@@ -563,6 +674,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             finally
             {
                 ProgressValue = 100; // 完成后设置进度条为100%
+                //PageStatusService.Instance.UpdateStatus(PageName, GetOverallStatus());
             }
         }
 

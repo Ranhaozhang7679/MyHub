@@ -99,7 +99,7 @@ namespace Luster.Motion.EditorUI.ViewModel
             set
             {
                 SetProperty(ref _searchKey, value);
-                FilterItems(0, value);
+                //FilterItems(0, value);
             }
         }
 
@@ -113,7 +113,7 @@ namespace Luster.Motion.EditorUI.ViewModel
             set
             {
                 SetProperty(ref _searchType, value);
-                FilterItems(1, value);
+                //FilterItems(1, value);
             }
         }
 
@@ -140,6 +140,7 @@ namespace Luster.Motion.EditorUI.ViewModel
         private DelegateCommand<string> _searchCommand;
         public DelegateCommand<string> SearchCommand => _searchCommand ?? (_searchCommand = new DelegateCommand<string>((txt) =>
         {
+            SearchKey = txt;
             FilterItems(0, txt);
         }));
 
@@ -165,6 +166,7 @@ namespace Luster.Motion.EditorUI.ViewModel
         private DelegateCommand<string> _searchTypeCommand;
         public DelegateCommand<string> SearchTypeCommand => _searchTypeCommand ?? (_searchTypeCommand = new DelegateCommand<string>((txt) =>
         {
+            SearchType = txt;
             FilterItems(1, txt);
         }));
     }

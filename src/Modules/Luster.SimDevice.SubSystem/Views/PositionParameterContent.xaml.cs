@@ -19,42 +19,34 @@ namespace Luster.SimDevice.SubSystem.Views
             InitializeComponent();
         }
 
-        // GridSplitter 拖拽事件处理
         private void GridSplitter_DragDelta(object sender, DragDeltaEventArgs e)
         {
             if (sender is GridSplitter splitter && splitter.Tag is string columnIndexStr)
             {
                 if (int.TryParse(columnIndexStr, out int columnIndex))
                 {
-                    // 获取列头网格
                     var headerGrid = splitter.Parent as Grid;
                     if (headerGrid != null && columnIndex >= 0 && columnIndex < headerGrid.ColumnDefinitions.Count)
                     {
-                        // 更新列宽度
                         var column = headerGrid.ColumnDefinitions[columnIndex];
                         var newWidth = column.ActualWidth + e.HorizontalChange;
 
-                        // 确保宽度不小于最小宽度
                         if (newWidth < column.MinWidth)
                         {
                             newWidth = column.MinWidth;
                         }
-
                         column.Width = new GridLength(newWidth);
-
-                        // 强制更新布局
                         headerGrid.UpdateLayout();
+                        HeaderScrollViewer?.UpdateLayout();
                     }
                 }
             }
         }
 
-        // 行鼠标进入事件
         private void Row_MouseEnter(object sender, MouseEventArgs e)
         {
             if (sender is Border border && border != _selectedRow)
             {
-                // 保存原始背景色
                 _originalBackground = border.Background;
 
                 // 设置悬停背景色（浅灰色）
@@ -62,7 +54,6 @@ namespace Luster.SimDevice.SubSystem.Views
             }
         }
 
-        // 行鼠标离开事件
         private void Row_MouseLeave(object sender, MouseEventArgs e)
         {
             if (sender is Border border && border != _selectedRow)
@@ -101,5 +92,14 @@ namespace Luster.SimDevice.SubSystem.Views
                 viewModel.OnViewDeactivated();
             }
         }
+        private void ContentScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        {
+            // 同步列头的横向滚动位置
+            if (e.HorizontalChange != 0)
+            {
+                HeaderScrollViewer.ScrollToHorizontalOffset(e.HorizontalOffset);
+            }
+        }
+
     }
 }

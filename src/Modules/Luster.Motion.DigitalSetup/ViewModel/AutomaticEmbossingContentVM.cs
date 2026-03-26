@@ -15,6 +15,7 @@ using Luster.TaskFlow.Common.Enums;
 using Luster.TaskFlow.Motion.Logic;
 using Prism.Commands;
 using Prism.Regions;
+using Prism.Services.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -36,6 +37,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
     {
         // 新增3个按钮和1个进度条的定义
         private double _progressValue;
+        private const string PageName = "Embossing";
 
         public ICommand EndCommand { get; private set; }
         public ICommand OneKeyCheckCommand { get; private set; }
@@ -59,14 +61,18 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         }
         public AutomaticEmbossingContentVM(IRepository repository,
                                            IRegionManager regionManager, ICommonBus commonBus, IMotionController motionController,
-                                           IDeviceEngine deviceEngine, CSVHelper cSVHelper, FlowBus _flowBus)
-                                            : base(repository, regionManager, commonBus, cSVHelper, _flowBus)
+                                           IDeviceEngine deviceEngine, CSVHelper cSVHelper, FlowBus _flowBus, IDialogService dialogService)
+                                            : base(repository, regionManager, commonBus, cSVHelper, _flowBus, dialogService)
         {
             flowBus = _flowBus;
             _deviceEngine = deviceEngine;
             _mController = motionController;
             Pages = new ObservableCollection<CommonPageModel>();
-            Pages.Add(new CommonPageModel() { Name = "AutomaticEmbossing", IsSelected = true, Region = "", ViewType = typeof(AssTbAutomaticEmbossing) });
+            Pages.Add(new CommonPageModel() { Name = "AutomaticEmbossing", IsSelected = false, Region = "", ViewType = typeof(AssTbAutomaticEmbossing) });
+
+            // 注册子页面到DigitalAssPageModel
+            DigitalAssPageModel.RegisterSubPages("AutomaticEmbossingContent", Pages);
+
             SelectedReportPage = Pages.Where(x => x.IsSelected).FirstOrDefault();
             InitModels();
 
@@ -79,7 +85,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             LoadStationConfigFromJson();
             //更新界面属性
             UpdateStationConfigs();
-
+            LoadCheckConfirmMessages();
         }
 
         public override void OnEnd()
@@ -89,9 +95,24 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             base.OnEnd();
         }
 
+        private string GetOverallStatus()
+        {
+            if (ItemModels == null || ItemModels.Count == 0)
+                return "未点检";
+
+            foreach (var item in ItemModels)
+            {
+                if (item is AssTbAutomaticEmbossing autoEmboss)
+                {
+                    if (autoEmboss.状态 != "OK")
+                        return "NG";
+                }
+            }
+            return "OK";
+        }
         public override async void OnOneKeyCheck(object obj)
         {
-            base.OnOneKeyCheck( obj);
+            await base.OnOneKeyCheckAsync(obj);
             // 子界面的一键点检逻辑
             try
             {
@@ -137,6 +158,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
                             // 绘制曲线
                             DrawPressureRepetitionChart();
+                            string overallStatus = GetOverallStatus();
+                            PageStatusService.Instance.UpdateStatus(PageName, overallStatus);
                         }
                         else
                         {
@@ -275,6 +298,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             {
                 // 异常处理逻辑
             }
+            PageStatusService.Instance.UpdateStatus(PageName, "未点检");
         }
 
         private static (double lower, double upper) ParseColumnRange(string standardValue)

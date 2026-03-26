@@ -67,5 +67,25 @@ namespace Luster.Motion.DigitalSetup.Datas
             get => _viewType;
             set => SetProperty(ref _viewType, value);
         }
+
+        /// <summary>
+        /// 一键点检确认弹窗消息
+        /// </summary>
+        private string _checkConfirmMessage;
+        public string CheckConfirmMessage
+        {
+            get => _checkConfirmMessage;
+            set => SetProperty(ref _checkConfirmMessage, value);
+        }
+
+        /// <summary>
+        /// 是否启用
+        /// </summary>
+        private bool _isEnabled = true;
+        public bool IsEnabled
+        {
+            get => _isEnabled;
+            set => SetProperty(ref _isEnabled, value);
+        }
     }
 }

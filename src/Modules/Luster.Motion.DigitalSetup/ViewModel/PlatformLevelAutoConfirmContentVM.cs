@@ -16,6 +16,7 @@ using Luster.TaskFlow.Common.Enums;
 using Luster.TaskFlow.Motion.Logic;
 using Prism.Commands;
 using Prism.Regions;
+using Prism.Services.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -34,8 +35,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
     public class PlatformLevelAutoConfirmContentVM : BaseAss
     {
         // 新增3个按钮和1个进度条的定义
-        
 
+        private const string PageName = "Horizontal";
         public ICommand EndCommand { get; private set; }
         public ICommand OneKeyCheckCommand { get; private set; }
         public ICommand UpdateItemsCommand { get; private set; }
@@ -64,15 +65,19 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         }
 
         public PlatformLevelAutoConfirmContentVM(IRepository repository,
-                                                 IRegionManager regionManager, IMotionController motionController, 
-                                                 IDeviceEngine deviceEngine, FlowBus _flowBus, ICommonBus commonBus, CSVHelper cSVHelper) 
-                                                    : base(repository, regionManager, commonBus, cSVHelper, _flowBus)
+                                                 IRegionManager regionManager, IMotionController motionController,
+                                                 IDeviceEngine deviceEngine, FlowBus _flowBus, ICommonBus commonBus, CSVHelper cSVHelper, IDialogService dialogService)
+                                                    : base(repository, regionManager, commonBus, cSVHelper, _flowBus, dialogService)
         {
             flowBus = _flowBus;
             _deviceEngine = deviceEngine;
             _mController = motionController;
             Pages = new ObservableCollection<CommonPageModel>();
-            Pages.Add(new CommonPageModel() { Name = "AutomaticPosAndLeveling", IsSelected = true, Region = "", ViewType = typeof(AssTbAutomaticPosAndLeveling) });
+            Pages.Add(new CommonPageModel() { Name = "AutomaticPosAndLeveling", IsSelected = false, Region = "", ViewType = typeof(AssTbAutomaticPosAndLeveling) });
+
+            // 注册子页面到DigitalAssPageModel
+            DigitalAssPageModel.RegisterSubPages("PlatformLevelAutoConfirmContent", Pages);
+
             SelectedReportPage = Pages.Where(x => x.IsSelected).FirstOrDefault();
             InitModels();
 
@@ -86,6 +91,22 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             LoadStationConfigFromJson();
             //更新界面属性
             UpdateStationConfigs();
+            LoadCheckConfirmMessages();
+        }
+        private string GetOverallStatus()
+        {
+            if (ItemModels == null || ItemModels.Count == 0)
+                return "未点检";
+
+            foreach (var item in ItemModels)
+            {
+                if (item is AssTbAutomaticPosAndLeveling posAndLevel)
+                {
+                    if (posAndLevel.状态 != "OK")
+                        return "NG";
+                }
+            }
+            return "OK";
         }
 
         public override void OnEnd()
@@ -97,7 +118,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
         public override async void OnOneKeyCheck(object obj)
         {
-            base.OnOneKeyCheck(obj);
+            await base.OnOneKeyCheckAsync(obj);
             // 子界面的一键点检逻辑
             try
             {
@@ -144,6 +165,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
                             // 绘制曲线
                             DrawPressureRepetitionChart();
+                            string overallStatus = GetOverallStatus();
+                            PageStatusService.Instance.UpdateStatus(PageName, overallStatus);
                         }
                         else
                         {
@@ -152,7 +175,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     }
                     else
                     {
-                        throw new FriendlyException("回零完成后方可运行测试流程");
+                        //throw new FriendlyException("回零完成后方可运行测试流程");
                     }
                 }
 
@@ -271,6 +294,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             {
                 // 异常处理逻辑
             }
+            PageStatusService.Instance.UpdateStatus(PageName, "未点检");
         }
 
         private static (double lower, double upper) ParseColumnRange(string standardValue)

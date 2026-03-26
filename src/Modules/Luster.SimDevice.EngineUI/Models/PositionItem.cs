@@ -65,6 +65,7 @@ namespace Luster.SimDevice.EngineUI.Models
                 if (src != value && Tag != null)
                 {
                     Tag.Axis.Engine.UpdatePostion(Tag, value);
+                    Tag.Axis.Engine.UpdatePosGroup(Tag, value);
                 }
             }
         }

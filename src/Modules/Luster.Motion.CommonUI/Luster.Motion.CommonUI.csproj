@@ -18,14 +18,14 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="FreeSql"/>
-        <PackageReference Include="HandyControl"/>
+        <PackageReference Include="FreeSql" />
+        <PackageReference Include="HandyControl" />
         <PackageReference Include="LiveCharts.Wpf" />
         <PackageReference Include="LiveChartsCore" />
         <PackageReference Include="LiveChartsCore.SkiaSharpView" />
         <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" />
         <PackageReference Include="Luster.Prism" />
-        <PackageReference Include="Luster.WindowsAPICodePack"/>
+        <PackageReference Include="Luster.WindowsAPICodePack" />
         <PackageReference Include="MinVer" />
 
         <PackageReference Include="AvalonEdit" />
@@ -33,10 +33,11 @@
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" />
         <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" />
-        <PackageReference Include="QRCoder"/>
+        <PackageReference Include="QRCoder" />
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\Luster.Authorization.Client\Luster.Authorization.Client.csproj" />
         <ProjectReference Include="..\Luster.Motion.Integration\Luster.Motion.Integration.csproj" />
         <!--<ProjectReference Include="..\Luster.Common.DataAccess\Luster.Common.DataAccess.csproj" />-->
         <ProjectReference Include="..\Luster.Motion.TaskFlow.Engine\Luster.Motion.TaskFlow.Engine.csproj" />

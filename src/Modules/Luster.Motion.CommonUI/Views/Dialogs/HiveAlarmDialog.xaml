@@ -78,8 +78,9 @@
                     CommandParameter="Clear"
                     Focusable="False"
                     IsEnabled="{Binding IsButtonEnable}" 
-                    Width="300" 
-                    Content="&#x00a0;&#x00a0;&#x00a0;&#x00a0;&#x00a0;&#x00a0;&#x00a0;&#x00a0;确认-清掉故障&#x0a;Acknowledge-Clear error" 
+                    Width="325" 
+                    Content="&#x00a0;&#x00a0;&#x00a0;&#x00a0;&#x00a0;&#x00a0;&#x00a0;&#x00a0;             清掉故障，立即恢复生产&#x0a;            Clear error and resume production&#x0a;&#x0a;点击此按钮后，机器将立即运行，确保遵守所有安全规则" 
+                    Foreground="White"
                     Height="100" 
                     HorizontalContentAlignment="Center"  
                     Background="#518FFF"/>

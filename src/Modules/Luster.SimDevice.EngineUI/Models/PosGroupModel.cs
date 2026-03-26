@@ -1,5 +1,7 @@
-﻿using Luster.Motion.DataStruct.DataModels;
+﻿using Luster.Common.DataStruct;
+using Luster.Motion.DataStruct.DataModels;
 using Luster.Motion.DataStruct.Enums;
+using Luster.Motion.DataStruct.Interfaces;
 using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
@@ -35,6 +37,19 @@ namespace Luster.SimDevice.EngineUI.Models
             }
         }
 
+        private string _moduel;
+        public string Module
+        {
+            get => _moduel; set
+            {
+                SetProperty(ref _moduel, value);
+                if (Tag != null)
+                {
+                    Tag.Module = value;
+                }
+            }
+        }
+
         /// <summary>
         /// 默认值
         /// </summary>
@@ -48,6 +63,7 @@ namespace Luster.SimDevice.EngineUI.Models
                 if (Tag != null && src.ToString() != double.NaN.ToString() && src != value)
                 {
                     Tag.DeviceEngine.UpdatePosGroup(Tag, AxisType.X, value);
+                    UpdateAxisPosition(AxisType.X, value);
                 }
             }
         }
@@ -65,6 +81,7 @@ namespace Luster.SimDevice.EngineUI.Models
                 if (Tag != null && src.ToString() != double.NaN.ToString() && src != value)
                 {
                     Tag.DeviceEngine.UpdatePosGroup(Tag, AxisType.Y, value);
+                    UpdateAxisPosition(AxisType.Y, value);
                 }
             }
         }
@@ -82,6 +99,7 @@ namespace Luster.SimDevice.EngineUI.Models
                 if (Tag != null && src.ToString() != double.NaN.ToString() && src != value)
                 {
                     Tag.DeviceEngine.UpdatePosGroup(Tag, AxisType.Z, value);
+                    UpdateAxisPosition(AxisType.Z, value);
                 }
             }
         }
@@ -99,6 +117,7 @@ namespace Luster.SimDevice.EngineUI.Models
                 if (Tag != null && src.ToString() != double.NaN.ToString() && src != value)
                 {
                     Tag.DeviceEngine.UpdatePosGroup(Tag, AxisType.U, value);
+                    UpdateAxisPosition(AxisType.U, value);
                 }
             }
         }
@@ -106,16 +125,17 @@ namespace Luster.SimDevice.EngineUI.Models
         /// <summary>
         /// 默认值
         /// </summary>
-        private double _V = double.NaN;
-        public double V
+        private double _Z2 = double.NaN;
+        public double Z2
         {
-            get => _V; set
+            get => _Z2; set
             {
-                var src = _V;
-                SetProperty(ref _V, value);
+                var src = _Z2;
+                SetProperty(ref _Z2, value);
                 if (Tag != null && src.ToString() != double.NaN.ToString() && src != value)
                 {
-                    Tag.DeviceEngine.UpdatePosGroup(Tag, AxisType.V, value);
+                    Tag.DeviceEngine.UpdatePosGroup(Tag, AxisType.Z2, value);
+                    UpdateAxisPosition(AxisType.Z2, value);
                 }
             }
         }
@@ -123,16 +143,17 @@ namespace Luster.SimDevice.EngineUI.Models
         /// <summary>
         /// 默认值
         /// </summary>
-        private double _W = double.NaN;
-        public double W
+        private double _U2 = double.NaN;
+        public double U2
         {
-            get => _W; set
+            get => _U2; set
             {
-                var src = _W;
-                SetProperty(ref _W, value);
+                var src = _U2;
+                SetProperty(ref _U2, value);
                 if (Tag != null && src.ToString() != double.NaN.ToString() && src != value)
                 {
-                    Tag.DeviceEngine.UpdatePosGroup(Tag, AxisType.W, value);
+                    Tag.DeviceEngine.UpdatePosGroup(Tag, AxisType.U2, value);
+                    UpdateAxisPosition(AxisType.U2, value);
                 }
             }
         }
@@ -149,13 +170,14 @@ namespace Luster.SimDevice.EngineUI.Models
         {
             Key = pGroup.Key;
             Name = pGroup.Name;
+            Module = pGroup.Module;
             Tag = pGroup;
             X = pGroup.X;
             Y = pGroup.Y;
             Z = pGroup.Z;
             U = pGroup.U;
-            V = pGroup.V;
-            W = pGroup.W;
+            Z2 = pGroup.Z2;
+            U2 = pGroup.U2;
 
             Axises = Tag.Select(u => u.Axis).ToList();
         }
@@ -201,5 +223,16 @@ namespace Luster.SimDevice.EngineUI.Models
         /// 拥有的轴
         /// </summary>
         public List<VAxis> Axises { get; set; }
+
+        private void UpdateAxisPosition(AxisType type, double position)
+        {
+            var pos = Tag.FirstOrDefault(u => u.Axis.AxisType == type);
+            if (pos != null)
+            {
+                var newName = $"{type}_{Name}";
+                var axisPos = pos.Axis.Positions.FirstOrDefault(u => u.Name == newName);
+                Tag.DeviceEngine.UpdatePostion(axisPos, position);
+            }
+        }
     }
 }

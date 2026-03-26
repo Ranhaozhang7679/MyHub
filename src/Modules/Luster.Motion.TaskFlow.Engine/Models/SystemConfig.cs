@@ -513,7 +513,7 @@ namespace Luster.Motion.TaskFlow.Engine.Models
             PlcAction(deviceEngine, plc =>
             {
                 if (string.IsNullOrEmpty(StatusAddr)) return;
-                
+
                 var pStatus = plc.ReadNumber(StatusAddr);
 
                 if (Enum.TryParse<PlcStatus>(pStatus.ToString(), out var p))
@@ -751,6 +751,11 @@ namespace Luster.Motion.TaskFlow.Engine.Models
 
         #endregion
 
+        #region 关键参数全局变量
+        [Ignore]
+        public List<string> KeyParameterGlobalNames { get; set; } = new List<string>();
+        #endregion
+
         #region 模块配置
         [Ignore]
         public List<ModuleSetModel> ListModule { get; set; }
@@ -808,12 +813,12 @@ namespace Luster.Motion.TaskFlow.Engine.Models
         /// <summary>
         /// 启用安全门
         /// </summary>
-        public bool EnableSaftyDoor=false;
+        public bool EnableSaftyDoor = false;
 
         /// <summary>
         /// 启用光栅
         /// </summary>
-        public bool EnableLightCurtain=false;
+        public bool EnableLightCurtain = false;
 
         /// <summary>
         /// 班次列表
@@ -1001,6 +1006,18 @@ namespace Luster.Motion.TaskFlow.Engine.Models
                         new XAttribute("Value", value.ToString().ToLower())));
                 }
                 root.Add(enableDisableElement);
+            }
+
+            if (KeyParameterGlobalNames != null && KeyParameterGlobalNames.Any())
+            {
+                var keyParameterGlobalNames = new XElement("KeyParameterGlobalNames");
+                foreach (var varName in KeyParameterGlobalNames)
+                {
+                    // 只存储变量名称
+                    keyParameterGlobalNames.Add(new XElement("Var",
+                        new XAttribute("Name", varName ?? "")));
+                }
+                root.Add(keyParameterGlobalNames);
             }
 
             return root;
@@ -1200,6 +1217,22 @@ namespace Luster.Motion.TaskFlow.Engine.Models
                     {
                         EnableDisableVarNames.Add(varName);
                         EnableDisableVarValues[varName] = bool.TryParse(varValueStr, out bool value) ? value : false;
+                    }
+                }
+            }
+
+            KeyParameterGlobalNames = new List<string>();
+
+            var keyParameterGlobalNames = xElement.Element("KeyParameterGlobalNames");
+            if (keyParameterGlobalNames != null && keyParameterGlobalNames.Elements().Any())
+            {
+                foreach (var xItem in keyParameterGlobalNames.Elements("Var"))
+                {
+                    var varName = xItem.Attribute("Name")?.Value ?? "";
+
+                    if (!string.IsNullOrEmpty(varName))
+                    {
+                        KeyParameterGlobalNames.Add(varName);
                     }
                 }
             }

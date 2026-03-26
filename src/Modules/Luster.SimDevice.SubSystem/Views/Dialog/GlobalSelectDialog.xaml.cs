@@ -1,27 +1,37 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
+using Luster.SimDevice.SubSystem.ViewModel;
 
 namespace Luster.SimDevice.SubSystem.Views.Dialog
 {
-    /// <summary>
-    /// GlobalSelectDialog.xaml 的交互逻辑
-    /// </summary>
     public partial class GlobalSelectDialog : Window
     {
-        public GlobalSelectDialog()
+        public GlobalSelectDialog(List<GlobalVarWrapper> availableVariables)
         {
             InitializeComponent();
+
+            var viewModel = new ViewModel.Dialog.GlobalSelectDialogVM(availableVariables);
+            viewModel.CloseAction = (result, selectedVars) =>
+            {
+                if (result)
+                {
+                    SelectedVariables = selectedVars;
+                    DialogResult = true;
+                }
+                else
+                {
+                    DialogResult = false;
+                }
+                Close();
+            };
+
+            this.DataContext = viewModel;
         }
+
+        /// <summary>
+        /// 选择的变量列表
+        /// </summary>
+        public List<GlobalVarWrapper> SelectedVariables { get; private set; }
     }
 }

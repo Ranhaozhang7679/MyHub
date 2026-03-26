@@ -20,6 +20,7 @@ using Luster.TaskFlow.Motion.Logic;
 using Prism.Commands;
 using Prism.Mvvm;
 using Prism.Regions;
+using Prism.Services.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -45,6 +46,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         // 新增3个按钮和1个进度条的定义
         private double _progressValue;
         private bool _isChartVisible;
+        private const string PageName = "LoadCell";
 
         public ICommand EndCommand { get; private set; }
         public ICommand OneKeyCheckCommand { get; private set; }
@@ -102,7 +104,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
                 //同步赋值给基类属性
                 base.SelectedReportPage = value;
-
+                if (_seletedReportPage == null) return;
                 if (_seletedReportPage.ViewType == typeof(AssTbCalibrationTable) 
                     || _seletedReportPage.ViewType == typeof(AssTbPressureRepetition)
                     || _seletedReportPage.ViewType == typeof(AssTbSuctionNozzle))
@@ -134,6 +136,26 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             }
         }
 
+        private string GetOverallStatus()
+        {
+            if (ItemModels == null || ItemModels.Count == 0)
+                return "未点检";
+
+            foreach (var item in ItemModels)
+            {
+                string status = "";
+                if (item is AssTbCalibrationTable calibration)
+                    status = calibration.状态;
+                else if (item is AssTbPressureRepetition pressure)
+                    status = pressure.状态;
+                else if (item is AssTbSuctionNozzle suction)
+                    status = suction.状态;
+
+                if (status == "NG")
+                    return "NG";
+            }
+            return "OK";
+        }
 
 
         //stationName
@@ -228,16 +250,20 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
 
         public AutomaticLoadCellContentVM(IRepository repository,
-                                          IRegionManager regionManager, ICommonBus commonBus, IMotionController motionController, IDeviceEngine deviceEngine, FlowBus _flowBus, CSVHelper cSVHelper) 
-                                          : base(repository, regionManager, commonBus, cSVHelper, _flowBus)
+                                          IRegionManager regionManager, ICommonBus commonBus, IMotionController motionController, IDeviceEngine deviceEngine, FlowBus _flowBus, CSVHelper cSVHelper, IDialogService dialogService)
+                                          : base(repository, regionManager, commonBus, cSVHelper, _flowBus, dialogService)
         {
             flowBus = _flowBus;
             _deviceEngine = deviceEngine;
             _mController = motionController;
             Pages = new ObservableCollection<CommonPageModel>();
-            Pages.Add(new CommonPageModel() { Name = "CalibrationTable", IsSelected = true, Region = "", ViewType = typeof(AssTbCalibrationTable) });
-            Pages.Add(new CommonPageModel() { Name = "PressureRepetition", IsSelected = true, Region = "", ViewType = typeof(AssTbPressureRepetition) });
-            Pages.Add(new CommonPageModel() { Name = "SuctionNozzle", IsSelected = true, Region = "", ViewType = typeof(AssTbSuctionNozzle) });
+            Pages.Add(new CommonPageModel() { Name = "SuctionNozzle", IsSelected = false, Region = "", ViewType = typeof(AssTbSuctionNozzle) });
+            Pages.Add(new CommonPageModel() { Name = "CalibrationTable", IsSelected = false, Region = "", ViewType = typeof(AssTbCalibrationTable) });
+            Pages.Add(new CommonPageModel() { Name = "PressureRepetition", IsSelected = false, Region = "", ViewType = typeof(AssTbPressureRepetition) });
+
+            // 注册子页面到DigitalAssPageModel
+            DigitalAssPageModel.RegisterSubPages("AutomaticLoadCellContent", Pages);
+
             SelectedReportPage = Pages.Where(x => x.IsSelected).FirstOrDefault();
             InitModels();
 
@@ -252,6 +278,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             UpdateStationConfigs();
             //DrawPressureRepetitionChartOpt();
             DrawPressureLinearChartOpt();
+            LoadCheckConfirmMessages();
         }
 
 
@@ -264,7 +291,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
         public override async void OnOneKeyCheck(object obj)
         {
-            base.OnOneKeyCheck(obj);
+            await base.OnOneKeyCheckAsync(obj);
 
             // 子界面的一键点检逻辑
             try
@@ -299,7 +326,11 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                                         PressRepe.状态 = "格式错误";
                                         continue;
                                     }
-                                    FillTableContent(PressRepe);
+                                    if (string.IsNullOrEmpty(PressRepe.实测))
+                                    {
+                                        PressRepe.状态 = "未完成";
+                                    }
+                                    //FillTableContent(PressRepe);
                                 }
                                 ProgressValue = (i + 1) * 100 / ItemModels.Count; // 进度
                             }
@@ -413,6 +444,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                         throw new FriendlyException("回零完成后方可运行测试流程");
                     }
                 }
+                string overallStatus = GetOverallStatus();
+                PageStatusService.Instance.UpdateStatus(PageName, overallStatus);
 
             }
             catch (Exception ex)
@@ -573,6 +606,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             {
                 // 异常处理逻辑
             }
+            PageStatusService.Instance.UpdateStatus(PageName, "未点检");
         }
 
         private static (double lower, double upper) ParseColumnRange(string standardValue)

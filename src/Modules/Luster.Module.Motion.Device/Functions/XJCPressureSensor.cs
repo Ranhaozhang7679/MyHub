@@ -41,13 +41,13 @@ using System.Windows;
 
 namespace Luster.Module.Motion.Device.Functions
 {
-  
+
     public class XJCPressureSensor : MotionFunction, IPauseFunction
     {
         [NotEmpty]
         [Parameter("通信设备", 0, CN = "通信设备", EditorType = typeof(VCommuncation))]
         public VDevice CommDevice { get; set; }
-      
+
         [Parameter("从站设备", 1, CN = "从站设备", CanRef = ParamRef.NoRef)]
         public SocketAction Slave { get; set; }
 
@@ -74,8 +74,16 @@ namespace Luster.Module.Motion.Device.Functions
         [Parameter("多次读取间隔时间，单位为ms", 7, CN = "间隔", DefaultV = 1)]
         public int Interval { get; set; }
 
+        [DependOn("PActionType", PressureActionType.CalibrationStart)]
+        [Parameter("标定值", 8, CN = "手持压力传感器值", CanRef = ParamRef.Ref, DefaultV = 1)]
+        public double CalibrationValue { get; set; }
+
+        [DependOn("PActionType", PressureActionType.CalibrationStart)]
+        [Parameter("量程", 9, CN = "压力传感器量程", DefaultV = 50)]
+        public double MeasuringRange { get; set; }
+
         [DependOn("PActionType", PressureActionType.ReadValue)]
-        [Parameter("压力传感器值,单位为千克", 8, CN = "压力传感器值", ParamType = TaskFlow.Common.Enums.ParamType.OUT, DefaultV = 0)]
+        [Parameter("压力传感器值,单位为千克", 100, CN = "压力传感器值", ParamType = TaskFlow.Common.Enums.ParamType.OUT, DefaultV = 0)]
         public double Value { get; set; }
 
         private static object lockRW = new object();
@@ -100,7 +108,7 @@ namespace Luster.Module.Motion.Device.Functions
             GetVDevice<VCommuncation>(CommDevice, out var communcation);
             communcation.SetProtocol(ProtocolType.ModbusRTU);
             StationNum = getSlaveNum(communcation);
-            if (StationNum ==-1)
+            if (StationNum == -1)
             {
                 errMsg = "串口选择异常或者站号选择异常,请在流程里将串口和站号重新选择一下！";
                 OnAlarm(AlarmType.WarningTip, errMsg);
@@ -143,7 +151,7 @@ namespace Luster.Module.Motion.Device.Functions
                     }
                 }
             }
-            else
+            else if (PActionType == PressureActionType.ReadValue)
             {
                 // 2、延时读取
                 Thread.Sleep(DelayTime);
@@ -155,12 +163,12 @@ namespace Luster.Module.Motion.Device.Functions
                         lock (lockRW)
                         {
                             var coilVs = communcation.Read<float>($"{StationNum} 04 02 1");
-                            if (Times<3)
+                            if (Times < 3)
                             {
                                 if (coilVs.Count > 0)
                                 {
-                                    Value += Math.Round(coilVs[0],3);
-                                   
+                                    Value += Math.Round(coilVs[0], 3);
+
                                 }
                                 else
                                 {
@@ -179,16 +187,16 @@ namespace Luster.Module.Motion.Device.Functions
                         Thread.Sleep(Interval);
                     }
                     //如果读值次数大于等于3次，去除最大最小值，取平均值
-                    if (Times>=3)
+                    if (Times >= 3)
                     {
                         Value = 0;
                         lstPressVal.Remove(lstPressVal.Max());
                         lstPressVal.Remove(lstPressVal.Min());
-                        for (int j = 0; j<Times-2; j++)
+                        for (int j = 0; j < Times - 2; j++)
                         {
                             Value += lstPressVal[j];
                         }
-                        Value = Math.Round(Math.Round(Value, 3) / (double)(Times-2), 3);
+                        Value = Math.Round(Math.Round(Value, 3) / (double)(Times - 2), 3);
                     }
                     else
                     {
@@ -208,6 +216,44 @@ namespace Luster.Module.Motion.Device.Functions
                 else
                 {
                     Value = PressureValue;
+                }
+            }
+            else if (PActionType == PressureActionType.CalibrationSet)
+            {
+                try
+                {
+                    //这里的流程是
+                    //1、输入密码：地址-0002 值-1149952000（44 8A E0 00）
+                    communcation.WriteWithoutBlocking<int>(1149952000, $"{StationNum} 10 2 1");
+                    Thread.Sleep(5);
+                    //2、设置标定类型（砝码标定）地址-200（00 C8）值-0
+                    communcation.WriteWithoutBlocking<int>(0, $"{StationNum} 10 200 1");
+                    Thread.Sleep(5);
+                    //3、设置零点标定 地址-206（00 CE） 值-0
+                    communcation.WriteWithoutBlocking<int>(0, $"{StationNum} 10 206 1");
+
+                }
+                catch (Exception ex)
+                {
+                    errMsg = ex.ToString();
+                }
+            }
+            else if (PActionType == PressureActionType.CalibrationStart)
+            {
+                try
+                {
+                    //4、设置增益标定 地址-208（00 D0） 值-0
+                    communcation.WriteWithoutBlocking<int>(0, $"{StationNum} 10 208 1");
+                    Thread.Sleep(5);
+                    //5、设置增益对应重量值 地址-210（00 D2）值-手持压力值
+                    communcation.WriteWithoutBlocking<float>((float)CalibrationValue, $"{StationNum} 10 210 1");
+                    Thread.Sleep(5);
+                    //6、设置仪表最大量程 地址-218（00 DA）值-1000（03 E8）
+                    communcation.WriteWithoutBlocking<float>((float)MeasuringRange, $"{StationNum} 10 218 1");
+                }
+                catch (Exception ex)
+                {
+                    errMsg = ex.ToString();
                 }
             }
             return string.IsNullOrEmpty(errMsg);
@@ -255,7 +301,7 @@ namespace Luster.Module.Motion.Device.Functions
                     // 没有选设备时清空数据源
                     OnDataSource(nameof(Slave), new object[0]);
                 }
-            }           
+            }
         }
 
         private int getSlaveNum(VCommuncation comm)
@@ -268,7 +314,7 @@ namespace Luster.Module.Motion.Device.Functions
                     int.TryParse(comm.Actions[i].Value, out slaveNum);
                     break;
                 }
-            }   
+            }
             return slaveNum;
         }
     }

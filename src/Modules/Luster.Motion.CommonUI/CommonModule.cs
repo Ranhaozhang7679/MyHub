@@ -20,6 +20,9 @@
 * 修 改 人:		  L05123
 ************************************************************************************/
 #endregion
+using Luster.Common.Assets.FloatingInfo.Services;
+using Luster.Common.Assets.FloatingInfo.ViewModel;
+using Luster.Common.Assets.FloatingInfo.Views;
 using Luster.Motion.CommonUI.ViewModel;
 using Luster.Motion.CommonUI.ViewModel.Dialogs;
 using Luster.Motion.CommonUI.Views;
@@ -46,8 +49,13 @@ namespace Luster.Motion.CommonUI
 
         public void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            //containerRegistry.Register<Dispatcher>(() => Application.Current.Dispatcher);
-
+            // 注册 Dispatcher
+            containerRegistry.RegisterInstance(Dispatcher.CurrentDispatcher);
+            
+            // 注册浮动信息服务
+            containerRegistry.RegisterSingleton<IFloatingInfoConfigService, FloatingInfoConfigService>();
+            containerRegistry.RegisterSingleton<IFloatingInfoService, FloatingInfoService>();
+            containerRegistry.RegisterDialog<FloatingInfoSettingsDialog, FloatingInfoSettingsDialogVM>(); // 浮动信息设置对话框
             // 通用方法及事件总线
             if (!containerRegistry.IsRegistered<ICommonBus>())
             {
@@ -63,6 +71,7 @@ namespace Luster.Motion.CommonUI
             // 注册视图和模型示例
             ViewModelLocationProvider.Register<Luster.Common.Assets.Views.MessageDialog, Luster.Common.Assets.ViewModel.MessageDialogVM>();
             ViewModelLocationProvider.Register<Luster.Common.Assets.Views.TextDialog, Luster.Common.Assets.ViewModel.TextDialogVM>();
+            ViewModelLocationProvider.Register<Luster.Common.Assets.Views.InfoInputDialog, Luster.Common.Assets.ViewModel.InfoInputDialogVM>();
 
             // log
             containerRegistry.RegisterForNavigation<LogContent, LogContentVM>();

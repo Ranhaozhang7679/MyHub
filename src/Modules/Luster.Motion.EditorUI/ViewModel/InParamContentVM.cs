@@ -62,6 +62,8 @@ using System.Windows.Threading;
 using Luster.Motion.DataStruct;
 using System.Threading;
 using Luster.Motion.DataStruct.VDevice;
+using Prism.Regions;
+using System.Windows;
 
 namespace Luster.Motion.EditorUI.ViewModel
 {
@@ -84,6 +86,7 @@ namespace Luster.Motion.EditorUI.ViewModel
         /// 
         /// </summary>
         private Dispatcher _dispatcher;
+        private readonly IRegionManager _regionManager;
 
         /// <summary>
         /// 构造函数
@@ -95,11 +98,12 @@ namespace Luster.Motion.EditorUI.ViewModel
             IMotionEngine mEngine,
             IDialogService dialogService,
             ICommonBus cBus,
-            Dispatcher dispatcher) : base(_eventBus, cBus)
+            Dispatcher dispatcher,IRegionManager regionManager) : base(_eventBus, cBus)
         {
             _dialogService = dialogService;
             _engine = mEngine;
             _dispatcher = dispatcher;
+            _regionManager = regionManager;
         }
 
 
@@ -186,6 +190,18 @@ namespace Luster.Motion.EditorUI.ViewModel
                 IsReadOnly = !(op.Dst == EngineStatus.Idle || op.Dst == EngineStatus.Ready || op.Dst == EngineStatus.Stop);
                 SetParamReadOnly(ModuleObj as IMotionModule);
             });
+
+            bus.GetEvent<UserLoginEvent>().Subscribe(role =>
+            {
+                ViewVisible = role.UserRole == SystemRole.Admin ? Visibility.Visible : Visibility.Hidden;
+            });
+        }
+
+        private Visibility _viewVisible = Visibility.Visible;
+        public Visibility ViewVisible
+        {
+            get { return _viewVisible; }
+            set { SetProperty(ref _viewVisible, value); }
         }
 
         /// <summary>

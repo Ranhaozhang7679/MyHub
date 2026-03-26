@@ -1,6 +1,7 @@
 ﻿using Luster.Common.DataStruct;
 using Luster.Common.Dongle;
 using Luster.Motion.CommonUI.Events;
+using Luster.Motion.CommonUI.Views.Dialogs;
 using Luster.Motion.DataStruct;
 using Luster.Motion.DataStruct.DataModels;
 using Luster.Motion.DataStruct.Enums;
@@ -157,12 +158,17 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
             _alarmClosedToken = _bus.EventBus.GetEvent<HiveReportStateChangedEvent>().Subscribe(isOpen =>
             {
                 _greenIsOpen = isOpen;
-                if (!isOpen && _helpRequested)   // ② 绿窗刚关，且之前延迟过
+                //if (!isOpen && _helpRequested)   // ② 绿窗刚关，且之前延迟过
+                //{
+                //    IsButtonEnable = !_greenIsOpen && (beginTime - DateTime.Now).TotalSeconds > 0;// 现在补执行
+                //    _helpRequested = false;
+                //    //补发Help Request
+                //    hiveAPI.HelpRequest(ErrorMessage, ErrorCode);
+                //}
+                
+                if (!isOpen)   // ReportEnd窗口关闭，按钮恢复可点击状态（如果时间未到）
                 {
-                    IsButtonEnable = !_greenIsOpen && (beginTime - DateTime.Now).TotalSeconds > 0;// 现在补执行
-                    _helpRequested = false;
-                    hiveAPI.HelpRequest(ErrorMessage, ErrorCode);
-
+                    IsButtonEnable = !_greenIsOpen && (beginTime - DateTime.Now).TotalSeconds > 0;
                 }
             });
 
@@ -170,6 +176,8 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
 
         public override void OnDialogOpened(IDialogParameters parameters)
         {
+            CloseHiveOperationDialogIfOpened();
+
             stopwatch.Start();
             //判断设备是否回零,如果回零才能执行暂停
             try
@@ -240,11 +248,13 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                             dispatcherTimer.Start();
 
                             // 如果HiveReport窗口存在，暂不发送 Help Request，绿色窗口关闭后再发送
-                            if (parameters.TryGetValue<bool>("HiveStart2_Opend", out _greenIsOpen) && _greenIsOpen)
-                                _helpRequested = true; // 绿窗开着 → 先标记，不执行
-                            else
-                                hiveAPI.HelpRequest(ErrorMessage, ErrorCode);  // 绿窗没开 → 立即执行
+                            //if (parameters.TryGetValue<bool>("HiveStart2_Opend", out _greenIsOpen) && _greenIsOpen)
+                            //    _helpRequested = true; // 绿窗开着 → 先标记，不执行
+                            //else
+                            //    hiveAPI.HelpRequest(ErrorMessage, ErrorCode);  // 绿窗没开 → 立即执行
 
+                            hiveAPI.HelpRequest(ErrorMessage, ErrorCode);
+                            parameters.TryGetValue<bool>("HiveStart2_Opend", out _greenIsOpen);
                             IsButtonEnable = !_greenIsOpen;
                         }
                     }
@@ -258,6 +268,56 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
             }
         }
 
+        private void CloseHiveOperationDialogIfOpened()
+        {
+            var app = Application.Current;
+            if (app == null)
+                return;
+
+            app.Dispatcher.Invoke(() =>
+            {
+                foreach (Window window in app.Windows)
+                {
+                    if (window is Luster.Common.Assets.Views.DialogWindow dialogWindow &&
+                        dialogWindow.Content is HiveOperationDialog)
+                    {
+                        // 关键：给 Prism 对话框设置结果，避免 Closing 被取消导致“残留”
+                        dialogWindow.Result = new DialogResult(ButtonResult.OK);
+
+                        dialogWindow.Close();
+
+                        // 可选：确保内容解绑，避免视觉残留/引用残留
+                        dialogWindow.Content = null;
+
+                        break;
+                    }
+                }
+            });
+
+            //app.Dispatcher.Invoke(() =>
+            //{
+            //    foreach (Window window in app.Windows)
+            //    {
+            //        //if (window is DialogWindow dialogWindow &&
+            //        //    dialogWindow.Content is HiveOperationDialog)
+            //        //{
+            //        //    dialogWindow.Close();
+            //        //    break;
+            //        //}
+            //        if (window.Content is HiveOperationDialog dialog)
+            //        {
+            //            // 在对话框的 Dispatcher 上执行
+            //            dialog.Dispatcher.Invoke(() =>
+            //            {
+            //                window.Visibility = Visibility.Hidden;  // 先隐藏
+            //                window.Content = null;                   // 清除内容
+            //                window.Close();                          // 再关闭
+            //            });
+            //            break;
+            //        }
+            //    }
+            //});
+        }
         private void Timer_Tick(object sender, EventArgs e)
         {
             CountDown = (beginTime - DateTime.Now).Minutes.ToString() + ":" + (beginTime - DateTime.Now).Seconds.ToString();
@@ -314,7 +374,7 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                     var currentID = cardID.Trim();
                     if (cardID.Substring(0, 1) == "0")
                         cardID = cardID.Substring(1, cardID.Length - 1);
-                    var ret = sfcHelper.CheckCard(cardID, out string auth);
+                    var ret = sfcHelper.CheckCard(cardID, hiveAPI.machineSN, out string auth);
                     currentAuth = auth;
                     cardID = "";
                     //刷卡后，需要判断权限是否满足

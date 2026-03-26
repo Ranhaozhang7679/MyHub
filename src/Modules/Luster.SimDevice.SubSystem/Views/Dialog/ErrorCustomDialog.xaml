@@ -7,30 +7,118 @@
     xmlns:lang="clr-namespace:Luster.SimDevice.SubSystem.Langs"
     xmlns:local="clr-namespace:Luster.SimDevice.SubSystem.Views.Dialog"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    MinWidth="350"
+    Width="650" MaxWidth="800"
     mc:Ignorable="d">
     <StackPanel Margin="10">
-        <hc:UniformSpacingPanel Orientation="Vertical" Spacing="20">
-            <TextBox
-                hc:InfoElement.Necessary="True"
-                hc:InfoElement.Placeholder="报警代码"
-                hc:InfoElement.Title="报警代码"
-                Style="{StaticResource TextBoxValidationStyle}"
-                Text="{Binding AlarmCode}" />            
-            <TextBox
-                hc:InfoElement.Necessary="True"
-                hc:InfoElement.Placeholder="报警内容"
-                hc:InfoElement.Title="报警内容"
-                Style="{StaticResource TextBoxValidationStyle}"
-                Text="{Binding AlarmContent}" />
-            <TextBox
-                hc:InfoElement.Necessary="True"
-                hc:InfoElement.Placeholder="报警英文"
-                hc:InfoElement.Title="报警英文"
-                Style="{StaticResource TextBoxValidationStyle}"
-                Text="{Binding AlarmEnglish}" />
-        </hc:UniformSpacingPanel>
-        <Grid Margin="0,10,0,0">
+        <!-- 原始输入框组 -->
+        <TextBox
+            Margin="0,0,0,20"
+            hc:InfoElement.Necessary="True"
+            hc:InfoElement.Placeholder="报警代码"
+            hc:InfoElement.Title="报警代码"
+            Style="{StaticResource TextBoxValidationStyle}"
+            Text="{Binding AlarmCode}" />
+        
+        <TextBox
+            Margin="0,0,0,20"
+            hc:InfoElement.Necessary="True"
+            hc:InfoElement.Placeholder="报警内容"
+            hc:InfoElement.Title="报警内容"
+            Style="{StaticResource TextBoxValidationStyle}"
+            Text="{Binding AlarmContent}" />
+            
+        <TextBox
+            Margin="0,0,0,20"
+            hc:InfoElement.Necessary="True"
+            hc:InfoElement.Placeholder="报警英文"
+            hc:InfoElement.Title="报警英文"
+            Style="{StaticResource TextBoxValidationStyle}"
+            Text="{Binding AlarmEnglish}" />
+
+        <!-- 生成器块 -->
+        <Expander IsExpanded="False" Background="Transparent" Margin="0,10,0,0">
+            <Expander.Header>
+                <Grid Width="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Expander}, Path=ActualWidth}">
+                    <TextBlock Text="报警码向导生成器" VerticalAlignment="Center"/>
+                    <Button Content="刷新配置" Margin="0,0,40,0" Padding="10,0" HorizontalAlignment="Right" VerticalAlignment="Center" Command="{Binding ReloadConfigCommand}" Style="{StaticResource ButtonInfo}"/>
+                </Grid>
+            </Expander.Header>
+            <Grid Margin="10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                
+                <ComboBox 
+                    Grid.Row="0" Grid.Column="0" Margin="5"
+                    hc:TitleElement.Title="报警类型 (Type)"
+                    hc:TitleElement.TitlePlacement="Left"
+                    hc:TitleElement.TitleWidth="115"
+                    Style="{StaticResource ComboBoxExtendBaseStyle}"
+                    ItemsSource="{Binding ErrorTypes}"
+                    SelectedItem="{Binding SelectedErrorType}" />
+                
+                <ComboBox 
+                    Grid.Row="0" Grid.Column="1" Margin="5"
+                    hc:TitleElement.Title="报警子类 (Sub-Type)"
+                    hc:TitleElement.TitlePlacement="Left"
+                    hc:TitleElement.TitleWidth="125"
+                    Style="{StaticResource ComboBoxExtendBaseStyle}"
+                    ItemsSource="{Binding ErrorSubTypes}"
+                    SelectedItem="{Binding SelectedErrorSubType}" />
+                
+                <ComboBox 
+                    Grid.Row="1" Grid.Column="0" Margin="5"
+                    hc:TitleElement.Title="组件 (Comp.)"
+                    hc:TitleElement.TitlePlacement="Left"
+                    hc:TitleElement.TitleWidth="115"
+                    Style="{StaticResource ComboBoxExtendBaseStyle}"
+                    IsEditable="True"
+                    Text="{Binding SelectedComponent}"
+                    ItemsSource="{Binding Components}" />
+                    
+                <ComboBox 
+                    Grid.Row="1" Grid.Column="1" Margin="5"
+                    hc:TitleElement.Title="子组件 (Sub-Comp)"
+                    hc:TitleElement.TitlePlacement="Left"
+                    hc:TitleElement.TitleWidth="125"
+                    Style="{StaticResource ComboBoxExtendBaseStyle}"
+                    IsEditable="True"
+                    Text="{Binding SelectedSubComponent}"
+                    ItemsSource="{Binding SubComponents}" />
+
+                <TextBox 
+                    Grid.Row="2" Grid.Column="0" Margin="5"
+                    hc:InfoElement.Title="序号 (Index)"
+                    hc:InfoElement.TitlePlacement="Left"
+                    hc:InfoElement.TitleWidth="115"
+                    Style="{StaticResource TextBoxExtendBaseStyle}"
+                    Text="{Binding ErrorIndex, UpdateSourceTrigger=PropertyChanged}" />
+
+                <ComboBox 
+                    Grid.Row="2" Grid.Column="1" Margin="5"
+                    hc:TitleElement.Title="维修动作 (Action)"
+                    hc:TitleElement.TitlePlacement="Left"
+                    hc:TitleElement.TitleWidth="125"
+                    Style="{StaticResource ComboBoxExtendBaseStyle}"
+                    ItemsSource="{Binding RepairActions}"
+                    SelectedItem="{Binding SelectedRepairAction}" />
+
+                <StackPanel Grid.Row="3" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="5,15,5,5" HorizontalAlignment="Right">
+                    <TextBlock Text="预览: " VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="Bold"/>
+                    <TextBox IsReadOnly="True" Width="150" Text="{Binding PreviewCode}" Margin="0,0,10,0"/>
+                    <Button Content="应用此代码" Style="{StaticResource ButtonPrimary}" Command="{Binding ApplyCodeCommand}"/>
+                </StackPanel>
+            </Grid>
+        </Expander>
+        
+        <Grid Margin="0,20,0,0">
             <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
                 <Button
                     Width="80"

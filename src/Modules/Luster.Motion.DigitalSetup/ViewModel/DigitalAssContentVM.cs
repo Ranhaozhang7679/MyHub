@@ -21,14 +21,17 @@
 ************************************************************************************/
 #endregion
 
+using Luster.Common.Assets.FloatingInfo.Services;
 using Luster.Motion.CommonUI;
 using Luster.Motion.CommonUI.ViewModel;
 using Luster.Motion.DigitalSetup.Datas;
+using Luster.Motion.DigitalSetup.Services;
 using Prism.Commands;
 using Prism.Events;
 using Prism.Regions;
 using Prism.Services.Dialogs;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Windows.Threading;
 
 namespace Luster.Motion.DigitalSetup.ViewModel
@@ -46,6 +49,18 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         private IDialogService _dialogService;
 
         /// <summary>
+        /// 页面启用设置服务
+        /// </summary>
+        private PageEnableSettingsService _settingsService;
+
+        /// <summary>
+        /// 浮动信息服务
+        /// </summary>
+        private IFloatingInfoService _floatingInfoService;
+
+        private IFloatingInfoConfigService _floatingInfoConfigService;
+
+        /// <summary>
         /// 菜单信息
         /// </summary>
         private ObservableCollection<DigitalAssPageModel> _pages;
@@ -55,16 +70,43 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             set { SetProperty(ref _pages, value); }
         }
 
+        /// <summary>
+        /// 控制左侧菜单区域的显示
+        /// </summary>
+        private bool _reportSelectVisible = true;
+        public bool ReportSelectVisible
+        {
+            get { return _reportSelectVisible; }
+            set { SetProperty(ref _reportSelectVisible, value); }
+        }
+
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="cBus"></param>
         /// <param name="bus"></param>
-        public DigitalAssContentVM(ICommonBus cBus, IRegionManager regionManager, IDialogService dialogService, Dispatcher dispatcher) : base(cBus)
+        public DigitalAssContentVM(ICommonBus cBus,
+                                   IRegionManager regionManager,
+                                   IDialogService dialogService,
+                                   Dispatcher dispatcher,
+                                   PageEnableSettingsService settingsService,
+                                   IFloatingInfoService floatingInfoService,
+                                   IFloatingInfoConfigService floatingInfoConfigService) : base(cBus)
         {
             _regionManager = regionManager;
             _dialogService = dialogService;
+
+            // 通过依赖注入获取设置服务
+            _settingsService = settingsService;
+
+            // 通过依赖注入获取浮动信息服务
+            _floatingInfoService = floatingInfoService;
+            _floatingInfoConfigService = floatingInfoConfigService;
+
+            var recipeDir = cBus.CurrentRecipe?.GetRecipePath();
+            var digitalDir = Path.Combine(recipeDir, "DigitalSetUpDataValidation");
+            _floatingInfoConfigService.SetConfigPath(recipeDir);
             BuildPages();
         }
 
@@ -76,10 +118,14 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         }
 
         /// <summary>
-        /// 获取菜单信息
+        /// 获取菜单信息，并应用本地保存的启用设置
         /// </summary>
         private void BuildPages()
         {
+            // 首先加载并应用本地配置
+            var settings = _settingsService.LoadOrMergeWithDefaults();
+            _settingsService.ApplySettings(settings);
+
             Pages = new ObservableCollection<DigitalAssPageModel>();
             Pages.AddRange(DigitalAssPageModel.Pages);
         }
@@ -93,7 +139,30 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             if (item == null) return;
             SetSelected(item.Name);
             _regionManager.RequestNavigate("DigitalAssEditorRegion", item.Region);
+
+            // 显示浮动信息窗口
+            ShowFloatingInfoForPage(item.Region);
         }));
+
+        /// <summary>
+        /// 显示页面对应的浮动信息窗口
+        /// </summary>
+        /// <param name="pageRegion">页面Region名称</param>
+        private void ShowFloatingInfoForPage(string pageRegion)
+        {
+            try
+            {
+                // 先隐藏所有浮动窗口
+                _floatingInfoService?.HideAllFloatingInfo();
+
+                // 显示当前页面的浮动窗口
+                _floatingInfoService?.ShowFloatingInfo(pageRegion);
+            }
+            catch (System.Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"显示浮动信息窗口失败: {ex.Message}");
+            }
+        }
 
         private void SetSelected(string name)
         {
@@ -121,7 +190,27 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             _regionManager.RequestNavigate("LogContentRegon_Ass", "LogContent");
         }));
 
+        /// <summary>
+        /// 打开设置对话框（仅管理员可用）
+        /// </summary>
+        private DelegateCommand _openSettingsCommand;
+        public DelegateCommand OpenSettingsCommand => _openSettingsCommand ?? (_openSettingsCommand = new DelegateCommand(() =>
+        {
+            if (!IsAdmin)
+            {
+                System.Windows.MessageBox.Show("当前用户权限不足，无法打开设置！", "提示", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Warning);
+                return;
+            }
 
+            _dialogService.Show("PageEnableSettingsDialog", new DialogParameters(), (result) =>
+            {
+                if (result.Result == ButtonResult.OK)
+                {
+                    // 设置已保存并应用，刷新页面列表
+                    BuildPages();
+                }
+            });
+        }));
 
 
     }

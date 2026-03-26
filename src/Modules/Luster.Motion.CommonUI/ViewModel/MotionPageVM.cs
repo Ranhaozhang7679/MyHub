@@ -21,6 +21,7 @@
 ************************************************************************************/
 #endregion
 
+using DC.Authorization;
 using Prism;
 using Prism.Regions;
 using System;
@@ -33,11 +34,11 @@ namespace Luster.Motion.CommonUI.ViewModel
 {
     public class MotionPageVM : MotionVM, INavigationAware
     {
-        public MotionPageVM(ICommonBus _commonBus) : base(_commonBus)
+        public MotionPageVM(ICommonBus _commonBus, IAuthorizationFacade auth = null) : base(_commonBus, auth)
         {
         }
 
-        public MotionPageVM() 
+        public MotionPageVM()
         {
         }
 

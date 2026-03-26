@@ -63,11 +63,22 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             set { SetProperty(ref _progressValue, value); }
         }
 
-        public ParamConfirmContentVM(IRepository repository, IRegionManager regionManager, ICommonBus commonBus, CSVHelper cSVHelper, IWebService webService, FlowBus flowBus) : base(repository, regionManager, commonBus, cSVHelper, flowBus)
+        public ParamConfirmContentVM(IRepository repository,
+                                     IRegionManager regionManager,
+                                     ICommonBus commonBus,
+                                     CSVHelper cSVHelper,
+                                     IWebService webService,
+                                     FlowBus flowBus,
+                                     IDialogService dialogService) 
+            : base(repository, regionManager, commonBus, cSVHelper, flowBus, dialogService)
         {
 
             Pages = new ObservableCollection<CommonPageModel>();
-            Pages.Add(new CommonPageModel() { Name = "ObtainSwVersion", IsSelected = true, Region = "", ViewType = typeof(AssTbSwVersion) });
+            Pages.Add(new CommonPageModel() { Name = "ObtainSwVersion", IsSelected = false, Region = "", ViewType = typeof(AssTbSwVersion) });
+
+            // 注册子页面到DigitalAssPageModel
+            DigitalAssPageModel.RegisterSubPages("ParamConfirmContent", Pages);
+
             SelectedReportPage = Pages.Where(x => x.IsSelected).FirstOrDefault();
             InitModels();
 
@@ -75,6 +86,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             OneKeyCheckCommand = new DelegateCommand<object>(OnOneKeyCheck);
             UpdateItemsCommand = new DelegateCommand(OnUpdateItems);
             this._webService = webService;
+            LoadCheckConfirmMessages();
         }
 
         public override void OnEnd()
@@ -84,16 +96,43 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             base.OnEnd();
         }
 
-        public override void OnOneKeyCheck(object obj)
+        /// <summary>
+        /// 获取页面整体状态
+        /// </summary>
+        private string GetOverallStatus()
         {
+            try
+            {
+                if (ItemModels == null || ItemModels.Count == 0)
+                    return "未点检";
+
+                foreach (var item in ItemModels)
+                {
+                    if (item is AssTbSwVersion swVersion)
+                    {
+                        if (swVersion.状态 != "OK")
+                            return "NG";
+                    }
+                }
+                return "OK";
+            }
+            catch
+            {
+                return "获取失败";
+            }
+        }
+
+        public override async void OnOneKeyCheck(object obj)
+        {
+            await base.OnOneKeyCheckAsync(obj);
             // 子界面的一键点检逻辑
             try
             {
                 ProgressValue = 0; // 进度
-                
+
                 // 获取 WebConfig 信息
                 var webConfig = _webService.GetConfig() as WebConfig;
-                
+
                 for (int i = 0; i < ItemModels.Count; i++)
                 {
                     if (ItemModels[i] is AssTbSwVersion swVersion)
@@ -104,11 +143,11 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                             swVersion.状态 = "格式错误";
                             continue;
                         }
-                        
+
                         // 根据项次从 WebConfig 获取实测值
                         string actualVersion = GetVersionFromWebConfig(webConfig, swVersion.项次);
                         swVersion.实测 = actualVersion;
-                        
+
                         // 比较标准和实测
                         if (swVersion.标准.Trim() == swVersion.实测.Trim())
                         {
@@ -118,11 +157,15 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                         {
                             swVersion.状态 = "NG";
                         }
-                        
+
                         swVersion.完成时间 = DateTime.Now;
                         ProgressValue = (i + 1) * 100 / ItemModels.Count; // 进度
                     }
                 }
+
+                // 点检完成后，将结果存储到 PageStatusService
+                string overallStatus = GetOverallStatus();
+                PageStatusService.Instance.UpdateStatus("MainParameters", overallStatus);
             }
             catch (Exception ex)
             {
@@ -133,14 +176,14 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 ProgressValue = 100;
             }
         }
-        
+
         /// <summary>
         /// 根据项次名称从 WebConfig 获取对应版本
         /// </summary>
         private string GetVersionFromWebConfig(WebConfig webConfig, string itemName)
         {
             if (webConfig == null) return "NN.NN";
-            
+
             return itemName switch
             {
                 "平台版本" => webConfig.SoftVersion ?? "NN.NN",
@@ -166,10 +209,36 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                         var items = _csvHelper.GetAllDataNew1<AssTbSwVersion>(0, 0, out totalCount);
                         foreach (var item in items)
                         {
+                            // 清理纯空壳数据：如果项次和标准都为空，说明是无意义的残留占位符，不应该被视作真实数据
+                            if (string.IsNullOrWhiteSpace(item.项次) && string.IsNullOrWhiteSpace(item.标准))
+                            {
+                                continue;
+                            }
+
                             item.实测 = "";
-                            item.状态 = "";
+                            item.状态 = ""; 
                             ItemModels.Add(item);
                         }
+
+                        // CSV读取失败或无实质数据时，进行默认兜底配置（备用逻辑）
+                        if (ItemModels.Count == 0)
+                        {
+                            string[] defaultItems = { "平台版本", "配方版本", "PLC版本", "视觉版本", "机器人版本", "激光版本" };
+                            for (int i = 0; i < defaultItems.Length; i++)
+                            {
+                                ItemModels.Add(new AssTbSwVersion()
+                                {
+                                    项序 = i,
+                                    项次 = defaultItems[i],
+                                    标准 = "NN.NN",
+                                    实测 = "",
+                                    状态 = "未点检",
+                                    完成时间 = DateTime.Now
+                                });
+                            }
+                        }
+
+                        PageStatusService.Instance.UpdateStatus("MainParameters", "未点检");
                         break;
                 }
             }

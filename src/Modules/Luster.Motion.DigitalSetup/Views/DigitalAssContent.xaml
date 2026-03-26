@@ -15,9 +15,9 @@
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="{DynamicResource RegionBrush}"
     FocusManager.IsFocusScope="True"
-    IsEnabled="{Binding Path=(g:GlobalProperty.IsEnabeld), UpdateSourceTrigger=PropertyChanged}"
     mc:Ignorable="d">
-    <Grid Background="#F4F6FA">
+    <!-- Root container -->
+    <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="200" />
             <ColumnDefinition Width="Auto" />
@@ -25,20 +25,50 @@
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="200*" />
         </Grid.ColumnDefinitions>
-        <Grid
-            Grid.Column="0"
-            Visibility="{Binding ReportSelectVisible, Converter={StaticResource Boolean2VisibilityConverter}}">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
-            <TextBlock
-                    Margin="20,10"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Center"
-                    FontSize="20"
-                    Text="{lang:Lang Key={x:Static lang:LangKeys.Configure}}" />
-            <ListBox
+
+        <!-- Settings Button - Outside the IsEnabled scope, positioned at top-right of left panel -->
+        <Button
+                Grid.Column="0"
+                Margin="0,10,10,0"
+                Padding="8,5"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Command="{Binding OpenSettingsCommand}"
+                Content="⚙"
+                FontSize="16"
+                Visibility="{Binding ReportSelectVisible, Converter={StaticResource Boolean2VisibilityConverter}}"
+                Panel.ZIndex="100" />
+
+        <!-- Main content layer - affected by GlobalProperty.IsEnabled -->
+        <Grid Grid.ColumnSpan="5" Background="#F4F6FA" IsEnabled="{Binding Path=(g:GlobalProperty.IsEnabeld), UpdateSourceTrigger=PropertyChanged}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="500*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="200*" />
+            </Grid.ColumnDefinitions>
+
+            <Grid
+                Grid.Column="0"
+                Visibility="{Binding ReportSelectVisible, Converter={StaticResource Boolean2VisibilityConverter}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                            Margin="20,10"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            FontSize="20"
+                            Text="{lang:Lang Key={x:Static lang:LangKeys.Configure}}" />
+                </Grid>
+                <ListBox
                   Name="lstDevice"
                   Grid.Row="1"
                   Margin="0,5,10,5"
@@ -49,69 +79,71 @@
                   SelectedItem="{Binding SelectedReportPage}"
                   SelectionMode="Single"
                   VirtualizingStackPanel.IsVirtualizing="True">
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <StackPanel Orientation="Horizontal">
-                             <hc:HighlightTextBlock
-                                  Width="160"
-                                  Padding="0"
-                                  HorizontalAlignment="Center"
-                                  VerticalAlignment="Center"
-                                  SourceText="{lang:Lang Key={Binding Name}}"
-                                  TextAlignment="Center" />
-                        </StackPanel>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-                <ListBox.ItemContainerStyle>
-                    <Style BasedOn="{StaticResource ListBoxItemBaseStyle}" TargetType="ListBoxItem">
-                        <Setter Property="Margin" Value="0,2" />
-                        <Setter Property="Height" Value="35" />
-                        <Setter Property="Background" Value="#DEE0E7" />
-                        <Setter Property="hc:BorderElement.CornerRadius" Value="0,5,5,0" />
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="true">
-                                <Setter Property="Background" Value="{DynamicResource SecondaryRegionBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="true">
-                                <Setter Property="Background" Value="{DynamicResource PrimaryBrush}" />
-                                <Setter Property="Foreground" Value="{DynamicResource TextIconBrush}" />
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </ListBox.ItemContainerStyle>
-                <hc:Interaction.Triggers>
-                    <hc:EventTrigger EventName="SelectionChanged">
-                        <hc:EventToCommand Command="{Binding SelectedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListBox}, Path=SelectedItem}" />
-                    </hc:EventTrigger>
-                </hc:Interaction.Triggers>
-            </ListBox>
-            <TextBlock Text="{Binding LogMsg}"/>
-        </Grid>
-        <GridSplitter
-              Grid.Column="1"
-              Width="2"
-              Margin="2"
-              HorizontalAlignment="Stretch"
-              Foreground="{DynamicResource RegionBrush}" />
-        <Grid  Grid.Column="2" Margin="1" Background="{DynamicResource RegionBrush}">
-            <ContentControl Grid.Row="0" Margin="2" prism:RegionManager.RegionName="DigitalAssEditorRegion" />
-        </Grid>
-        <GridSplitter
-              Grid.Column="3"
-              Width="2"
-              Margin="0,10"
-              HorizontalAlignment="Stretch"
-              Foreground="{DynamicResource RegionBrush}" />
-        <ContentControl
-              Grid.Column="4"
-              Margin="1"
-              prism:RegionManager.RegionName="LogContentRegon_Ass" />
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <hc:HighlightTextBlock
+                                      Width="160"
+                                      Padding="0"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center"
+                                      SourceText="{lang:Lang Key={Binding Name}}"
+                                      TextAlignment="Center" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                    <ListBox.ItemContainerStyle>
+                        <Style BasedOn="{StaticResource ListBoxItemBaseStyle}" TargetType="ListBoxItem">
+                            <Setter Property="Margin" Value="0,2" />
+                            <Setter Property="Height" Value="35" />
+                            <Setter Property="Background" Value="#DEE0E7" />
+                            <Setter Property="hc:BorderElement.CornerRadius" Value="0,5,5,0" />
+                            <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="true">
+                                    <Setter Property="Background" Value="{DynamicResource SecondaryRegionBrush}" />
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="true">
+                                    <Setter Property="Background" Value="{DynamicResource PrimaryBrush}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource TextIconBrush}" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <hc:Interaction.Triggers>
+                        <hc:EventTrigger EventName="SelectionChanged">
+                            <hc:EventToCommand Command="{Binding SelectedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListBox}, Path=SelectedItem}" />
+                        </hc:EventTrigger>
+                    </hc:Interaction.Triggers>
+                </ListBox>
+                <TextBlock Text="{Binding LogMsg}"/>
+            </Grid>
+            <GridSplitter
+                  Grid.Column="1"
+                  Width="2"
+                  Margin="2"
+                  HorizontalAlignment="Stretch"
+                  Foreground="{DynamicResource RegionBrush}" />
+            <Grid  Grid.Column="2" Margin="1" Background="{DynamicResource RegionBrush}">
+                <ContentControl Grid.Row="0" Margin="2" prism:RegionManager.RegionName="DigitalAssEditorRegion" />
+            </Grid>
+            <GridSplitter
+                  Grid.Column="3"
+                  Width="2"
+                  Margin="0,10"
+                  HorizontalAlignment="Stretch"
+                  Foreground="{DynamicResource RegionBrush}" />
+            <ContentControl
+                  Grid.Column="4"
+                  Margin="1"
+                  prism:RegionManager.RegionName="LogContentRegon_Ass" />
 
 
-        <hc:Interaction.Triggers>
-            <hc:EventTrigger EventName="Loaded">
-                <hc:EventToCommand Command="{Binding LoadedCommand}" PassEventArgsToCommand="True" />
-            </hc:EventTrigger>
-        </hc:Interaction.Triggers>
+            <hc:Interaction.Triggers>
+                <hc:EventTrigger EventName="Loaded">
+                    <hc:EventToCommand Command="{Binding LoadedCommand}" PassEventArgsToCommand="True" />
+                </hc:EventTrigger>
+            </hc:Interaction.Triggers>
+        </Grid>
     </Grid>
 </UserControl>

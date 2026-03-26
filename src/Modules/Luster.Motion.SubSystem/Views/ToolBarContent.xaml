@@ -117,7 +117,7 @@
                 <ColumnDefinition />
             </Grid.ColumnDefinitions>
             <Grid
-                Background="{Binding BackColor}"
+                
                 Grid.Column="0"
                 Grid.ColumnSpan="2"
                 Margin="20,0,162,0"
@@ -244,7 +244,7 @@
             <Grid
                 Grid.Row="1"
                 Grid.Column="1"
-                Background="{Binding PageBtnBrush}">
+                Background="{Binding BackColor}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
@@ -474,7 +474,8 @@
             PlacementTarget="{Binding ElementName=gStatus}"
             StaysOpen="True"
             VerticalOffset="0">
-            <Grid VerticalAlignment="Center" Background="{StaticResource DangerBrush}">
+            <Grid VerticalAlignment="Center" Background="DarkOrange">
+                <!--{StaticResource DangerBrush}-->
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />

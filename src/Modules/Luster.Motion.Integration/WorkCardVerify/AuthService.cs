@@ -159,7 +159,8 @@ namespace Luster.Motion.Integration.WorkCardVerify
                     Name= role switch
                     {
                         SystemRole.Admin => "Admin",
-                        SystemRole.Sustaining => "Sustaining",
+                        SystemRole.Integrator => "Integrator",
+                        SystemRole.Maintenance => "Maintenance",
                         _ => "OP"
                     },
                     CardId = employeeId,

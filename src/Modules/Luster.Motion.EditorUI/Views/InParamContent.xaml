@@ -103,7 +103,7 @@
             </ContextMenu.ItemContainerStyle>
         </ContextMenu>
     </UserControl.Resources>
-    <Grid>
+    <Grid Visibility="{Binding ViewVisible}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />

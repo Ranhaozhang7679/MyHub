@@ -58,165 +58,93 @@ namespace Luster.TaskFlow.Common.Models
         public void Match(string strVal)
         {
             // 当前匹配项
-            //int startIndex = 0;
+            int startIndex = 0;
 
             // 匹配的字符索引
             int matchIndex = 0;
 
-
-            //先对申明的变量进行查找，查不到的直接不查询
-            List<int> sy = new List<int>();  //在匹配模板中有的索引
-            List<int> sypx = new List<int>();  //排序后的索引
-            List<int> dz = new List<int>();  //索引对应的地址
-            List<int> dzpx = new List<int>();   //排序后的地址
-            List<int> zfcd = new List<int>();  //查找到的需要匹配的元素长度
-            List<int> zfcdpx = new List<int>();
-            sy.Clear();
-            dz.Clear();
-            sypx.Clear();
-            dzpx.Clear();
-            zfcd.Clear();
-            zfcdpx.Clear();
-            for (int i = 0; i < Variables.Count; i++)
-            {
-                int matchloc = MatchString.IndexOf(Variables[i].Name);
-                if (matchloc >= 0)
-                {
-                    sy.Add(i);
-                    dz.Add(matchloc);
-                    dzpx.Add(matchloc);
-                    zfcd.Add(Variables[i].Name.Length);
-                }
-                else
-                {
-                    Variables[i].Value = "NA"; //找不着的也要记得给值
-                }
-            }
-
-            //给找到的拍个顺序，开始查找分隔
-            dzpx.Sort();
-            foreach (var varItem in dzpx)
-            {
-                int d = dz.IndexOf(varItem);
-                sypx.Add(sy[d]);
-                zfcdpx.Add(zfcd[d]);
-            }
-            //查找分隔符
-            for (int i = 0; i < dzpx.Count; i++)
-            {
-                string result = "NA";
-                //前面的找2个之间的分隔符
-                if (i < dzpx.Count - 1)
-                {
-                    string zf = MatchString.Substring(dzpx[i] + zfcdpx[i], dzpx[i + 1] - dzpx[i] - zfcdpx[i]);//提取出分隔符号
-                    int cz = strVal.IndexOf(zf, matchIndex);
-
-                    if (cz >= 0)
-                    {
-                        result = strVal.Substring(matchIndex, cz - matchIndex);
-                        matchIndex = cz + zf.Length;
-                    }
-                }
-                //最后一个找最后一个分隔符号，然后将所有内容放进去
-                else
-                {
-                    string zfx = MatchString.Substring(dzpx[dzpx.Count - 2] + zfcdpx[dzpx.Count - 2], dzpx[dzpx.Count - 1] - dzpx[dzpx.Count - 2] - zfcdpx[dzpx.Count - 2]);
-                    int czx = strVal.LastIndexOf(zfx, matchIndex);
-                    if (czx > 0 && czx <= matchIndex)
-                    {
-                        result = strVal.Substring(matchIndex, strVal.Length - czx - 1);
-                    }
-                }
-                Variables[sypx[i]].Value = TypeConvert(Variables[sypx[i]], result);
-            }
-
-
-
-
             foreach (var varItem in Variables)
             {
-                #region
-                //varItem.Value = "NA";
-                //int matchLoc = MatchString.IndexOf(varItem.Name, matchIndex);
+                varItem.Value = "NA";
+                int matchLoc = MatchString.IndexOf(varItem.Name, matchIndex);
 
-                //// 模板中未包含改变量
-                //if (matchLoc == -1) continue;
+                // 模板中未包含改变量
+                if (matchLoc == -1) continue;
+               
+                string prevChar = "";
+                string lastChar = "";
 
-                //string prevChar = "";
-                //string lastChar = "";
+                // 匹配模板变量前面和后面两个分隔符
+                if (matchLoc > 0)
+                {
+                    prevChar = MatchString.Substring(matchLoc - 1, 1);
+                }
 
-                //// 匹配模板变量前面和后面两个分隔符
-                //if (matchLoc > 0)
-                //{
-                //    prevChar = MatchString.Substring(matchLoc - 1, 1);
-                //}
+                var lastMatchIndex = matchLoc + varItem.Name.Length;
 
-                //var lastMatchIndex = matchLoc + varItem.Name.Length;
+                matchIndex = lastMatchIndex;
 
-                //matchIndex = lastMatchIndex;
+                if (lastMatchIndex + 1 < MatchString.Length)
+                {
+                    lastChar = MatchString.Substring(matchLoc + varItem.Name.Length, 1);
+                }
 
-                //if (lastMatchIndex + 1 < MatchString.Length)
-                //{
-                //    lastChar = MatchString.Substring(matchLoc + varItem.Name.Length, 1);
-                //}
+                // 从后往前匹配真实字符串分隔符
+                int sIndex = 0;
+                int lastIndex = strVal.Length - 1;
+                if (!string.IsNullOrEmpty(prevChar))
+                {
+                    sIndex = strVal.IndexOf(prevChar, startIndex) + 1;
 
-                //// 从后往前匹配真实字符串分隔符
-                //int sIndex = 0;
-                //int lastIndex = strVal.Length - 1;
-                //if (!string.IsNullOrEmpty(prevChar))
-                //{
-                //    sIndex = strVal.IndexOf(prevChar, startIndex) + 1;
+                    // sIndex == 0 起始字符没有匹配到
+                    if (sIndex == 0)
+                    {
+                        continue;
+                    }
+                }
 
-                //    // sIndex == 0 起始字符没有匹配到
-                //    if (sIndex == 0)
-                //    {
-                //        continue;
-                //    }
-                //}
+                if (varItem.Length < 0)
+                {
+                    // 从前往后匹配真实字符串分隔符号
+                    if (!string.IsNullOrEmpty(lastChar))
+                    {
+                        lastIndex = strVal.IndexOf(lastChar, sIndex + 1);
 
-                //if (varItem.Length < 0)
-                //{
-                //    // 从前往后匹配真实字符串分隔符号
-                //    if (!string.IsNullOrEmpty(lastChar))
-                //    {
-                //        lastIndex = strVal.IndexOf(lastChar, sIndex + 1);
+                        if (lastIndex > -1)
+                        {
+                            // 再次从后往前匹配前一个字符防止相同字符问题 A@B @C;
+                            if (!string.IsNullOrEmpty(prevChar))
+                            {
+                                int tmpIndex = strVal.LastIndexOf(prevChar, lastIndex - 1) + 1;
+                                if (tmpIndex != sIndex)
+                                {
+                                    sIndex = tmpIndex;
+                                }
+                            }
+                        }
+                        else
+                        {
 
-                //        if (lastIndex > -1)
-                //        {
-                //            // 再次从后往前匹配前一个字符防止相同字符问题 A@B @C;
-                //            if (!string.IsNullOrEmpty(prevChar))
-                //            {
-                //                int tmpIndex = strVal.LastIndexOf(prevChar, lastIndex - 1) + 1;
-                //                if (tmpIndex != sIndex)
-                //                {
-                //                    sIndex = tmpIndex;
-                //                }
-                //            }
-                //        }
-                //        else
-                //        {
+                            // 默认到结尾
+                            lastIndex = strVal.Length;
+                        }
+                    }
+                    else
+                    {
+                        // 处于字符尾部
+                        lastIndex = strVal.Length;
+                    }
+                }
+                else
+                {
+                    lastIndex = sIndex + varItem.Length;
+                }
 
-                //            // 默认到结尾
-                //            lastIndex = strVal.Length;
-                //        }
-                //    }
-                //    else
-                //    {
-                //        // 处于字符尾部
-                //        lastIndex = strVal.Length;
-                //    }
-                //}
-                //else
-                //{
-                //    lastIndex = sIndex + varItem.Length;
-                //}
+                int charLen = lastIndex - sIndex;
+                varItem.Value = TypeConvert(varItem, strVal.Substring(sIndex, charLen));
 
-                //int charLen = lastIndex - sIndex;
-                //varItem.Value = TypeConvert(varItem, strVal.Substring(sIndex, charLen));
-
-                //// 更新位置
-                //startIndex = lastIndex;
-                #endregion
+                // 更新位置
+                startIndex = lastIndex;
             }
         }
 

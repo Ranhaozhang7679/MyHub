@@ -31,6 +31,7 @@ using Luster.TaskFlow.Common.Attributes;
 using Luster.TaskFlow.Motion;
 using Luster.TaskFlow.Motion.Logic;
 using Newtonsoft.Json.Linq;
+using Prism.Events;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -96,7 +97,7 @@ namespace Luster.Module.Motion.Device.Functions
         //[Parameter("端口号", 2, CN = "端口号", DefaultV = "5000")]
         private int Port { get; set; }
 
-        [NotEmpty]
+        //[NotEmpty]
         [DependOn("ComType", COMType.Net)]
         [DependOn("ComType", COMType.NetAndCOM)]
         [Parameter("IP地址", 1, CN = "IP地址", EditorType = typeof(VCommuncation))]
@@ -114,7 +115,7 @@ namespace Luster.Module.Motion.Device.Functions
         //[Parameter("波特率", 3, CN = "波特率", DefaultV = "115200")]
         private int BaudRate { get; set; }
         
-        [NotEmpty]
+        //[NotEmpty]
         [DependOn("ComType", COMType.Com)]
         [DependOn("ComType", COMType.NetAndCOM)]
         [Parameter("串口地址", 2, CN = "串口地址", EditorType = typeof(VCommuncation))]
@@ -177,6 +178,12 @@ namespace Luster.Module.Motion.Device.Functions
         private List<double> listTimeVal = new List<double>();
 
         #region 输出参数
+        [Parameter("批头使用次数", 99, CN = "Bit", ParamType = TaskFlow.Common.Enums.ParamType.OUT, DefaultV = 0)]
+        public double BitTimes { get; set; }
+       
+        [Parameter("批头使用次数", 100, CN = "Sleeve", ParamType = TaskFlow.Common.Enums.ParamType.OUT, DefaultV = 10000)]
+        public double SleeveTimes { get; set; }
+
         [Parameter("错误代码", 101, CN = "EC", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
         public string EC { get; set; } = "";  //错误代码
 
@@ -333,7 +340,7 @@ namespace Luster.Module.Motion.Device.Functions
                 MyOwner.TaiKeScrewRegister(electricScrewDrivers, Name);
                 LogEvent("注册电批");
             }
-
+            
             bool res = false;
             switch (ComType)
             {
@@ -364,7 +371,6 @@ namespace Luster.Module.Motion.Device.Functions
             string StationID = MyOwner.ConfigManager.GetWebConfig("StationID");
             string StationType = MyOwner.ConfigManager.GetWebConfig("Product_Vision");
             electricScrewDrivers.SetDirStationID(StationID, StationType);
-            //结果输出设置默认值
             initResultOut();
 
             VCommuncation communcation = null;
@@ -472,6 +478,8 @@ namespace Luster.Module.Motion.Device.Functions
                 GetVDevice<VCommuncation>(NetDevice, out var curentNet);
                 var cN = curentNet.Communication as CommTCP;
                 curentNet.CurrentHP++;
+                BitTimes= curentNet.CurrentHP;
+                SleeveTimes= curentNet.MaxHP;
             }
             if (connectedSerial)
                 connectedSerial = electricScrewDrivers.CloseSerialPort();

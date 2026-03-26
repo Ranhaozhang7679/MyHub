@@ -26,6 +26,13 @@
                 hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.Name}}"
                 Style="{StaticResource TextBoxValidationStyle}"
                 Text="{Binding Name}" />
+            <hc:ComboBox
+                hc:InfoElement.Necessary="True"
+                hc:InfoElement.Placeholder="{lang:Lang Key={x:Static lang:LangKeys.ModuleName}}"
+                hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.ModuleName}}"
+                ItemsSource="{Binding Modules}"
+                SelectedValue="{Binding Module}"
+                Style="{StaticResource ComboBoxValidationStyle}" />
             <hc:NumericUpDown
                 hc:InfoElement.Necessary="True"
                 hc:InfoElement.Placeholder="{lang:Lang Key={x:Static lang:LangKeys.Position}}"

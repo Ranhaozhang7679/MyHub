@@ -153,11 +153,12 @@ namespace Luster.Motion.DataStruct.DataModels
                 }
             }
         }
-        
+
         /// <summary>
         /// 生产模式速度百分比
         /// </summary>
         private double _productionModelSpeedPercent = 0.1;
+        [Ignore]
         public double ProductionModelSpeedPercent
         {
             get => _productionModelSpeedPercent;
@@ -176,6 +177,7 @@ namespace Luster.Motion.DataStruct.DataModels
         /// 空跑模式速度百分比
         /// </summary>
         private double _emptyRunSpeedPercent = 0.1;
+        [Ignore]
         public double EmptyRunSpeedPercent
         {
             get => _emptyRunSpeedPercent;
@@ -194,6 +196,7 @@ namespace Luster.Motion.DataStruct.DataModels
         /// 调试模式速度百分比
         /// </summary>
         private double _debugSpeedPercent = 0.1;
+        [Ignore]
         public double DebugSpeedPercent
         {
             get => _debugSpeedPercent;
@@ -204,6 +207,42 @@ namespace Luster.Motion.DataStruct.DataModels
                 if (Math.Abs(srcV - value) > 0.001)
                 {
                     OnPropertyChanged(nameof(DebugSpeedPercent), srcV, value);
+                }
+            }
+        }
+        /// <summary>
+        /// 其他模式速度百分比（用于除生产、空跑、调试之外的模式）
+        /// </summary>
+        private double _otherModeSpeedPercent = 0.1;
+        [Ignore]
+        public double OtherModeSpeedPercent
+        {
+            get => _otherModeSpeedPercent;
+            set
+            {
+                double srcV = _otherModeSpeedPercent;
+                _otherModeSpeedPercent = value;
+                if (Math.Abs(srcV - value) > 0.001)
+                {
+                    OnPropertyChanged(nameof(OtherModeSpeedPercent), srcV, value);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 是否使用模式特定的速度设置
+        /// </summary>
+        private bool _useModeSpecificSpeed = false;
+        [Ignore]
+        public bool UseModeSpecificSpeed
+        {
+            get => _useModeSpecificSpeed;
+            set
+            {
+                if (_useModeSpecificSpeed != value)
+                {
+                    _useModeSpecificSpeed = value;
+                    OnPropertyChanged(nameof(UseModeSpecificSpeed), !value, value);
                 }
             }
         }
@@ -487,15 +526,46 @@ namespace Luster.Motion.DataStruct.DataModels
         {
             if (string.IsNullOrEmpty(CurrentMode))
                 return SpeedPercent;
+            if (!UseModeSpecificSpeed)
+                return SpeedPercent;
 
             return CurrentMode switch
             {
                 "生产模式" => ProductionModelSpeedPercent,
                 "空跑模式" => EmptyRunSpeedPercent,
                 "调试模式" => DebugSpeedPercent,
-                "调机模式" => DebugSpeedPercent, 
-                _ => SpeedPercent 
+                "调机模式" => DebugSpeedPercent,
+                _ => OtherModeSpeedPercent
             };
+        }
+
+        /// <summary>
+        /// 设置当前模式的百分比值
+        /// </summary>
+        public void SetCurrentModeSpeedPercent(string currentMode, double value)
+        {
+            if (!UseModeSpecificSpeed)
+            {
+                SpeedPercent = value;
+                return;
+            }
+
+            switch (currentMode)
+            {
+                case "生产模式":
+                    ProductionModelSpeedPercent = value;
+                    break;
+                case "空跑模式":
+                    EmptyRunSpeedPercent = value;
+                    break;
+                case "调试模式":
+                case "调机模式":
+                    DebugSpeedPercent = value;
+                    break;
+                default:
+                    OtherModeSpeedPercent = value;
+                    break;
+            }
         }
 
         /// <summary>
@@ -527,29 +597,27 @@ namespace Luster.Motion.DataStruct.DataModels
             if (IsFixedSpd)
                 return speed;
 
-            double speedPercent=0;
-            if (CurrentMode != "生产模式" && CurrentMode != "空跑模式" && CurrentMode != "调试模式" && CurrentMode != "调机模式")
-            {
-                speedPercent = SpeedPercent;
-            }
-            else
-            {
-                if (useCurrentMode && !string.IsNullOrEmpty(CurrentMode))
-                {
-                    speedPercent = GetCurrentModeSpeedPercent();
-                }
-            }
-
-            //if (useCurrentMode && !string.IsNullOrEmpty(CurrentMode))
-            //{
-            //    speedPercent = GetCurrentModeSpeedPercent();
-            //}
-            //else
+            double speedPercent = 0;
+            //if (CurrentMode != "生产模式" && CurrentMode != "空跑模式" && CurrentMode != "调试模式" && CurrentMode != "调机模式")
             //{
             //    speedPercent = SpeedPercent;
             //}
+            //else
+            //{
+            //    if (useCurrentMode && !string.IsNullOrEmpty(CurrentMode))
+            //    {
+            //        speedPercent = GetCurrentModeSpeedPercent();
+            //    }
+            //}
+            if (useCurrentMode && !string.IsNullOrEmpty(CurrentMode))
+            {
+                speedPercent = GetCurrentModeSpeedPercent();
+            }
+            else
+            {
+                speedPercent = SpeedPercent;
+            }
 
-            // 防止输入错误
             if (speedPercent > 1)
             {
                 speedPercent = 1;
@@ -819,7 +887,7 @@ namespace Luster.Motion.DataStruct.DataModels
                     if (lastAxisConfig == null)
                     {
                         // 记录历史
-                        lastAxisConfig = vDevice.Clone() as IAxisParam;                     
+                        lastAxisConfig = vDevice.Clone() as IAxisParam;
                     }
 
                     dstPos = GetCurrentPos() + vDevice.Compensate;
@@ -1195,7 +1263,7 @@ namespace Luster.Motion.DataStruct.DataModels
             //判断设备是否自动运行
             LogTool.Debug($"2.1 引擎当前状态{Engine.GetMachineStatus()}");
 
-            if (Engine.GetMachineStatus()== EngineStatus.Running|| Engine.GetMachineStatus()== EngineStatus.Resetting)
+            if (Engine.GetMachineStatus() == EngineStatus.Running || Engine.GetMachineStatus() == EngineStatus.Resetting)
             {
                 action?.Invoke();
                 return;

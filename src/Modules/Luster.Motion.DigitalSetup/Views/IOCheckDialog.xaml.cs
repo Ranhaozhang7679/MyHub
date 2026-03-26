@@ -1,4 +1,7 @@
-﻿using Luster.Motion.DataStruct.DataModels;
+using Luster.Common.Assets.FloatingInfo.Models;
+using Luster.Common.Assets.FloatingInfo.Services;
+using Luster.Motion.DataStruct.DataModels;
+using System.Collections.ObjectModel;
 using System.Windows.Threading;
 using System.Windows;
 using System;
@@ -24,12 +27,28 @@ namespace Luster.Motion.DigitalSetup.Views
         private int _toggleCount = 0;  
         private const int MaxToggleCount = 20;
 
-        public IOCheckDialog(VIO vio, bool initialLevel, int ioIndex)
+        private readonly IFloatingInfoConfigService _configService;
+        private readonly IFloatingInfoService _floatingInfoService;
+
+        public static readonly DependencyProperty ContentItemsProperty =
+            DependencyProperty.Register("ContentItems", typeof(ObservableCollection<ContentItem>), typeof(IOCheckDialog), new PropertyMetadata(null));
+
+        public ObservableCollection<ContentItem> ContentItems
+        {
+            get { return (ObservableCollection<ContentItem>)GetValue(ContentItemsProperty); }
+            set { SetValue(ContentItemsProperty, value); }
+        }
+
+        public IOCheckDialog(VIO vio, bool initialLevel, int ioIndex, IFloatingInfoConfigService configService, IFloatingInfoService floatingInfoService)
         {
             InitializeComponent();
 
             _vio = vio;
             _currentLevel = initialLevel;
+            _configService = configService;
+            _floatingInfoService = floatingInfoService;
+
+            LoadFloatingInfo();
 
             // 设置显示文本
             txtMessage.Text = $"请选择第【{ioIndex}】个IO({vio.Name})的人工检查结果{Environment.NewLine}请注意，关闭本窗口将直接退出本次点检！";
@@ -90,6 +109,31 @@ namespace Luster.Motion.DigitalSetup.Views
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             _timer?.Stop();
+        }
+
+        private void LoadFloatingInfo()
+        {
+            if (_configService != null && _vio != null)
+            {
+                var config = _configService.GetConfig(_vio.Name);
+                if (config != null && config.ContentItems != null)
+                {
+                    ContentItems = new ObservableCollection<ContentItem>(config.ContentItems);
+                }
+                else
+                {
+                    ContentItems = new ObservableCollection<ContentItem>();
+                }
+            }
+        }
+
+        private void BtnSettings_Click(object sender, RoutedEventArgs e)
+        {
+            if (_floatingInfoService != null && _vio != null)
+            {
+                _floatingInfoService.OpenSettings(_vio.Name);
+                LoadFloatingInfo();
+            }
         }
     }
 }

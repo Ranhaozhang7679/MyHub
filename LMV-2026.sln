@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.2.11415.280 d18.0
+VisualStudioVersion = 18.2.11415.280
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LusterMotion", "src\Shell\LusterMotion\LusterMotion.csproj", "{56F47C03-55B7-0815-6A9B-AE39D91B27DC}"
 EndProject
@@ -113,6 +113,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "解决方案项", "解决�
 		global.json = global.json
 		NuGet.config = NuGet.config
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Luster.Authorization.Client", "src\Modules\Luster.Authorization.Client\Luster.Authorization.Client.csproj", "{C2EFC65A-FA2D-2861-0D44-84459C278B90}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Luster.Common.Authorization", "src\Modules\Luster.Common.Authorization\Luster.Common.Authorization.csproj", "{E1BE70E6-157A-20D6-E552-CFC670AE49CB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -284,6 +288,14 @@ Global
 		{A42CD5B0-5266-4D33-A29C-700137AA0176}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A42CD5B0-5266-4D33-A29C-700137AA0176}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A42CD5B0-5266-4D33-A29C-700137AA0176}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2EFC65A-FA2D-2861-0D44-84459C278B90}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2EFC65A-FA2D-2861-0D44-84459C278B90}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2EFC65A-FA2D-2861-0D44-84459C278B90}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2EFC65A-FA2D-2861-0D44-84459C278B90}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E1BE70E6-157A-20D6-E552-CFC670AE49CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E1BE70E6-157A-20D6-E552-CFC670AE49CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E1BE70E6-157A-20D6-E552-CFC670AE49CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E1BE70E6-157A-20D6-E552-CFC670AE49CB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -333,5 +345,7 @@ Global
 		{D4DDEA1F-60E7-DE0A-D931-6E3F6B9D2E63} = {EC447DCF-ABFA-6E24-52A5-D7FD48A5C558}
 		{A42CD5B0-5266-4D33-A29C-700137AA0176} = {EC447DCF-ABFA-6E24-52A5-D7FD48A5C558}
 		{B760A253-9F68-673B-BD5D-A8E1592F7D45} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{C2EFC65A-FA2D-2861-0D44-84459C278B90} = {EC447DCF-ABFA-6E24-52A5-D7FD48A5C558}
+		{E1BE70E6-157A-20D6-E552-CFC670AE49CB} = {EC447DCF-ABFA-6E24-52A5-D7FD48A5C558}
 	EndGlobalSection
 EndGlobal

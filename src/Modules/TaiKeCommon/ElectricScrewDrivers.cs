@@ -45,6 +45,7 @@ namespace TaiKeCommon
             //rootSaveDir = "";
             Task.Factory.StartNew(Timer100Tick);
             Task.Factory.StartNew(Timer20Tick);
+           
         }
 
         /// <summary>
@@ -124,10 +125,10 @@ namespace TaiKeCommon
             ScrewNumber = screwName.Substring(0, 1);
         }
 
-        public void SetDirStationID(string dirStationID, string dirStationType)
+        public void SetDirStationID(string dirStationID,string dirStationType)
         {
             this.dirStationID = dirStationID;
-            this.dirStationType = dirStationType;
+            this.dirStationType=dirStationType;
         }
 
         /// <summary>
@@ -740,7 +741,6 @@ namespace TaiKeCommon
             //}
         }
 
-
         private void ProcessType1Data()
         {
             // "进程监控数据"处理逻辑
@@ -852,7 +852,6 @@ namespace TaiKeCommon
             }
             driverOptTime = 0;
         }
-
 
         /// <summary>
         /// 
@@ -1330,7 +1329,9 @@ namespace TaiKeCommon
             //E:\工站\厂商\Type\Date\Result\Time_WIP_SN_WorkStaion\StationID_{YYYYMMDD_HHMMSS}_SN_Status_Screw_Torque_Vendor_Machine.csv
             //E:\CGSF\Luster\Torque_Screw_1\20251121\OK\235959_SN\FXGL_B06-2FT-07_5_STATION1615_20251121_233215_Valkyrie_SN_OK_Screw_W_Torque_SR_MAM2.csv
             string dirTCRData1 = $"E:\\CGSF\\Luster\\Torque_Screw_{ScrewNumber}\\{DateTime.Now.ToString("yyyyMMdd")}\\";
-            string logPath1 = dirStationID + "_" + DateTime.Now.ToString("yyyyMMdd_HHmmssfff") + "_" + dirStationType + "_" +
+            //FXGL_B06-2FT-07_5_STATION1615_20251121_233215_Valkyrie_SN_OK_Screw_W_Torque_SR_MAM2.csv
+            //FXGL_B11-2FT-07_11_STATION1779_20260303_022735212_Mistral_G9NHP6J306J0000L4B+A100_OK_Screw_2_Torque_Luster_CGSF.csv
+            string logPath1 =dirStationID+ "_" + DateTime.Now.ToString("yyyyMMdd_HHmmssfff") + "_" + dirStationType + "_" +
                              ProductSn.Trim() + "_" + "OK_Screw_" + ScrewNumber + "_Torque_Luster_CGSF.csv";
             FileInfo fi = new FileInfo(logPath);
             FileInfo fi1 = new FileInfo(logPath1);
@@ -1387,7 +1388,8 @@ namespace TaiKeCommon
             string logPath = dirPressData + fileName + ".csv";
             string dirPressData1 = $"E:\\CGSF\\Luster\\Force_Screw_{ScrewNumber}\\{DateTime.Now.ToString("yyyyMMdd")}\\";
             string logPath1 = dirStationID + "_" + DateTime.Now.ToString("yyyyMMdd_HHmmssfff") + "_" + dirStationType + "_" +
-                                        ProductSn.Trim() + "_" + "OK_Screw_" + ScrewNumber + "_Force_Luster_CGSF.csv";
+                              ProductSn.Trim() + "_" + "OK_Screw_" + ScrewNumber + "_Force_Luster_CGSF.csv";
+
             //double[] timeNew = time;
             //double[] pressNew = press;
 

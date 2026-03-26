@@ -3153,4 +3153,25 @@
   <data name="RunModeTips" xml:space="preserve">
     <value>(启用编辑后双击修改)</value>
   </data>
+  <data name="LADUpload" xml:space="preserve">
+    <value>LAD Upload</value>
+  </data>
+  <data name="CPKTest" xml:space="preserve">
+    <value>CPK检测</value>
+  </data>
+  <data name="AutoVerication" xml:space="preserve">
+    <value>Auto Verication</value>
+  </data>
+  <data name="SolutionMode" xml:space="preserve">
+    <value>工程模式</value>
+  </data>
+  <data name="LoginMode" xml:space="preserve">
+    <value>登录模式</value>
+  </data>
+  <data name="LoginLevel" xml:space="preserve">
+    <value>登录等级</value>
+  </data>
+  <data name="DataValidation" xml:space="preserve">
+    <value>数据验证</value>
+  </data>
 </root>

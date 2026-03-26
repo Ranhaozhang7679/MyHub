@@ -654,6 +654,57 @@ namespace Luster.Motion.ReportUI.ViewModel
         }
 
         /// <summary>
+        /// 导出数据
+        /// </summary>
+        protected override void Export()
+        {
+            var saveFile = new SaveFileDialog();
+            saveFile.Filter = "CSV|*.csv";
+            if (saveFile.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                var filename = saveFile.FileName;
+                SaveProductToCSVFile(StartTime, EndTime, SearchParas, filename);
+            }
+        }
+
+        /// <summary>
+        /// 导出CSV文件
+        /// </summary>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <param name="paras"></param>
+        /// <param name="fileName"></param>
+        private void SaveProductToCSVFile(DateTime startTime, DateTime endTime, string paras, string fileName)
+        {   // 异步导出文件，不卡顿UI线程
+            Task.Run(() =>
+            {
+                //orm 拼接条件 查询               
+                var productInfos = new List<TbProductInfo>();
+                if (!string.IsNullOrEmpty(paras))
+                {
+                    productInfos = reporitory.GetList<TbProductInfo>(x => x.CreateTime > startTime && x.CreateTime < endTime && x.SNCode.Contains(paras),
+                        x => x.ID).ToList();
+                }
+                else
+                {
+                    productInfos = reporitory.GetList<TbProductInfo>(x => x.CreateTime > startTime && x.CreateTime < endTime,
+                        x => x.ID).ToList();
+                }
+
+                // 获取表头，保证CSV导出数据不会错位
+                var headers = _mController.MotionEngine.MapDatas.GroupBy(u => u.Alias).Select(u => u.Key).ToList();
+                var listSaveProducts = new List<SaveProductModel>();
+                foreach (var product in productInfos)
+                {
+                    listSaveProducts.Add(new SaveProductModel(product, headers));
+                }
+
+                CSVTool.IsCN = false;
+                CSVTool.SaveCSV(listSaveProducts, fileName, Encoding.UTF8, "yyyy/MM/dd_HH:mm:ss");
+            });
+        }
+
+        /// <summary>
         /// 只查一次DB，同时产出趋势模型和分析模型，并返回是否按天聚合
         /// </summary>
         private (List<HistoryTrendModel> trend, List<AnalyzeModel> analyze, bool isByDay) BuildAllModelsFast(
@@ -911,6 +962,22 @@ namespace Luster.Motion.ReportUI.ViewModel
                             var splitGroup = product.Data.Split('|');
                             foreach (var item in splitGroup)
                             {
+                                // 如果是路径格式（包含:\）
+                                if (item.Contains(@":\"))
+                                {
+                                    // 查找键名包含"图片"的键
+                                    var pictureKey = rowDict.Keys.FirstOrDefault(k => k.Contains("图片"));
+                                    if (pictureKey != null)
+                                    {
+                                        var parts = item.Split(new[] { ':' }, 2);
+                                        if (parts.Length == 2)
+                                        {
+                                            rowDict[pictureKey] = parts[1];  // 只赋值路径部分
+                                        }
+                                    }
+                                    continue;
+                                }
+
                                 var tempValue = item.Split(':');
                                 if (tempValue.Length == 2)
                                 {
@@ -934,7 +1001,54 @@ namespace Luster.Motion.ReportUI.ViewModel
 
         private void UpdateChart(DateTime startTime, DateTime endTime, List<HistoryTrendModel> trendModels)
         {
-            // ...existing code...
+            var lables = new List<string>();
+            if (startTime.AddDays(1) < endTime)
+            {
+                foreach (var item in trendModels)
+                {
+                    lables.Add(item.Date.ToString("m"));
+                }
+            }
+            else
+            {
+                foreach (var item in trendModels)
+                {
+                    lables.Add(item.Date.ToString("t"));
+                }
+            }
+
+            var okCount = new ChartValues<double>();
+            var ngCount = new ChartValues<double>();
+            foreach (var item in trendModels)
+            {
+                okCount.Add(item.OkCount);
+                ngCount.Add(item.NgCount);
+            }
+            _dispatcher.Invoke(() =>
+            {
+                CapacityLabels = lables.ToArray();
+                CapacityFormatter = value => value.ToString("F2");
+
+                CapacitySeriesCollection = new SeriesCollection();
+                CapacitySeriesCollection.Add(new LineSeries
+                {
+                    Values = okCount,
+                    LineSmoothness = 0,
+                    Title = Luster.Motion.Assests.Langs.LangProvider.GetLang("EndProduct"),
+                    PointGeometry = DefaultGeometries.Circle,
+                    PointGeometrySize = 5,
+                    Stroke = GreenBrush,
+                });
+                CapacitySeriesCollection.Add(new LineSeries
+                {
+                    Values = ngCount,
+                    LineSmoothness = 0,
+                    Title = "NG",
+                    PointGeometry = DefaultGeometries.Circle,
+                    PointGeometrySize = 5,
+                    Stroke = OrangeBrush,
+                });
+            });
         }
 
         /// <summary>

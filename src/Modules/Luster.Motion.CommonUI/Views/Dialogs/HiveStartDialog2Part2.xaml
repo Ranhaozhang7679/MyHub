@@ -30,7 +30,7 @@
             <hc:ComboBox
                 Grid.Row="1"
                 Width="680"
-                IsEditable="True"
+                IsEditable="False"
                 hc:InfoElement.Placeholder="宕机原因 Downtime cause"
                 DisplayMemberPath="Desc"
                 ItemsSource="{Binding DownTimeLists}"

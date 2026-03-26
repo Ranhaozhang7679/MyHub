@@ -33,6 +33,10 @@
                         <!--<ResourceDictionary Source="/Luster.SubSystem.ThreeD;component/Controls/Generic.xaml" />-->
                     </ResourceDictionary.MergedDictionaries>
                 </ResourceDictionary>
+                <!-- MahApps主题（权限管理界面使用） --><!--
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Controls.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Fonts.xaml"/>
+                <ResourceDictionary Source="pack://application:,,,/MahApps.Metro;component/Styles/Themes/Light.Blue.xaml"/>-->
             </ResourceDictionary.MergedDictionaries>
             <langs:LangProvider x:Key="MotionLangs" />
             <devicelangs:LangProvider x:Key="DeviceLangs" />

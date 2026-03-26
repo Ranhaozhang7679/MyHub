@@ -75,7 +75,7 @@
                         <DataGridTextColumn
                             Width="*"
                             MinWidth="80"
-                            Binding="{Binding Name}"
+                            Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
                             Header="{lang:Lang Key={x:Static lang:LangKeys.Name}}" />
                         <DataGridTemplateColumn
                             Width="130"

@@ -34,6 +34,7 @@ using System.Security.Policy;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using System.Xml;
 using static FreeSql.Internal.GlobalFilter;
 using static System.Collections.Specialized.BitVector32;
@@ -59,6 +60,8 @@ namespace Luster.Motion.Integration.Web
 
         // 2025-12-10 新增字段，记录当前维修事件ID
         public string CurrentEventId { get; set; } = "";
+        // 2026-2-24 新增字段，记录上一个维修事件ID
+        public string LastEventId { get; set; } = "";
     }
 
     // ==================== 新增：Hive事件链追踪 ====================
@@ -148,6 +151,7 @@ namespace Luster.Motion.Integration.Web
         public string spareVersion = "1.0.0.0";
         public string ApiVision = "";
         public static string token = "";
+        public string machineSN = "";
         private ICacheManager _cacheManager;
         private string PDCANAME = "Extend_PDCA启用";
         private string CPKNAME = "Extend_CPK启用";
@@ -164,6 +168,7 @@ namespace Luster.Motion.Integration.Web
         public static int seque = 0;
         private const string Str_RepairEnd = "repair end";
         private string currentEventID = "";
+        private string lastEventID = "";
         /// <summary>
         /// 错误内容
         /// </summary>
@@ -246,6 +251,7 @@ namespace Luster.Motion.Integration.Web
                 parser.Load(path);
                 stationInfo.machine_sn = parser.GetValue("machine_info", "machine_sn", "");
                 stationInfo.machine_sn = stationInfo.machine_sn.Trim('"');
+                machineSN = stationInfo.machine_sn;
                 stationInfo.machine_model_number = parser.GetValue("machine_info", "machine_model_number", "");
                 stationInfo.machine_model_number = stationInfo.machine_model_number.Trim('"');
                 stationInfo.machine_rifd = parser.GetValue("machine_info", "machine_rfid", "");
@@ -649,6 +655,7 @@ namespace Luster.Motion.Integration.Web
                     JsonSerializerHelper<HiveState>.Save(_hiveState, out reason);
                 }
                 currentEventID = _hiveState.CurrentEventId ?? string.Empty;
+                lastEventID = _hiveState.LastEventId ?? string.Empty;
 
                 if (_hiveState.HiveRepairState == RepairState.HelpRequest)
                 {
@@ -707,7 +714,7 @@ namespace Luster.Motion.Integration.Web
         private VisionAPI _visionAPI;
         public HiveAPI(ICacheManager cacheManager, IErrorManager errorManager, VisionAPI visionAPI)
         {
-            ApiVision = "Luster_" + SoftVersionTool.GetVersion("LusterMotion.exe");
+            ApiVision = "Luster" + SoftVersionTool.GetVersion("LusterMotion.exe");
             _cacheManager = cacheManager;
             _errorMangaer = errorManager;
             IsFirstLoad = true;
@@ -774,6 +781,69 @@ namespace Luster.Motion.Integration.Web
             var statusMessage = "";
             bool isChainStep = false;
 
+            // 单独处理ReportEnd状态，不伴随HiveMachineState状态变更
+            if (!string.IsNullOrEmpty(downCause))
+            {
+                // 不能SaveHiveState()，因为不更新HiveMachineState
+                statusMessage = "report end";
+                // 发送数据后，标记链路完成
+                int rat = 0;
+                int.TryParse(rating, out rat);
+                string actualEventID = "";
+                // hive reportEnd弹窗是否打开
+                if (string.IsNullOrEmpty(lastEventID))
+                {
+                    actualEventID = currentEventID;
+                }
+                else
+                {
+                    actualEventID = lastEventID;
+                    lastEventID = "";
+                    _hiveState.LastEventId = lastEventID;
+                    // 单独刷新下LastEventId，不改变其他字段
+                    SaveHiveState();
+                }
+                var statusData = new
+                {
+                    machine_state = status,
+                    state_change_time = DateTime.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.ff+0800"),
+                    data = new
+                    {
+                        downtime_cause = downCause,
+                        action_taken = actionTaken,
+                        spare_parts = spareParts,
+                        rating = rat,
+                        status = statusMessage,
+                        event_id = actualEventID
+                    },
+                    station_info = new
+                    {
+                        machine_sn = stationInfo.machine_sn,
+                        machine_model_number = stationInfo.machine_model_number,
+                        machine_rfid = stationInfo.machine_rifd,
+                        vendor = stationInfo.vendor,
+                        site = stationInfo.site,
+                        building = stationInfo.building,
+                        product = stationInfo.product,
+                        station_type = stationInfo.station_type,
+                        line = stationInfo.line,
+                        instance = stationInfo.instance,
+                        line_type = stationInfo.line_type,
+                        station_name = stationInfo.station_name,
+                        build_type = stationInfo.build_type,
+                    }
+                };
+                string jsonData = JsonTool.ToJson(statusData);
+                var ok = Send(url, jsonData, 5);
+                SendAsync(urlSim, jsonData, 5);
+                //ok = true;
+                if (ok && !string.IsNullOrEmpty(actualEventID) && statusMessage == "report end")
+                {
+                    MarkChain(actualEventID, RepairState.ReportEnd, DateTime.Now);
+                }
+                return ok;
+            }
+
             // 用 switch 重写状态推进逻辑，计算 statusMessage 并更新 _hiveState
             switch (_hiveState.HiveMachineState)
             {
@@ -826,22 +896,22 @@ namespace Luster.Motion.Integration.Web
                             break;
 
                         case 1: // Running
-                            if (!string.IsNullOrEmpty(downCause))
-                            {
-                                if (currentEventID != "")
-                                {
-                                    _hiveState.HiveMachineState = 1;
-                                    _hiveState.HiveRepairState = dstRepairState;
-                                    statusMessage = "report end";
-                                }
-                                else
-                                {
-                                    _hiveState.HiveMachineState = 1;
-                                    _hiveState.HiveRepairState = dstRepairState;
-                                    statusMessage = "";
-                                }
-                            }
-                            else if (dstRepairState == RepairState.Normal)
+                            //if (!string.IsNullOrEmpty(downCause))
+                            //{
+                            //    if (currentEventID != "")
+                            //    {
+                            //        _hiveState.HiveMachineState = 1;
+                            //        _hiveState.HiveRepairState = dstRepairState;
+                            //        statusMessage = "report end";
+                            //    }
+                            //    else
+                            //    {
+                            //        _hiveState.HiveMachineState = 1;
+                            //        _hiveState.HiveRepairState = dstRepairState;
+                            //        statusMessage = "";
+                            //    }
+                            //}
+                            if (dstRepairState == RepairState.Normal)
                             {
                                 // 1->1且不是ReportEnd，软件在运行中被强制关闭后重启，启动刷卡。
                                 // 但是HiveSimulator反馈，status字段取值必须为repair/report end或者这个字段不存在。
@@ -1033,6 +1103,7 @@ namespace Luster.Motion.Integration.Web
                     string jsonData = JsonTool.ToJson(statusData);
                     var ok = Send(url, jsonData, 5);
                     SendAsync(urlSim, jsonData, 5);
+                    //ok = true;
                     if (ok && !string.IsNullOrEmpty(currentEventID))
                     {
                         var now = DateTime.Now;
@@ -1082,6 +1153,7 @@ namespace Luster.Motion.Integration.Web
                     string jsonData = JsonTool.ToJson(statusData);
                     var ok = Send(url, jsonData, 5);
                     SendAsync(urlSim, jsonData, 5);
+                    //ok = true;
                     if (ok && !string.IsNullOrEmpty(currentEventID))
                     {
                         var now = DateTime.Now;
@@ -1100,50 +1172,6 @@ namespace Luster.Motion.Integration.Web
             }
             else
             {
-                if (!string.IsNullOrEmpty(downCause))
-                {
-                    int rat = 0;
-                    int.TryParse(rating, out rat);
-                    var statusData = new
-                    {
-                        machine_state = status,
-                        state_change_time = DateTime.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.ff+0800"),
-                        data = new
-                        {
-                            downtime_cause = downCause,
-                            action_taken = actionTaken,
-                            spare_parts = spareParts,
-                            rating = rat,
-                            status = statusMessage,
-                            event_id = currentEventID
-                        },
-                        station_info = new
-                        {
-                            machine_sn = stationInfo.machine_sn,
-                            machine_model_number = stationInfo.machine_model_number,
-                            machine_rfid = stationInfo.machine_rifd,
-                            vendor = stationInfo.vendor,
-                            site = stationInfo.site,
-                            building = stationInfo.building,
-                            product = stationInfo.product,
-                            station_type = stationInfo.station_type,
-                            line = stationInfo.line,
-                            instance = stationInfo.instance,
-                            line_type = stationInfo.line_type,
-                            station_name = stationInfo.station_name,
-                            build_type = stationInfo.build_type,
-                        }
-                    };
-                    string jsonData = JsonTool.ToJson(statusData);
-                    var ok = Send(url, jsonData, 5);
-                    SendAsync(urlSim, jsonData, 5);
-                    if (ok && !string.IsNullOrEmpty(currentEventID) && statusMessage == "report end")
-                    {
-                        MarkChain(currentEventID, RepairState.ReportEnd, DateTime.Now);
-                    }
-                    return ok;
-                }
-
                 if (status == 1) //  || status == 2
                 {
                     var statusData = new
@@ -1174,7 +1202,7 @@ namespace Luster.Motion.Integration.Web
                     string jsonData = JsonTool.ToJson(statusData);
                     var ok = Send(url, jsonData, 5);
                     SendAsync(urlSim, jsonData, 5);
-
+                    //ok = true;
                     if (ok && !string.IsNullOrEmpty(currentEventID))
                     {
                         var now = DateTime.Now;
@@ -1228,6 +1256,11 @@ namespace Luster.Motion.Integration.Web
                 }
                 else
                 {
+                    if (Dialog2Part2_Opend)
+                    {
+                        lastEventID = currentEventID;
+                        _hiveState.LastEventId = lastEventID;
+                    }
                     // 新DT事件：生成 event_id（help request）
                     currentEventID = DateTime.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.ff+0800");
                     _hiveState.CurrentEventId = currentEventID;
@@ -1264,7 +1297,7 @@ namespace Luster.Motion.Integration.Web
                     string jsonData = JsonTool.ToJson(statusData);
                     var ok = Send(url, jsonData, 5);
                     SendAsync(urlSim, jsonData, 5);
-
+                    //ok = true;
                     if (ok && !string.IsNullOrEmpty(currentEventID) && statusMessage == "help request")
                     {
                         MarkChain(currentEventID, RepairState.HelpRequest, DateTime.Now);
@@ -1463,8 +1496,8 @@ namespace Luster.Motion.Integration.Web
                     /*string jsonData = JsonTool.ToJson(statusData);
                     return Send(url, jsonData, 5);*/
                     //自动设备状态检测流程中的Hive状态发送
-                    if (!Dialog2Part2_Opend)
-                        return SendStausChange(sendState, sendMessage, sendCode, sendRepairState);                                     
+                    //if (!Dialog2Part2_Opend)
+                    return SendStausChange(sendState, sendMessage, sendCode, sendRepairState);
                 }
                 return true;
             }
@@ -2084,8 +2117,9 @@ namespace Luster.Motion.Integration.Web
                 //string jsonData = JsonTool.ToJson(statusData);
                 //Send(url, jsonData, 5);
                 SendStausChange(1, "", "", RepairState.Normal, "", downCause, actionTaken, spareParts, rating);
-                SetIsRepairing(false);
-                curStatus = 1;
+                //SetIsRepairing(false);
+                // ReportEnd不参与HiveState状态切换
+                //curStatus = 1;
             }
         }
 
@@ -2169,8 +2203,8 @@ namespace Luster.Motion.Integration.Web
 
 
             string jsonData = JsonTool.ToJson(motionSw);
-            Send22(url, jsonData, 5, true);
-            Send22(urlSim, jsonData, 5, true);
+            Send(url, jsonData, 5, true);
+            Send(urlSim, jsonData, 5, true);
 
         }
         protected override void Register(IMotionController motionController)

@@ -95,6 +95,47 @@ namespace Luster.Motion.DigitalSetup.Datas
         }
 
 
+        /// <summary>
+        /// 子页面注册表 - 存储每个一级页面对应的二级子页面
+        /// </summary>
+        private static Dictionary<string, List<CommonPageModel>> _subPagesRegistry = new Dictionary<string, List<CommonPageModel>>();
+
+        /// <summary>
+        /// 注册子页面
+        /// </summary>
+        /// <param name="parentRegion">父页面的Region名称</param>
+        /// <param name="subPages">子页面列表</param>
+        public static void RegisterSubPages(string parentRegion, ObservableCollection<CommonPageModel> subPages)
+        {
+            if (string.IsNullOrEmpty(parentRegion) || subPages == null)
+                return;
+
+            _subPagesRegistry[parentRegion] = subPages.ToList();
+        }
+
+        /// <summary>
+        /// 获取子页面列表
+        /// </summary>
+        /// <param name="parentRegion">父页面的Region名称</param>
+        /// <returns>子页面列表</returns>
+        public static List<CommonPageModel> GetSubPages(string parentRegion)
+        {
+            if (_subPagesRegistry.TryGetValue(parentRegion, out var subPages))
+            {
+                return subPages;
+            }
+            return new List<CommonPageModel>();
+        }
+
+        /// <summary>
+        /// 根据父页面Region和子页面Name查找子页面
+        /// </summary>
+        public static CommonPageModel FindSubPage(string parentRegion, string subPageName)
+        {
+            var subPages = GetSubPages(parentRegion);
+            return subPages.FirstOrDefault(p => p.Name == subPageName);
+        }
+
         private static ObservableCollection<DigitalAssPageModel> _pages;
         public static ObservableCollection<DigitalAssPageModel> Pages
         {
@@ -131,6 +172,15 @@ namespace Luster.Motion.DigitalSetup.Datas
                             IsVisible=true,IsEnabled=true ,Iconfont="\xe609" },
                          new DigitalAssPageModel()
                         { Name = "PointTeaching",IsSelected=false, Region = "PointTeachingContent",
+                            IsVisible=true,IsEnabled=true ,Iconfont="\xe609" },
+                           new DigitalAssPageModel()
+                        { Name = "DataValidation",IsSelected=false, Region = "DataValidationContent",
+                            IsVisible=true,IsEnabled=true ,Iconfont="\xe609" },
+                         new DigitalAssPageModel()
+                        { Name = "LADUpload",IsSelected=false, Region = "LADUploadContent",
+                            IsVisible=true,IsEnabled=true ,Iconfont="\xe609" },
+                         new DigitalAssPageModel()
+                        { Name = "AutoVerication",IsSelected=false, Region = "AutoVericationContent",
                             IsVisible=true,IsEnabled=true ,Iconfont="\xe609" },
 
                     };

@@ -310,9 +310,40 @@ namespace Luster.Common.Tools.FlowChart
                 }
                 else if (c.NodeType == FlowNodeType.Condition)
                 {
+                    string expression = string.Empty;
+                    if (!string.IsNullOrEmpty(c.FunctionInParameters))
+                    {
+                        try
+                        {
+                            string[] inParameters = c.FunctionInParameters.Split(new char[] { ';' }
+                            , StringSplitOptions.RemoveEmptyEntries);
+
+                            if (inParameters.Length >= 1)
+                            {
+                                string condition = inParameters[0].Split('#')[1];
+                                JObject array = JObject.Parse(condition);
+                                expression = array["StringEx"]?.ToString();
+                            }
+                            //
+                            if (inParameters.Length >= 2)
+                            {
+                                string[] isWait = inParameters[1].Split('#');
+                                string isWaitSting = $"{isWait[0]}={isWait[1]}";
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            //忽略异常
+                        }
+                    }
+
                     //条件(只会有真和假两个节点)
                     foreach (FlowNode s in c.Childrens)
                     {
+                        if (!string.IsNullOrEmpty(expression))
+                        {
+                            s.LebleText = $"({expression})为{(bool.Parse(s.Name)?"真":"假")}";
+                        }
                         s.Color = c.Color;
                         s.LableColor = c.LableColor;
                         s.FillColor = c.FillColor;

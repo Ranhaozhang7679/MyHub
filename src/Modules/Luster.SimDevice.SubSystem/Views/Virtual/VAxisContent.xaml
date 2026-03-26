@@ -22,6 +22,7 @@
             <FrameworkElement x:Key="ProxyElement" DataContext="{Binding}" Visibility="Collapsed" />
             <extension:AxisForwardOppositeConverter x:Key="AxisForwardOppositeConverter" />
             <extension:EnumDescriptionConverter x:Key="EnumDescriptionConverter" />
+            <local:IndexToOneBasedConverter x:Key="IndexToOneBasedConverter" />
         </ResourceDictionary>
     </Border.Resources>
     <Grid Margin="10">
@@ -112,13 +113,19 @@
                    VerticalAlignment="Center"
                    FontSize="12"
                    Text="{Binding ModeSpeedText}" />
+            <CheckBox Grid.Column="2" 
+                   IsChecked="{Binding UseModeSpecificSpeed}" 
+                   Content=""
+                   Margin="5,0"
+                   VerticalAlignment="Center"
+                   ToolTip="是否调试使用,勾选后用于调试,无法保存"/>
             <StackPanel
-                Grid.Column="2"
+                Grid.Column="3"
                 HorizontalAlignment="Right"
                 Orientation="Horizontal">
                 <hc:SearchBar
                     x:Name="txtSearch"
-                    Width="200"
+                    Width="120"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Center"
                     hc:InfoElement.Placeholder="{lang:Lang Key={x:Static lang:LangKeys.ModuleOrName}}"
@@ -155,17 +162,29 @@
                     SelectionMode="Single"
                     Visibility="{Binding IsShowHome, Converter={StaticResource Boolean2VisibilityReConverter}}">
                     <DataGrid.Columns>
-                        <DataGridTextColumn
+                        <DataGridComboBoxColumn
                             MinWidth="100"
-                            Binding="{Binding Module}"
-                            ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
                             Header="{lang:Lang Key={x:Static lang:LangKeys.ModuleName}}"
                             HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
-                            IsReadOnly="True" />
+                            SelectedValueBinding="{Binding Module, UpdateSourceTrigger=PropertyChanged}">
+                            <DataGridComboBoxColumn.EditingElementStyle>
+                                <Style TargetType="ComboBox">
+                                    <Setter Property="ItemsSource" Value="{Binding Path=DataContext.ModuleNameList, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                    <Setter Property="SelectedValue" Value="{Binding Module, UpdateSourceTrigger=PropertyChanged}" />
+                                </Style>
+                            </DataGridComboBoxColumn.EditingElementStyle>
+                            <DataGridComboBoxColumn.ElementStyle>
+                                <Style TargetType="ComboBox">
+                                    <Setter Property="HorizontalAlignment" Value="Center" />
+                                    <Setter Property="ItemsSource" Value="{Binding Path=DataContext.ModuleNameList, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                                    <Setter Property="SelectedValue" Value="{Binding Module}" />
+                                </Style>
+                            </DataGridComboBoxColumn.ElementStyle>
+                        </DataGridComboBoxColumn>
                         <DataGridTextColumn
                             Width="*"
                             MinWidth="120"
-                            Binding="{Binding Name}"
+                            Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
                             ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
                             Header="{lang:Lang Key={x:Static lang:LangKeys.Name}}"
                             HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
@@ -378,7 +397,7 @@
                         <DataGridTextColumn
                             Width="*"
                             MinWidth="120"
-                            Binding="{Binding Name}"
+                            Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
                             ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
                             Header="{lang:Lang Key={x:Static lang:LangKeys.Name}}"
                             HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
@@ -740,12 +759,13 @@
                             x:Name="dgPosition"
                             MaxHeight="300"
                             Padding="-5"
+                            EnableRowVirtualization="False"
                             extension:DragDropRowBehavior.Edit="True"
                             extension:DragDropRowBehavior.Enabled="True"
                             extension:DragDropRowBehavior.PopupControl="{Binding ElementName=dgPopup}"
                             hc:DataGridAttach.ShowRowNumber="False"
                             hc:DataGridAttach.ShowSelectAllButton="False"
-                            AlternationCount="2"
+                            AlternationCount="{Binding AxisPositions.Count}"
                             BorderBrush="{DynamicResource BorderBrush}"
                             BorderThickness="1"
                             CanUserSortColumns="False"
@@ -757,16 +777,31 @@
                             SelectedCellsChanged="dgPosition_SelectedCellsChanged"
                             SelectionMode="Single">
                             <DataGrid.Columns>
+                                <DataGridTemplateColumn
+                                    Width="50"
+                                    MinWidth="50"
+                                    hc:TitleElement.HorizontalAlignment="Center"
+                                    CanUserResize="False"
+                                    Header="序号"
+                                    HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <TextBlock
+                                                Text="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=(DataGridRow.AlternationIndex), Converter={StaticResource IndexToOneBasedConverter}}"
+                                                HorizontalAlignment="Center"/>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
                                 <DataGridTextColumn
                                     Width="*"
                                     MinWidth="80"
-                                    Binding="{Binding Name}"
+                                    Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
                                     Header="{lang:Lang Key={x:Static lang:LangKeys.Name}}"
                                     HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
                                     IsReadOnly="False" />
                                 <DataGridTextColumn
                                     Width="*"
-                                    MinWidth="85"
+                                    MinWidth="70"
                                     Binding="{Binding Position}"
                                     ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
                                     Header="{lang:Lang Key={x:Static lang:LangKeys.Position}}"

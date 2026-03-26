@@ -1226,10 +1226,10 @@ namespace Luster.Motion.EditorUI
 
                 list.Add(new KeyValue() { Key = func.ID.ToString(), Value = func, Desc = name });
                 i++;
-                if (i > 30)
-                {
-                    break;
-                }
+                //if (i > 30)
+                //{
+                //    break;
+                //}
             }
 
             return list;

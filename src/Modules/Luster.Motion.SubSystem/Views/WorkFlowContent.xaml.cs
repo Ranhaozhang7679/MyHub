@@ -199,7 +199,7 @@ namespace Luster.Motion.SubSystem.Views
         /// </summary>
         /// <param name="item"></param>
         /// <param name="minRole"></param>
-        private void SetPermission(MenuItem item, SystemRole minRole = SystemRole.Sustaining)
+        private void SetPermission(MenuItem item, SystemRole minRole = SystemRole.Integrator)
         {
             // 是否启用
             BindingOperations.SetBinding(item, MenuItem.IsEnabledProperty, new Binding("SysRole")
