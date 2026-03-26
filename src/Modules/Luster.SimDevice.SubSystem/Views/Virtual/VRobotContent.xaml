@@ -7,14 +7,14 @@
     xmlns:lang="clr-namespace:Luster.SimDevice.SubSystem.Langs"
     xmlns:local="clr-namespace:Luster.SimDevice.SubSystem.Views.Virtual"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:prism="http://prismlibrary.com/"
+    xmlns:prism="http://prismlibrary.com/" xmlns:virtual="clr-namespace:Luster.SimDevice.SubSystem.ViewModel.Virtual" d:DataContext="{d:DesignInstance Type=virtual:VRobotContentVM}"
     d:DesignHeight="600"
     d:DesignWidth="1400"
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="{DynamicResource RegionBrush}"
     CornerRadius="10"
     mc:Ignorable="d">
-    <Border.Resources>
+    <!--<Border.Resources>
         <FrameworkElement
             x:Key="ProxyElement"
             DataContext="{Binding}"
@@ -31,8 +31,10 @@
             BasedOn="{StaticResource {x:Type Button}}"
             TargetType="Button">
             <Setter Property="Width" Value="100" />
-            <!--<Setter Property="Command" Value="{Binding RobotMoveCommand}" />
+            -->
+    <!--<Setter Property="Command" Value="{Binding RobotMoveCommand}" />
             <Setter Property="CommandParameter" Value="{Binding Content, RelativeSource={RelativeSource Mode=Self}}" />-->
+    <!--
         </Style>
     </Border.Resources>
     <Grid Margin="5">
@@ -83,7 +85,8 @@
                                 CanUserSort="False"
                                 ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
                                 Header="{lang:Lang Key={x:Static lang:LangKeys.RobotName}}" />
-                            <!--<DataGridTextColumn
+                            -->
+    <!--<DataGridTextColumn
                             Width="200"
                             MinWidth="150"
                             Binding="{Binding LaserSN}"
@@ -91,6 +94,7 @@
                             ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
                             Header="{lang:Lang Key={x:Static lang:LangKeys.SerialNumber}}"
                             HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />-->
+    <!--
                             <DataGridTemplateColumn
                                 Width="110"
                                 MinWidth="100"
@@ -840,5 +844,998 @@
 
 
 
+    </Grid>-->
+    <Grid>
+        <TabControl TabStripPlacement="Left" Grid.ColumnSpan="2" SelectedIndex="{Binding TabPagChoose}">
+            <TabItem Header="控制面板" Margin="-2,-2,0,2">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="50"/>
+                        <RowDefinition Height="Auto"/>
+                        <!-- 分割条所在行 -->
+                        <RowDefinition Height="50"/>
+                        <RowDefinition Height="Auto"/>
+                        <!-- 分割条所在行 -->
+                        <RowDefinition Height="50"/>
+                    </Grid.RowDefinitions>
+                    <Grid  Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <ComboBox  Grid.Column="0"  HorizontalAlignment="Center"
+                                   ItemsSource="{Binding VRobotModels}"
+                                   SelectedValue="{Binding RobotCommuncation}" 
+                                   SelectedIndex="{Binding VRobotchoose}"
+                                   Margin="0,0,0,4" Width="366"/>
+
+                        <!-- 分割条：放在第1列，宽度Auto，横向居中，纵向拉伸 -->
+                        <GridSplitter Grid.Column="1"
+                                      Width="5"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Stretch"
+                                      Background="Silver"/>
+
+                        <!-- 右侧内容 -->
+                        <Button Grid.Column="2" Width="190" Content="连接" Command="{Binding RconRobot}"/>
+                    </Grid>
+                    <GridSplitter Grid.Row="1"
+                                  Height="5"
+                                  HorizontalAlignment="Stretch"
+                                  VerticalAlignment="Center"
+                                  Background="LightGray"/>
+                    <TextBlock Grid.Row="2" Text="{Binding Statues}"/>
+                    <GridSplitter Grid.Row="3"
+                                  Height="5"
+                                  HorizontalAlignment="Stretch"
+                                  VerticalAlignment="Center"
+                                  Background="LightGray"/>
+                    <TextBlock Grid.Row="4" Text="{Binding ReciveCommand}"/>
+                </Grid>
+            </TabItem>
+            <TabItem Header="运动" Margin="-4,-3,0,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="70*"/>
+                        <RowDefinition Height="Auto"/>
+                        <!-- 分割条所在行 -->
+                        <RowDefinition Height="20*"/>
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="260"/>
+                            <!-- 左侧 -->
+                            <ColumnDefinition Width="Auto"/>
+                            <!-- 分割条所在列 -->
+                            <ColumnDefinition Width="*"/>
+                            <!-- 右侧 -->
+                        </Grid.ColumnDefinitions>
+                        <!-- 左侧内容 -->
+                        <GroupBox Header="步进">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="30"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <Grid Grid.Row="0" >
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="10*"/>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="速度：" />
+                                    <TextBox Grid.Column="1" Text="{Binding SpeedRateText, UpdateSourceTrigger=PropertyChanged}"  HorizontalAlignment="Center" Width="30" />
+                                    <TextBlock Grid.Column="2" Text="%" />
+                                    <ComboBox  Grid.Column="4"  HorizontalAlignment="Center"
+                                           ItemsSource="{Binding CoordTypes}"
+                                           SelectedValue="{Binding CurCoordType}">
+                                    </ComboBox>
+                                    <TextBlock Grid.Column="5" Text="坐标系："  Visibility="{Binding CoordNumVis}"/>
+                                    <ComboBox  Grid.Column="6" Text="1" HorizontalAlignment="Center" Width="50"
+                                           ItemsSource="{Binding CoordNums}"
+                                           SelectedValue="{Binding CurCoordNum}"
+                                           Visibility="{Binding CoordNumVis}"/>
+                                </Grid>
+
+                                <Grid Grid.Row="1" >
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="20*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button Grid.Column="1"  Height="60" Width="60" Command="{Binding RobotMove}" CommandParameter="Y-">
+                                        <Image Source="/Luster.SimDevice.SubSystem;component/Views/Virtual/Y-.PNG" Width="50" Height="50" Stretch="Uniform" />
+                                    </Button>
+                                    <Button Grid.Column="4" Height="60" Width="60"  Command="{Binding RobotMove}" CommandParameter="Z+">
+                                        <Image Width="50" Height="50" Source="/Luster.SimDevice.SubSystem;component/Views/Virtual/Z+.PNG"/>
+                                    </Button>
+                                </Grid>
+                                <Grid Grid.Row="2" >
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="20*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button Grid.Column="0"  Height="60" Width="60"  Command="{Binding RobotMove}" CommandParameter="X+">
+                                        <Image Width="50" Height="50" Source="/Luster.SimDevice.SubSystem;component/Views/Virtual/X+.PNG"/>
+                                    </Button>
+                                    <Button Grid.Column="2"  Height="60" Width="60"  Command="{Binding RobotMove}" CommandParameter="X-">
+                                        <Image  Width="50" Height="50" Source="/Luster.SimDevice.SubSystem;component/Views/Virtual/X-.PNG"/>
+                                    </Button>
+                                </Grid>
+                                <Grid Grid.Row="3" >
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="20*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button Grid.Column="1"  Height="60" Width="60"  Command="{Binding RobotMove}" CommandParameter="Y+">
+                                        <Image Width="50" Height="50" Source="/Luster.SimDevice.SubSystem;component/Views/Virtual/Y+.PNG"/>
+                                    </Button>
+                                    <Button Grid.Column="4"  Height="60" Width="60"  Command="{Binding RobotMove}" CommandParameter="Z-">
+                                        <Image  Width="50" Height="50" Source="/Luster.SimDevice.SubSystem;component/Views/Virtual/Z-.PNG"/>
+                                    </Button>
+                                </Grid>
+                                <Grid Grid.Row="4" >
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="20*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button Grid.Column="0" Height="60" Width="60"  Command="{Binding RobotMove}" CommandParameter="U-">
+                                        <Image Width="50" Height="50" Source="/Luster.SimDevice.SubSystem;component/Views/Virtual/U-.PNG"/>
+                                    </Button>
+                                    <Button Grid.Column="2" Height="60" Width="60" Command="{Binding RobotMove}" CommandParameter="V-">
+                                        <Image Width="50" Height="50" Source="/Luster.SimDevice.SubSystem;component/Views/Virtual/V-.PNG"/>
+                                    </Button>
+                                    <Button Grid.Column="4" Height="60" Width="60" Command="{Binding RobotMove}" CommandParameter="W-">
+                                        <Image Width="50" Height="50" Source="/Luster.SimDevice.SubSystem;component/Views/Virtual/W-.PNG"/>
+                                    </Button>
+                                </Grid>
+                                <Grid Grid.Row="5" >
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="20*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Button Grid.Column="0" Height="60" Width="60" Command="{Binding RobotMove}" CommandParameter="U+">
+                                        <Image Width="50" Height="50" Source="/Luster.SimDevice.SubSystem;component/Views/Virtual/U+.PNG"/>
+                                    </Button>
+                                    <Button Grid.Column="2" Height="60" Width="60" Command="{Binding RobotMove}" CommandParameter="V+">
+                                        <Image Width="50" Height="50" Source="/Luster.SimDevice.SubSystem;component/Views/Virtual/V+.PNG"/>
+                                    </Button>
+                                    <Button Grid.Column="4" Height="60" Width="60" Command="{Binding RobotMove}" CommandParameter="W+">
+                                        <Image Width="50" Height="50" Source="/Luster.SimDevice.SubSystem;component/Views/Virtual/W+.PNG"/>
+                                    </Button>
+                                </Grid>
+
+                            </Grid>
+                        </GroupBox>
+                        <!-- 分割条：放在第1列，宽度Auto，横向居中，纵向拉伸 -->
+                        <GridSplitter Grid.Column="1" Width="2" HorizontalAlignment="Center" VerticalAlignment="Stretch" Background="Silver"/>
+                        <!-- 右侧内容 -->
+                        <Grid Grid.Column="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="30*"/>
+                                <RowDefinition Height="30*"/>
+                                <RowDefinition Height="30*"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <GroupBox Grid.Row="0" Header="目前位置">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="25*"/>
+                                        <RowDefinition Height="25*"/>
+                                        <RowDefinition Height="25*"/>
+                                        <RowDefinition Height="25*"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid Grid.Row="0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="33*"/>
+                                            <ColumnDefinition Width="33*"/>
+                                            <ColumnDefinition Width="33*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="X(mm)" HorizontalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Y(mm)" HorizontalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="Z(mm)" HorizontalAlignment="Center"/>
+                                    </Grid>
+                                    <Grid Grid.Row="1">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="33*"/>
+                                            <ColumnDefinition Width="33*"/>
+                                            <ColumnDefinition Width="33*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <ContentControl Grid.Column="0"  HorizontalAlignment="Center" Content="{Binding X_Position}"/>
+                                        <ContentControl Grid.Column="1"  HorizontalAlignment="Center" Content="{Binding Y_Position}"/>
+                                        <ContentControl Grid.Column="2"  HorizontalAlignment="Center" Content="{Binding Z_Position}"/>
+                                    </Grid>
+                                    <Grid Grid.Row="2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="33*"/>
+                                            <ColumnDefinition Width="33*"/>
+                                            <ColumnDefinition Width="33*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="U(mm)" HorizontalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="V(mm)" HorizontalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="W(mm)" HorizontalAlignment="Center"/>
+                                    </Grid>
+                                    <Grid Grid.Row="3">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="33*"/>
+                                            <ColumnDefinition Width="33*"/>
+                                            <ColumnDefinition Width="33*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <ContentControl Grid.Column="0"  HorizontalAlignment="Center" Content="{Binding U_Position}"/>
+                                        <ContentControl Grid.Column="1"  HorizontalAlignment="Center" Content="{Binding V_Position}"/>
+                                        <ContentControl Grid.Column="2"  HorizontalAlignment="Center" Content="{Binding W_Position}"/>
+                                    </Grid>
+                                </Grid>
+                            </GroupBox>
+                            <DockPanel Grid.Row="1" />
+                            <!-- 存放其他的数据使用 -->
+                            <GroupBox Grid.Row="2" Header="步进距离">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="20*"/>
+                                        <RowDefinition Height="25*"/>
+                                        <RowDefinition Height="20*"/>
+                                        <RowDefinition Height="25*"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid Grid.Row="0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="33*"/>
+                                            <ColumnDefinition Width="33*"/>
+                                            <ColumnDefinition Width="33*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="X(mm)" HorizontalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="Y(mm)" HorizontalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="Z(mm)" HorizontalAlignment="Center"/>
+                                    </Grid>
+                                    <Grid Grid.Row="1">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="33*"/>
+                                            <ColumnDefinition Width="33*"/>
+                                            <ColumnDefinition Width="33*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <ComboBox Grid.Column="0"  HorizontalAlignment="Center"
+                                                  ItemsSource="{Binding X_distances}"
+                                                  SelectedValue="{Binding X_distance}"/>
+                                        <ComboBox x:Name="Y_distance" Grid.Column="1"  HorizontalAlignment="Center"
+                                                  ItemsSource="{Binding Y_distances}"
+                                                  SelectedValue="{Binding Y_distance}"/>
+                                        <ComboBox x:Name="Z_distance" Grid.Column="2"  HorizontalAlignment="Center"
+                                                  ItemsSource="{Binding Z_distances}"
+                                                  SelectedValue="{Binding Z_distance}"/>
+                                    </Grid>
+                                    <Grid Grid.Row="2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="33*"/>
+                                            <ColumnDefinition Width="33*"/>
+                                            <ColumnDefinition Width="33*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="U(mm)" HorizontalAlignment="Center"/>
+                                        <TextBlock Grid.Column="1" Text="V(mm)" HorizontalAlignment="Center"/>
+                                        <TextBlock Grid.Column="2" Text="W(mm)" HorizontalAlignment="Center"/>
+                                    </Grid>
+                                    <Grid Grid.Row="3">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="33*"/>
+                                            <ColumnDefinition Width="33*"/>
+                                            <ColumnDefinition Width="33*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <ComboBox x:Name="U_distance" Grid.Column="0"  HorizontalAlignment="Center"
+                                                  ItemsSource="{Binding U_distances}"
+                                                  SelectedValue="{Binding U_distance}"/>
+                                        <ComboBox x:Name="V_distance" Grid.Column="1"  HorizontalAlignment="Center"
+                                                  ItemsSource="{Binding V_distances}"
+                                                  SelectedValue="{Binding V_distance}"/>
+                                        <ComboBox x:Name="W_distance" Grid.Column="2"  HorizontalAlignment="Center"
+                                                  ItemsSource="{Binding W_distances}"
+                                                  SelectedValue="{Binding W_distance}"/>
+                                    </Grid>
+                                </Grid>
+                            </GroupBox>
+                            <!--<Grid Grid.Row="3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="1*"/>
+                                    <ColumnDefinition Width="1*"/>
+                                </Grid.ColumnDefinitions>
+                                <Button x:Name="Tech" Grid.Column="0" Content="示教" Padding="10,4" Command="{Binding TechPos}">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Background" Value="#FF0078D4"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="border" Property="Background" Value="#FF005A9E"/>
+                                                                <Setter Property="RenderTransform">
+                                                                    <Setter.Value>
+                                                                        <ScaleTransform ScaleX="1.05" ScaleY="1.05"/>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                            </Trigger>
+                                                            <Trigger Property="IsPressed" Value="True">
+                                                                <Setter TargetName="border" Property="Background" Value="#FF004275"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                                <Button x:Name="Add" Grid.Column="1" Content="增加" Padding="10,4"  Command="{Binding AddPos}">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Background" Value="#FF0078D4"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="border" Property="Background" Value="#FF005A9E"/>
+                                                                <Setter Property="RenderTransform">
+                                                                    <Setter.Value>
+                                                                        <ScaleTransform ScaleX="1.05" ScaleY="1.05"/>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                            </Trigger>
+                                                            <Trigger Property="IsPressed" Value="True">
+                                                                <Setter TargetName="border" Property="Background" Value="#FF004275"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                                <Button x:Name="Deletepos" Grid.Column="2" Content="删除" Padding="10,4" Command="{Binding DeletePos}">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Background" Value="#FF0078D4"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="border" Property="Background" Value="#FF005A9E"/>
+                                                                <Setter Property="RenderTransform">
+                                                                    <Setter.Value>
+                                                                        <ScaleTransform ScaleX="1.05" ScaleY="1.05"/>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                            </Trigger>
+                                                            <Trigger Property="IsPressed" Value="True">
+                                                                <Setter TargetName="border" Property="Background" Value="#FF004275"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                                <Button x:Name="AbsMove" Grid.Column="3" Content="运动" Padding="10,4" Command="{Binding MovePos}">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Background" Value="#FF0078D4"/>
+                                            <Setter Property="Foreground" Value="White"/>
+                                            <Setter Property="BorderThickness" Value="0"/>
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="border" Property="Background" Value="#FF005A9E"/>
+                                                                <Setter Property="RenderTransform">
+                                                                    <Setter.Value>
+                                                                        <ScaleTransform ScaleX="1.05" ScaleY="1.05"/>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                            </Trigger>
+                                                            <Trigger Property="IsPressed" Value="True">
+                                                                <Setter TargetName="border" Property="Background" Value="#FF004275"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </Grid>-->
+                        </Grid>
+                    </Grid>
+                    <GridSplitter Grid.Row="1"
+                                  Height="5"
+                                  HorizontalAlignment="Stretch"
+                                  VerticalAlignment="Center"
+                                  Background="LightGray"/>
+                    <DockPanel Grid.Row="2">
+                        <TabControl>
+                            <TabItem Header="示教点">
+                                <Grid  Background="White">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="40*"/>
+                                        <ColumnDefinition Width="40*"/>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="20*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="50*"/>
+                                        <RowDefinition Height="50*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="点文件(P):"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="0"  Margin="5,5,5,5" Text="默认" Grid.ColumnSpan="3" />
+
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="点(P):"/>
+                                    <ComboBox Grid.Column="1" 
+                                                  ItemsSource="{Binding PositionNames}"
+                                                  SelectedValue="{Binding PositionName}"
+                                                  SelectedIndex="{Binding PositionNum}" Grid.Row="1"/>
+                                    <Button Grid.Row="1" Grid.Column="2" Content="示教(T)" Command="{Binding TechPos}"/>
+
+                                    <Button Grid.Row="1" Grid.Column="3" Content="退出(E)" Command="{Binding DeletePos}"/>
+                                </Grid>
+                            </TabItem>
+                            <TabItem Header="执行运动">
+                                <Grid  Background="White">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="38*"/>
+                                        <ColumnDefinition Width="20*"/>
+                                        <ColumnDefinition Width="40*"/>
+                                        <ColumnDefinition Width="342*"/>
+                                        <ColumnDefinition Width="440*"/>
+                                        <ColumnDefinition Width="220*"/>
+                                        <ColumnDefinition Width="220*"/>
+                                        <ColumnDefinition Width="11*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="50*"/>
+                                        <RowDefinition Height="50*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="命令(A):" Grid.ColumnSpan="5" Margin="0,0,241,50" Grid.RowSpan="2"/>
+                                    <ComboBox Grid.Column="0" Grid.ColumnSpan="4" Margin="0,0,82,0"
+                                                  ItemsSource="{Binding MoveStypes}"
+                                                  SelectedValue="{Binding MoveStype}" Grid.Row="1"/>
+
+                                    <TextBlock Grid.Row="0" Grid.Column="4" Text="目标(D):" Margin="0,0,0,50" Grid.RowSpan="2"/>
+                                    <ComboBox Grid.Column="4" Margin="0,0,10,0"
+                                                  ItemsSource="{Binding PositionNames}"
+                                                  SelectedValue="{Binding MovePositionName}" 
+                                                  SelectedIndex="{Binding MovePositionNum}" Grid.Row="1"/>
+                                    <Button Grid.Row="1" Grid.Column="6" Content="执行(X)" Command="{Binding MovePos}"/>
+
+                                </Grid>
+                            </TabItem>
+                        </TabControl>
+                    </DockPanel>
+                </Grid>
+
+            </TabItem>
+            <TabItem Header="点数据" Margin="-2,-2,0,2">
+                <ScrollViewer HorizontalScrollBarVisibility="Visible">
+                    <StackPanel>
+                        <DataGrid x:Name="DataGridView" AutoGenerateColumns="False" CanUserAddRows="True" GridLinesVisibility="Horizontal" HeadersVisibility="Column" RowHeaderWidth="100" 
+                                  ItemsSource ="{Binding Group, Mode=TwoWay}"
+                                  CanUserSortColumns="True"
+                                  IsReadOnly="False"
+                                  >
+                            <DataGrid.Columns>
+                                <DataGridTextColumn                                  
+                                    Width="Auto"
+                                    MinWidth="10"
+                                    Binding="{Binding Num}"
+                                    ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                                    Header="编号" />
+                                <DataGridTextColumn                                  
+                                    Width="Auto"
+                                    MinWidth="30"
+                                    Binding="{Binding Mark}"
+                                    ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                                    Header="标签" />
+                                <DataGridTextColumn                                  
+                                    Width="Auto"
+                                    MinWidth="10"
+                                    Binding="{Binding X}"
+                                    ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                                    Header="X" />
+                                <DataGridTextColumn                                  
+                                    Width="Auto"
+                                    MinWidth="10"
+                                    Binding="{Binding Y}"
+                                    ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                                    Header="Y" />
+                                <DataGridTextColumn                                  
+                                    Width="Auto"
+                                    MinWidth="10"
+                                    Binding="{Binding Z}"
+                                    ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                                    Header="Z" />
+                                <DataGridTextColumn                                  
+                                    Width="Auto"
+                                    MinWidth="10"
+                                    Binding="{Binding U}"
+                                    ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                                    Header="U" />
+                                <DataGridTextColumn                                  
+                                    Width="Auto"
+                                    MinWidth="10"
+                                    Binding="{Binding V}"
+                                    ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                                    Header="V" />
+                                <DataGridTextColumn                                  
+                                    Width="Auto"
+                                    MinWidth="10"
+                                    Binding="{Binding W}"
+                                    ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                                    Header="W" />
+                                <DataGridTextColumn                                  
+                                    Width="Auto"
+                                    MinWidth="10"
+                                    Binding="{Binding Description}"
+                                    ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                                    Header="点位注解" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+            <TabItem Header="IO" Height="23" Margin="-2,-2,0,0" VerticalAlignment="Top">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid Grid.Column="0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="输入" />
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="位" />
+                            <TextBlock Grid.Column="1" Text="状态" />
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TI_0" Grid.Column="0" Text="0" />
+                            <Button x:Name="Io_BI_0" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOinstatues[0]}" Margin="0,-2,0,0" VerticalAlignment="Top"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="3">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TI_1" Grid.Column="0" Text="1" />
+                            <Button x:Name="Io_BI_1" Grid.Column="1"  Style="{StaticResource StateButton}" Tag="{Binding IOinstatues[1]}"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TI_2" Grid.Column="0" Text="2" />
+                            <Button x:Name="Io_BI_2" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOinstatues[2]}"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TI_3" Grid.Column="0" Text="3" />
+                            <Button x:Name="Io_BI_3" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOinstatues[3]}"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TI_4" Grid.Column="0" Text="4" />
+                            <Button x:Name="Io_BI_4" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOinstatues[4]}"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="7">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TI_5" Grid.Column="0" Text="5" />
+                            <Button x:Name="Io_BI_5" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOinstatues[5]}"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TI_6" Grid.Column="0" Text="6" />
+                            <Button x:Name="Io_BI_6" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOinstatues[6]}"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="9">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TI_7" Grid.Column="0" Text="7" />
+                            <Button x:Name="Io_BI_7" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOinstatues[7]}"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TI_8" Grid.Column="0" Text="8" />
+                            <Button x:Name="Io_BI_8" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOinstatues[8]}"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="11">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock  x:Name="Io_TI_9" Grid.Column="0" Text="9" />
+                            <Button x:Name="Io_BI_9" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOinstatues[9]}"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock  x:Name="Io_TI_10" Grid.Column="0" Text="10" />
+                            <Button x:Name="Io_BI_10" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOinstatues[10]}"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="13">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock  x:Name="Io_TI_11" Grid.Column="0" Text="11" />
+                            <Button x:Name="Io_BI_11" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOinstatues[11]}"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="14">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TI_12" Grid.Column="0" Text="12" />
+                            <Button x:Name="Io_BI_12" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOinstatues[12]}"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="15">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock  x:Name="Io_TI_13" Grid.Column="0" Text="13" />
+                            <Button x:Name="Io_BI_13" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOinstatues[13]}"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock  x:Name="Io_TI_14" Grid.Column="0" Text="14" />
+                            <Button x:Name="Io_BI_14" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOinstatues[14]}"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="17">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock  x:Name="Io_TI_15" Grid.Column="0" Text="15" />
+                            <Button x:Name="Io_BI_15" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOinstatues[15]}"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="18">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="10*"/>
+                            </Grid.ColumnDefinitions>
+                        </Grid>
+                    </Grid>
+                    <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Center" VerticalAlignment="Stretch" Background="Silver"/>
+                    <Grid Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="1*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="输出" />
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="位" />
+                            <TextBlock Grid.Column="1" Text="状态" />
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TO_0" Grid.Column="0" Text="0" />
+                            <Button x:Name="Io_BO_0" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOoutstatues[0]}" Command="{Binding Io_DO_Click}" CommandParameter="0"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="3">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TO_1" Grid.Column="0" Text="1" />
+                            <Button x:Name="Io_BO_1" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOoutstatues[1]}" Command="{Binding Io_DO_Click}" CommandParameter="1"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TO_2" Grid.Column="0" Text="2" />
+                            <Button x:Name="Io_BO_2" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOoutstatues[2]}" Command="{Binding Io_DO_Click}" CommandParameter="2"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TO_3" Grid.Column="0" Text="3" />
+                            <Button x:Name="Io_BO_3" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOoutstatues[3]}" Command="{Binding Io_DO_Click}" CommandParameter="3"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TO_4" Grid.Column="0" Text="4" />
+                            <Button Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOoutstatues[4]}" Command="{Binding Io_DO_Click}" CommandParameter="4"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="7">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TO_5" Grid.Column="0" Text="5" />
+                            <Button x:Name="Io_BO_5" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOoutstatues[5]}" Command="{Binding Io_DO_Click}" CommandParameter="5"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TO_6" Grid.Column="0" Text="6" />
+                            <Button x:Name="Io_BO_6" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOoutstatues[6]}" Command="{Binding Io_DO_Click}" CommandParameter="6"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="9">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TO_7" Grid.Column="0" Text="7" />
+                            <Button x:Name="Io_BO_7" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOoutstatues[7]}" Command="{Binding Io_DO_Click}" CommandParameter="7"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TO_8" Grid.Column="0" Text="8" />
+                            <Button x:Name="Io_BO_8" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOoutstatues[8]}" Command="{Binding Io_DO_Click}" CommandParameter="8"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="11">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TO_9" Grid.Column="0" Text="9" />
+                            <Button x:Name="Io_BO_9" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOoutstatues[9]}" Command="{Binding Io_DO_Click}" CommandParameter="9"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TO_10" Grid.Column="0" Text="10" />
+                            <Button x:Name="Io_BO_10" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOoutstatues[10]}" Command="{Binding Io_DO_Click}" CommandParameter="10"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="13">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TO_11" Grid.Column="0" Text="11" />
+                            <Button x:Name="Io_BO_11" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOoutstatues[11]}" Command="{Binding Io_DO_Click}" CommandParameter="11"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="14">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TO_12" Grid.Column="0" Text="12" />
+                            <Button x:Name="Io_BO_12" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOoutstatues[12]}" Command="{Binding Io_DO_Click}" CommandParameter="12"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="15">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TO_13" Grid.Column="0" Text="13" />
+                            <Button x:Name="Io_BO_13" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOoutstatues[13]}" Command="{Binding Io_DO_Click}" CommandParameter="13"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TO_14" Grid.Column="0" Text="14" />
+                            <Button x:Name="Io_BO_14" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOoutstatues[14]}" Command="{Binding Io_DO_Click}" CommandParameter="14"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="17">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="15*"/>
+                                <ColumnDefinition Width="80*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="Io_TO_15" Grid.Column="0" Text="15" />
+                            <Button x:Name="Io_BO_15" Grid.Column="1" Style="{StaticResource StateButton}" Tag="{Binding IOoutstatues[15]}" Command="{Binding Io_DO_Click}" CommandParameter="15"/>
+                            <TextBlock Grid.Column="2" Text="标签" />
+                        </Grid>
+                        <Grid Grid.Row="18">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="10*"/>
+                                <ColumnDefinition Width="10*"/>
+                            </Grid.ColumnDefinitions>
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </TabItem>
+        </TabControl>
     </Grid>
 </Border>

@@ -105,7 +105,7 @@ namespace Luster.Common.Assets
         /// <param name="service"></param>
         /// <param name="message"></param>
         /// <param name="callback"></param>
-        public static void ShowConfirm(this IDialogService service, string message, Action<IDialogResult> callback = null)
+        public static void ShowConfirm(this IDialogService service, string message, Action<IDialogResult> callback = null, bool bIsBlock = true)
         {
             service.CloseExistShowWindow();
 
@@ -114,8 +114,14 @@ namespace Luster.Common.Assets
             param.Add("MessageType", "Confirm");
             param.Add("Message", message);
             param.Add("MsgIcon", "\xe65d");
-
-            service.ShowDialog("MessageDialog", param, callback);
+            if (bIsBlock)
+            {
+                service.ShowDialog("MessageDialog", param, callback);
+            }
+            else
+            {
+                service.Show("MessageDialog", param, callback);
+            }
         }
 
         /// <summary>
@@ -153,6 +159,16 @@ namespace Luster.Common.Assets
 
             // 弹出一个Dialog，用于用户输入对应的模块名称
             service.ShowDialog("TextDialog", param, callback);
+        }
+
+
+        public static void ShowInfoInput(this IDialogService service, string title, string defaultText = "", Action<IDialogResult> callback = null)
+        {
+            DialogParameters param = new DialogParameters();
+            param.Add("Title", LangProvider.GetLang(title));
+            param.Add("Text", defaultText);
+            // 弹出一个Dialog，用于用户输入对应的模块名称
+            service.ShowDialog("InfoInputDialog", param, callback);
         }
 
         /// <summary>

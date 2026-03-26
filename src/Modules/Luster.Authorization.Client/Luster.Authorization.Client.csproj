@@ -1,0 +1,57 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net472</TargetFramework>
+		<Nullable>enable</Nullable>
+		<LangVersion>12.0</LangVersion>
+		<UseWPF>true</UseWPF>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<AssemblyName>DC.Authorization.WPF</AssemblyName>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Remove="BoxIcons-UserLogout.png" />
+		<None Remove="Resources\BoxIcons-UserLogout.png" />
+		<None Remove="Resources\Codicons-Add.png" />
+		<None Remove="Resources\Codicons-Edit.png" />
+		<None Remove="Resources\Material-AccountMultiple.png" />
+		<None Remove="Resources\Material-DeleteAlertOutline.png" />
+		<None Remove="Resources\PhosphorIcons-Password.png" />
+		<None Remove="Resources\PhosphorIcons-UserSwitch.png" />
+		<None Remove="Resources\RemixIcon-ExportFill.png" />
+		<None Remove="Resources\RemixIcon-ImportLine.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+        <PackageReference Include="Fody" >
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+		<PackageReference Include="MahApps.Metro"/>
+		<!--<PackageReference Include="Prism.Wpf" Version="9.0.537" />-->
+		<PackageReference Include="Luster.Prism" />
+		<PackageReference Include="PropertyChanged.Fody" />
+		<PackageReference Include="Serilog.Sinks.File" />
+		<PackageReference Include="System.Data.SQLite.Core" />
+		<PackageReference Include="Serilog"  />
+		<PackageReference Include="DocumentFormat.OpenXml"  />
+		<PackageReference Include="System.Text.Json" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Luster.Common.Authorization\Luster.Common.Authorization.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Resource Include="Resources\BoxIcons-UserLogout.png" />
+		<Resource Include="Resources\Codicons-Add.png" />
+		<Resource Include="Resources\Codicons-Edit.png" />
+		<Resource Include="Resources\Material-AccountMultiple.png" />
+		<Resource Include="Resources\Material-DeleteAlertOutline.png" />
+		<Resource Include="Resources\PhosphorIcons-Password.png" />
+		<Resource Include="Resources\PhosphorIcons-UserSwitch.png" />
+		<Resource Include="Resources\RemixIcon-ExportFill.png" />
+		<Resource Include="Resources\RemixIcon-ImportLine.png" />
+</ItemGroup>
+
+</Project>

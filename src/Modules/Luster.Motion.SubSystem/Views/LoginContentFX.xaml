@@ -51,8 +51,8 @@
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="2*" />
-                            <RowDefinition Height="5*" />
-                            <RowDefinition Height="3*" />
+                            <RowDefinition Height="6*" />
+                            <RowDefinition Height="2*" />
                             <RowDefinition Height="1*" />
                         </Grid.RowDefinitions>
                         <StackPanel VerticalAlignment="Center">
@@ -70,7 +70,13 @@
                                 Content="{lang:Lang Key={x:Static lang:LangKeys.LusterSmartCockpit}}"
                                 FontSize="30"
                                 FontWeight="Bold"
-                                Foreground="{DynamicResource SecondaryTextBrush}" />
+                                Foreground="{DynamicResource SecondaryTextBrush}">
+                                <hc:Interaction.Triggers>
+                                    <hc:EventTrigger EventName="MouseDoubleClick">
+                                        <hc:EventToCommand Command="{Binding OpenAuthorViewCommand}" />
+                                    </hc:EventTrigger>
+                                </hc:Interaction.Triggers>
+                            </Label>
                         </StackPanel>
                         <StackPanel
                             Grid.Row="1"
@@ -167,6 +173,7 @@
                                     </hc:Interaction.Triggers>
                                 </hc:ComboBox>
                             </hc:ElementGroup>
+                            <!--工程模式-->
                             <hc:ElementGroup
                                 Margin="0,15,0,0"
                                 Layout="Stack"
@@ -174,7 +181,7 @@
                                 <TextBlock
                                     Width="70"
                                     VerticalAlignment="Center"
-                                    Text="{lang:Lang Key={x:Static lang:LangKeys.Model}}" />
+                                    Text="{lang:Lang Key={x:Static lang:LangKeys.SolutionMode}}" />
                                 <Border
                                     Padding="6,0"
                                     Background="{DynamicResource RegionBrush}"
@@ -203,10 +210,58 @@
                                     </hc:Interaction.Triggers>
                                 </hc:ComboBox>
                             </hc:ElementGroup>
-                            <hc:ElementGroup
-                                Margin="0,15,0,0"
-                                Layout="Stack"
-                                Orientation="Horizontal">
+                            <!--登录模式-->
+                            <hc:ElementGroup Margin="0,15,0,0" Layout="Stack" Orientation="Horizontal" >
+                                <TextBlock Width="70" VerticalAlignment="Center"
+                                           Text="{lang:Lang Key={x:Static lang:LangKeys.LoginMode}}" />
+                                <Border
+                                    Padding="6,0"
+                                    Background="{DynamicResource RegionBrush}"
+                                    Style="{StaticResource BorderRegion}">
+                                    <Path
+                                            Width="16"
+                                            Height="16"
+                                            Data="{StaticResource DeviceModeGeometry}"
+                                            Fill="{DynamicResource BorderBrush}"
+                                            Stretch="Uniform" />
+                                </Border>
+                                <hc:ComboBox
+                                                MinWidth="220"
+                                                hc:InfoElement.Placeholder="请选择登录模式"    
+                                                Background="{DynamicResource RegionBrush}"
+                                                DisplayMemberPath="{Binding Desc}"
+                                                IsEditable="False"
+                                                ItemsSource="{Binding LoginModeList, Converter={StaticResource MultiLangConverter}}"
+                                                SelectedValue="{Binding SelectLoginMode}"
+                                                SelectedValuePath="Value">
+                                    <hc:Interaction.Triggers>
+                                        <hc:EventTrigger EventName="SelectionChanged">
+                                            <hc:EventToCommand Command="{Binding RelativeSource={RelativeSource AncestorType=ComboBox}, Path=DataContext.ChangeLoginModeCommand}" PassEventArgsToCommand="True" />
+                                        </hc:EventTrigger>
+                                    </hc:Interaction.Triggers>
+                                </hc:ComboBox>
+                            </hc:ElementGroup>
+                            <!--登录等级-->
+                            <hc:ElementGroup Margin="0,15,0,0" Layout="Stack" Orientation="Horizontal">
+                                <TextBlock Width="70" VerticalAlignment="Center"
+                                           Text="{lang:Lang Key={x:Static lang:LangKeys.LoginLevel}}" />
+                                <Border Padding="6,0" Background="{DynamicResource RegionBrush}" Style="{StaticResource BorderRegion}">
+                                    <Path Width="16" Height="16" Data="{StaticResource DeviceModeGeometry}"
+                                          Fill="{DynamicResource BorderBrush}" Stretch="Uniform" />
+                                </Border>
+                                <hc:ComboBox
+                                     MinWidth="220"
+                                     hc:InfoElement.Placeholder="请选择登录等级"    
+                                     Background="{DynamicResource RegionBrush}"
+                                     DisplayMemberPath="{Binding Desc}"
+                                     IsEditable="False"
+                                     ItemsSource="{Binding LoginLevelList, Converter={StaticResource MultiLangConverter}}"
+                                     SelectedValue="{Binding SelectLoginLevel}"
+                                     SelectedValuePath="Value">
+                                </hc:ComboBox>
+                            </hc:ElementGroup>
+                            <!--SFCurl选择-->
+                            <hc:ElementGroup Margin="0,15,0,0" Layout="Stack" Orientation="Horizontal" Visibility="{Binding FXCardModeVisual}">
                                 <TextBlock
                                         Width="70"
                                         VerticalAlignment="Center"
@@ -252,14 +307,14 @@
                         </ScrollViewer>
                         <StackPanel Grid.Row="3" Orientation="Vertical">
                             <DockPanel>
-                                <Label Content="是否离线登录" 
+                                <!--<Label Content="是否离线登录" 
                                        Visibility="Visible"/>
                                 <CheckBox 
                                     IsChecked="false" 
                                     Command="{Binding ToggleOfflineCommand}"
                                     Visibility="Visible"
                                     HorizontalAlignment="Left"
-                                    IsEnabled="True"/>
+                                    IsEnabled="True"/>-->
                                 <Button
                                     Width="88"
                                     hc:BorderElement.CornerRadius="15"

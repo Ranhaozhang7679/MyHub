@@ -138,14 +138,14 @@ namespace Luster.Module.Motion.Logic.Functions
         public AlarmType AlarmType { get; set; }
 
         /// <summary>
-        /// 报警代码
+        /// 报警内容
         /// </summary>
         private string _alarmCode;
-        [Parameter("报警代码", 5, CN = "报警代码", DefaultV = "TBD", IsReadOnly = true)]
-        public string AlarmCode
-        {
-            get => _alarmCode;
-            set
+        [Parameter("报警代码", 5, CN = "报警代码", DefaultV = "TBD", IsReadOnly = false)]
+        public string AlarmCode 
+        { 
+            get => _alarmCode; 
+            set 
             {
                 if (_alarmCode != value)
                 {
@@ -159,11 +159,11 @@ namespace Luster.Module.Motion.Logic.Functions
         /// 报警内容
         /// </summary>
         private string _message;
-        [Parameter("报警内容", 6, CN = "报警内容", IsReadOnly = true)]
-        public string Message
-        {
-            get => _message;
-            set
+        [Parameter("报警内容", 6, CN = "报警内容", IsReadOnly = false)]
+        public string Message 
+        { 
+            get => _message; 
+            set 
             {
                 if (_message != value)
                 {
@@ -174,11 +174,11 @@ namespace Luster.Module.Motion.Logic.Functions
         }
 
         private string _detail;
-        [Parameter("报警英文", 7, CN = "报警英文", IsReadOnly = true)]
-        public string Detail
-        {
-            get => _detail;
-            set
+        [Parameter("报警英文", 7, CN = "报警英文", IsReadOnly = false)]
+        public string Detail 
+        { 
+            get => _detail; 
+            set 
             {
                 if (_detail != value)
                 {
@@ -256,29 +256,23 @@ namespace Luster.Module.Motion.Logic.Functions
                         var pDetail = MyOwner.Parameters[nameof(Detail)];
                         if (pDetail.Value?.ToString() != Detail) pDetail.Value = Detail;
                     }
-                }
-                else
-                {
-                    try
+
+                    var newAlarmC = new VAlarm();
+                    newAlarmC.ID = alarm.ID;
+                    newAlarmC.AlarmKey = alarm.AlarmKey;
+                    newAlarmC.AlarmCN = alarm.AlarmCN;
+                    newAlarmC.AlarmEn = alarm.AlarmEn;
+
+                    AlarmC = newAlarmC;
+
+                    if (MyOwner.Parameters.ContainsKey(nameof(AlarmC)))
                     {
-                        AlarmCode = null;
-                        Message = null;
-                        Detail = null;
-
-                        if (MyOwner.Parameters.TryGetValue(nameof(AlarmCode), out var pCode))
-                            if (pCode.Value?.ToString() != null) pCode.Value = null;
-
-                        if (MyOwner.Parameters.TryGetValue(nameof(Message), out var pMessage))
-                            if (pMessage.Value?.ToString() != null) pMessage.Value = null;
-
-                        if (MyOwner.Parameters.TryGetValue(nameof(Detail), out var pDetail))
-                            if (pDetail.Value?.ToString() != null) pDetail.Value = null;
-
-                        AlarmC = null;
-                        if (MyOwner.Parameters.TryGetValue(nameof(AlarmC), out var pAlarmC))
-                            if (pAlarmC.Value != null) pAlarmC.Value = null;
+                        var pAlarmC = MyOwner.Parameters[nameof(AlarmC)];
+                        if (pAlarmC.Value != AlarmC)
+                        {
+                            pAlarmC.Value = AlarmC;
+                        }
                     }
-                    catch { }
                 }
             }
         }
@@ -591,6 +585,7 @@ namespace Luster.Module.Motion.Logic.Functions
             message = "未配置";
         }
 
+
         public override void OnNotifyPropertyUIChanged(ParameterAttribute parameter, object newV)
         {
             base.OnNotifyPropertyUIChanged(parameter, newV);
@@ -621,10 +616,12 @@ namespace Luster.Module.Motion.Logic.Functions
 
                         if (MyOwner.Parameters.TryGetValue(nameof(Detail), out var pDetail))
                             if (pDetail.Value?.ToString() != Detail) pDetail.Value = Detail;
-                    }
+                    } 
                     catch { }
                 }
             }
         }
+
+
     }
 }

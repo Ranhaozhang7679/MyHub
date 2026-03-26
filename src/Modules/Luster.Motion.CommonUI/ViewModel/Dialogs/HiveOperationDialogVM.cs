@@ -219,7 +219,7 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                         if (cardID.Substring(0, 1) == "0")
                             cardID = cardID.Substring(1, cardID.Length - 1);
 
-                        var ret = sfcHelper.CheckCard(cardID, out string auth);
+                        var ret = sfcHelper.CheckCard(cardID, hiveAPI.machineSN, out string auth);
 
                         SendHiveMsg(cmdStr);
                         cardID = "";

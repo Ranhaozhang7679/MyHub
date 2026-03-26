@@ -1,4 +1,4 @@
-﻿#region 作者和版权
+#region 作者和版权
 /*************************************************************************************
 * CLR 版本:       4.0.30319.42000
 * 类 名 称:       VVacuumContentVM
@@ -335,15 +335,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
             {
                 if (r.Result == ButtonResult.OK)
                 {
-                    if (r.Parameters.TryGetValue<VacuumModel>("VacuumModel", out var deviceModel))
-                    {
-                        // update device
-                        var dModel = VacuumList.FirstOrDefault(u => u.ID == deviceModel.ID);
-                        if (dModel != null)
-                        {
-                            dModel = deviceModel;
-                        }
-                    }
+                    LoadDevices();
                 }
             });
         }));

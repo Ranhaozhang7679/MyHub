@@ -42,6 +42,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
     {
         String OffsetJsonPath;
         String AxisPositionsPath;
+        private const string PageName = "PointTeaching";
         private readonly IMotionController _mController;
         private readonly IDeviceEngine _deviceEngine;
         private readonly FlowBus flowBus;
@@ -99,6 +100,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
                 //同步赋值给基类属性
                 base.SelectedReportPage = value;
+                if (_seletedReportPage == null) return;
                 ConfigKey = _seletedReportPage.Name;           
                 // 加载界面属性
                 LoadStationConfigFromJson();
@@ -109,15 +111,20 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         }
 
 
-        public PointTeachingContentVM(IRepository repository, IDialogService dialogService,
-                                                 IRegionManager regionManager, IMotionController motionController,
-                                                 IDeviceEngine deviceEngine, FlowBus _flowBus, ICommonBus commonBus, CSVHelper cSVHelper)
-                                                    : base(repository, regionManager, commonBus, cSVHelper, _flowBus)
+        public PointTeachingContentVM(IRepository repository,
+                                      IDialogService dialogService,
+                                      IRegionManager regionManager,
+                                      IMotionController motionController,
+                                      IDeviceEngine deviceEngine,
+                                      FlowBus _flowBus,
+                                      ICommonBus commonBus,
+                                      CSVHelper cSVHelper)
+                                                    : base(repository, regionManager, commonBus, cSVHelper, _flowBus, dialogService)
         {
             flowBus = _flowBus;
             _deviceEngine = deviceEngine;
-            _mController = motionController;
             _dialogService = dialogService;
+            _mController = motionController;
 
             //获取当前的轴列表
             LoadDevices();
@@ -125,8 +132,12 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             Pages = new ObservableCollection<CommonPageModel>();
             for (int i = 0; i < AxisList.Count; i++)
             {
-                Pages.Add(new CommonPageModel() { Name = AxisList[i].Name, IsSelected = true, Region = "", ViewType = null });
+                Pages.Add(new CommonPageModel() { Name = AxisList[i].Name, IsSelected = false, Region = "", ViewType = null });
             }
+
+            // 注册子页面到DigitalAssPageModel
+            DigitalAssPageModel.RegisterSubPages("PointTeachingContent", Pages);
+
             SelectedReportPage = Pages.Where(x => x.IsSelected).FirstOrDefault();
             EndCommand = new DelegateCommand(OnEnd);
             InitModels();
@@ -163,7 +174,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             {
                 sc.PropertyChanged += AxisPositions_PropertyChanged;
             }
-
+            LoadCheckConfirmMessages();
         }
 
         #region  示教点位管理
@@ -399,6 +410,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         //切换子界面时加载对应的示教点位
         public override void PageUpdated(FunctionEventArgs<int> obj)
         {
+            if (SelectedReportPage == null) return;
             var select = SelectedReportPage.Name;
             var Current = AxisList.Where(x => x.Name == select).FirstOrDefault();
             LoadCurrentPoints(Current);
@@ -424,7 +436,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         }
         public override async void OnOneKeyCheck(object obj)
         {
-            base.OnOneKeyCheck(obj);
+            await base.OnOneKeyCheckAsync(obj);
             try
             {
                 ProgressValue = 0; // 进度
@@ -444,6 +456,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                                 await Task.Delay(200); // 200ms轮询
                             }
                         }, _cts.Token);
+                        PageStatusService.Instance.UpdateStatus(PageName, "OK");
                     }
                     else
                     {

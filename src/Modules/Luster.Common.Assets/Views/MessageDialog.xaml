@@ -51,7 +51,7 @@
                     VerticalAlignment="Center"
                     FontSize="18"
                     Text="{Binding MsgInfo}"
-                    TextWrapping="Wrap" />
+                    TextWrapping="Wrap" Focusable="True" />
             </StackPanel>
         </Grid>
 

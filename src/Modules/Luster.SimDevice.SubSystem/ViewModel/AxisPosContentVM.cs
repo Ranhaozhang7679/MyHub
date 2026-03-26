@@ -399,15 +399,20 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
             // 如果示教，就将数据更新到点位中
             if (str == "Teach")
             {
+                if (SubAxisList.Count == 0)
+                {
+                    throw new FriendlyException($"请添加轴后再示教!");
+                }
                 if (Current == null)
                 {
                     _dialogService.ShowTeachPositionDialog(0, "", true, r =>
                     {
                         if (r.Result == ButtonResult.OK)
                         {
-                            if (r.Parameters.TryGetValue<string>("Name", out var name))
+                            if (r.Parameters.TryGetValue<string>("Name", out var name)
+                                && r.Parameters.TryGetValue<string>("Module", out var module))
                             {
-                                deviceEngine.TeachPosGroup(name, SubAxisList.Select(u => u.Tag).ToArray());
+                                deviceEngine.TeachPosGroup(name, module, SubAxisList.Select(u => u.Tag).ToArray());
                                 LoadDevices();
                             }
                         }

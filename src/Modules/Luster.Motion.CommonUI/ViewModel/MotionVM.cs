@@ -21,6 +21,8 @@
 ************************************************************************************/
 #endregion
 
+using DC.Authorization;
+using DC.Authorization.WPF;
 using Luster.Common.DataStruct;
 using Luster.Motion.CommonUI.Events;
 using Luster.Motion.DataStruct.Enums;
@@ -40,7 +42,7 @@ namespace Luster.Motion.CommonUI.ViewModel
     /// <summary>
     /// 
     /// </summary>
-    public class MotionVM : BindableBase
+    public class MotionVM : AuthViewModelBase
     {
         /// <summary>
         /// 通用事件总线
@@ -74,6 +76,8 @@ namespace Luster.Motion.CommonUI.ViewModel
         /// 角色对象
         /// </summary>
         private SystemRole _systemRole = SystemRole.Operator;
+        private readonly IAuthorizationFacade? facade;
+
         public SystemRole SysRole
         {
             get { return _systemRole; }
@@ -88,19 +92,21 @@ namespace Luster.Motion.CommonUI.ViewModel
         /// </summary>
         protected bool IsAdmin => SysRole == SystemRole.Admin;
 
-        protected bool IsEngineer => (int)SysRole <= (int)SystemRole.Sustaining;
+        protected bool IsEngineer => (int)SysRole <= (int)SystemRole.Integrator;
 
-        public MotionVM()
+        public MotionVM(IAuthorizationFacade auth = null) : base(auth)
         {
+            this.facade = auth;
         }
 
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="_commonBus">参数注册</param>
-        public MotionVM(ICommonBus _commonBus)
+        public MotionVM(ICommonBus _commonBus, IAuthorizationFacade auth = null) : base(auth)
         {
             commonBus = _commonBus;
+            this.facade = auth;
             RegisterEvent(commonBus.EventBus);
             BindGlobalCommnads();
             LangProperties = new List<PropertyInfo>();

@@ -26,13 +26,13 @@ namespace Luster.SimDevice.SubSystem.Views.Virtual
             InitializeComponent();
         }
 
-        private void DataGrid_SelectedCellsChanged(object sender, SelectedCellsChangedEventArgs e)
-        {
-            var grid = sender as DataGrid;
-            if (DataContext is VRobotContentVM viewModel)
-            {
-                viewModel.CurrentPointIndex = grid.SelectedIndex + 1;
-            }
-        }
+        //private void DataGrid_SelectedCellsChanged(object sender, SelectedCellsChangedEventArgs e)
+        //{
+        //    var grid = sender as DataGrid;
+        //    if (DataContext is VRobotContentVM viewModel)
+        //    {
+        //        viewModel.CurrentPointIndex = grid.SelectedIndex + 1;
+        //    }
+        //}
     }
 }

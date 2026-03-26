@@ -9,6 +9,7 @@
     xmlns:local="clr-namespace:Luster.SimDevice.SubSystem.Views.Virtual"
     xmlns:m="clr-namespace:Luster.SimDevice.EngineUI.Models;assembly=Luster.SimDevice.EngineUI"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:extension="clr-namespace:Luster.SimDevice.SubSystem.Extension"
     xmlns:prism="http://prismlibrary.com/"
     d:DesignHeight="800"
     d:DesignWidth="1366"
@@ -174,6 +175,8 @@
             x:Key="IoTemplate"
             DigInTemplate="{StaticResource DigitalInTemplate}"
             DigOutTemplate="{StaticResource DigitalOutTemplate}" />
+        <local:IndexToOneBasedConverter x:Key="IndexToOneBasedConverter" />
+        <extension:AxisMoveDirectionIconConverter x:Key="AxisMoveDirectionIconConverter" />
     </UserControl.Resources>
 
     <Grid Margin="5">
@@ -194,33 +197,84 @@
                 hc:TitleElement.Background="{DynamicResource RegionBrush}"
                 Style="{StaticResource GroupBoxTab}">
                 <GroupBox.Header>
-                    <hc:ButtonGroup Margin="10,3" Layout="Uniform">
-                        <Button
-                            Command="{Binding AxisCommand}"
-                            CommandParameter="Stop"
-                            Content="{lang:Lang Key={x:Static lang:LangKeys.Stop}}"
-                            Style="{StaticResource ButtonDashed}" />
-                        <Button
-                            Command="{Binding AxisCommand}"
-                            CommandParameter="ClearError"
-                            Content="{lang:Lang Key={x:Static lang:LangKeys.ClearError}}"
-                            Style="{StaticResource ButtonDashed}" />
-                        <Button
-                            Command="{Binding AxisCommand}"
-                            CommandParameter="ServOn"
-                            Content="{lang:Lang Key={x:Static lang:LangKeys.UppperEnable}}"
-                            Style="{StaticResource ButtonDashed}" />
-                        <Button
-                            Command="{Binding AxisCommand}"
-                            CommandParameter="ServOff"
-                            Content="{lang:Lang Key={x:Static lang:LangKeys.DownEnable}}"
-                            Style="{StaticResource ButtonDashed}" />
-                        <!-- <Button
-                            Command="{Binding AxisCommand}"
-                            CommandParameter="Teach"
-                            Content="{lang:Lang Key={x:Static lang:LangKeys.Teach}}"
-                            Style="{StaticResource ButtonDashed}" /> -->
-                    </hc:ButtonGroup>
+                    <Grid HorizontalAlignment="Stretch">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1*" />
+                            <ColumnDefinition Width="2*" />
+                        </Grid.ColumnDefinitions>
+                        <hc:ButtonGroup Grid.Column="0" Margin="0,3" Layout="Uniform">
+                            <Button
+                                Command="{Binding AxisCommand}"
+                                CommandParameter="Stop"
+                                Content="{lang:Lang Key={x:Static lang:LangKeys.Stop}}"
+                                Style="{StaticResource ButtonDashed}" />
+                            <Button
+                                Command="{Binding AxisCommand}"
+                                CommandParameter="ClearError"
+                                Content="{lang:Lang Key={x:Static lang:LangKeys.ClearError}}"
+                                Style="{StaticResource ButtonDashed}" />
+                            <Button
+                                Command="{Binding AxisCommand}"
+                                CommandParameter="ServOn"
+                                Content="{lang:Lang Key={x:Static lang:LangKeys.UppperEnable}}"
+                                Style="{StaticResource ButtonDashed}" />
+                            <Button
+                                Command="{Binding AxisCommand}"
+                                CommandParameter="ServOff"
+                                Content="{lang:Lang Key={x:Static lang:LangKeys.DownEnable}}"
+                                Style="{StaticResource ButtonDashed}" />
+                            <Button
+                                Command="{Binding AxisCommand}"
+                                CommandParameter="Teach"
+                                Content="{lang:Lang Key={x:Static lang:LangKeys.Teach}}"
+                                Style="{StaticResource ButtonDashed}" />
+                        </hc:ButtonGroup>
+                        <hc:ElementGroup Grid.Column="1" Margin="50,0,0,0" HorizontalAlignment="Right">
+                            <hc:ElementGroup.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                    </Grid>
+                                </ItemsPanelTemplate>
+                            </hc:ElementGroup.ItemsPanel>
+                            <TextBlock
+                                Width="80"
+                                VerticalAlignment="Center"
+                                Foreground="Red"
+                                Text="{lang:Lang Key={x:Static lang:LangKeys.SpeedCoefficient}}"
+                                ToolTip="{lang:Lang Key={x:Static lang:LangKeys.SpeedTip}}" />
+                            <Slider
+                                    Name="slider"
+                                    Grid.Column="1"
+                                    Width="200"
+                                    Margin="20,0,0,0"
+                                    hc:TipElement.Placement="Top"
+                                    hc:TipElement.Visibility="Visible"
+                                    IsSnapToTickEnabled="True"
+                                    Maximum="100"
+                                    Minimum="10"
+                                    Orientation="Horizontal"
+                                    TickFrequency="10"
+                                    TickPlacement="BottomRight"
+                                    Value="{Binding SpeedPercent}">
+                                <hc:Interaction.Triggers>
+                                    <hc:EventTrigger EventName="ValueChanged">
+                                        <hc:EventToCommand Command="{Binding ChangeSpeedCommand}" PassEventArgsToCommand="True" />
+                                    </hc:EventTrigger>
+                                </hc:Interaction.Triggers>
+                            </Slider>
+                            <hc:NumericUpDown
+                                Grid.Column="2"
+                                Width="60"
+                                Margin="5,0,0,0"
+                                IsReadOnly="True"
+                                Value="{Binding ElementName=slider, Path=Value}" />
+                        </hc:ElementGroup>
+                    </Grid>
                 </GroupBox.Header>
                 <ScrollViewer ScrollViewer.VerticalScrollBarVisibility="Hidden">
                     <ItemsControl ItemsSource="{Binding SubAxisList}">
@@ -326,14 +380,14 @@
                                             <TextBlock
                                                 VerticalAlignment="Center"
                                                 FontSize="14"
-                                                Text="{lang:Lang Key={x:Static lang:LangKeys.Position}}" />
+                                                Text="{lang:Lang Key={x:Static lang:LangKeys.Diatance}}" />
                                             <hc:NumericUpDown
                                                 Grid.Column="1"
                                                 DecimalPlaces="3"
                                                 Value="{Binding DstPostion}" />
                                         </Grid>
                                         <hc:ButtonGroup>
-                                            <Button
+                                            <!--<Button
                                                 hc:IconElement.Geometry="{StaticResource AddGeometry}"
                                                 hc:IconElement.Height="12"
                                                 hc:IconElement.Width="10"
@@ -361,7 +415,7 @@
                                                     </hc:EventTrigger>
                                                 </hc:Interaction.Triggers>
                                             </Button>
-                                            <!--<Button
+                                            <Button
                                                 Padding="0,2"
                                                 Command="{Binding MoveAbsCommand}"
                                                 CommandParameter="{Binding .}"
@@ -371,7 +425,64 @@
                                                 Command="{Binding MoveRelCommand}"
                                                 CommandParameter="{Binding .}"
                                                 Content="{lang:Lang Key={x:Static lang:LangKeys.RelativeMove}}" /> -->
-
+                                            <RepeatButton Command="{Binding MoveRelCommandAdd}"
+                                                CommandParameter="1"
+                                                Delay="500"
+                                                Interval="200"
+                                                Background="Transparent"
+                                                BorderThickness="0">
+                                                <Grid>
+                                                    <Border
+                                                        BorderBrush="#CCCCCC" 
+                                                        BorderThickness="1" 
+                                                        CornerRadius="4,0,0,4" 
+                                                        Width="100"
+                                                        Height="30"/>
+                                                    <Path 
+                                                        Fill="#333333" 
+                                                        Stretch="Uniform" 
+                                                        Width="10"
+                                                        Height="12"
+                                                        HorizontalAlignment="Center" 
+                                                        VerticalAlignment="Center">
+                                                        <Path.Data>
+                                                            <MultiBinding Converter="{StaticResource AxisMoveDirectionIconConverter}">
+                                                                <Binding Path="." />
+                                                                <Binding Source="Positive" />
+                                                            </MultiBinding>
+                                                        </Path.Data>
+                                                    </Path>
+                                                </Grid>
+                                            </RepeatButton>
+                                            <RepeatButton Command="{Binding MoveRelCommandSub}"
+                                                CommandParameter="-1"
+                                                Delay="500"
+                                                Interval="200"
+                                                Background="Transparent"
+                                                BorderThickness="0">
+                                                <Grid>
+                                                    <Border 
+                                                        BorderBrush="#CCCCCC" 
+                                                        BorderThickness="1" 
+                                                        CornerRadius="0,4,4,0" 
+                                                        Width="100"
+                                                        Height="30"/>
+                                                    <Path 
+                                                        Fill="#333333" 
+                                                        Stretch="Uniform" 
+                                                        Width="10"
+                                                        Height="12"
+                                                        HorizontalAlignment="Center" 
+                                                        VerticalAlignment="Center">
+                                                        <Path.Data>
+                                                            <MultiBinding Converter="{StaticResource AxisMoveDirectionIconConverter}">
+                                                                <Binding Path="." />
+                                                                <Binding Source="Negative" />
+                                                            </MultiBinding>
+                                                        </Path.Data>
+                                                    </Path>
+                                                </Grid>
+                                            </RepeatButton>
                                         </hc:ButtonGroup>
                                         <hc:ButtonGroup Margin="0,5,0,0">
                                             <Button
@@ -387,11 +498,11 @@
                                                 Command="{Binding ClearErrorCommand}"
                                                 CommandParameter="{Binding .}"
                                                 Content="{lang:Lang Key={x:Static lang:LangKeys.ClearError}}" />
-                                            <!-- <Button
-                                                Command="{Binding Path=DataContext.DeleteAxisCommand, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
+                                            <Button
+										        Command="{Binding RelativeSource={RelativeSource AncestorType=ScrollViewer}, Path=DataContext.TeachCommand}"
                                                 CommandParameter="{Binding .}"
-                                                Content="{lang:Lang Key={x:Static lang:LangKeys.Delete}}"
-                                                Foreground="{StaticResource DangerBrush}" /> -->
+                                                Content="{lang:Lang Key={x:Static lang:LangKeys.Teach}}"
+                                                Foreground="{StaticResource DangerBrush}" />
                                         </hc:ButtonGroup>
                                     </StackPanel>
                                 </Border>
@@ -410,7 +521,7 @@
                 MinWidth="150"
                 Padding="0"
                 hc:TitleElement.Background="{DynamicResource RegionBrush}"
-                Header="{lang:Lang Key={x:Static lang:LangKeys.VAxisIOAxisListTip}}"
+                Header="模组列表(双击显示)"
                 Style="{StaticResource GroupBoxTab}">
                 <ListBox
                     Margin="0"
@@ -418,7 +529,7 @@
                     SelectionMode="Single">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Alias}" />
+                            <TextBlock Text="{Binding}" />
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                     <hc:Interaction.Triggers>
@@ -436,17 +547,18 @@
             Margin="2"
             HorizontalAlignment="Stretch"
             VerticalAlignment="Center" />
-		<Grid Grid.Row ="2">
+        <Grid Grid.Row ="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1*" />
+                <ColumnDefinition Width="1.2*" />
                 <ColumnDefinition Width="1*" />
             </Grid.ColumnDefinitions>
-			<DataGrid
+            <DataGrid
 				Grid.Column="0"
 				Padding="0"
+                EnableRowVirtualization="False"
 				hc:DataGridAttach.ShowRowNumber="False"
 				hc:DataGridAttach.ShowSelectAllButton="False"
-				AlternationCount="2"
+				AlternationCount="{Binding PosGroups.Count}"
 				AutoGenerateColumns="False"
 				ColumnHeaderStyle="{StaticResource CustomDataGridColumnHeaderStyle}"
 				HeadersVisibility="Column"
@@ -454,8 +566,23 @@
 				ItemsSource="{Binding PosGroups}"
 				RowStyle="{StaticResource CustomDataGridRowStyle}"
 				SelectionMode="Single">
-				<DataGrid.Columns>
-					<DataGridTextColumn
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn
+                        Width="50"
+						MinWidth="50"
+						hc:TitleElement.HorizontalAlignment="Center"
+						CanUserResize="False"
+                        Header="序号"
+						HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock
+                                    Text="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=(DataGridRow.AlternationIndex), Converter={StaticResource IndexToOneBasedConverter}}"
+                                    HorizontalAlignment="Center"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn
 						Width="*"
 						MinWidth="200"
 						Binding="{Binding Name}"
@@ -464,7 +591,7 @@
 						FontWeight="Bold"
 						Foreground="Black"
 						Header="{lang:Lang Key={x:Static lang:LangKeys.Point}}" />
-					<DataGridTextColumn
+                    <DataGridTextColumn
 						Width="80"
 						MinWidth="80"
 						Binding="{Binding X}"
@@ -474,7 +601,7 @@
 						Header="X (mm)"
 						HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
 						IsReadOnly="False" />
-					<DataGridTextColumn
+                    <DataGridTextColumn
 						Width="80"
 						MinWidth="80"
 						Binding="{Binding Y}"
@@ -484,7 +611,7 @@
 						Header="Y (mm)"
 						HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
 						IsReadOnly="False" />
-					<DataGridTextColumn
+                    <DataGridTextColumn
 						Width="80"
 						MinWidth="80"
 						Binding="{Binding U}"
@@ -494,7 +621,7 @@
 						Header="U (mm)"
 						HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
 						IsReadOnly="False" />
-					<DataGridTextColumn
+                    <DataGridTextColumn
 						Width="80"
 						MinWidth="80"
 						Binding="{Binding Z}"
@@ -504,80 +631,80 @@
 						Header="Z (mm)"
 						HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
 						IsReadOnly="False" />
-					<DataGridTextColumn
+                    <DataGridTextColumn
 						Width="80"
 						MinWidth="80"
-						Binding="{Binding V}"
+						Binding="{Binding U2}"
 						ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
 						FontSize="12"
 						Foreground="Blue"
-						Header="V (mm)"
+						Header="U2 (mm)"
 						HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
 						IsReadOnly="False" />
-					<DataGridTextColumn
+                    <DataGridTextColumn
 						Width="80"
 						MinWidth="80"
-						Binding="{Binding W}"
+						Binding="{Binding Z2}"
 						ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
 						FontSize="12"
 						Foreground="Blue"
-						Header="W (mm)"
+						Header="Z2 (mm)"
 						HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
 						IsReadOnly="False" />
 
-					<DataGridTemplateColumn
-						Width="130"
-						MinWidth="130"
+                    <DataGridTemplateColumn
+						Width="150"
+						MinWidth="150"
 						hc:TitleElement.HorizontalAlignment="Center"
 						CanUserResize="False"
 						Header="{lang:Lang Key={x:Static lang:LangKeys.Operation}}"
 						HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}">
-						<DataGridTemplateColumn.CellTemplate>
-							<DataTemplate>
-								<hc:ElementGroup HorizontalContentAlignment="Center" Orientation="Horizontal">
-									<Button
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <hc:ElementGroup HorizontalContentAlignment="Center" Orientation="Horizontal">
+                                    <Button
 										Margin="5,0,0,0"
 										Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.MoveCommand}"
 										CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=SelectedItem}"
 										Content="{lang:Lang Key={x:Static lang:LangKeys.Move}}"
 										Style="{StaticResource ButtonInfo.Small}" />
-									<Button
+                                    <Button
 										Margin="5,0,0,0"
 										Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.UpdateCommand}"
 										CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=SelectedItem}"
 										Content="{lang:Lang Key={x:Static lang:LangKeys.Update}}"
 										Style="{StaticResource ButtonWarning.Small}" />
-									<!--<Button
+                                    <Button
 										Margin="0,0,0,0"
 										Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.RemoveCommand}"
 										CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=SelectedItem}"
 										Content="{lang:Lang Key={x:Static lang:LangKeys.Delete}}"
-										Style="{StaticResource ButtonDanger.Small}" /> -->
-								</hc:ElementGroup>
-							</DataTemplate>
-						</DataGridTemplateColumn.CellTemplate>
-					</DataGridTemplateColumn>
-				</DataGrid.Columns>
-				<hc:Interaction.Triggers>
-					<hc:EventTrigger EventName="SelectionChanged">
-						<hc:EventToCommand Command="{Binding SelectedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=SelectedItem}" />
-					</hc:EventTrigger>
-				</hc:Interaction.Triggers>
-			</DataGrid>
+										Style="{StaticResource ButtonDanger.Small}" />
+                                </hc:ElementGroup>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+                <hc:Interaction.Triggers>
+                    <hc:EventTrigger EventName="SelectionChanged">
+                        <hc:EventToCommand Command="{Binding SelectedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=SelectedItem}" />
+                    </hc:EventTrigger>
+                </hc:Interaction.Triggers>
+            </DataGrid>
 
 
 
-			<Grid x:Name="GridIO" Grid.Column="1" Margin="5">
-				<Grid.RowDefinitions>
-					<RowDefinition Height="Auto" />
-					<RowDefinition Height="*" />
-				</Grid.RowDefinitions>
-				<Grid Margin="0,0,0,5">
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="150" />
-						<ColumnDefinition Width="*" />
-					</Grid.ColumnDefinitions>
-					<!--<ComboBox
+            <Grid x:Name="GridIO" Grid.Column="1" Margin="5">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid Margin="0,0,0,5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="150" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <!--<ComboBox
 						Name="combCard"
 						ItemsSource="{Binding Cards}"
 						SelectedValue="{Binding CurrentCard}">
@@ -587,32 +714,32 @@
 							</hc:EventTrigger>
 						</hc:Interaction.Triggers>
 					</ComboBox> -->
-					<StackPanel
+                    <StackPanel
 						Grid.Column="1"
 						HorizontalAlignment="Right"
 						Orientation="Horizontal">
-						<hc:ElementGroup Margin="0,0,10,0">
-							<hc:ElementGroup.ItemsPanel>
-								<ItemsPanelTemplate>
-									<Grid>
-										<Grid.ColumnDefinitions>
-											<ColumnDefinition Width="Auto" />
-											<ColumnDefinition Width="Auto" />
-											<ColumnDefinition Width="50" />
-										</Grid.ColumnDefinitions>
-									</Grid>
-								</ItemsPanelTemplate>
-							</hc:ElementGroup.ItemsPanel>
-							<Label Content="{lang:Lang Key={x:Static lang:LangKeys.Frequency}}" />
-							<hc:NumericUpDown
+                        <hc:ElementGroup Margin="0,0,10,0">
+                            <hc:ElementGroup.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="50" />
+                                        </Grid.ColumnDefinitions>
+                                    </Grid>
+                                </ItemsPanelTemplate>
+                            </hc:ElementGroup.ItemsPanel>
+                            <Label Content="{lang:Lang Key={x:Static lang:LangKeys.Frequency}}" />
+                            <hc:NumericUpDown
 								Name="txtRate"
 								Grid.Column="1"
 								Width="80"
 								Minimum="0"
 								Value="{Binding SpanTime}" />
-						</hc:ElementGroup>
+                        </hc:ElementGroup>
 
-						<hc:SearchBar
+                        <!--<hc:SearchBar
 							x:Name="txtSearch"
 							Width="200"
 							HorizontalAlignment="Right"
@@ -620,25 +747,25 @@
 							hc:InfoElement.Placeholder="{lang:Lang Key={x:Static lang:LangKeys.ModuleOrName}}"
 							Command="{Binding SearchIOCommand}"
 							Style="{StaticResource SearchBarExtend}"
-							Text="{Binding SearchIOText, UpdateSourceTrigger=PropertyChanged}" />
-					</StackPanel>
-				</Grid>
-				<Grid Grid.Row="1">
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="1*" />
-						<ColumnDefinition Width="Auto" />
-						<ColumnDefinition Width="1*" />
-					</Grid.ColumnDefinitions>
-					<Border
+							Text="{Binding SearchIOText, UpdateSourceTrigger=PropertyChanged}" />-->
+                    </StackPanel>
+                </Grid>
+                <Grid Grid.Row="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="1*" />
+                    </Grid.ColumnDefinitions>
+                    <Border
 						Padding="0"
 						Background="{DynamicResource BorderBrush}"
 						Style="{StaticResource BorderRegion}">
-						<Grid>
-							<Grid.RowDefinitions>
-								<RowDefinition Height="*" />
-								<RowDefinition Height="Auto" />
-							</Grid.RowDefinitions>
-							<ListBox
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <ListBox
 								Name="itemsIn"
 								Padding="0"
 								Background="Transparent"
@@ -646,18 +773,18 @@
 								ItemsSource="{Binding IoInDatas}"
 								ScrollViewer.HorizontalScrollBarVisibility="Disabled"
 								Style="{StaticResource ListBoxCustom}">
-								<ListBox.ItemsPanel>
-									<ItemsPanelTemplate>
-										<hc:UniformSpacingPanel
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <hc:UniformSpacingPanel
 											HorizontalAlignment="Left"
 											VerticalAlignment="Top"
 											ChildWrapping="Wrap"
 											Orientation="Vertical"
 											ScrollViewer.HorizontalScrollBarVisibility="Visible"
 											ScrollViewer.VerticalScrollBarVisibility="Visible" />
-									</ItemsPanelTemplate>
-								</ListBox.ItemsPanel>
-								<!--<hc:Interaction.Triggers>
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <!--<hc:Interaction.Triggers>
 									<hc:EventTrigger EventName="Loaded">
 										<hc:EventToCommand Command="{Binding LoadedCommand}" PassEventArgsToCommand="True" />
 									</hc:EventTrigger>
@@ -665,33 +792,33 @@
 										<hc:EventToCommand Command="{Binding SizeChangedCommand}" PassEventArgsToCommand="True" />
 									</hc:EventTrigger>
 								</hc:Interaction.Triggers> -->
-								<ListBox.ItemContainerStyle>
-									<Style TargetType="ListBoxItem">
-										<Setter Property="Padding" Value="0" />
-										<Setter Property="IsSelected" Value="{Binding IsSelected}" />
-										<Setter Property="BorderThickness" Value="0" />
-									</Style>
-								</ListBox.ItemContainerStyle>
-							</ListBox>
-						</Grid>
-					</Border>
-					<GridSplitter
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="Padding" Value="0" />
+                                        <Setter Property="IsSelected" Value="{Binding IsSelected}" />
+                                        <Setter Property="BorderThickness" Value="0" />
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                            </ListBox>
+                        </Grid>
+                    </Border>
+                    <GridSplitter
 						Grid.Column="1"
 						Width="3"
 						Margin="2"
 						HorizontalAlignment="Center"
 						VerticalAlignment="Stretch" />
-					<Border
+                    <Border
 						Grid.Column = "2"
 						Padding="0"
 						Background="{DynamicResource BorderBrush}"
 						Style="{StaticResource BorderRegion}">
-						<Grid>
-							<Grid.RowDefinitions>
-								<RowDefinition Height="*" />
-								<RowDefinition Height="Auto" />
-							</Grid.RowDefinitions>
-							<ListBox
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <ListBox
 								Name="itemsOut"
 								Padding="0"
 								Background="Transparent"
@@ -699,18 +826,18 @@
 								ItemsSource="{Binding IoOutDatas}"
 								ScrollViewer.HorizontalScrollBarVisibility="Disabled"
 								Style="{StaticResource ListBoxCustom}">
-								<ListBox.ItemsPanel>
-									<ItemsPanelTemplate>
-										<hc:UniformSpacingPanel
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <hc:UniformSpacingPanel
 											HorizontalAlignment="Left"
 											VerticalAlignment="Top"
 											ChildWrapping="Wrap"
 											Orientation="Vertical"
 											ScrollViewer.HorizontalScrollBarVisibility="Visible"
 											ScrollViewer.VerticalScrollBarVisibility="Visible" />
-									</ItemsPanelTemplate>
-								</ListBox.ItemsPanel>
-								<!--<hc:Interaction.Triggers>
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <!--<hc:Interaction.Triggers>
 									<hc:EventTrigger EventName="Loaded">
 										<hc:EventToCommand Command="{Binding LoadedCommand}" PassEventArgsToCommand="True" />
 									</hc:EventTrigger>
@@ -718,19 +845,19 @@
 										<hc:EventToCommand Command="{Binding SizeChangedCommand}" PassEventArgsToCommand="True" />
 									</hc:EventTrigger>
 								</hc:Interaction.Triggers> -->
-								<ListBox.ItemContainerStyle>
-									<Style TargetType="ListBoxItem">
-										<Setter Property="Padding" Value="0" />
-										<Setter Property="IsSelected" Value="{Binding IsSelected}" />
-										<Setter Property="BorderThickness" Value="0" />
-									</Style>
-								</ListBox.ItemContainerStyle>
-							</ListBox>
-						</Grid>
-					</Border>
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="Padding" Value="0" />
+                                        <Setter Property="IsSelected" Value="{Binding IsSelected}" />
+                                        <Setter Property="BorderThickness" Value="0" />
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                            </ListBox>
+                        </Grid>
+                    </Border>
 
-				</Grid>
-				<!-- <Grid Grid.Row="2" Margin="0,5,0,0">
+                </Grid>
+                <!-- <Grid Grid.Row="2" Margin="0,5,0,0">
 					<Grid.ColumnDefinitions>
 						<ColumnDefinition Width="*" />
 						<ColumnDefinition Width="*" />
@@ -767,10 +894,7 @@
 						</hc:Interaction.Triggers>
 					</hc:Pagination>
 				</Grid> -->
-			</Grid>
-
-
-
-		</Grid>
+            </Grid>
+        </Grid>
     </Grid>
 </UserControl>

@@ -227,7 +227,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Dialog
                     CardName = MDevice.Name,
                     Module = module,
                     Name = name,
-                    SubDefinite = subDefinite,
+                    SubDefinite= subDefinite,
                     IOType = ioType,
                     Behavior = behavior,
                     Mode = DeviceMode.Virtual,

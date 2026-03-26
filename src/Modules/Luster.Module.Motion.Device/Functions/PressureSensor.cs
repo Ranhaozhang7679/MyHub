@@ -46,7 +46,13 @@ namespace Luster.Module.Motion.Device.Functions
         Clear,
 
         [Description("读值")]
-        ReadValue
+        ReadValue,
+
+        [Description("设置标定模式")]
+        CalibrationSet,
+
+        [Description("开始标定")]
+        CalibrationStart
     }
     public class PressureSensor : MotionFunction, IPauseFunction
     {
@@ -125,7 +131,7 @@ namespace Luster.Module.Motion.Device.Functions
                         // 1、单通道清零-01 10 00 5E 00 01 02 00 01 6A EE
                         for (int i = 0; i < 1; i++)
                         {
-                           bool comResult=  communcation.WriteWithoutBlocking<int>(1, $"{StationNum} 10 94 1");
+                            bool comResult = communcation.WriteWithoutBlocking<int>(1, $"{StationNum} 10 94 1");
                             if (comResult)
                             {
                                 //    var coilVs = (communcation.Read<int>($"{StationNum} 03 80 1")[0]) / 1000.0;
@@ -148,10 +154,10 @@ namespace Luster.Module.Motion.Device.Functions
 
                             }
                         }
-                      }
                     }
+                }
             }
-            else
+            else if (PActionType == PressureActionType.ReadValue)
             {
                 // 2、延时读取
                 Thread.Sleep(DelayTime);
@@ -164,8 +170,8 @@ namespace Luster.Module.Motion.Device.Functions
                         {
                             var coilVs = communcation.Read<int>($"{StationNum} 03 80 1");
 
-                            
-                            if(Times<3)
+
+                            if (Times < 3)
                             {
                                 if (coilVs.Count > 0)
                                 {
@@ -180,32 +186,32 @@ namespace Luster.Module.Motion.Device.Functions
                             {
                                 lstPressVal.Add(coilVs[0]);
                             }
-                            
+
                         }
                         Thread.Sleep(Interval);
                     }
                     //如果读值次数大于等于3次，去除最大最小值，取平均值
-                    if(Times>=3)
+                    if (Times >= 3)
                     {
                         Value = 0;
                         lstPressVal.Remove(lstPressVal.Max());
                         lstPressVal.Remove(lstPressVal.Min());
-                        for(int j=0;j<Times-2;j++)
+                        for (int j = 0; j < Times - 2; j++)
                         {
                             Value += lstPressVal[j];
                         }
-                        Value = Math.Round(Math.Round(Value * 1.0 / 1000, 3) / (double)(Times-2), 3);
+                        Value = Math.Round(Math.Round(Value * 1.0 / 1000, 3) / (double)(Times - 2), 3);
                     }
                     else
                     {
                         Value = Math.Round(Math.Round(Value * 1.0 / 1000, 3) / (double)Times, 3);
                     }
 
-                    double dbRandom =Math.Round(new Random().NextDouble()/10.0,3);
+                    double dbRandom = Math.Round(new Random().NextDouble() / 10.0, 3);
                     // 压力值为负，并且程序配置最小压力值，那么就更新压力并提醒报警
                     if (MinValue > -1 && Value < 0)
                     {
-                        Value = MinValue+ dbRandom;
+                        Value = MinValue + dbRandom;
                         //取消界面报警提示
                         // OnAlarm(AlarmType.InfoTip, $"压力读取到负值:{Value} 使用默认最小值{MinValue}");
                     }
@@ -215,6 +221,10 @@ namespace Luster.Module.Motion.Device.Functions
                 {
                     Value = PressureValue;
                 }
+            }
+            else if (PActionType == PressureActionType.CalibrationSet)
+            {
+                // 4、标定
             }
             return string.IsNullOrEmpty(errMsg);
         }

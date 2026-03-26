@@ -587,7 +587,7 @@ namespace Luster.SimDevice.SubSystem.Extension
             _showWindow = service.Show("MotionConditionsDialog", dialogParameters, callback);
         }
 
-        public static void ShowAlarmConfigCustomDialog(this IDialogService service, string AlarmCode, string AlarmContent, string AlarmEnglish, Action<IDialogResult> callback = null)
+        public static void ShowAlarmConfigCustomDialog(this IDialogService service, string AlarmCode, string AlarmContent, string AlarmEnglish, List<string> existingCodes, Action<IDialogResult> callback = null)
         {
             service.CloseExistShowWindow();
 
@@ -596,9 +596,26 @@ namespace Luster.SimDevice.SubSystem.Extension
             dialogParameters.Add("AlarmCode", AlarmCode);
             dialogParameters.Add("AlarmContent", AlarmContent);
             dialogParameters.Add("AlarmEnglish", AlarmEnglish);
+            dialogParameters.Add("ExistingCodes", existingCodes);
 
             _showWindow = service.Show("ErrorCustomDialog", dialogParameters, callback);
         }
+
+        /// <summary>
+        /// 加载显示属性弹窗
+        /// </summary>
+        /// <param name="service"></param>
+        /// <param name="module"></param>
+        public static void ShowModuleNameDialog(this IDialogService service, Action<IDialogResult> callback = null)
+        {
+            service.CloseExistShowWindow();
+
+            DialogParameters dialogParameters = new DialogParameters();
+            dialogParameters.Add("Title", "模组名称");
+
+            _showWindow = service.Show("ModuleNameDialog", dialogParameters, callback);
+        }
+
     }
 
 }

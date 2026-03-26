@@ -5,8 +5,117 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Luster.SimDevice.SubSystem.Views.Dialog"
         mc:Ignorable="d"
-        Title="GlobalSelectDialog" Height="450" Width="800">
-    <Grid>
-        
+        Title="选择全局变量" 
+        Height="600" 
+        Width="1100"
+        WindowStartupLocation="CenterOwner"
+        Background="#F5F5F5"
+        FontSize="12">
+
+    <Window.Resources>
+        <Style TargetType="Border" x:Key="SearchBorderStyle">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#DDDDDD"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="3"/>
+        </Style>
+
+        <Style TargetType="Button" x:Key="ActionButtonStyle">
+            <Setter Property="Width" Value="70"/>
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="5,0,0,0"/>
+        </Style>
+
+        <Style TargetType="ListViewItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Padding" Value="5"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="BorderBrush" Value="#EEEEEE"/>
+        </Style>
+    </Window.Resources>
+
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 搜索区域 -->
+        <Border Grid.Row="0" 
+                Style="{StaticResource SearchBorderStyle}" 
+                Padding="10"
+                Margin="0,0,0,15">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" 
+                           Text="搜索：" 
+                           VerticalAlignment="Center" 
+                           Margin="0,0,10,0"
+                           FontWeight="Bold"/>
+
+                <TextBox Grid.Column="1" 
+                         x:Name="SearchTextBox"
+                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         Height="28"
+                         Padding="5"/>
+            </Grid>
+        </Border>
+
+        <!-- 变量列表区域 -->
+        <Border Grid.Row="1" 
+                Style="{StaticResource SearchBorderStyle}" 
+                Padding="0">
+            <ListView x:Name="GlobalVariableListView"
+                      ItemsSource="{Binding FilteredVariables}"
+                      SelectionMode="Multiple"
+                      Background="Transparent"
+                      BorderThickness="0"
+                      ScrollViewer.VerticalScrollBarVisibility="Auto">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="选择" Width="50">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                              VerticalAlignment="Center"
+                                              HorizontalAlignment="Center"/>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Header="变量名称" Width="200" DisplayMemberBinding="{Binding Name}"/>
+                        <GridViewColumn Header="变量类型" Width="100" DisplayMemberBinding="{Binding TypeName}"/>
+                        <GridViewColumn Header="当前值" Width="150" DisplayMemberBinding="{Binding Value}"/>
+                        <GridViewColumn Header="默认值" Width="150" DisplayMemberBinding="{Binding DefaultV}"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </Border>
+
+        <Border Grid.Row="2" 
+                Background="Transparent"
+                Padding="0,15,0,0">
+            <StackPanel Orientation="Horizontal" 
+                        HorizontalAlignment="Right">
+                <Button Content="确定"
+                        Style="{StaticResource ActionButtonStyle}"
+                        Command="{Binding ConfirmCommand}"
+                        Background="#1890FF"
+                        Foreground="White"
+                        BorderThickness="0"/>
+
+                <Button Content="取消"
+                        Style="{StaticResource ActionButtonStyle}"
+                        Command="{Binding CancelCommand}"
+                        Background="White"
+                        BorderBrush="#DDDDDD"
+                        Foreground="#333333"/>
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>

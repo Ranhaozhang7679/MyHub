@@ -20,13 +20,13 @@ namespace Luster.Motion.Integration.WorkCardVerify
         private static readonly Dictionary<DeviceLevel, HashSet<SystemRole>> Matrix =
             new Dictionary<DeviceLevel, HashSet<SystemRole>>
             {
-                { DeviceLevel.L1,   new HashSet<SystemRole> { SystemRole.Operator, SystemRole.Sustaining } },
-                { DeviceLevel.L2,   new HashSet<SystemRole> { SystemRole.Operator, SystemRole.Sustaining } },
-                { DeviceLevel.L3,   new HashSet<SystemRole> { SystemRole.Operator, SystemRole.Sustaining } },
-                { DeviceLevel.L6,   new HashSet<SystemRole> { SystemRole.Operator, SystemRole.Sustaining } },
+                { DeviceLevel.L1,   new HashSet<SystemRole> { SystemRole.Operator, SystemRole.Maintenance, SystemRole.Integrator } },
+                { DeviceLevel.L2,   new HashSet<SystemRole> { SystemRole.Operator, SystemRole.Maintenance, SystemRole.Integrator } },
+                { DeviceLevel.L3,   new HashSet<SystemRole> { SystemRole.Operator, SystemRole.Maintenance, SystemRole.Integrator, SystemRole.Admin } },
+                { DeviceLevel.L6,   new HashSet<SystemRole> { SystemRole.Operator, SystemRole.Maintenance } },
                 { DeviceLevel.L7,   new HashSet<SystemRole> { SystemRole.Operator } },
                 { DeviceLevel.L8,   new HashSet<SystemRole> { SystemRole.Operator } },
-                { DeviceLevel.L9,   new HashSet<SystemRole> { SystemRole.Operator, SystemRole.Sustaining } },
+                { DeviceLevel.L9,   new HashSet<SystemRole> { SystemRole.Operator, SystemRole.Maintenance } },
             };
 
         /// <summary>
@@ -35,7 +35,8 @@ namespace Luster.Motion.Integration.WorkCardVerify
         private static readonly Dictionary<string, SystemRole> OfflineAccounts =
             new Dictionary<string, SystemRole>
             {
-                { "Luster@1996",        SystemRole.Sustaining },
+                { "Luster@1996",        SystemRole.Maintenance },
+                { "Luster@1996_Inter",  SystemRole.Integrator },
                 { "Luster@1996_Admin",  SystemRole.Admin },
                 { "Luster@1996_OP",     SystemRole.Operator },
             };

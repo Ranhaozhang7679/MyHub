@@ -1,11 +1,19 @@
 ﻿using Luster.Common.DataStruct.DataModels;
+using Luster.Common.DataStruct.Extensions;
+using Luster.Module.Motion.Business.Functions;
+using Luster.Motion.CommonUI.Events;
 using Luster.Motion.DataStruct;
 using Luster.Motion.DataStruct.DataModels;
+using Luster.Motion.EditorUI.Events;
+using Luster.SimDevice.EngineUI;
 using Luster.SimDevice.SubSystem.ViewModel;
 using Luster.TaskFlow.Common.Attributes;
+using Luster.TaskFlow.Common.Enums;
 using Luster.TaskFlow.Common.Models;
+using Luster.TaskFlow.Motion;
 using Microsoft.Win32;
 using Prism.Commands;
+using Prism.Events;
 using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
@@ -19,13 +27,7 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
 using System.Xml.Linq;
-using Luster.Module.Motion.Business.Functions;
-using Luster.TaskFlow.Motion;
-using Prism.Events;
-using Luster.TaskFlow.Common.Enums;
-using Luster.Common.DataStruct.Extensions;
-using Luster.Motion.EditorUI.Events;
-using Luster.Motion.CommonUI.Events;
+using Prism.Ioc;
 
 namespace Luster.SimDevice.SubSystem.ViewModel
 {
@@ -962,7 +964,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel
         }
     }
 
-    internal class KeyParameterContentVM : BindableBase
+    internal class KeyParameterContentVM : PageVM
     {
         private readonly IDeviceEngine _deviceEngine;
         private readonly IEventAggregator _ea;
@@ -975,7 +977,9 @@ namespace Luster.SimDevice.SubSystem.ViewModel
         private Dictionary<string, List<PDCAKeyParameterRow>> _stationDataCache;
 
         public ObservableCollection<IMotionModule> totalAEs;
-
+        public override bool IsShowAdd => false;
+        public override bool IsShowRemove => false;
+        public override bool IsShowAuto => false;
         public ObservableCollection<PDCAKeyParameterRow> ParameterRows
         {
             get => _parameterRows;
@@ -1021,7 +1025,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel
         public ICommand RefreshCommand { get; }
         public DelegateCommand ApplyCommand { get; set; }
 
-        public KeyParameterContentVM(IDeviceEngine deviceEngine, IEventAggregator @event)
+        public KeyParameterContentVM(IDeviceEngine deviceEngine, IEventAggregator @event) : base(GetEngineUI(deviceEngine))
         {
             _deviceEngine = deviceEngine;
             _ea = @event;
@@ -1036,6 +1040,21 @@ namespace Luster.SimDevice.SubSystem.ViewModel
             ApplyCommand = new DelegateCommand(OnApply);
         }
 
+        private static ISimDeviceEngineUI GetEngineUI(IDeviceEngine deviceEngine)
+        {
+            if (deviceEngine == null)
+                throw new ArgumentNullException(nameof(deviceEngine));
+            if (deviceEngine is ISimDeviceEngineUI engineUI)
+                return engineUI;
+            try
+            {
+                return ContainerLocator.Container.Resolve<ISimDeviceEngineUI>();
+            }
+            catch
+            {
+                throw new InvalidOperationException($"无法将 IDeviceEngine 转换为 ISimDeviceEngineUI，请检查依赖注入配置。");
+            }
+        }
         /// <summary>
         /// 导出数据为CSV文件
         /// </summary>
@@ -1585,7 +1604,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                     }
                     catch
                     {
-                      
+
                     }
                 }
                 else if (type == typeof(LPath))
@@ -1628,7 +1647,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                 bool hasBinding = false;
                 string bindingRefName = "";
                 bool showCheckBox = false;
-                bool? checkBoxValue = null; 
+                bool? checkBoxValue = null;
 
                 // 检查是否有绑定属性
                 if (parameters != null && parameters.TryGetValue(key, out var paramAttr))
@@ -1751,7 +1770,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                     }
                     catch
                     {
-                        
+
                     }
                 }
 

@@ -210,7 +210,19 @@ namespace Luster.Motion.DataStruct.Enums
         /// 绕X轴旋转
         /// </summary>
         [Description("W轴")]
-        W
+        W,
+ 
+        /// <summary>
+        /// 绕Y轴旋转
+        /// </summary>
+        [Description("U2轴")]
+        U2,
+
+        /// <summary>
+        /// 绕X轴旋转
+        /// </summary>
+        [Description("Z2轴")]
+        Z2
     }
 
 

@@ -217,6 +217,9 @@ namespace LusterMotion
         {
             base.ConfigureModuleCatalog(moduleCatalog);
 
+
+            moduleCatalog.AddModule<DC.Authorization.WPF.WpfAuthorizationModule>();
+
             // 注册UI模块
             moduleCatalog.AddModule<Luster.Motion.AlarmUI.AlarmModule>();// 报警
             moduleCatalog.AddModule<Luster.Motion.ReportUI.ReportModule>();// 报表

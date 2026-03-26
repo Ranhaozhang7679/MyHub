@@ -57,7 +57,7 @@
                     <DataGridTextColumn
                             Width="*"
                             MinWidth="200"
-                            Binding="{Binding AlarmCode, UpdateSourceTrigger=PropertyChanged}"
+                            Binding="{Binding AlarmCode, UpdateSourceTrigger=LostFocus}"
                             CanUserSort="False"
                             ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
                             Header="{lang:Lang Key={x:Static lang:LangKeys.AlarmCode}}"
@@ -66,7 +66,7 @@
                     <DataGridTextColumn
                             Width="150"
                             MinWidth="150"
-                            Binding="{Binding AlarmContent, UpdateSourceTrigger=PropertyChanged}"
+                            Binding="{Binding AlarmContent, UpdateSourceTrigger=LostFocus}"
                             CanUserSort="False"
                             ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
                             Header="报警内容"
@@ -75,7 +75,7 @@
                     <DataGridTextColumn
                             Width="150"
                             MinWidth="150"
-                            Binding="{Binding AlarmEnglish, UpdateSourceTrigger=PropertyChanged}"
+                            Binding="{Binding AlarmEnglish, UpdateSourceTrigger=LostFocus}"
                             CanUserSort="False"
                             ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
                             Header="报警英文"

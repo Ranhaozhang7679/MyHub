@@ -3147,4 +3147,25 @@
   <data name="RunModeTips" xml:space="preserve">
     <value>(Double-click to edit after enabling editing)</value>
   </data>
+  <data name="LADUpload" xml:space="preserve">
+    <value>LADUpload</value>
+  </data>
+  <data name="CPKTest" xml:space="preserve">
+    <value>CPKTest</value>
+  </data>
+  <data name="AutoVerication" xml:space="preserve">
+    <value>AutoVerication</value>
+  </data>
+  <data name="SolutionMode" xml:space="preserve">
+    <value>SolutionMode</value>
+  </data>
+  <data name="LoginMode" xml:space="preserve">
+    <value>LoginMode</value>
+  </data>
+  <data name="LoginLevel" xml:space="preserve">
+    <value>LoginLevel</value>
+  </data>
+  <data name="DataValidation" xml:space="preserve">
+    <value>DataValidation</value>
+  </data>
 </root>

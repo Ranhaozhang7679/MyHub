@@ -68,12 +68,13 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="HandyControl"/>
+        <PackageReference Include="HandyControl" />
         <PackageReference Include="Luster.Prism" />
         <PackageReference Include="MinVer" />
     </ItemGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\..\Modules\Luster.Authorization.Client\Luster.Authorization.Client.csproj" />
         <ProjectReference Include="..\..\Modules\Luster.Common.DataAccess\Luster.Common.DataAccess.csproj" />
         <ProjectReference Include="..\..\Modules\Luster.SimDevice\Luster.SimDevice.csproj" />
         <ProjectReference Include="..\..\Modules\Luster.Motion.DigitalSetup\Luster.Motion.DigitalSetup.csproj" />

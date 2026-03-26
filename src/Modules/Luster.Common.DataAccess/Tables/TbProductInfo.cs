@@ -75,9 +75,9 @@ namespace Luster.Common.DataAccess.Tables
 
 
         /// <summary>
-        /// 图片存储路劲
+        /// 图片存储路径
         /// </summary>
-        [PropSort(7), DisplayName("图片存储路劲")]
+        [PropSort(7), DisplayName("图片存储路径")]
         public string ImagePath { get; set; }
 
         [Ignore]

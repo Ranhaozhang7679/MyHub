@@ -1,4 +1,4 @@
-﻿#region 作者和版权
+#region 作者和版权
 
 /*************************************************************************************
 * CLR 版本:       4.0.30319.42000
@@ -41,8 +41,15 @@ namespace Luster.Motion.DataStruct.Virtual
     /// <summary>
     /// 虚拟设备
     /// </summary>
-    public abstract class VirtualDeviceBase : IVirtualDevice, IReference, IDisposable
+    public abstract class VirtualDeviceBase : IVirtualDevice, IReference, IDisposable, System.ComponentModel.INotifyPropertyChanged
     {
+        event System.ComponentModel.PropertyChangedEventHandler System.ComponentModel.INotifyPropertyChanged.PropertyChanged
+        {
+            add { propertyChanged += value; }
+            remove { propertyChanged -= value; }
+        }
+        private event System.ComponentModel.PropertyChangedEventHandler propertyChanged;
+
         /// <summary>
         /// 模块名称
         /// </summary>
@@ -56,6 +63,7 @@ namespace Luster.Motion.DataStruct.Virtual
                 if (srcV != module)
                 {
                     PropertyChanged?.Invoke(this, nameof(Module), srcV, value);
+                    propertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Module)));
                 }
             }
         }
@@ -84,6 +92,7 @@ namespace Luster.Motion.DataStruct.Virtual
                 if (srcV != name)
                 {
                     PropertyChanged?.Invoke(this, nameof(Name), srcV, value);
+                    propertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Name)));
                 }
             }
         }

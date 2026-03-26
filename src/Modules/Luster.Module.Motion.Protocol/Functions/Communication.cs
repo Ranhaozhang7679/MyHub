@@ -144,7 +144,7 @@ namespace Luster.Module.Motion.Protocol.Functions
             if (IsRN)
             {
                 command += "\r\n";
-            }         
+            }
             switch (Method)
             {
                 case CommMethod.GetResult:
@@ -182,7 +182,7 @@ namespace Luster.Module.Motion.Protocol.Functions
         private void ReceiveMessage(VCommuncation comm, bool IsAutoDisConnect)
         {
             // 通讯超时、读取为空时，不主动断开连接
-            OutString = comm.ReadSingle<string>("", OverTime, isCloseConnect: IsAutoDisConnect).Trim();
+            OutString = comm.ReadSingle<string>("", OverTime, isCloseConnect: IsAutoDisConnect)?.Trim(); // ??string.Empty
 
             if (!string.IsNullOrEmpty(Pattern))
             {

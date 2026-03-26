@@ -83,6 +83,22 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
             set { SetProperty(ref _currentMode, value); }
         }
 
+        /// <summary>
+        /// 是否使用模式特定的速度设置
+        /// </summary>
+        private bool _useModeSpecificSpeed;
+        public bool UseModeSpecificSpeed
+        {
+            get { return _useModeSpecificSpeed; }
+            set
+            {
+                SetProperty(ref _useModeSpecificSpeed, value);
+                UpdateAllAxesSpeedPercentConfig();
+                UpdateSpeedPercentByCurrentMode();
+                UpdateModeSpeedText();
+            }
+        }
+
         private DispatcherTimer _modeTextTimer;
         private string _modeSpeedText;
         public string ModeSpeedText
@@ -122,7 +138,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
             AxisTypes = typeof(AxisType).EnumToDataSource();
             SelectedList = new ObservableCollection<EngineUI.Models.AxisModel>();
             RemovePositionCommand = new DelegateCommand<PositionItem>(RemovePosition);
-
+            ModuleNameList = deviceEngine.GetModules();
             // 初始化模式相关数据
             InitModeData();
             // 初始化模式文本定时器
@@ -178,21 +194,18 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
             {
                 if (axisModel?.Tag is VAxis vAxis)
                 {
-                    // 根据当前模式获取对应的速度百分比
-                    double speedPercent = GetCurrentModeSpeedPercent(vAxis);
-                    
                     vAxis.CurrentMode = CurrentMode;
-                    if (CurrentMode != "生产模式" && CurrentMode != "空跑模式" && CurrentMode != "调试模式" && CurrentMode != "调机模式")
-                    {
-                        vAxis.SpeedPercent = speedPercent;
-                    }
-                        //if (CurrentMode != "生产模式" && CurrentMode != "空跑模式" && CurrentMode != "调试模式" && CurrentMode != "调机模式")
-                        //{
-                        //    vAxis.SpeedPercent = speedPercent;
-                        //    vAxis.CurrentMode = CurrentMode;
-                        //}
 
+                    if (UseModeSpecificSpeed)
+                    {
+                        double speedPercent = GetCurrentModeSpeedPercent(vAxis);
                         SpeedPercent = speedPercent * 100;
+                    }
+                    else
+                    {
+                        SpeedPercent = vAxis.SpeedPercent * 100;
+                    }
+
                     if (SpeedPercent > 150)
                     {
                         SpeedPercent = 150;
@@ -268,6 +281,9 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
 
 
         public List<VAxis> ListAxis { get; set; }
+
+        public List<string> ModuleNameList { get; set; }
+
         /// <summary>
         /// 显示Home参数
         /// </summary>
@@ -310,7 +326,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
             {
                 var vAxis = device as VAxis;
                 var axisModel = new AxisModel(vAxis);
-
+                //vAxis.UseModeSpecificSpeed = UseModeSpecificSpeed;
                 // 根据当前模式设置对应的速度百分比
                 double currentSpeedPercent = GetCurrentModeSpeedPercent(vAxis);
                 SpeedPercent = currentSpeedPercent * 100;
@@ -331,6 +347,11 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
                     {
                         AxisList.Add(axisModel);
                     }
+                }
+                if (AxisList.Any() && AxisList[0].Tag is VAxis firstAxis)
+                {
+                    _useModeSpecificSpeed = firstAxis.UseModeSpecificSpeed;
+                    RaisePropertyChanged(nameof(UseModeSpecificSpeed));
                 }
             }
         }
@@ -804,7 +825,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
                 Task.Run(() =>
                 {
                     axis.Tag.MoveAbs(MovePos);
-                    axis.Tag.CheckMotionDone(targetPulse : MovePos * axis.PerPluse);
+                    axis.Tag.CheckMotionDone(targetPulse: MovePos * axis.PerPluse);
                 });
             }
         }));
@@ -1110,8 +1131,16 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
                     // 根据当前模式保存到对应的属性
                     double speedPercentValue = Math.Round(args.NewValue / 100, 1);
 
-                    // 设置当前模式的百分比值
-                    SetCurrentModeSpeedPercent(vAxis, speedPercentValue);
+                    if (UseModeSpecificSpeed)
+                    {
+                        // 勾选时：根据当前模式更新对应的百分比
+                        SetCurrentModeSpeedPercent(vAxis, speedPercentValue);
+                    }
+                    else
+                    {
+                        // 未勾选时：只更新通用速度百分比
+                        vAxis.SpeedPercent = speedPercentValue;
+                    }
                 }
             }
 
@@ -1126,14 +1155,14 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
         private double GetCurrentModeSpeedPercent(VAxis vAxis)
         {
             if (vAxis == null) return 0.1;
-
+            if (!UseModeSpecificSpeed) return vAxis.SpeedPercent;
             return CurrentMode switch
             {
                 "生产模式" => vAxis.ProductionModelSpeedPercent,
                 "空跑模式" => vAxis.EmptyRunSpeedPercent,
                 "调试模式" => vAxis.DebugSpeedPercent,
                 "调机模式" => vAxis.DebugSpeedPercent,
-                _ => vAxis.SpeedPercent 
+                _ => vAxis.OtherModeSpeedPercent
             };
         }
 
@@ -1144,21 +1173,45 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
         {
             if (vAxis == null) return;
 
-            switch (CurrentMode)
+            // 只有在勾选使用模式特定速度时才更新对应模式的百分比
+            if (vAxis.UseModeSpecificSpeed)
             {
-                case "生产模式":
-                    vAxis.ProductionModelSpeedPercent = value;
-                    break;
-                case "空跑模式":
-                    vAxis.EmptyRunSpeedPercent = value;
-                    break;
-                case "调试模式":
-                case "调机模式": 
-                    vAxis.DebugSpeedPercent = value;
-                    break;
-                default:
-                    vAxis.SpeedPercent = value;
-                    break;
+                switch (CurrentMode)
+                {
+                    case "生产模式":
+                        vAxis.ProductionModelSpeedPercent = value;
+                        break;
+                    case "空跑模式":
+                        vAxis.EmptyRunSpeedPercent = value;
+                        break;
+                    case "调试模式":
+                    case "调机模式":
+                        vAxis.DebugSpeedPercent = value;
+                        break;
+                    default:
+                        vAxis.OtherModeSpeedPercent = value;
+                        break;
+                }
+            }
+            else
+            {
+                // 未勾选时，只更新通用速度百分比
+                vAxis.SpeedPercent = value;
+            }
+        }
+        /// <summary>
+        /// 更新所有轴的速度百分比配置
+        /// </summary>
+        private void UpdateAllAxesSpeedPercentConfig()
+        {
+            if (AxisList == null || !AxisList.Any()) return;
+
+            foreach (var axisModel in AxisList)
+            {
+                if (axisModel?.Tag is VAxis vAxis)
+                {
+                    vAxis.UseModeSpecificSpeed = UseModeSpecificSpeed;
+                }
             }
         }
         private void UpdateModeSpeedText()
@@ -1179,17 +1232,34 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
                     return;
                 }
 
-                // 计算各模式百分比
-                var productionPercent = Math.Round(vAxis.ProductionModelSpeedPercent * 100, 0);
-                var emptyRunPercent = Math.Round(vAxis.EmptyRunSpeedPercent * 100, 0);
-                var debugPercent = Math.Round(vAxis.DebugSpeedPercent * 100, 0);
-                var otherPercent = Math.Round(vAxis.SpeedPercent * 100, 0); 
+                if (UseModeSpecificSpeed)
+                {
+                    // 勾选时：显示生产、空跑、调试/机模式百分比，以及其他模式百分比
+                    //var productionPercent = Math.Round(vAxis.ProductionModelSpeedPercent * 100, 0);
+                    //var emptyRunPercent = Math.Round(vAxis.EmptyRunSpeedPercent * 100, 0);
+                    //var debugPercent = Math.Round(vAxis.DebugSpeedPercent * 100, 0);
+                    //var otherPercent = Math.Round(vAxis.OtherModeSpeedPercent * 100, 0);
 
-                // 生成文本
-                ModeSpeedText = $"生产模式: {productionPercent:F0}% " +
-                               $"空跑模式: {emptyRunPercent:F0}% " +
-                               $"调试/机模式: {debugPercent:F0}% " +
-                               $"其他模式: {otherPercent:F0}%";
+                    //ModeSpeedText = $"生产模式: {productionPercent:F0}% " +
+                    //               $"空跑模式: {emptyRunPercent:F0}% " +
+                    //               $"调试/机模式: {debugPercent:F0}% " +
+                    //               $"其他模式: {otherPercent:F0}%";
+                    double percent = CurrentMode switch
+                    {
+                        "生产模式" => vAxis.ProductionModelSpeedPercent,
+                        "空跑模式" => vAxis.EmptyRunSpeedPercent,
+                        "调试模式" or "调机模式" => vAxis.DebugSpeedPercent,
+                        _ => vAxis.OtherModeSpeedPercent
+                    };
+
+                    ModeSpeedText = $"调试百分比";
+                }
+                else
+                {
+                    // 未勾选时：显示通用百分比
+                    var allPercent = Math.Round(vAxis.SpeedPercent * 100, 0);
+                    ModeSpeedText = $"通用百分比";
+                }
             }
             catch (Exception ex)
             {

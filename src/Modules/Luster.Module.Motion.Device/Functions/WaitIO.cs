@@ -99,7 +99,7 @@ namespace Luster.Module.Motion.Device.Functions
                 retryAction = () =>
                 {
                     MyOwner.LightManager.SetBuzzer(true, 500, 500);
-                    OnAlarm(AlarmType.InfoTip, $"{MyOwner.Alias}等待IO超时,蜂鸣提示，再次等待");
+                    OnAlarm(AlarmType.Timeout, $"{MyOwner.Alias}等待IO超时,蜂鸣提示，再次等待");
                     if (IOType == IOType.Digital)
                     {
                         io.WaitIO(DigitalVal, -1);

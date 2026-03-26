@@ -200,4 +200,18 @@
         </Style.Triggers>
     </Style>
 
+    <Style x:Key="StateButton" TargetType="Button">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Image x:Name="Img" Width="45" Height="32" Source="/Luster.SimDevice.SubSystem;component/Resources/布尔F.PNG"/>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Tag" Value="True">
+                            <Setter TargetName="Img" Property="Source" Value="/Luster.SimDevice.SubSystem;component/Resources/布尔F.PNG"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 </ResourceDictionary>

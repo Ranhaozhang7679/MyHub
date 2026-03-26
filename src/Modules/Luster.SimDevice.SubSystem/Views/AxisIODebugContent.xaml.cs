@@ -1,6 +1,7 @@
 ﻿using Luster.SimDevice.EngineUI.Models;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,73 +26,5 @@ namespace Luster.SimDevice.SubSystem.Views
         {
             InitializeComponent();
         }
-
     }
-
-
-#if false
-    /// <summary>
-    /// IO 模板
-    /// </summary>
-    public class ValueTemplateSelector : DataTemplateSelector
-    {
-        /// <summary>
-        /// 数字模板
-        /// </summary>
-        public DataTemplate DigInTemplate { get; set; }
-
-        /// <summary>
-        /// 模拟量模板
-        /// </summary>
-        public DataTemplate DigOutTemplate { get; set; }
-
-        /// <summary>
-        /// 数字模板
-        /// </summary>
-        public DataTemplate AnaInTemplate { get; set; }
-
-        /// <summary>
-        /// 模拟量模板
-        /// </summary>
-        public DataTemplate AnaOutTemplate { get; set; }
-
-        /// <summary>
-        /// 方法
-        /// </summary>
-        /// <param name="item"></param>
-        /// <param name="container"></param>
-        /// <returns></returns>
-        public override DataTemplate SelectTemplate(object item, DependencyObject container)
-        {
-            if (item != null && item is IOModel model)
-            {
-                if (model.IsDigital)
-                {
-                    if (model.IsIn)
-                    {
-                        return DigInTemplate;
-                    }
-                    else
-                    {
-                        return DigOutTemplate;
-                    }
-                }
-                else
-                {
-                    if (model.IsIn)
-                    {
-                        return AnaInTemplate;
-                    }
-                    else
-                    {
-                        return AnaOutTemplate;
-                    }
-                }
-
-            }
-
-            return DigInTemplate;
-        }
-    }
-#endif
 }

@@ -3,6 +3,8 @@ using HandyControl.Data;
 using LiveCharts;
 using LiveCharts.Defaults;
 using LiveCharts.Wpf;
+using Luster.Common.Assets;
+using Luster.Common.Assets.FloatingInfo.Services;
 using Luster.Common.DataAccess.Repositories;
 using Luster.Common.DataStruct;
 using Luster.Common.DataStruct.DataModels;
@@ -11,6 +13,7 @@ using Luster.Motion.CommonUI;
 using Luster.Motion.DigitalSetup.AssTables;
 using Luster.Motion.DigitalSetup.Datas;
 using Luster.Motion.DigitalSetup.Helpers;
+using Luster.Motion.DigitalSetup.Services;
 using Luster.Motion.EditorUI;
 using Luster.TaskFlow.Common.Attributes;
 using Luster.TaskFlow.Common.Enums;
@@ -22,6 +25,7 @@ using Newtonsoft.Json.Linq;
 using Prism.Commands;
 using Prism.Mvvm;
 using Prism.Regions;
+using Prism.Services.Dialogs;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -41,11 +45,21 @@ using MessageBox = System.Windows.MessageBox;
 
 namespace Luster.Motion.DigitalSetup.ViewModel
 {
-    public class BaseAss : BindableBase
+    public class BaseAss : BindableBase, IRegionMemberLifetime
     {
         public string csvPath = @"D:\Motion\AssData.csv";
         public CancellationTokenSource _cts = new CancellationTokenSource();
-        
+
+        /// <summary>
+        /// 保持视图实例不被销毁，切换页面时保留状态
+        /// </summary>
+        public bool KeepAlive => true;
+
+        /// <summary>
+        /// 标记是否已初始化，防止LoadedCommand重复触发
+        /// </summary>
+        protected bool _isInitialized = false;
+
         /// <summary>
         /// 全局保存命令，用于注册到GlobalCommands.SaveCommand
         /// </summary>
@@ -70,6 +84,37 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
         public readonly CSVHelper _csvHelper;
         public string ConfigKey { get; set; } // 每个界面ViewModel设置自己的字段名
+
+        /// <summary>
+        /// 父页面Region名称，用于构建子页面的浮动信息窗口PageId
+        /// 子类应在构造函数中设置此属性
+        /// </summary>
+        protected string _parentRegionName = "DigitalInfoDialog";
+
+        /// <summary>
+        /// 持久化服务，用于保存和加载页面配置
+        /// </summary>
+        protected DataValidationPersistenceService _persistenceService;
+
+        /// <summary>
+        /// 页面启用设置服务，用于加载和应用页面启用状态
+        /// </summary>
+        protected PageEnableSettingsService _pageEnableSettingsService;
+
+        /// <summary>
+        /// 浮动信息服务，用于显示浮动信息窗口
+        /// </summary>
+        protected IFloatingInfoService _floatingInfoService;
+
+        /// <summary>
+        /// 对话框服务，用于显示对话框（子类可设置）
+        /// </summary>
+        protected IDialogService _dialogService;
+
+        /// <summary>
+        /// 设置点检确认消息命令
+        /// </summary>
+        public ICommand SetCheckMessageCommand { get; protected set; }
 
 
         #region  属性
@@ -179,12 +224,16 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         }));
 
         /// <summary>
-        /// 模块加载
+        /// 模块加载 - 只在第一次加载时初始化，避免重复触发
         /// </summary>
         private DelegateCommand<object> _loadedCommand;
         public DelegateCommand<object> LoadedCommand => _loadedCommand ?? (_loadedCommand = new DelegateCommand<object>((obj) =>
         {
-            InitModels();
+            if (!_isInitialized)
+            {
+                _isInitialized = true;
+                InitModels();
+            }
         }));
 
         #endregion
@@ -325,7 +374,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             try
             {
                 var recipeDir = _commonbus.CurrentRecipe.GetRecipePath();
-                var configFile = Path.Combine(recipeDir, "db","Ass_Data","StationConfig.json");
+                var configFile = Path.Combine(recipeDir, "db", "Ass_Data", "StationConfig.json");
                 JObject allConfig;
                 if (File.Exists(configFile))
                 {
@@ -363,7 +412,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             try
             {
                 var recipeDir = _commonbus.CurrentRecipe.GetRecipePath();
-                var configFile = Path.Combine(recipeDir, "db", "Ass_Data","StationConfig.json");
+                var configFile = Path.Combine(recipeDir, "db", "Ass_Data", "StationConfig.json");
                 if (!File.Exists(configFile) || string.IsNullOrEmpty(ConfigKey))
                     return;
 
@@ -381,7 +430,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 }
                 SelectedStationName = configObj["SelectedStationName"]?.Value<string>() ?? SelectedStationName;
 
-                
+
             }
             catch (Exception ex)
             {
@@ -521,15 +570,18 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 // 选择改变时，刷新图表
                 if (_currentPage == "PressureRepetition")
                 {
+                    IsLinear = "Collapsed";
                     UpdateChart();
                 }
                 else if (_currentPage == "CalibrationTable")
                 {
+                    IsLinear = "Visible";
                     UpdateChart2();
                 }
                 // “自动LoadCell”页面初始加载
                 else if (_currentPage == null)
                 {
+                    IsLinear = "Visible";
                     UpdateChart2();
                 }
             }
@@ -607,6 +659,37 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             }
 
             SeriesCollection = seriesCollection;
+        }
+        // 新增压力拟合曲线的k和b约束值
+        private string _isLinear;
+        public string IsLinear
+        {
+            get { return _isLinear; }
+            set { SetProperty(ref _isLinear, value); }
+        }
+        private string _kValue = "0.05";
+        public string KValue
+        {
+            get { return _kValue; }
+            set { SetProperty(ref _kValue, value); }
+        }
+        private string _bValue = "0.05";
+        public string BValue
+        {
+            get { return _bValue; }
+            set { SetProperty(ref _bValue, value); }
+        }
+        private string _resValue;
+        public string ResValue
+        {
+            get { return _resValue; }
+            set { SetProperty(ref _resValue, value); }
+        }
+        private string _resColor;
+        public string ResColor
+        {
+            get { return _resColor; }
+            set { SetProperty(ref _resColor, value); }
         }
         // 压力线性曲线
         public void DrawPressureLinearChartOpt()
@@ -737,19 +820,38 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     Fill = new SolidColorBrush(colorList[colorIndex % colorList.Length]),
                     Stroke = new SolidColorBrush(colorList[colorIndex % colorList.Length]),
                     MinPointShapeDiameter = 8,
-                    MaxPointShapeDiameter = 8                 
+                    MaxPointShapeDiameter = 8
                 };
                 seriesCollection.Add(scatterSeries);
                 colorIndex++;
                 // 6. 更新 UI 显示 k 和 b（绑定到 TextBlock）
                 FitEquation = $"y = {k:F4}x + {b:F4}";
+                // 根据约束值，给出压力线性的测量结果
+                if (double.TryParse(KValue, out double KValued) && double.TryParse(BValue, out double BValued))
+                {
+                    if (Math.Abs(k - KValued) <= 1 && Math.Abs(b) <= BValued)
+                    {
+                        ResColor = "LightGreen";
+                        ResValue = "OK";
+                    }
+                    else
+                    {
+                        ResColor = "LightPink";
+                        ResValue = "NG";
+                    }
+                }
+                else
+                {
+                    ResColor = "LightPink";
+                    ResValue = "K/B非法";
+                }
             }
             SeriesCollection = seriesCollection;
         }
 
         #endregion
 
-        public BaseAss(IRepository repository, IRegionManager regionManager, ICommonBus commonhus, CSVHelper csvHelper, FlowBus flowBus)
+        public BaseAss(IRepository repository, IRegionManager regionManager, ICommonBus commonhus, CSVHelper csvHelper, FlowBus flowBus, IDialogService dialogService)
         {
 
             _syncContext = SynchronizationContext.Current ?? new SynchronizationContext();
@@ -765,13 +867,23 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             _regionManager = regionManager;
             _commonbus = commonhus;
             _flowBus = flowBus;
+            _dialogService = dialogService;
             ItemModels = new ObservableCollection<object>();
             _csvHelper = csvHelper;
 
+            var recipeDir = _commonbus.CurrentRecipe?.GetRecipePath() ?? "D:\\Luster\\DigitalSetUp\\";
+            _persistenceService = new DataValidationPersistenceService();
+            _persistenceService?.SetConfigFilePath(recipeDir);
+
+            // 通过服务定位器获取 PageEnableSettingsService 单例
+            _pageEnableSettingsService = DigitalSetupServiceLocator.PageEnableSettingsService;
+
+            // 通过服务定位器获取 FloatingInfoService 单例
+            _floatingInfoService = DigitalSetupServiceLocator.FloatingInfoService;
 
             // 将 SaveStationConfigCommand 的初始化方式改为使用委托调用基类的受保护方法
             SaveStationConfigCommand = new DelegateCommand(SaveStationConfigHandler);
-           
+
 
             // 监听StationConfigs集合变化
             StationConfigs.CollectionChanged += (s, e) =>
@@ -798,16 +910,90 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             }
 
             AvailableItems = new ObservableCollection<string>();
-            
+
             // 注册到全局保存命令，主窗口保存时会自动保存当前页面数据
             _globalSaveCommand = new DelegateCommand(() => SaveGridItems(ItemModels));
             GlobalCommands.SaveCommand.RegisterCommand(_globalSaveCommand);
+
+            // 初始化设置点检确认消息命令
+            SetCheckMessageCommand = new DelegateCommand<CommonPageModel>(OnSetCheckMessage);
         }
 
         protected void LogStatus(string msg)
         {
             LogMsg = $"[{DateTime.Now:T}] {msg}";
         }
+
+        #region 页面配置持久化方法
+
+        /// <summary>
+        /// 加载页面点检确认消息配置
+        /// </summary>
+        protected void LoadCheckConfirmMessages()
+        {
+            if (_persistenceService == null || Pages == null) return;
+
+            try
+            {
+                var data = _persistenceService.LoadMessageConfig();
+                if (data?.PageConfigs != null && data.PageConfigs.Count > 0)
+                {
+                    foreach (var pageConfig in data.PageConfigs)
+                    {
+                        var page = Pages.FirstOrDefault(p => p.Name == pageConfig.PageName);
+                        if (page != null)
+                        {
+                            page.CheckConfirmMessage = pageConfig.CheckConfirmMessage;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"加载页面配置失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 保存页面点检确认消息配置
+        /// </summary>
+        protected void SaveCheckConfirmMessages()
+        {
+            if (_persistenceService == null || Pages == null) return;
+
+            try
+            {
+                // 加载现有配置，避免覆盖其他界面的配置
+                var data = _persistenceService.LoadMessageConfig();
+
+                foreach (var page in Pages)
+                {
+                    // 查找是否已存在该页面的配置
+                    var existingConfig = data.PageConfigs.FirstOrDefault(c => c.PageName == page.Name);
+                    if (existingConfig != null)
+                    {
+                        // 更新现有配置
+                        existingConfig.CheckConfirmMessage = page.CheckConfirmMessage;
+                    }
+                    else
+                    {
+                        // 添加新配置
+                        data.PageConfigs.Add(new PageConfig
+                        {
+                            PageName = page.Name,
+                            CheckConfirmMessage = page.CheckConfirmMessage
+                        });
+                    }
+                }
+                _persistenceService.SaveMessageConfig(data);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"保存页面配置失败: {ex.Message}");
+            }
+        }
+
+        #endregion
 
 
         /// <summary>
@@ -855,42 +1041,59 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             if (collection == null)// || collection.Count == 0) return;
                 return;
             //var itemType = collection[0].GetType();
+            if (SelectedReportPage == null)
+            {
+                return;
+            }
             var itemType = SelectedReportPage.ViewType;
             if (itemType == null) return;
-                // 获取 Cast<T> 方法
-                MethodInfo castMethod = typeof(Enumerable).GetMethod(
-                    "Cast",
-                    BindingFlags.Public | BindingFlags.Static,
-                    null,
-                    new[] { typeof(IEnumerable) },
-                    null);
+            // 获取 Cast<T> 方法
+            MethodInfo castMethod = typeof(Enumerable).GetMethod(
+                "Cast",
+                BindingFlags.Public | BindingFlags.Static,
+                null,
+                new[] { typeof(IEnumerable) },
+                null);
 
-                if (castMethod == null)
-                {
-                    throw new InvalidOperationException("找不到 Enumerable.Cast 方法");
-                }
+            if (castMethod == null)
+            {
+                throw new InvalidOperationException("找不到 Enumerable.Cast 方法");
+            }
 
-                MethodInfo genericCastMethod = castMethod.MakeGenericMethod(itemType);
+            MethodInfo genericCastMethod = castMethod.MakeGenericMethod(itemType);
 
-                object convertedEnumerable = genericCastMethod.Invoke(null, new object[] { collection });
+            object convertedEnumerable = genericCastMethod.Invoke(null, new object[] { collection });
 
-                // 直接调用CSVHelper实例方法
-                var method = typeof(CSVHelper).GetMethod("InsertOrUpdateNew")?.MakeGenericMethod(itemType);
+            // 直接调用CSVHelper实例方法
+            var method = typeof(CSVHelper).GetMethod("InsertOrUpdateNew")?.MakeGenericMethod(itemType);
 
-                if (method == null)
-                {
-                    throw new InvalidOperationException("找不到 InsertOrUpdateNew 泛型方法");
-                }
+            if (method == null)
+            {
+                throw new InvalidOperationException("找不到 InsertOrUpdateNew 泛型方法");
+            }
 
-                method.Invoke(_csvHelper, new object[] { convertedEnumerable });
+            method.Invoke(_csvHelper, new object[] { convertedEnumerable });
         }
 
         protected void InitModels()
         {
             OnEnd();
+            // 应用子页面启用设置
+            ApplySubPageSettings();
             // 初始化数据
             PageUpdated(new FunctionEventArgs<int>(1));
             PageIndex = 1;
+        }
+
+        /// <summary>
+        /// 应用子页面的启用设置（加载全部配置并应用到所有子页面）
+        /// </summary>
+        protected void ApplySubPageSettings()
+        {
+            if (_pageEnableSettingsService != null)
+            {
+                _pageEnableSettingsService.ApplySubPageSettings();
+            }
         }
         // 保存当前页面标识
         private string _currentPage;
@@ -912,6 +1115,35 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 {
                     DrawPressureLinearChartOpt();
                 }
+
+                //// 显示子页面对应的浮动信息窗口
+                //ShowFloatingInfoForSubPage(obj.Name);
+            }
+        }
+
+        /// <summary>
+        /// 显示子页面对应的浮动信息窗口
+        /// </summary>
+        /// <param name="subPageName">子页面名称</param>
+        protected void ShowFloatingInfoForSubPage(string subPageName)
+        {
+            try
+            {
+                // 构建子页面的PageId，格式为：父页面Region_子页面Name
+                // 例如：IOinspectionContent_Digital_In_Single
+                // 如果_parentRegionName为空，则使用_currentPage作为备用
+                string parentRegion = !string.IsNullOrEmpty(_parentRegionName) ? _parentRegionName : ConfigKey;
+                string pageId = $"{parentRegion}_{subPageName}";
+                
+                // 先隐藏所有浮动窗口
+                _floatingInfoService?.HideAllFloatingInfo();
+                
+                // 显示当前子页面的浮动窗口
+                _floatingInfoService?.ShowFloatingInfo(pageId);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"显示子页面浮动信息窗口失败: {ex.Message}");
             }
         }
 
@@ -996,7 +1228,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 var index = obj.Info;
                 long count = 0;
                 IEnumerable<object> infos = Enumerable.Empty<object>();
-
+                if (SelectedReportPage == null) return;
                 // 获取当前选中的类型
                 Type targetType = SelectedReportPage.ViewType;
 
@@ -1009,7 +1241,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
                 count = (long)parameters[2];
                 infos = ((IEnumerable)result).Cast<object>().ToList();
-                
+
                 /* 1. 显式指定 GroupBy 的泛型实参：<object, string> 
                       把“项序+项次”直接拼成 string 当 key，省去匿名对象。 */
                 var filtered = infos
@@ -1066,15 +1298,32 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         /// <summary>
         /// 一键点检
         /// </summary>
-        //public virtual void OnOneKeyCheck()
-        //{
+        public virtual async void OnOneKeyCheck(object obj)
+        {
+            //耗时的点检操作
+            //throw new FriendlyException("未实现一键点检功能");
 
-        //    //耗时的点检操作            
+        }
 
-        //    throw new FriendlyException("未实现一键点检功能");
+        public virtual async Task OnOneKeyCheckAsync(object obj)
+        {
+            // 如果当前页面设置了确认消息，先显示确认弹窗
+            if (!string.IsNullOrEmpty(SelectedReportPage?.CheckConfirmMessage))
+            {
+                var result = await ShowConfirmAsync(SelectedReportPage.CheckConfirmMessage);
+                if (result != ButtonResult.OK)
+                {
+                    return;
+                }
+            }
 
-        //}
-        public virtual void OnOneKeyCheck(object obj)
+            ExecuteOneKeyCheck(obj);
+        }
+
+        /// <summary>
+        /// 执行一键点检的实际逻辑
+        /// </summary>
+        private void ExecuteOneKeyCheck(object obj)
         {
             var collection = obj as ObservableCollection<object>;
             if (collection == null)
@@ -1102,10 +1351,53 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             {
                 return;
             }
-                //耗时的点检操作            
+            //耗时的点检操作
 
-                throw new FriendlyException("未实现一键点检功能");
+            throw new FriendlyException("未实现一键点检功能");
 
+        }
+
+        /// <summary>
+        /// 设置点检确认消息
+        /// </summary>
+        protected virtual void OnSetCheckMessage(CommonPageModel page)
+        {
+            if (page == null) return;
+
+            //if (_dialogService == null)
+            //{
+            //    ShowMessage("对话框服务未初始化");
+            //    return;
+            //}
+
+            // 显示子页面对应的浮动信息窗口
+            ShowFloatingInfoForSubPage(page.Name);
+
+            //_dialogService.ShowInfoInput($"设置 [{page.Name}] 的点检确认消息:", page.CheckConfirmMessage ?? string.Empty, r =>
+            //{
+            //    if (r.Result == ButtonResult.OK)
+            //    {
+            //        var text = r.Parameters.GetValue<string>("Text");
+            //        page.CheckConfirmMessage = text;
+            //        // 保存配置到文件
+            //        SaveCheckConfirmMessages();
+            //    }
+            //});
+        }
+
+        /// <summary>
+        /// 异步显示确认对话框
+        /// </summary>
+        protected Task<ButtonResult> ShowConfirmAsync(string message)
+        {
+            if (_dialogService == null)
+            {
+                return Task.FromResult(ButtonResult.None);
+            }
+
+            var tcs = new TaskCompletionSource<ButtonResult>();
+            _dialogService.ShowConfirm(message, r => tcs.SetResult(r.Result), false);
+            return tcs.Task;
         }
         /// <summary>
         /// 终止点检
@@ -1231,7 +1523,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             {
                 GlobalCommands.SaveCommand.UnregisterCommand(_globalSaveCommand);
             }
-            
+
             _cts?.Cancel();
             _cts?.Dispose();
             _task?.Dispose();

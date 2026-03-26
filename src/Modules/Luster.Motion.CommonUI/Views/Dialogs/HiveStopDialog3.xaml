@@ -15,13 +15,18 @@
         <Border Background="White" Margin="5" Padding="5" MaxHeight="150">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>
-                    <CheckBox Content="安全：检查所有安全装置功能是否正常，标识是否齐全" Margin="2"/>
-                    <CheckBox Content="5S：检查电控箱、轴、导轨和机台内部是否有灰尘等脏污" Margin="2"/>
-                    <CheckBox Content="气路：检查听气管接头是否有漏气、气管与运动连接处是否有磨损" Margin="2"/>
-                    <CheckBox Content="电路：检查是否有露铜和明显磨损" Margin="2"/>
-                    <CheckBox Content="限位感应器：检查固定螺丝、是否有松动，线路是否有磨损" Margin="2"/>
-                    <CheckBox Content="流水线：检查是否正常工作，是否出现卡载具情况" Margin="2"/>
-                    <CheckBox Content="皮带：检查是否龟裂，齿痕是否清晰，转动时是否有打滑现象" Margin="2"/>
+                    <CheckBox x:Name="SelectAllCheckBox" Content="全选/Select All" Margin="2" FontWeight="Bold"
+                              Checked="SelectAllCheckBox_Checked" Unchecked="SelectAllCheckBox_Unchecked"/>
+                    <Separator Margin="2,2,2,4"/>
+                    <StackPanel x:Name="CheckListPanel">
+                        <CheckBox Content="安全：检查所有安全装置功能是否正常，标识是否齐全" Margin="2"/>
+                        <CheckBox Content="5S：检查电控箱、轴、导轨和机台内部是否有灰尘等脏污" Margin="2"/>
+                        <CheckBox Content="气路：检查听气管接头是否有漏气、气管与运动连接处是否有磨损" Margin="2"/>
+                        <CheckBox Content="电路：检查是否有露铜和明显磨损" Margin="2"/>
+                        <CheckBox Content="限位感应器：检查固定螺丝、是否有松动，线路是否有磨损" Margin="2"/>
+                        <CheckBox Content="流水线：检查是否正常工作，是否出现卡载具情况" Margin="2"/>
+                        <CheckBox Content="皮带：检查是否龟裂，齿痕是否清晰，转动时是否有打滑现象" Margin="2"/>
+                    </StackPanel>
                 </StackPanel>
             </ScrollViewer>
         </Border>

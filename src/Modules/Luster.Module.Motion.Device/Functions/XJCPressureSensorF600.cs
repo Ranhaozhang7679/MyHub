@@ -41,13 +41,13 @@ using System.Windows;
 
 namespace Luster.Module.Motion.Device.Functions
 {
-  
+
     public class XJCPressureSensorF600 : MotionFunction, IPauseFunction
     {
         [NotEmpty]
         [Parameter("通信设备", 0, CN = "通信设备", EditorType = typeof(VCommuncation))]
         public VDevice CommDevice { get; set; }
-      
+
         [Parameter("从站设备", 1, CN = "从站设备", CanRef = ParamRef.NoRef)]
         public SocketAction Slave { get; set; }
 
@@ -80,6 +80,14 @@ namespace Luster.Module.Motion.Device.Functions
 
         [Parameter("多次读取间隔时间，单位为ms", 9, CN = "间隔", DefaultV = 1)]
         public int Interval { get; set; }
+
+        [DependOn("PActionType", PressureActionType.CalibrationStart)]
+        [Parameter("标定值", 10, CN = "手持压力传感器值", CanRef = ParamRef.Ref, DefaultV = 1)]
+        public double CalibrationValue { get; set; }
+
+        [DependOn("PActionType", PressureActionType.CalibrationStart)]
+        [Parameter("量程", 11, CN = "压力传感器量程", DefaultV = 5)]
+        public double MeasuringRange { get; set; }
 
         [DependOn("PActionType", PressureActionType.ReadValue)]
         [Parameter("压力传感器值,单位为千克", 10, CN = "压力传感器值", ParamType = TaskFlow.Common.Enums.ParamType.OUT, DefaultV = 0)]
@@ -134,7 +142,7 @@ namespace Luster.Module.Motion.Device.Functions
                     }
                 }
             }
-            else
+            else if (PActionType == PressureActionType.ReadValue)
             {
                 // 2、延时读取
                 Thread.Sleep(DelayTime);
@@ -146,12 +154,12 @@ namespace Luster.Module.Motion.Device.Functions
                         lock (lockRW)
                         {
                             var coilVs = communcation.Read<float>($"{StationNum} 04 {(ChannelNo - 1) * 2} 1");
-                            if (Times<3)
+                            if (Times < 3)
                             {
                                 if (coilVs.Count > 0)
                                 {
-                                    Value += Math.Round(coilVs[0],3);
-                                   
+                                    Value += Math.Round(coilVs[0], 3);
+
                                 }
                                 else
                                 {
@@ -170,16 +178,16 @@ namespace Luster.Module.Motion.Device.Functions
                         Thread.Sleep(Interval);
                     }
                     //如果读值次数大于等于3次，去除最大最小值，取平均值
-                    if (Times>=3)
+                    if (Times >= 3)
                     {
                         Value = 0;
                         lstPressVal.Remove(lstPressVal.Max());
                         lstPressVal.Remove(lstPressVal.Min());
-                        for (int j = 0; j<Times-2; j++)
+                        for (int j = 0; j < Times - 2; j++)
                         {
                             Value += lstPressVal[j];
                         }
-                        Value = Math.Round(Math.Round(Value, 3) / (double)(Times-2), 3);
+                        Value = Math.Round(Math.Round(Value, 3) / (double)(Times - 2), 3);
                     }
                     else
                     {
@@ -191,6 +199,45 @@ namespace Luster.Module.Motion.Device.Functions
                     Value = PressureValue;
                 }
             }
+            else if (PActionType == PressureActionType.CalibrationSet)
+            {
+                try
+                {
+                    //这里的流程是
+                    //1、输入密码：
+                    communcation.WriteWithoutBlocking<int>(1111, $"{StationNum} 10 0 1");
+                    Thread.Sleep(5);
+                    //2、设置标定类型（砝码标定）
+                    communcation.WriteWithoutBlocking<int>(0, $"{StationNum} 10 {(528 + ChannelNo * 10 - 10) * 2} 1");
+                    Thread.Sleep(5);
+                    //3、设置零点标定时得零点mV值
+                    communcation.WriteWithoutBlocking<int>(0, $"{StationNum} 10 {(531 + ChannelNo * 10 - 10) * 2} 1");
+
+                }
+                catch (Exception ex)
+                {
+                    errMsg = ex.ToString();
+                }
+            }
+            else if (PActionType == PressureActionType.CalibrationStart)
+            {
+                try
+                {
+                    //4、设置增益标定 地址-208（00 D0） 值-0
+                    //communcation.WriteWithoutBlocking<int>(0, $"{StationNum} 10 {(** + ChannelNo * 10 - 10) * 2} 1");
+                    //Thread.Sleep(5);
+                    //5、设置增益标定对应的重量显示值 - 手持压力值
+                    communcation.WriteWithoutBlocking<float>((float)CalibrationValue, $"{StationNum} 10 {(533 + ChannelNo * 10 - 10) * 2} 1");
+                    Thread.Sleep(5);
+                    //6、设置仪表最大量程 
+                    communcation.WriteWithoutBlocking<float>((float)MeasuringRange, $"{StationNum} 10 {(537 + ChannelNo * 10 - 10) * 2} 1");
+                }
+                catch (Exception ex)
+                {
+                    errMsg = ex.ToString();
+                }
+            }
+
             return string.IsNullOrEmpty(errMsg);
         }
 
@@ -236,7 +283,7 @@ namespace Luster.Module.Motion.Device.Functions
                     // 没有选设备时清空数据源
                     OnDataSource(nameof(Slave), new object[0]);
                 }
-            }           
+            }
         }
 
         private int getSlaveNum(VCommuncation comm)
@@ -249,7 +296,7 @@ namespace Luster.Module.Motion.Device.Functions
                     int.TryParse(comm.Actions[i].Value, out slaveNum);
                     break;
                 }
-            }   
+            }
             return slaveNum;
         }
     }

@@ -101,6 +101,7 @@ namespace Luster.SimDevice.SubSystem
             containerRegistry.RegisterForNavigation<AxisPosContent, AxisPosContentVM>();        // 轴点位内容配置
             containerRegistry.RegisterForNavigation<VRobotContent, VRobotContentVM>();   //仿真机器人
 
+
             containerRegistry.RegisterForNavigation<VFlyingPhotoContent, VFlyingPhotoContentVM>();   //仿真飞怕模块
             containerRegistry.RegisterForNavigation<AxisIODebugContent, AxisIODebugContentVM>();     // 轴点位内容配置
 
@@ -119,6 +120,8 @@ namespace Luster.SimDevice.SubSystem
             
             ///注册模组
             containerRegistry.RegisterForNavigation<VModuleContent, VModuleContentVM>();
+
+            containerRegistry.RegisterForNavigation<ModuleNameContent, ModuleNameContentVM>();
 
             // 注册Dialog
             containerRegistry.RegisterDialog<Luster.Common.Assets.Views.MessageDialog, Luster.Common.Assets.ViewModel.MessageDialogVM>();
@@ -171,6 +174,8 @@ namespace Luster.SimDevice.SubSystem
             containerRegistry.RegisterDialog<MotionConditionsDialog, MotionConditionsDialogVM>();
 
             containerRegistry.RegisterDialog<ErrorCustomDialog, ErrorCustomDialogVM>();
+
+            containerRegistry.RegisterDialog<ModuleNameDialog, ModuleNameDialogVM>();
 
             // 注册引擎
             if (!containerRegistry.IsRegistered<IDeviceEngine>())

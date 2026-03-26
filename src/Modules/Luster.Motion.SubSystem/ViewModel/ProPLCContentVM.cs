@@ -537,6 +537,38 @@ namespace Luster.Motion.SubSystem.ViewModel
                 //5、設備已經啟動且無異常，上游無來料或下游堵料10秒後閃黃燈；
                 //6、設備缺小料，滿料，拋料時閃黃燈 + 蜂鳴器閃鳴。
 
+                #region 不用
+                MainPrevHave = GetPlcValue(_mController.SysConfig.MainPrevHaveAddr);
+                MainThisHave = GetPlcValue(_mController.SysConfig.MainThisHaveAddr);
+                MainThisGet = GetPlcValue(_mController.SysConfig.MainThisGetAddr);
+                MainNextGet = GetPlcValue(_mController.SysConfig.MainNextGetAddr);
+
+                SubPrevHave = GetPlcValue(_mController.SysConfig.SubPrevHaveAddr);
+                SubThisHave = GetPlcValue(_mController.SysConfig.SubThisHaveAddr);
+                SubThisGet = GetPlcValue(_mController.SysConfig.SubThisGetAddr);
+                SubNextGet = GetPlcValue(_mController.SysConfig.SubNextGetAddr);
+
+                //TotalCarrierCount = GetPlcIntValue(_mController.SysConfig.TotalCarrierCountAddr);
+                MainCarrierCount = GetPlcIntValue(_mController.SysConfig.MainCarrierCountAddr);
+                SubCarrierCount = GetPlcIntValue(_mController.SysConfig.SubCarrierCountAddr);
+                BackCarrierCount = GetPlcIntValue(_mController.SysConfig.BackCarrierCountAddr);
+                TotalCarrierCount = 0;
+                if (MainCarrierCount >= 0)
+                {
+                    TotalCarrierCount += MainCarrierCount;
+                }
+                if (SubCarrierCount >= 0)
+                {
+                    TotalCarrierCount += SubCarrierCount;
+                }
+                if (BackCarrierCount >= 0)
+                {
+                    TotalCarrierCount += BackCarrierCount;
+                }
+                int smemaStatus = SmemaToInt(MainNextGet, MainThisHave, MainThisGet, MainPrevHave);
+
+                #endregion
+
                 var idleStatus = GetPlcIntValue(_mController.SysConfig.IdleStatusAddr);
                 bool IsIdle = idleStatus == 2 || idleStatus == 3;//Idle状态
                 bool IsRunning = idleStatus == 7;//流线动作

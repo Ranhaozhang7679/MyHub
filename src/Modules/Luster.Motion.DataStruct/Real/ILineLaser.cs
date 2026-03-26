@@ -140,7 +140,7 @@ namespace Luster.Motion.DataStruct.Real
         /// 设置非常用参数
         /// </summary>
         /// <param name="keyValues"></param>
-        void LaserSetSpPama(string key, object value);
+        void LaserSetSpPama(string key,object value);
 
         /// <summary>
         /// 获取激光参数

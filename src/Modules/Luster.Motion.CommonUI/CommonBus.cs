@@ -1,4 +1,4 @@
-﻿using Luster.Common.Assets;
+using Luster.Common.Assets;
 using Luster.Common.DataAccess.Factory;
 using Luster.Common.DataAccess.Repositories;
 using Luster.Common.DataAccess.Tables;
@@ -727,8 +727,13 @@ namespace Luster.Motion.CommonUI
             {
                 // 错误导出
                 string projDri = Path.Combine(Path.GetDirectoryName(ProjInfo.FullName), "Config");
+                string errPath = Path.Combine(projDri, "Errors.xml");
+
+                // 发起保存前，强制重新从设备引擎读取当前最新的设备名，并同步覆盖掉内存旧数据
+                _errorManager.LoadErrorConfig(errPath, _deviceEngine);
+
                 var xErr = _errorManager.ExportXml();
-                xErr.Save(Path.Combine(projDri, "Errors.xml"));
+                xErr.Save(errPath);
             }
         }
 
@@ -984,6 +989,12 @@ namespace Luster.Motion.CommonUI
                                 {
                                     _deviceEngine.LoadPosGroup(xPos);
                                 }
+
+                                var xModule = xData.Element("ModuleNameGroup");
+                                if (xModule != null)
+                                {
+                                    _deviceEngine.LoadModuleNameGroup(xModule);
+                                }
                             }
 
                             LoadRecipeEvent?.Invoke(XElement.Load(recipePath));
@@ -1050,6 +1061,28 @@ namespace Luster.Motion.CommonUI
                     System.Threading.Tasks.Task.Run(() =>
                     {
                         _dbManager.WriteParameterToCSV();
+                        // CGP工站SFCINFO保存
+                        var sysConfig = _webService.GetConfig() as WebConfig;
+                        if (sysConfig != null && sysConfig.StationId.Contains("CGP"))
+                        {
+                            // webConfig.xml拷贝到Vision系统指定目录，并更名为SFCINFO.txt
+                            string targetDir = @"E:\CGP\LUSTER";
+                            if (Directory.Exists(targetDir))
+                            {
+                                try
+                                {
+                                    // 目标文件路径（修改文件名和后缀）
+                                    string targetFile = Path.Combine(targetDir, "SFCINFO.txt");
+                                    // 拷贝文件（覆盖已存在的）
+                                    File.Copy(webConfig, targetFile, overwrite: true);
+                                }
+                                catch (Exception ex)
+                                {
+                                    OnLog(LogType.Error, $"拷贝SFCINFO.txt失败:{ex.Message}");
+                                }
+                            }
+                            
+                        }
                     });
                 }
                 catch (Exception ex)
@@ -1113,6 +1146,9 @@ namespace Luster.Motion.CommonUI
 
             // 将点位信息保持到组中
             _deviceEngine.SavePosGroup(xIni);
+
+            // 将模组信息保持到组中
+            _deviceEngine.SaveModuleNameGroup(xIni);
             xIni.Save(iniDataFile);
 
             // 此时是主动保存，需要将IsNeedSave置为false

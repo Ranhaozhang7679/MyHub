@@ -37,6 +37,12 @@ namespace Luster.Common.Assets.Views
 
             this.NonClientAreaContent = new DialogNonClientArea();
             //this.Loaded += DialogWindow_Loaded;
+
+            var mainWindow = Application.Current?.MainWindow;
+            if (Owner == null && mainWindow != null && !ReferenceEquals(mainWindow, this))
+            {
+                Owner = mainWindow;
+            }
         }
 
         private void DialogWindow_Loaded(object sender, RoutedEventArgs e)

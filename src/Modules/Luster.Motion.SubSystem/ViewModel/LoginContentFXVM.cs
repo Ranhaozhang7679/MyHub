@@ -1,5 +1,12 @@
-﻿using HandyControl.Controls;
+using DC.Authorization;
+using DC.Authorization.Models;
+using DC.Authorization.WPF;
+using DC.Authorization.WPF.Infrastructure;
+using DC.Authorization.WPF.Providers;
+using DocumentFormat.OpenXml.Spreadsheet;
+using HandyControl.Controls;
 using LiveCharts.Dtos;
+using Luster.Authorization.Client.Models;
 using Luster.Common.DataStruct;
 using Luster.Common.DataStruct.DataModels;
 using Luster.Common.DataStruct.Extensions;
@@ -15,6 +22,7 @@ using Luster.Motion.TaskFlow.Engine;
 using Prism.Commands;
 using Prism.Events;
 using Prism.Regions;
+using Prism.Services.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -26,6 +34,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using UserInfo = Luster.Motion.Integration.WorkCardVerify.UserInfo;
 
 namespace Luster.Motion.SubSystem.ViewModel
 {
@@ -43,7 +52,9 @@ namespace Luster.Motion.SubSystem.ViewModel
         /// 切换平台在线离线模式
         /// </summary>
         private readonly IDeviceEngine _deviceEngine;
-        private readonly IAuthService _authService;
+        private readonly ILoginService _loginService;
+        private readonly IDialogService _dialogService;
+        private readonly DC.Authorization.WPF.Providers.HiveAuthProvider _hiveAuthProvider;
 
         private UserInfo _userInfo;
         private UserModel _userModel;
@@ -51,22 +62,43 @@ namespace Luster.Motion.SubSystem.ViewModel
         public LoginContentFXVM(ICommonBus commonBus,
                                 IMotionController mController,
                                 IDeviceEngine deviceEngine,
-                                IAuthService authService) : base(commonBus)
+                                ILoginService loginService,
+                                IDialogService dialogService,
+                                IAuthorizationFacade facade,
+                                HiveAuthProvider hiveAuthProvider) : base(commonBus, facade)
         {
             this._commonBus = commonBus;
+            this._hiveAuthProvider = hiveAuthProvider;
             this._mController = mController;
             this._deviceEngine = deviceEngine;
-            this._authService = authService;
+            this._loginService = loginService;
+            this._dialogService = dialogService;
             ModeList = typeof(DeviceMode).EnumToDataSource();
+            LoginModeList = typeof(LoginMode).EnumToDataSource();
+            LoginLevelList = typeof(SystemRole).EnumToDataSource();
             BindProject();
             RegisterMuliLang(nameof(ModeList));
             SelectUrl = ListUrl[0];
+            if (_hiveAuthProvider != null)
+            {
+                _hiveAuthProvider.HiveApiBaseUrl = SelectUrl;
+            }
             _userInfo = new UserInfo();
             _userModel = new UserModel()
             {
                 UserName = _userInfo.Role.ToString(),
                 UserRole = _userInfo.Role,
             };
+
+            SelectLoginLevel = SystemRole.Integrator;
+            //_loginService.TargetRoleLevel = 4 - (int)SelectLoginLevel;
+            _loginService.TargetRoleLevel = (int)SelectLoginLevel + 1;
+
+            // 订阅刷卡登录成功事件 → 自动完成登录并广播用户信息
+            _loginService.OnCardLogin += LoginService_OnCardLogin;
+
+            // 订阅刷卡状态更新（验证中/失败）→ 刷新 FXRecv 显示
+            _loginService.OnCardStatusUpdated += LoginService_OnCardStatusUpdated;
         }
 
         public void OnNavigatedTo(NavigationContext navigationContext)
@@ -75,10 +107,17 @@ namespace Luster.Motion.SubSystem.ViewModel
             {
                 ProjectEnable = navigationContext.Parameters.GetValue<bool>("ProjectEnable");
             }
+            // 进入登录页：开启刷卡监听
+            _loginService.LoginAllowed = SelectLoginMode == LoginMode.FXCard;            
         }
 
         public bool IsNavigationTarget(NavigationContext navigationContext) => true;
-        public void OnNavigatedFrom(NavigationContext navigationContext) { }
+
+        public void OnNavigatedFrom(NavigationContext navigationContext)
+        {
+            // 离开登录页：关闭刷卡监听，防止其他页面下误触发
+            _loginService.LoginAllowed = false;
+        }
 
         protected override void RegisterEvent(IEventAggregator bus)
         {
@@ -89,7 +128,81 @@ namespace Luster.Motion.SubSystem.ViewModel
             });
         }
 
-        
+        // ─── 新 Auth 事件处理 ─────────────────────────────────────────────
+
+        /// <summary>
+        /// 双击标题 → 打开权限管理界面
+        /// </summary>
+        private AuthCommand _openAuthorViewCommand;
+        public AuthCommand OpenAuthorViewCommand => _openAuthorViewCommand
+            ?? (_openAuthorViewCommand = new AuthCommand(Auth, AuthDictionary.ModifyRight, OnOpenAuthorViewCommand));
+
+
+        [AuthRight(nameof(AuthDictionary.ModifyRight))]
+        private void OnOpenAuthorViewCommand()
+        {
+            if (!Auth.CheckAuth(default)) return;
+            _dialogService.ShowDialog(nameof(AuthorityView));
+        }
+
+        /// <summary>
+        /// 刷卡登录成功 → 构造 UserInfo/UserModel，驱动 SendUserToOther
+        /// </summary>
+        private void LoginService_OnCardLogin(object? sender, EventArgs e)
+        {
+            var acc = _loginService.Current;
+            if (acc == null) return;
+
+            _userInfo = BuildUserInfoFromAccount(acc);
+            _userInfo.Level = UserInfo.ParseDeviceLevel(acc.HiveLevel);
+            _userModel = new UserModel
+            {
+                UserName = _userInfo.Name,
+                UserRole = _userInfo.Role,
+            };
+
+            FXCardID = _loginService.LastCardNo;
+            FXRecv = _loginService.LastAuthMessage;
+            IsOffline = System.Windows.Visibility.Collapsed;
+
+            Application.Current.Dispatcher.Invoke(SendUserToOther);
+        }
+
+        /// <summary>
+        /// 刷卡状态更新（验证中 / 失败）→ 刷新 FXRecv
+        /// </summary>
+        private void LoginService_OnCardStatusUpdated(object? sender, EventArgs e)
+        {
+            FXCardID = _loginService.LastCardNo;
+            FXRecv = _loginService.LastAuthMessage;
+        }
+
+        /// <summary>
+        /// 将新 Account 模型映射到旧 UserInfo（供 commonBus 广播使用）
+        /// Level 映射：1=Admin, 2=Integrator, 3=Maintenance, 4=Operator
+        /// </summary>
+        private static UserInfo BuildUserInfoFromAccount(Account acc)
+        {
+            // 按 RoleName 映射 SystemRole（与 DbInitializer 预设角色名一致）
+            var role = acc.RoleName switch
+            {
+                "Administrator" => SystemRole.Admin,
+                "Integrator" => SystemRole.Integrator,
+                "Maintenance" => SystemRole.Maintenance,
+                _ => SystemRole.Operator   // OP ReadOnly 及未知角色
+            };
+
+            return new UserInfo
+            {
+                Name = acc.RealName ?? acc.AccName,
+                Company = acc.Department ?? string.Empty,
+                CardId = acc.TelNo,
+                Role = role,
+                LogionMsg = $"{acc.RoleName} 登录成功"
+            };
+        }
+
+
         private bool _projectEnable = true;
         /// <summary>
         /// 选择工程是否可用
@@ -118,6 +231,13 @@ namespace Luster.Motion.SubSystem.ViewModel
         {
             get { return _isOffline; }
             set { SetProperty(ref _isOffline, value); }
+        }
+
+        private Visibility _fXCardModeVisual = Visibility.Visible;
+        public Visibility FXCardModeVisual
+        {
+            get { return _fXCardModeVisual; }
+            set { SetProperty(ref _fXCardModeVisual, value); }
         }
 
         private string _fXPassword;
@@ -170,7 +290,37 @@ namespace Luster.Motion.SubSystem.ViewModel
             set { SetProperty(ref _selectUrl, value); }
         }
 
-        private ObservableCollection<string> _listUrl = new ObservableCollection<string>() { "http://172.18.240.28/fatpvk", "11.0.0.1" };
+        private static ObservableCollection<string> GetUrlsFromConfig()
+        {
+            var urls = new ObservableCollection<string>();
+            try
+            {
+                // 读取 app.config 中的 HiveApiUrls 配置
+                var configStr = System.Configuration.ConfigurationManager.AppSettings["HiveApiUrls"];
+                if (!string.IsNullOrWhiteSpace(configStr))
+                {
+                    // 支持使用逗号或分号分割多个URL
+                    var items = configStr.Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var item in items)
+                    {
+                        urls.Add(item.Trim());
+                    }
+                }
+            }
+            catch
+            {
+                // 忽略异常，防止在没有System.Configuration引用时的崩溃
+            }
+
+            // 如果没配置或者配置为空，给一个默认值
+            if (urls.Count == 0)
+            {
+                urls.Add("http://172.25.3.168/fatpal");
+            }
+            return urls;
+        }
+
+        private ObservableCollection<string> _listUrl = GetUrlsFromConfig();
         /// <summary>
         /// 不同专案的URL
         /// </summary>
@@ -180,13 +330,13 @@ namespace Luster.Motion.SubSystem.ViewModel
             set { SetProperty(ref _listUrl, value); }
         }
 
-        /// <summary>
-        /// 切换离线
-        /// </summary>
-        public DelegateCommand ToggleOfflineCommand => new DelegateCommand(() =>
-        {
-            IsOffline = IsOffline == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
-        });
+        ///// <summary>
+        ///// 切换离线
+        ///// </summary>
+        //public DelegateCommand ToggleOfflineCommand => new DelegateCommand(() =>
+        //{
+        //    IsOffline = IsOffline == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+        //});
 
         /// <summary>
         /// 切换工程
@@ -229,6 +379,80 @@ namespace Luster.Motion.SubSystem.ViewModel
             }
         }
 
+
+
+        private LoginMode _selectLoginMode = LoginMode.FXCard;
+        /// <summary>
+        /// 当前模式
+        /// </summary>
+        public LoginMode SelectLoginMode
+        {
+            get { return _selectLoginMode; }
+            set
+            {
+                SetProperty(ref _selectLoginMode, value);
+                if (_selectLoginMode == LoginMode.FXCard)
+                {
+                    _loginService.LoginAllowed = true;
+                }
+                else
+                {
+                    _loginService.LoginAllowed = false;
+                }
+            }
+        }
+        private List<KeyValue> _loginModeList;
+
+        public List<KeyValue> LoginModeList
+        {
+            get => _loginModeList; set
+            {
+                SetProperty(ref _loginModeList, value);
+            }
+        }
+
+
+        private SystemRole _selectLoginLevel;
+        /// <summary>
+        /// 当前登录等级
+        /// </summary>
+        public SystemRole SelectLoginLevel
+        {
+            get { return _selectLoginLevel; }
+            set
+            {
+                if (!SetProperty(ref _selectLoginLevel, value)) return;
+                //int targetLevel = 4 - (int)SelectLoginLevel;
+                int targetLevel = (int)SelectLoginLevel + 1;
+                _loginService.TargetRoleLevel = targetLevel;
+            }
+        }
+        private List<KeyValue> _loginLevelList;
+
+        public List<KeyValue> LoginLevelList
+        {
+            get => _loginLevelList; set
+            {
+                SetProperty(ref _loginLevelList, value);
+            }
+        }
+
+
+        private DelegateCommand<object> _changeLoginModeCommand;
+        public DelegateCommand<object> ChangeLoginModeCommand => _changeLoginModeCommand ?? (_changeLoginModeCommand = new DelegateCommand<object>((arg) =>
+        {
+            var cArgs = arg as SelectionChangedEventArgs;
+
+            if (cArgs.AddedItems.Count > 0)
+            {
+                var keyVal = cArgs.AddedItems[0] as KeyValue;
+                LoginMode mode = (LoginMode)keyVal.Value;
+                IsOffline = mode == LoginMode.Offline ? Visibility.Visible : Visibility.Collapsed;
+                FXCardModeVisual = mode == LoginMode.FXCard ? Visibility.Visible : Visibility.Collapsed;
+            }
+        }));
+
+
         /// <summary>
         /// 切换模式
         /// </summary>
@@ -255,6 +479,11 @@ namespace Luster.Motion.SubSystem.ViewModel
             {
                 var keyVal = cArgs.AddedItems[0].ToString();
                 SelectUrl = keyVal;
+
+                if (_hiveAuthProvider != null)
+                {
+                    _hiveAuthProvider.HiveApiBaseUrl = keyVal;
+                }
             }
         }));
 
@@ -269,24 +498,35 @@ namespace Luster.Motion.SubSystem.ViewModel
             Login();
         }));
 
-        protected async void Login()
+        protected void Login()
         {
             if (IsOffline == Visibility.Visible)
             {
                 if (string.IsNullOrEmpty(FXCardID))
                 {
-                    FXRecv = "CardID cannot be null !!!\r\n";
+                    FXRecv = "账户名不能为空 / Account cannot be null";
                     return;
                 }
                 if (string.IsNullOrEmpty(FXPassword))
                 {
-                    FXRecv = "CardID cannot be null !!!\r\n";
+                    FXRecv = "密码不能为空 / Password cannot be null";
                     return;
                 }
-                _userInfo = await _authService.OfflineVerifCardyAsync(FXCardID, FXPassword);
-                _userModel = new UserModel()
+
+                int targetLevel = 4 - (int)SelectLoginLevel;
+                // 使用新 LoginService 进行本地密码验证
+                var (succeeded, message, hiveLevel) = _loginService.Login(FXCardID, FXPassword, targetLevel);
+                FXRecv = message;
+
+                if (!succeeded) return;
+
+                // 登录成功：构建 UserInfo/UserModel
+                var acc = _loginService.Current!;
+                _userInfo = BuildUserInfoFromAccount(acc);
+                _userInfo.Level = UserInfo.ParseDeviceLevel(hiveLevel); // 记录 HiveAuth 返回的实际权限等级
+                _userModel = new UserModel
                 {
-                    UserName = _userInfo.Role.ToString(),
+                    UserName = _userInfo.Name,
                     UserRole = _userInfo.Role,
                 };
             }
@@ -300,16 +540,18 @@ namespace Luster.Motion.SubSystem.ViewModel
 
         public DelegateCommand LogoutCommand => _logoutCommand ?? (_logoutCommand = new DelegateCommand(() =>
         {
+            // 通知新权限模块注销
+            _loginService.Logout();
+
+            // 重置为默认 Operator 状态，广播到 commonBus
             _userInfo = new UserInfo()
             {
                 Name = "None",
                 Company = "None",
                 CardId = "None",
                 Role = SystemRole.Operator,
-                //Level = DeviceLevel.L1,
-                Level = DeviceLevel.None,
                 LogionMsg = "Logout"
-            };  
+            };
             _userModel = new UserModel()
             {
                 UserName = SystemRole.Operator.ToString(),
@@ -372,60 +614,17 @@ namespace Luster.Motion.SubSystem.ViewModel
         /// <summary>
         /// 临时用于接受界面卡号的字符串
         /// </summary>
-        private string tempCardID = string.Empty;
+        private string tempCardID = string.Empty; // 已弃用，保留防止子类引用
 
         private DelegateCommand<object> _scanCommand;
         /// <summary>
-        /// 刷卡响应事件
+        /// 刷卡响应事件（保留绑定，内部逻辑已迁移至 LoginService.GlobalHook）
+        /// 新流程：GlobalHook(WH_KEYBOARD_LL) → ProcessCardNoAsync → OnCardLogin 事件 → LoginService_OnCardLogin
         /// </summary>
-        public DelegateCommand<object> ScanCommand => _scanCommand ?? (new DelegateCommand<object>(async (obj) =>
+        public DelegateCommand<object> ScanCommand => _scanCommand ?? (_scanCommand = new DelegateCommand<object>((obj) =>
         {
-            if (IsOffline == Visibility.Visible)
-            {
-                return;
-            }
-            //接收刷卡响应消息
-            var e = obj as KeyEventArgs;
-            if (e != null)
-            {
-                if (e.Key != Key.Enter)
-                {
-                    if (e.Key.ToString().Contains('D'))
-                    {
-                        tempCardID += e.Key.ToString()[1];
-                    }
-                }
-                else
-                {
-                    if (tempCardID.Length > 10 || tempCardID.Length < 6)
-                    {
-                        tempCardID = "";
-                        return;
-                    }
-                    //进行报文上报
-                    var currentID = tempCardID;
-                    if (tempCardID.Substring(0, 1) == "0")
-                        tempCardID = tempCardID.Substring(1, tempCardID.Length - 1);
-                    FXCardID = tempCardID;
-                    _userInfo = await _authService.OnlineVerifyCardAsync(SelectUrl, FXCardID);
-                    FXRecv = _userInfo.LogionMsg;
-                    _userModel = new UserModel()
-                    {
-                        UserName = _userInfo.Role.ToString(),
-                        UserRole = _userInfo.Role,
-                    };
-                    if (_userInfo.Level == DeviceLevel.None)
-                    {
-                        IsOffline = Visibility.Visible;
-                    }
-                    
-                    if (IsOffline != Visibility.Visible)
-                    {
-                        SendUserToOther();
-                    }
-                    tempCardID = string.Empty; //清空临时变量 
-                }
-            }
+            // 已由 GlobalHook 全局键盘钩子接管，此处不再处理键盘解析逻辑
+            // 保留此命令仅为防止 LoginContentFX.xaml 中的 EventToCommand 绑定报错
         }));
 
         /// <summary>

@@ -1,4 +1,4 @@
-﻿#region 作者和版权
+#region 作者和版权
 /*************************************************************************************
 * CLR 版本:       4.0.30319.42000
 * 类 名 称:       IVDManager
@@ -103,6 +103,11 @@ namespace Luster.Motion.DataStruct
         /// 轴点位删除，进行校验防止被引用
         /// </summary>
         event Func<AxisPosition, string> AxisPosDeleteEvent;
+
+        /// <summary>
+        /// 设备名称发生变更
+        /// </summary>
+        event Action<Guid, string, string> DeviceNameChangedEvent;
 
         /// <summary>
         /// 设备发生变更
@@ -222,6 +227,8 @@ namespace Luster.Motion.DataStruct
         /// </summary>
         /// <returns></returns>
         List<string> GetModules();
+
+        List<string> GetModulesUsed();
 
         /// <summary>
         /// 警告
@@ -399,7 +406,7 @@ namespace Luster.Motion.DataStruct
         /// </summary>
         /// <param name="name"></param>
         /// <param name="vAxis"></param>
-        void TeachPosGroup(string name, params VAxis[] vAxis);
+        void TeachPosGroup(string name, string module, params VAxis[] vAxis);
 
         /// <summary>
         /// 删除点位
@@ -414,6 +421,7 @@ namespace Luster.Motion.DataStruct
         /// <param name="aType"></param>
         /// <param name="position"></param>
         void UpdatePosGroup(VAxisPosGroup pGroup, AxisType aType, double position);
+        void UpdatePosGroup(AxisPosition pPos, double position);
 
         /// <summary>
         /// 保存点位配置
@@ -504,5 +512,37 @@ namespace Luster.Motion.DataStruct
 
         public event Func<IEnumerable<object>> GetPDCAModulesEvent;
         public IEnumerable<object> GetPDCAModulesFromMotionEngine();
+        public event Func<IEnumerable<object>> GetSFCModulesEvent;
+        public IEnumerable<object> GetSFCModulesFromMotionEngine();
+
+
+        #region 模块信息组
+        /// <summary>
+        /// 点位集合
+        /// </summary>
+        List<ModuleNameModel> ModuleNameGroup { get; set; }
+
+        /// <summary>
+        /// 添加模组
+        /// </summary>
+        /// <param name="name"></param>
+        void AddModuleNameGroup(string name);
+
+        /// <summary>
+        /// 删除模组
+        /// </summary>
+        /// <param name="name"></param>
+        void RemoveModuleNameGroup(string name);
+
+        /// <summary>
+        /// 保存模组配置
+        /// </summary>
+        void SaveModuleNameGroup(XElement xParent);
+
+        /// <summary>
+        /// 加载模组配置
+        /// </summary>
+        void LoadModuleNameGroup(XElement xModuleGroup);
+        #endregion
     }
 }

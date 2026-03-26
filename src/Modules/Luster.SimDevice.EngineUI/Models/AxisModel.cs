@@ -22,10 +22,12 @@
 #endregion
 
 using Luster.Common.DataStruct.Attributes;
+using Luster.Common.DataStruct.Enums;
 using Luster.Motion.DataStruct.DataModels;
 using Luster.Motion.DataStruct.Enums;
 using Prism.Commands;
 using Prism.Mvvm;
+using Prism.Services.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -34,6 +36,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
+using System.Windows.Controls;
+using System.Windows.Threading;
 
 namespace Luster.SimDevice.EngineUI.Models
 {
@@ -719,6 +723,58 @@ namespace Luster.SimDevice.EngineUI.Models
         public DelegateCommand MoveRelCommand => _moveRelCommand ?? (_moveRelCommand = new DelegateCommand(() =>
         {
             Tag.MoveRel(DstPostion, MoveSpeed);
+        }));
+
+
+        private bool _isBusy = false;
+
+        private DelegateCommand<string> _moveRelCommandAdd;
+        public DelegateCommand<string> MoveRelCommandAdd => _moveRelCommandAdd ?? (_moveRelCommandAdd = new DelegateCommand<string>((string direction) =>
+        {
+            if (_isBusy)
+            {
+                return;
+            }
+
+            _isBusy = true;
+            try
+            {
+                if (double.TryParse(direction, out double dir))
+                {
+                    Tag.MoveRel(DstPostion, MoveSpeed);
+                    //System.Diagnostics.Debug.WriteLine($"Moving axis by {dir} * {DstPostion} units.");
+                }
+            }
+            finally
+            {
+                _isBusy = false;
+            }
+        }));
+
+        /// <summary>
+        /// 相对运动
+        /// </summary>
+        private DelegateCommand<string> _moveRelCommandSub;
+        public DelegateCommand<string> MoveRelCommandSub => _moveRelCommandSub ?? (_moveRelCommandSub = new DelegateCommand<string>((string direction) =>
+        {
+            if (_isBusy)
+            {
+                return;
+            }
+
+            _isBusy = true;
+            try
+            {
+                if (double.TryParse(direction, out double dir))
+                {
+                    Tag.MoveRel(dir * DstPostion, MoveSpeed);
+                    //System.Diagnostics.Debug.WriteLine($"Moving axis by {dir} * {DstPostion} units.");
+                }
+            }
+            finally
+            {
+                _isBusy = false;
+            }
         }));
 
         /// <summary>

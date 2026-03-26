@@ -253,6 +253,7 @@ namespace Luster.TaskFlow.Common.Attributes
                         Owner.OnUpdate(ModuleUpdate.ParameterVal);
                     }
                 }
+                
                 if (isChanged)
                 {
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Value)));
@@ -568,7 +569,7 @@ namespace Luster.TaskFlow.Common.Attributes
             }
             xParam.SetAttributeValue("CN", CN);
 
-            xParam.SetAttributeValue("IsMemoric", IsMemoric);
+            xParam.SetAttributeValue ("IsMemoric",IsMemoric);
             xParam.SetAttributeValue("IsHomeDefault", IsHomeDefault);
 
             return xParam;
@@ -652,7 +653,7 @@ namespace Luster.TaskFlow.Common.Attributes
                 }
                 else
                 {
-                    IsHomeDefault = true;
+                   IsHomeDefault = true;
                 }
             });
 

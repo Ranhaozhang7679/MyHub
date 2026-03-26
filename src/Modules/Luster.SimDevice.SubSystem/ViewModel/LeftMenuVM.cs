@@ -139,6 +139,15 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                     DeviceType = DeviceType.Printer
                 });
 
+                DeviceList.Add(new PageModel()
+                {
+                    Group = "Management",
+                    Icon = "\xe6d7",
+                    Name = "ModuleName",
+                    PageView = "ModuleNameContent",
+                    DeviceType = DeviceType.Printer
+                });
+
                 //DeviceList.Add(new PageModel()
                 //{
                 //    Group = "Management",

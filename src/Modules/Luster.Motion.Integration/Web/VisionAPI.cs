@@ -309,7 +309,7 @@ namespace Luster.Motion.Integration.Web
             base.ManualDown(arg1, op, reason);
 
             //手动停止后，缓存需要清除
-            cacheTimes.Clear();       
+            cacheTimes.Clear();
         }
 
         private ProductStat productStat;
@@ -478,7 +478,7 @@ namespace Luster.Motion.Integration.Web
 
             //为了区分是否有左右工站，如GG8
             if (module.StartTime == DateTime.MinValue)
-            { 
+            {
                 //parameterName = "None";
                 //parameterValue = "None";
                 parameterName = moduleValue;
@@ -705,7 +705,7 @@ namespace Luster.Motion.Integration.Web
                         value = 0
                     };
                     ctList.Add(moduleTime3);
-                }              
+                }
             }
 
             //foreach (var keyPair in ctConfigs)
@@ -929,7 +929,7 @@ namespace Luster.Motion.Integration.Web
             string jsonData = JsonTool.ToJson(jsonArray);
             CommException(url, jsonData, r =>
             {
-                if (r.IsSuccess)
+                if (r?.IsSuccess == true)
                 {
                 }
             });
@@ -1188,7 +1188,7 @@ namespace Luster.Motion.Integration.Web
                         case TrainRunMode.Idle: // Down不会->Idle
                             break; // 规避穿透原则
                         case TrainRunMode.Running: // Down->Running
-                             _visionState.VisionMachineState = TrainRunMode.Running;
+                            _visionState.VisionMachineState = TrainRunMode.Running;
                             _visionState.VisionErrorCode = "";
                             _visionState.VisionErrorMessage = "";
                             MachineStatusUpload(TrainRunMode.Down, TrainRunMode.Running, "", "");
@@ -1902,7 +1902,7 @@ namespace Luster.Motion.Integration.Web
                 }
             }
 
-           // OnLog($"NG原因不包含Unit,可以上传", url);
+            // OnLog($"NG原因不包含Unit,可以上传", url);
 
             // 如果没有连接上，不触发通讯
             //if (!isConnected) return;
@@ -1985,7 +1985,7 @@ namespace Luster.Motion.Integration.Web
             if (stationResult.IsToss)
             {
                 tossSn += wip;
-                keypartsSn = !stationResult.ProCode.ToUpper().Contains("NG") ? stationResult.ProCode : " ";
+                keypartsSn = !stationResult.ProCode.ToUpper().Contains("NG") ? stationResult.ProCode : "";
                 keypartsSnCount++;
                 tossingList.Add(new
                 {
@@ -2238,7 +2238,8 @@ namespace Luster.Motion.Integration.Web
             return role switch
             {
                 SystemRole.Operator => "OP",
-                SystemRole.Sustaining => "Sustaining",
+                SystemRole.Maintenance => "Maintenance",
+                SystemRole.Integrator => "Integrator",
                 SystemRole.Admin => "Admin",
                 _ => "OP"
             };
@@ -2252,7 +2253,7 @@ namespace Luster.Motion.Integration.Web
             last_Homework_Mode = Homework_Mode.ToString();
             editUser = string.Concat(role?.Company, "-", role?.Name);
             Homework_Mode = ConvertUserRoleToHomeworkMode(role?.Role);
-            MachineParaUpload("控制参数上传", true, true);
+            //MachineParaUpload("控制参数上传", true, true);
 
         }
         #endregion

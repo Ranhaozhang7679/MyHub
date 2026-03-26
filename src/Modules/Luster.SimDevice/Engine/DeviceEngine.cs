@@ -1,4 +1,4 @@
-﻿#region 作者和版权
+#region 作者和版权
 /*************************************************************************************
 * CLR 版本:       4.0.30319.42000
 * 类 名 称:       DeviceEngine
@@ -197,6 +197,7 @@ namespace Luster.SimDevice.Engine
         /// </summary>
         public event Func<string, string, List<object>> GetModuleListEvent;
         public event Func<IEnumerable<object>> GetPDCAModulesEvent;
+        public event Func<IEnumerable<object>> GetSFCModulesEvent;
 
         /// <summary>
         /// 
@@ -362,6 +363,11 @@ namespace Luster.SimDevice.Engine
                 XElement xPosGroup = xRoot.Element(nameof(PosGroup));
                 LoadPosGroup(xPosGroup);
 
+                XElement xModule = xRoot.Element(nameof(ModuleNameGroup));
+                if (xModule != null)
+                {
+                    LoadModuleNameGroup(xModule);
+                }
 
                 //XmlElement controlPara = xRoot.GetElement();
 
@@ -647,6 +653,9 @@ namespace Luster.SimDevice.Engine
             // 保存点位配置
             SavePosGroup(xRoot);
 
+            //保存模组名
+            SaveModuleNameGroup(xRoot);
+
             // 如果没有给出提示，那么使用默认打开的配置文件
             if (string.IsNullOrEmpty(saveTask))
             {
@@ -671,6 +680,28 @@ namespace Luster.SimDevice.Engine
         /// </summary>
         /// <returns></returns>
         public List<string> GetModules()
+        {
+            //var devices = GetDevices();
+            //if (devices == null || devices.Count == 0)
+            //{
+            //    return new List<string>() { "System" };
+            //}
+            //else
+            //{
+            //    return devices.GroupBy(u => u.Module).Select(u => u.Key).ToList();
+            //}
+
+            if (ModuleNameGroup.Count == 0)
+            {
+                return new List<string>() { "System" };
+            }
+            else
+            {
+                return ModuleNameGroup.Select(u => u.Name).ToList();
+            }
+        }
+
+        public List<string> GetModulesUsed()
         {
             var devices = GetDevices();
             if (devices == null || devices.Count == 0)
@@ -821,12 +852,19 @@ namespace Luster.SimDevice.Engine
             VDeviceChangedEvent?.Invoke();
         }
 
+        public event Action<Guid, string, string> DeviceNameChangedEvent;
+
         private void VirDevice_PropertyChanged(IVirtualDevice vDevice, string propName, object srcV, object newV)
         {
             // 设备状态变更不在记录
             if (propName != nameof(VStatus))
             {
                 OnLog(LogType.Info, $"设备{vDevice.Name}的属性:{propName}值发生变更,原始值:{srcV} 新值:{newV}");
+            }
+
+            if (propName == "Name")
+            {
+                DeviceNameChangedEvent?.Invoke(vDevice.ID, srcV?.ToString(), newV?.ToString());
             }
 
             if (propName != nameof(VStatus))
@@ -1550,9 +1588,9 @@ namespace Luster.SimDevice.Engine
         /// </summary>
         /// <param name="name"></param>
         /// <param name="vAxis"></param>
-        public void TeachPosGroup(string name, params VAxis[] vAxis)
+        public void TeachPosGroup(string name, string module, params VAxis[] vAxis)
         {
-            if (PosGroup.Any(u => u.Name == name))
+            if (PosGroup.Any(u => u.Name == name && u.Module == module))
             {
                 throw new FriendlyException($"点位:{name} 已存在");
             }
@@ -1562,6 +1600,7 @@ namespace Luster.SimDevice.Engine
             {
                 Key = Guid.NewGuid(),
                 Name = name,
+                Module = module,
                 DeviceEngine = this,
             };
 
@@ -1616,6 +1655,36 @@ namespace Luster.SimDevice.Engine
             IsNeedSave = true;
         }
 
+        public void UpdatePosGroup(AxisPosition pPos, double position)
+        {
+            // 只在首次使用时进行分割
+            var posNameItems = pPos.Name.Split('_');
+            if (posNameItems.Length < 2 || posNameItems[1] == null)
+            {
+                throw new FriendlyException($"点位名称格式不正确: {pPos.Name}");
+            }
+
+            var group = PosGroup.FirstOrDefault(u => u.Module == pPos.Axis.Module && u.Name == posNameItems[1]);
+            if (group == null)
+            {
+                throw new FriendlyException($"点位组:{posNameItems[1]} 不存在");
+            }
+
+            var pos = group.FirstOrDefault(u => u.Name == pPos.Name);
+            if (pos == null)
+            {
+                throw new FriendlyException($"点位:{pPos.Name} 不存在");
+            }
+
+            if (pos.Position != position)
+            {
+                PropertyChangedEvent?.Invoke($"{pos.Name}", pos.Position, position);
+                OnLog(LogType.Debug, $"点位:{pos.Name}的值发生变更,旧值:{pos.Position}->{position}");
+                pos.Position = position;
+                IsNeedSave = true;
+            }
+        }
+
         /// <summary>
         /// 保存点位配置
         /// </summary>
@@ -1649,6 +1718,79 @@ namespace Luster.SimDevice.Engine
                 pGroup.ParserXml(xItem);
 
                 PosGroup.Add(pGroup);
+            }
+        }
+        #endregion
+
+        #region 模块信息组
+        /// <summary>
+        /// 点位集合
+        /// </summary>
+        public List<ModuleNameModel> ModuleNameGroup { get; set; } = new List<ModuleNameModel>();
+
+        /// <summary>
+        /// 添加模组
+        /// </summary>
+        /// <param name="name"></param>
+        public void AddModuleNameGroup(string name)
+        {
+            if (ModuleNameGroup.Any(u => u.Name == name))
+            {
+                throw new FriendlyException($"模组名称:{name} 已存在");
+            }
+
+            // 构建点位组
+            ModuleNameModel pModule = new ModuleNameModel()
+            {
+                Name = name,
+            };
+
+            ModuleNameGroup.Add(pModule);
+            IsNeedSave = true;
+        }
+
+        /// <summary>
+        /// 删除模组
+        /// </summary>
+        /// <param name="name"></param>
+        public void RemoveModuleNameGroup(string name)
+        {
+            ModuleNameGroup.RemoveAll(u => u.Name == name);
+            IsNeedSave = true;
+        }
+
+        /// <summary>
+        /// 保存模组配置
+        /// </summary>
+        public void SaveModuleNameGroup(XElement xParent)
+        {
+            if (ModuleNameGroup.Count > 0)
+            {
+                XElement xModuel = new XElement(nameof(ModuleNameGroup));
+                foreach (var item in ModuleNameGroup)
+                {
+                    xModuel.Add(item.ExportXml());
+                }
+
+                xParent.Add(xModuel);
+            }
+        }
+
+        /// <summary>
+        /// 加载模组配置
+        /// </summary>
+        public void LoadModuleNameGroup(XElement xModuleGroup)
+        {
+            if (xModuleGroup == null) return;
+
+            ModuleNameGroup.Clear();
+
+            foreach (var xItem in xModuleGroup.Elements())
+            {
+                ModuleNameModel moduleModel = new ModuleNameModel();
+                moduleModel.ParserXml(xItem);
+
+                ModuleNameGroup.Add(moduleModel);
             }
         }
         #endregion
@@ -1753,7 +1895,18 @@ namespace Luster.SimDevice.Engine
         {
             try
             {
-               return  GetPDCAModulesEvent?.Invoke();
+                return GetPDCAModulesEvent?.Invoke();
+            }
+            catch
+            {
+                return new List<object>();
+            }
+        }
+        public IEnumerable<object> GetSFCModulesFromMotionEngine()
+        {
+            try
+            {
+                return GetSFCModulesEvent?.Invoke();
             }
             catch
             {

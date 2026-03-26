@@ -15,11 +15,16 @@
         <Border Background="White" Margin="5" Padding="5" MaxHeight="150">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel>
-                    <CheckBox Content="润滑：检查料盘上下移动丝杆等机械传动部件是否会吐黄油" Margin="2"/>
-                    <CheckBox Content="联轴器：检查传动固定螺丝是否松动，弹片是否损坏" Margin="2"/>
-                    <CheckBox Content="皮带：检查是否磨损出须，张力是否合适，拉动有无打滑或未贴紧" Margin="2"/>
-                    <CheckBox Content="气缸：检查阻挡和升降气缸是否能正常伸缩，所有气缸感应器划线是否松动" Margin="2"/>
-                    <CheckBox Content="螺丝：所有螺丝划线是否松动" Margin="2"/>
+                    <CheckBox x:Name="SelectAllCheckBox" Content="全选/Select All" Margin="2" FontWeight="Bold"
+                              Checked="SelectAllCheckBox_Checked" Unchecked="SelectAllCheckBox_Unchecked"/>
+                    <Separator Margin="2,2,2,4"/>
+                    <StackPanel x:Name="CheckListPanel">
+                        <CheckBox Content="润滑：检查料盘上下移动丝杆等机械传动部件是否会吐黄油" Margin="2"/>
+                        <CheckBox Content="联轴器：检查传动固定螺丝是否松动，弹片是否损坏" Margin="2"/>
+                        <CheckBox Content="皮带：检查是否磨损出须，张力是否合适，拉动有无打滑或未贴紧" Margin="2"/>
+                        <CheckBox Content="气缸：检查阻挡和升降气缸是否能正常伸缩，所有气缸感应器划线是否松动" Margin="2"/>
+                        <CheckBox Content="螺丝：所有螺丝划线是否松动" Margin="2"/>
+                    </StackPanel>
                 </StackPanel>
             </ScrollViewer>
         </Border>

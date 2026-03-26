@@ -55,6 +55,7 @@
                         <Setter Property="Height" Value="35" />
                         <Setter Property="Background" Value="#DEE0E7" />
                         <Setter Property="hc:BorderElement.CornerRadius" Value="0,5,5,0" />
+                        <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
                         <Style.Triggers>
                             <Trigger Property="IsMouseOver" Value="true">
                                 <Setter Property="Background" Value="{DynamicResource SecondaryRegionBrush}" />

@@ -21,6 +21,8 @@
 ************************************************************************************/
 #endregion
 
+using DC.Authorization;
+using DC.Authorization.WPF;
 using LiveCharts.Dtos;
 using Luster.Common.Assets;
 using Luster.Common.DataAccess.Factory;
@@ -44,6 +46,7 @@ using Luster.Motion.Integration.SFC;
 using Luster.Motion.Integration.Web;
 using Luster.Motion.SubSystem.ViewModel;
 using Luster.Motion.SubSystem.Views;
+using Luster.Motion.SubSystem.Views.Login;
 using Luster.Motion.TaskFlow.Engine;
 using Luster.Motion.TaskFlow.Engine.HyperTrain;
 using Luster.Motion.TaskFlow.Engine.Models;
@@ -74,6 +77,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using static FreeSql.Internal.GlobalFilter;
@@ -127,12 +131,20 @@ namespace LusterMotion.ViewModel
         /// </summary>
         private readonly IWebService _webService;
 
+        /// <summary>
+        /// 会话超时管理器（来自 Luster.Authorization.Client）
+        /// </summary>
+        private readonly ISessionManager _sessionManager;
+        private readonly ILoginService _loginService;
         private string CpkFilePath = "Config\\CPK_WIP.txt";
 
 
         #endregion
 
         public MainWindowVM(
+            IAuthorizationFacade auth,
+            ISessionManager sessionManager,
+            ILoginService loginService,
             IModuleFactory factory,
             ICommonBus _commonBus,
             IRegionManager regionManager,
@@ -145,7 +157,7 @@ namespace LusterMotion.ViewModel
             IDbManager dbManager,
             IWebService webService,
             ProFXContentVM _proFXContentVM,
-            HiveDialogVM _hiveDialogVM) : base(_commonBus)
+            HiveDialogVM _hiveDialogVM) : base(_commonBus, auth)
         {
             _regionManager = regionManager;
             _dispatcher = Dispatcher;
@@ -157,7 +169,6 @@ namespace LusterMotion.ViewModel
             _dialogService = dialogService;
             _dbManager = dbManager;
             _deviceEngine = deviceEngine;
-
 
             motionController.StartHomeEvent -= MotionController_StartHomeEvent;
             motionController.StartHomeEvent += MotionController_StartHomeEvent;
@@ -210,6 +221,18 @@ namespace LusterMotion.ViewModel
             MainBackColor = (Brush)converter.ConvertFromString("#f5f5f5");
             //开启定时器，1min/次,清理缓存
             SetTimer();
+            auth.PopLoginWindowAction = () =>
+            {
+                _dispatcher.Invoke(() =>
+                {
+                    _dialogService.ShowDialog(nameof(DC.Authorization.WPF.Views.LoginView));
+                });
+            };
+            _loginService = loginService;
+            // 启动会话超时管理器，并订阅超时事件
+            _sessionManager = sessionManager;
+            //_sessionManager.Start();
+            _sessionManager.SessionExpired += OnSessionExpired;
 
         }
 
@@ -231,72 +254,58 @@ namespace LusterMotion.ViewModel
         private string userNameCur = "None";
 
         /// <summary>
+        /// 会话超时回调：降级为 Operator、广播状态、安全居启用、跳回主页
+        /// </summary>
+        private void OnSessionExpired(object sender, EventArgs e)
+        {
+            var curUserModel = new UserModel()
+            {
+                Id = 3,
+                UserName = SystemRole.Operator.ToString(),
+                UserRole = SystemRole.Operator,
+            };
+            commonBus.CurrentUser = curUserModel;
+            _dispatcher.Invoke(() =>
+            {
+                _loginService.Login("114516", "123456");//切换到op
+                commonBus.OnUserLogin(curUserModel);
+                commonBus.OnUserRoleChange(new Luster.Motion.Integration.WorkCardVerify.UserInfo());
+                _mController.SysConfig.EnableSaftyDoor = true;
+                _mController.SysConfig.EnableLightCurtain = true;
+                _mController.StartButtonMontor();
+                var homePage = PageModel.Pages.FirstOrDefault(u => u.Name == "Home");
+                commonBus.OnNavigate(homePage);
+            });
+        }
+
+        /// <summary>
         /// 界面监控
         /// </summary>
         private void MontorInteraction()
         {
             Task.Run(async () =>
             {
-                //commonBus.OnLog(LogType.Info, $"界面60s无交互:{Thread.CurrentThread.ManagedThreadId} 开始监控");
-
-                // while 循环
                 while (true)
                 {
-                    if (_cts.IsCancellationRequested)
-                    {
-                        //  commonBus.OnLog(LogType.Info, $"界面60s无交互:{Thread.CurrentThread.ManagedThreadId} 结束监控");
-                        break;
-                    }
+                    if (_cts.IsCancellationRequested) break;
 
-                    // 机台运行
+                    // 机台运行中，60s 无交互则跳回主页
                     if (_motionEngine.EngineStatus == EngineStatus.Running)
                     {
                         if ((DateTime.Now - mouseMoveTime).TotalSeconds > 60)
                         {
                             var homePage = PageModel.Pages.FirstOrDefault(u => u.Name == "Home");
                             commonBus.OnNavigate(homePage);
-
-                            // 更新时间
-                            // mouseMoveTime = DateTime.Now;
-                        }
-                    }
-                    if (commonBus.CurrentUser != null && commonBus.CurrentUser.UserRole != SystemRole.Operator)  // userNameCur != "None"
-                    {
-                        var reaminTime = (int)(_mController.SysConfig.HighLevelTime * 60 - (DateTime.Now - mouseMoveTime).TotalSeconds);
-                        commonBus.OnRemainTimeChange(reaminTime);
-                    }
-                    if ((DateTime.Now - mouseMoveTime).TotalMinutes > _mController.SysConfig.HighLevelTime)
-                    {
-                        //如果高级权限时间为负值，默认无限登录时长
-                        if (_mController.SysConfig.HighLevelTime <= 0) return;
-                        if (commonBus.CurrentUser == null) return;
-                        if (commonBus.CurrentUser.UserRole != SystemRole.Operator)  //  || userNameCur != "None"
-                        {
-                            var curUserModel = new UserModel()
-                            {
-                                Id = 3,
-                                UserName = SystemRole.Operator.ToString(),
-                                UserRole = SystemRole.Operator,
-                                Password = "123456",
-                            };
-                            commonBus.CurrentUser = curUserModel;
-                            commonBus.OnUserLogin(curUserModel);
-                            commonBus.OnUserRoleChange(new Luster.Motion.Integration.WorkCardVerify.UserInfo());
-                            // 更新时间
-                            mouseMoveTime = DateTime.Now;
-                            _mController.SysConfig.EnableSaftyDoor = true;
-                            _mController.SysConfig.EnableLightCurtain = true;
-                            _mController.StartButtonMontor();
-                            //切回主界面
-                            var homePage = PageModel.Pages.FirstOrDefault(u => u.Name == "Home");
-                            commonBus.OnNavigate(homePage);
-                        }
-                        else
-                        {
-                            mouseMoveTime = DateTime.Now;
                         }
                     }
 
+                    // 将 SessionManager 的倒计时广播到 commonBus
+                    if (commonBus.CurrentUser != null)
+                    {
+                        commonBus.OnRemainTimeChange(_sessionManager.CountDown);
+                    }
+
+                    // 后台差居工站
                     if (_motionEngine.GetStations().FirstOrDefault(u =>
                                u.Status != RunStatus.Skip
                                && typeof(IBackGroundStation).IsAssignableFrom(u.TaskFunction.GetType())) != null)
@@ -310,12 +319,11 @@ namespace LusterMotion.ViewModel
                     await _mController.Update_FFU_ConnectStatus();
 
                     Thread.Sleep(800);
-
                 }
-
-
             }, _cts.Token);
         }
+
+
 
         private void HiveDialogVM_HiveRepairEndEvent(Brush obj)
         {
@@ -1248,8 +1256,6 @@ namespace LusterMotion.ViewModel
 
             taskWaitForm.ShowDialog();
         }
-
-
 
     }
 }

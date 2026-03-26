@@ -485,7 +485,11 @@ namespace Luster.Motion.Integration.Web
             if (src == dst) return;
             await Task.Run(() =>
             {
-                Status = ConvertToMode(dst);
+                // Hive未注册时，状态条不能随机台状态变化
+                if (Status != TrainRunMode.OffBoard)
+                {
+                    Status = ConvertToMode(dst);
+                }
                 StatusChanged(sender as IMotionController, src, dst);
             });
 
@@ -582,7 +586,7 @@ namespace Luster.Motion.Integration.Web
                 if (url.Contains("10.0.0.2") == false)
                 {
                     OnLog($"System:{this.GetType().Name} URL:{url} Send:{jsonData}\r\n Receive:{strResult}", url);
-                } 
+                }
                 //当前设备生产指标返回值格式不对，会导致误报，实际上是传成功
                 var resStatus = JsonTool.ToObject<ResultStatus>(strResult);
                 req.Invoke(resStatus);

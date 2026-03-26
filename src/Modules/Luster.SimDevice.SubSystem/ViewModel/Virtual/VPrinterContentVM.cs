@@ -1,5 +1,7 @@
-﻿using Luster.Common.Assets;
+using Luster.Common.Assets;
+using Luster.Common.Tools.Tools;
 using Luster.Motion.DataStruct.DataModels;
+using Luster.Motion.DataStruct.VDevice;
 using Luster.SimDevice.EngineUI;
 using Luster.SimDevice.EngineUI.Models;
 using Luster.SimDevice.SubSystem.Extension;
@@ -8,9 +10,12 @@ using Prism.Services.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 
 namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
 {
@@ -165,7 +170,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
         /// </summary>
         public override void AddNewItem()
         {
-            dialogService.ShowPrinterDialog(null,r =>
+            dialogService.ShowPrinterDialog(null, r =>
             {
                 LoadDevices();
             });
@@ -213,15 +218,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
             {
                 if (r.Result == ButtonResult.OK)
                 {
-                    if (r.Parameters.TryGetValue<PrinterModel>("PrinterModel", out var deviceModel))
-                    {
-                        // update device
-                        var dModel = printerList.FirstOrDefault(u => u.ID == deviceModel.ID);
-                        if (dModel != null)
-                        {
-                            dModel = deviceModel;
-                        }
-                    }
+                    LoadDevices();
                 }
             });
         }));
@@ -235,4 +232,5 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
             printer.Tag.Print(printer.Content, 5000);
         }));
     }
+
 }

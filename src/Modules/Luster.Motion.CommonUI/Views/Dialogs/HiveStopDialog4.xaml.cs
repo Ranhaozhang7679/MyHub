@@ -24,5 +24,26 @@ namespace Luster.Motion.CommonUI.Views.Dialogs
         {
             InitializeComponent();
         }
+
+        private void SelectAllCheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            SetAllCheckBoxes(true);
+        }
+
+        private void SelectAllCheckBox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            SetAllCheckBoxes(false);
+        }
+
+        private void SetAllCheckBoxes(bool isChecked)
+        {
+            foreach (var child in CheckListPanel.Children)
+            {
+                if (child is CheckBox cb)
+                {
+                    cb.IsChecked = isChecked;
+                }
+            }
+        }
     }
 }

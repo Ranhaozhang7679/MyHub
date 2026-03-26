@@ -1,6 +1,7 @@
 using HandyControl.Controls;
 using HandyControl.Data;
 using Luster.Common.Assets;
+using Luster.Common.Assets.FloatingInfo.Services;
 using Luster.Common.DataAccess.Repositories;
 using Luster.Common.DataStruct;
 using Luster.Common.DataStruct.DataModels;
@@ -47,8 +48,10 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         public ICommand EndCommand { get; private set; }
         public ICommand OneKeyCheckCommand { get; private set; }
         public ICommand UpdateItemsCommand { get; private set; }
+        public ICommand DeleteRowCommand { get; private set; }
 
         private Dispatcher _dispatcher;
+        private const string PageName = "IOConform";
 
         /// <summary>
         /// 进度条
@@ -60,25 +63,65 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             set { SetProperty(ref _progressValue, value); }
         }
 
+        /// <summary>
+        /// 是否正在点检中
+        /// </summary>
+        private bool _isChecking;
+        public bool IsChecking
+        {
+            get { return _isChecking; }
+            set
+            {
+                if (SetProperty(ref _isChecking, value))
+                {
+                    // 当IsChecking状态改变时，通知DeleteRowCommand重新评估可执行状态
+                    (DeleteRowCommand as DelegateCommand<object>)?.RaiseCanExecuteChanged();
+                }
+            }
+        }
+
         readonly IDeviceEngine _deviceEngine;
         protected IDialogService _dialogService;
         private bool _checkResult = false;
         private string _checkErrorMessage = string.Empty;
 
+        /// <summary>
+        /// 用于控制同时只能弹出一个IO交替检测对话框
+        /// </summary>
+        private static readonly object _dialogLock = new object();
+        private static IOAlternatingCheckDialog _currentDialog = null;
+        
+        /// <summary>
+        /// 用于控制同时只能弹出一个IO输出检测对话框
+        /// </summary>
+        private static IOCheckDialog _currentOutputDialog = null;
+
+        private readonly IFloatingInfoConfigService _configService;
+
         public IOinspectionContentVM(ISimDeviceEngineUI engineUI, IDeviceEngine deviceEngine, ICommonBus commonBus,
                IRepository repository, IRegionManager regionManager,
-               IDialogService dialogService, ISimDeviceEngineUI simDeviceEngineUI, CSVHelper cSVHelper, Dispatcher dispatcher,FlowBus flowBus) :
-               base(repository, regionManager, commonBus, cSVHelper, flowBus)
+               IDialogService dialogService, ISimDeviceEngineUI simDeviceEngineUI, CSVHelper cSVHelper, Dispatcher dispatcher, FlowBus flowBus,
+               IFloatingInfoConfigService configService, IFloatingInfoService floatingInfoService) :
+               base(repository, regionManager, commonBus, cSVHelper, flowBus, dialogService)
         {
+            _configService = configService;
+            _floatingInfoService = floatingInfoService;
+
+            // 设置父页面Region名称，用于构建子页面浮动信息窗口的PageId
+            //_parentRegionName = "IOinspectionContent";
+
             Pages = new ObservableCollection<CommonPageModel>();
             //Pages.Add(new CommonPageModel() { Name = "Vacuum", IsSelected = true, Region = "", ViewType = typeof(AssTbVacuum) });
-            Pages.Add(new CommonPageModel() { Name = "Cylinder", IsSelected = true, Region = "", ViewType = typeof(AssTbCylinder) });
             //Pages.Add(new CommonPageModel() { Name = "OriginLimit", IsSelected = false, Region = "", ViewType = typeof(AssTbOriginLimit) });
             //Pages.Add(new CommonPageModel() { Name = "Runners", IsSelected = false, Region = "", ViewType = typeof(AssTbRunners) });
-            Pages.Add(new CommonPageModel() { Name = "Digital_In", IsSelected = false, Region = "", ViewType = typeof(AssTbDigitalIn) });
-            Pages.Add(new CommonPageModel() { Name = "Digital_Out", IsSelected = false, Region = "", ViewType = typeof(AssTbDigitalOut) });
             Pages.Add(new CommonPageModel() { Name = "Digital_In_Single", IsSelected = false, Region = "", ViewType = typeof(AssTbDigitalInSingle) });
             Pages.Add(new CommonPageModel() { Name = "Digital_Out_Single", IsSelected = false, Region = "", ViewType = typeof(AssTbDigitalOutSingle) });
+            Pages.Add(new CommonPageModel() { Name = "Digital_In", IsSelected = false, Region = "", ViewType = typeof(AssTbDigitalIn) });
+            Pages.Add(new CommonPageModel() { Name = "Digital_Out", IsSelected = false, Region = "", ViewType = typeof(AssTbDigitalOut) });
+            Pages.Add(new CommonPageModel() { Name = "Cylinder", IsSelected = false, Region = "", ViewType = typeof(AssTbCylinder) });
+
+            // 注册子页面到DigitalAssPageModel
+            DigitalAssPageModel.RegisterSubPages("IOinspectionContent", Pages);
 
             SelectedReportPage = Pages.Where(x => x.IsSelected).FirstOrDefault();
             _deviceEngine = deviceEngine;
@@ -89,6 +132,13 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             EndCommand = new DelegateCommand(OnEnd);
             OneKeyCheckCommand = new DelegateCommand<object>(OnOneKeyCheck);
             UpdateItemsCommand = new DelegateCommand(OnUpdateItems);
+            DeleteRowCommand = new DelegateCommand<object>(OnDeleteRow, CanDeleteRow);
+            LoadCheckConfirmMessages();
+        }
+
+        private bool CanDeleteRow(object arg)
+        {
+            return !IsChecking;
         }
 
 
@@ -99,8 +149,76 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             base.OnEnd();
         }
 
+        /// <summary>
+        /// 获取页面整体状态
+        /// </summary>
+        private string GetOverallStatus()
+        {
+            if (ItemModels == null || ItemModels.Count == 0)
+                return "未点检";
+
+            bool hasNG = false;
+            bool hasOK = false;
+            bool hasNotChecked = false;
+
+            foreach (var item in ItemModels)
+            {
+                string status = "";
+
+                // 根据类型获取状态
+                if (item is AssTbCylinder cylinder)
+                    status = cylinder.状态;
+                else if (item is AssTbDigitalIn digitalIn)
+                    status = digitalIn.状态;
+                else if (item is AssTbDigitalOut digitalOut)
+                    status = digitalOut.状态;
+                else if (item is AssTbDigitalInSingle digitalInSingle)
+                    status = digitalInSingle.状态;
+                else if (item is AssTbDigitalOutSingle digitalOutSingle)
+                    status = digitalOutSingle.状态;
+                else if (item is AssTbOriginLimit originLimit)
+                    status = originLimit.状态;
+
+                // 跳过状态忽略不计
+                if (status == "跳过")
+                    continue;
+
+                // NG 优先级最高
+                if (status == "NG")
+                {
+                    hasNG = true;
+                    break;  // 只要有一个 NG，整体就是 NG，直接退出
+                }
+
+                if (status == "OK")
+                {
+                    hasOK = true;
+                }
+                else if (status == "" || status == "未点检" || status == "未完成")
+                {
+                    hasNotChecked = true;
+                }
+            }
+
+            // 有 NG 直接返回 NG
+            if (hasNG)
+                return "NG";
+
+            // 有未点检，返回未点检
+            if (hasNotChecked)
+                return "未点检";
+
+            // 有 OK 返回 OK
+            if (hasOK)
+                return "OK";
+
+            // 默认返回未点检
+            return "未点检";
+        }
+
         public override async void OnOneKeyCheck(object obj)
         {
+            await base.OnOneKeyCheckAsync(obj);
             // 子界面的一键点检逻辑
             try
             {
@@ -143,7 +261,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     var parts = item.项次.Split('/');
                     var deviceName = parts[0];
                     var exists = cylinders.Any(c => c.Name == deviceName);
-                    if (!exists)
+                    //var isValid = !item.项次.Contains("备用") && !item.项次.Contains("弃用");
+                    if (!exists /*&& isValid*/)
                     {
                         mismatched.Add(item.项次);
                     }
@@ -156,7 +275,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 {
                     if (string.IsNullOrEmpty(item.项次)) continue;
                     var exists = vios.Any(v => v.Name == item.项次);
-                    if (!exists)
+                    //var isValid = !item.项次.Contains("备用") && !item.项次.Contains("弃用");
+                    if (!exists /*&& isValid*/)
                     {
                         mismatched.Add(item.项次);
                     }
@@ -169,7 +289,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 {
                     if (string.IsNullOrEmpty(item.项次)) continue;
                     var exists = vios.Any(v => v.Name == item.项次);
-                    if (!exists)
+                    //var isValid = !item.项次.Contains("备用") && !item.项次.Contains("弃用");
+                    if (!exists /*&& isValid*/)
                     {
                         mismatched.Add(item.项次);
                     }
@@ -182,7 +303,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 {
                     if (string.IsNullOrEmpty(item.项次)) continue;
                     var exists = vios.Any(v => v.Name == item.项次);
-                    if (!exists)
+                    //var isValid = !item.项次.Contains("备用") && !item.项次.Contains("弃用");
+                    if (!exists /*&& isValid*/)
                     {
                         mismatched.Add(item.项次);
                     }
@@ -194,6 +316,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
         protected override async Task ExecuteAsync(CancellationToken token)
         {
+            IsChecking = true;
             try
             {
                 switch (SelectedReportPage.Name)
@@ -223,6 +346,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                         await Check_IO_Single(token);
                         break;
                 }
+                PageStatusService.Instance.UpdateStatus(PageName, GetOverallStatus());
             }
             catch (Exception)
             {
@@ -231,7 +355,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             }
             finally
             {
-
+                IsChecking = false;
             }
         }
         private async Task Check_Cylinder(CancellationToken token)
@@ -308,6 +432,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                             ProgressValue = (i + 1) * 100 / ItemModels.Count; // 进度
                         }
                     }
+                    await Task.Delay(500);
                 }
                 //弹出提示框， 所有气缸操作已完成，请检查结果
 
@@ -398,7 +523,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             var tcs = new TaskCompletionSource<ButtonResult>();
             this._dispatcher.BeginInvoke(new Action(() =>
             {
-                _dialogService.ShowConfirm(message, r => tcs.SetResult(r.Result));
+                _dialogService.ShowConfirm(message, r => tcs.SetResult(r.Result), false);
             }));
             return tcs.Task;
         }
@@ -519,15 +644,24 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                             propStatus.SetValue(item, "");
                         }
 
+                        var IOName = type.GetProperty("项次").GetValue(item);
+                        if (IOName != null)
+                        {
+                            if (IOName.ToString().Contains("备用") || IOName.ToString().Contains("弃用"))
+                            {
+                                continue;
+                            }
+                        }
                         ItemModels.Add(item);
                     }
                     _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"从CSV文件成功读取 {ItemModels.Count} 条数据 ({SelectedReportPage.Name})" });
-                   if(ItemModels.Count>1)
+                    PageStatusService.Instance.UpdateStatus(PageName, "未点检");
+                    if (ItemModels.Count>1)
                     {
                         return; // CSV读取成功，直接返回
                     }
-                    
-                    
+
+
                 }
             }
             catch (Exception ex)
@@ -794,7 +928,40 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             ItemModels.Clear();
             foreach (var item in tempCollection)
             {
+                var IOName = item.GetType().GetProperty("项次").GetValue(item);
+                if (IOName.ToString().Contains("备用") || IOName.ToString().Contains("弃用"))
+                {
+                    continue;
+                }
                 ItemModels.Add(item);
+            }
+        }
+
+        /// 删除指定行
+        /// </summary>
+        private async void OnDeleteRow(object obj)
+        {
+            if (obj == null) return;
+
+            var itemToDelete = obj;
+
+            // 获取项次信息用于确认提示
+            var itemType = itemToDelete.GetType();
+            var propXc = itemType.GetProperty("项次");
+            var itemName = propXc != null ? propXc.GetValue(itemToDelete)?.ToString() : "未知项";
+
+            // 弹出确认对话框
+            var confirmResult = await ShowConfirmAsync($"确定要删除项次 [{itemName}] 吗？\n此操作不可撤销。");
+            if (confirmResult != ButtonResult.OK)
+            {
+                return;
+            }
+
+            // 从集合中移除
+            if (ItemModels.Contains(itemToDelete))
+            {
+                ItemModels.Remove(itemToDelete);
+                _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"已删除项次: {itemName}" });
             }
         }
 
@@ -822,13 +989,13 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                             inIo.实测 = "";
                             inIo.状态 = "未完成";
                         }
-                            
+
                         else if (item is AssTbDigitalOut outIo)
                         {
                             outIo.实测 = "";
                             outIo.状态 = "未完成";
                         }
-                            
+
                         //if (item is AssTbCylinder CylinderTb)
                         //{
                         //    CylinderTb.实测 = "0ms";
@@ -883,9 +1050,9 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                         }
                         if (vio.Behavior == IOBehavior.Input)
                         {
+                            // 如果交替检测未通过，则使用原有的单次检测逻辑
                             io.实测 = vio.GetDigitalIn().ToString();
                             io.状态 = vio.GetDigitalIn() == Convert.ToBoolean(io.标准) ? "OK" : "NG";
-
                         }
                         //if (vio.Behavior == IOBehavior.Output)
                         //{
@@ -976,10 +1143,11 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
                 for (int i = 0; i < ItemModels.Count; i++)
                 {
+                    if (token.IsCancellationRequested) return;
                     //输入
                     if (ItemModels[i] is AssTbDigitalInSingle io)
                     {
-                        if (io.状态 == "OK"|| io.状态 == "跳过")
+                        if (io.状态 == "OK" || io.状态 == "跳过")
                         {
                             continue; // 跳过已OK的项
                         }
@@ -999,127 +1167,15 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                         }
                         if (vio.Behavior == IOBehavior.Input)
                         {
-                            // 循环等待输入IO等于标准值取反，无超时时间
-                            //bool targetLevel = !Convert.ToBoolean(io.标准);   // 解析标准值并取反
-                            //// 轮询等待（可取消）
-                            //try
-                            //{
-                            //    while (true)
-                            //    {
-                            //        token.ThrowIfCancellationRequested();
-
-                            //        bool actual = vio.GetDigitalIn();
-                            //        io.实测 = actual.ToString();          // 实时刷新界面
-
-                            //        if (actual == targetLevel)            // 等到目标电平
-                            //        {
-                            //            io.状态 = "OK";
-                            //            break;                            // 结束本轮检测
-                            //        }
-                            //        // 避免 CPU 飙高，100 ms 扫一次
-                            //        await Task.Delay(100, token);
-                            //        LogStatus($"正在等待第{i}个IO达到“标准”电平的“取反”值...");
-                            //    }
-                            //}
-                            //catch (OperationCanceledException)
-                            //{
-                            //}
-
-                            // 创建 CancellationTokenSource 来管理取消操作
-                            var cts = new CancellationTokenSource();
-                            bool targetLevel = Convert.ToBoolean(io.标准);
-                            bool isSkip = false;
-                            bool isNG = false;
-                            IOCheckDialogIn dialog = null;
-                            bool a = false;
-                            Task waitTask = Task.Run(async () =>
+                            // 首先尝试True/False交替触发检测
+                            var alternatingResult = await CheckIOAlternatingAsync(vio, io, token);
+                            io.状态 = alternatingResult switch
                             {
-                                try
-                                {
-                                    while (true)
-                                    {
-                                        bool actual = vio.GetDigitalIn();
-                                        io.实测 = actual.ToString();          // 实时刷新界面
-
-                                        if (actual == targetLevel)            // 等到目标电平
-                                        {
-                                            io.状态 = "OK";
-                                            await _dispatcher.InvokeAsync(() =>
-                                            {
-                                                a = true;
-                                                dialog?.CloseDialog();
-                                            });
-                                            break;                            // 结束本轮检测
-                                        }
-                                        if (isSkip)            // 等到目标电平
-                                        {
-                                            io.状态 = "跳过";
-                                            break;                            // 结束本轮检测
-                                        }
-                                        if (isNG)            // 等到目标电平
-                                        {
-                                            io.状态 = "NG";
-                                            break;                            // 结束本轮检测
-                                        }
-                                        // 避免 CPU 飙高，100 ms 扫一次
-                                        await Task.Delay(100, cts.Token);
-                                        LogStatus($"正在等待第{i}个IO({vio.Name})达到“标准”电平的“取反”值...");
-                                    }
-                                }
-                                catch (OperationCanceledException)
-                                {
-                                    // 取消操作时可以执行一些清理逻辑（可选）
-                                    LogStatus("检测被取消。");
-                                }
-                            }, cts.Token);
-                            
-                            var dialogResult = await _dispatcher.InvokeAsync(() =>
-                            {
-                                // 弹出窗体，用于人工确认输出状态
-                                 dialog = new IOCheckDialogIn(vio, targetLevel, i);
-                                dialog.ShowDialog();
-                                // 当人工关闭弹窗时，结束循环
-                                
-                                return new
-                                {
-                                    Result1 = dialog.Result1,
-                                    IsButtonClicked1 = dialog.IsButtonClicked1  // 直接读取属性
-                                };
-                            });
-                            if (dialogResult.Result1 == IOCheckResult.Skip)
-                            {
-                                isSkip = true;
-                            }
-                            else if(dialogResult.Result1 == IOCheckResult.NG)
-                            {
-                                isNG = true;
-                            }
-                            if (dialogResult.IsButtonClicked1 == false&&!a)
-                            {
-                                cts.Cancel();
-                                io.状态 = "NG";
-                                return;
-                            }
-                            try
-                            {
-                                if (cts.IsCancellationRequested)
-                                {
-                                    io.状态 = "Cancelled";
-                                }
-                                else
-                                {
-                                    // 处理检测完成后的逻辑
-                                    LogStatus("检测完成。");
-                                }
-                            }
-                            catch (OperationCanceledException)
-                            {
-                                LogStatus("检测被取消。");
-                            }
-                            if (io.状态 == "OK")
-                            {
-                                              
-                            }
+                                IOAlternatingResult.OK => "OK",
+                                IOAlternatingResult.Skip => "跳过",
+                                IOAlternatingResult.Cancel => "Cancel",
+                                IOAlternatingResult.Error => "Error",
+                            };
 
                         }
                         io.完成时间 = DateTime.Now;
@@ -1148,19 +1204,49 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                         if (vio != null && vio.Behavior == IOBehavior.Output)
                         {
                             bool targetLevel = !Convert.ToBoolean(outIO.标准);
-                            // 如果在非 UI 线程，使用 Dispatcher 切换到 UI 线程
-                            var dialogResult = await _dispatcher.InvokeAsync(() =>
+                            
+                            // 等待当前输出对话框关闭（确保同时只有一个对话框）
+                            while (_currentOutputDialog != null)
                             {
-                                // 弹出窗体，用于人工确认输出状态
-                                var dialog = new IOCheckDialog(vio, targetLevel, i);
-                                dialog.ShowDialog();
-                                // 当人工关闭弹窗时，结束循环
-                                return new
+                                await Task.Delay(50, token);
+                            }
+                            
+                            // 使用TaskCompletionSource等待对话框关闭
+                            var tcs = new TaskCompletionSource<(IOCheckResult Result, bool IsButtonClicked)>();
+                            
+                            // 在UI线程上弹出对话框（非阻塞）
+                            await _dispatcher.InvokeAsync(() =>
+                            {
+                                lock (_dialogLock)
                                 {
-                                    Result = dialog.Result,
-                                    IsButtonClicked = dialog.IsButtonClicked  // 直接读取属性
-                                };
+                                    // 再次检查，防止竞态条件
+                                    if (_currentOutputDialog != null)
+                                    {
+                                        tcs.SetResult((IOCheckResult.Skip, false));
+                                        return;
+                                    }
+                                    
+                                    // 弹出窗体，用于人工确认输出状态
+                                    var dialog = new IOCheckDialog(vio, targetLevel, i, _configService, _floatingInfoService);
+                                    _currentOutputDialog = dialog;
+                                    
+                                    dialog.Closed += (s, e) =>
+                                    {
+                                        lock (_dialogLock)
+                                        {
+                                            _currentOutputDialog = null;
+                                        }
+                                        tcs.TrySetResult((dialog.Result, dialog.IsButtonClicked));
+                                    };
+                                    
+                                    // 使用Show()而非ShowDialog()，非阻塞显示
+                                    dialog.Show();
+                                }
                             });
+                            
+                            // 等待对话框关闭
+                            var dialogResult = await tcs.Task;
+                            
                             if (dialogResult.IsButtonClicked == false)
                             {
                                 if (vio.GetDigitalOut().ToString() != outIO.标准)
@@ -1169,7 +1255,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                                 }
                                 return;
                             }
-                            // 获取用户点击的结果，填充“状态”，实测无需填写
+                            // 获取用户点击的结果，填充"状态"，实测无需填写
                             switch (dialogResult.Result)
                             {
                                 case IOCheckResult.OK:
@@ -1201,6 +1287,104 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
         }
 
+        /// <summary>
+        /// 检测IO信号True/False交替触发逻辑
+        /// 当IO信号完成True→False→True或False→True→False的交替变化时，判定为OK
+        /// 不需要超时，只需要界面提示人工操作IO
+        /// </summary>
+        /// <param name="vio">VIO设备</param>
+        /// <param name="ioItem">IO数据项（用于更新界面显示）</param>
+        /// <param name="token">取消令牌</param>
+        /// <param name="timeoutMs">此参数已废弃，不再使用</param>
+        /// <returns>如果检测到交替变化返回true，否则返回false</returns>
+        private async Task<IOAlternatingResult> CheckIOAlternatingAsync(VIO vio, dynamic ioItem, CancellationToken token, int timeoutMs = 10000)
+        {
+            try
+            {
+                // 根据IO类型获取初始状态
+                bool initialState;
+                if (vio.Behavior == IOBehavior.Input)
+                {
+                    initialState = vio.GetDigitalIn();
+                }
+                else
+                {
+                    initialState = vio.GetDigitalOut();
+                }
+
+                ioItem.实测 = initialState.ToString();
+                LogStatus($"IO [{vio.Name}] 开始检测交替触发，初始状态: {initialState}");
+
+                // 等待当前对话框关闭（确保同时只有一个对话框）
+                while (_currentDialog != null)
+                {
+                    await Task.Delay(50, token);
+                }
+
+                // 使用TaskCompletionSource等待对话框关闭
+                var tcs = new TaskCompletionSource<IOAlternatingResult>();
+
+                // 在UI线程上弹出对话框
+                await _dispatcher.InvokeAsync(() =>
+                {
+                    lock (_dialogLock)
+                    {
+                        // 再次检查，防止竞态条件
+                        if (_currentDialog != null)
+                        {
+                            tcs.SetResult(IOAlternatingResult.Cancel);
+                            return;
+                        }
+
+                        var dialog = new IOAlternatingCheckDialog(vio, initialState, _configService, _floatingInfoService);
+                        _currentDialog = dialog;
+
+                        dialog.Closed += (s, e) =>
+                        {
+                            lock (_dialogLock)
+                            {
+                                _currentDialog = null;
+                            }
+                            tcs.TrySetResult(dialog.Result);
+                        };
+
+                        dialog.Show();
+                    }
+                });
+
+                // 等待对话框关闭
+                var result = await tcs.Task;
+
+                // 根据对话框结果判断
+                if (result == IOAlternatingResult.OK)
+                {
+                    LogStatus($"IO [{vio.Name}] 检测到有效的True/False交替触发，判定为OK");
+                    ioItem.实测 = "交替触发OK";
+                }
+                else if (result == IOAlternatingResult.Skip)
+                {
+                    LogStatus($"IO [{vio.Name}] 检测被用户跳过");
+                    ioItem.实测 = "跳过";
+                }
+                else
+                {
+                    LogStatus($"IO [{vio.Name}] 检测被用户取消");
+                    ioItem.实测 = "取消";
+                }
+                return result;
+            }
+            catch (OperationCanceledException)
+            {
+                LogStatus($"IO [{vio.Name}] 检测被取消");
+                return IOAlternatingResult.Cancel;
+            }
+            catch (Exception ex)
+            {
+                LogStatus($"IO [{vio.Name}] 检测过程中发生异常: {ex.Message}");
+                return IOAlternatingResult.Error;
+            }
+        }
+
         private IEnumerable<VIO> GetIOList(string key = "", IOBehavior behavior = IOBehavior.Input, IOType ioType = IOType.Digital)
         {
             // 控制卡
@@ -1214,11 +1398,12 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 .Select(u => u as VIO)
                 .Where(u => u.CardName == CurrentCard)
                 .Where(u => u.IOType == ioType)
-                .Where(u => u.Behavior == behavior);
+                .Where(u => u.Behavior == behavior)
+                .Where(u => !u.Name.Contains("备用") && !u.Name.Contains("弃用"));
 
             if (!string.IsNullOrEmpty(key))
             {
-                list = list.Where(u => u.CardName.Contains(key) || u.Name.Contains(key));
+                list = list.Where(u => u.CardName.Contains(key) || u.Name.Contains(key)).Where(u => !u.Name.Contains("备用") && !u.Name.Contains("弃用"));
             }
 
             return list;
@@ -1313,7 +1498,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     vAxis.Home(); //执行回零操作
                     Thread.Sleep(100); //稍作延时，确保命令发送出去
                     var timeoutTask = Task.Delay(10000); // 10秒超时
-                    var checkHomeTask = Task.Run(() => {
+                    var checkHomeTask = Task.Run(() =>
+                    {
                         vAxis.CheckHomeDone();
                     }, token);
                     var completedTask = await Task.WhenAny(timeoutTask, checkHomeTask);

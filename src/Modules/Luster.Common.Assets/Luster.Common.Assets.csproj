@@ -54,6 +54,9 @@
         <Reference Include="ICSharpCode.AvalonEdit">
             <HintPath>..\..\..\lib\ICSharpCode.AvalonEdit.dll</HintPath>
         </Reference>
+        <Reference Include="Newtonsoft.Json">
+          <HintPath>..\..\..\lib\Newtonsoft.Json.dll</HintPath>
+        </Reference>
         <Reference Include="PresentationCore" />
         <Reference Include="PresentationFramework" />
         <Reference Include="System.Xaml" />

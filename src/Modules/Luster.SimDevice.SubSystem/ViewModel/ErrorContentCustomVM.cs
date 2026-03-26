@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Media;
 
+
 namespace Luster.SimDevice.SubSystem.ViewModel
 {
     public class ErrorContentCustomVM : PageVM
@@ -100,8 +101,10 @@ namespace Luster.SimDevice.SubSystem.ViewModel
             string alarmContent = "";
             string alarmEnglish = "";
 
+            // 收集已有的所有报警代码，传给向导用于序号自增
+            var existingCodes = ErrorList.Select(e => e.AlarmCode).Where(c => !string.IsNullOrEmpty(c)).ToList();
 
-            dialogService.ShowAlarmConfigCustomDialog(alarmCode, alarmContent, alarmEnglish, r =>
+            dialogService.ShowAlarmConfigCustomDialog(alarmCode, alarmContent, alarmEnglish, existingCodes, r =>
             {
                 if (r.Result == ButtonResult.OK)
                 {
@@ -536,8 +539,13 @@ namespace Luster.SimDevice.SubSystem.ViewModel
 
                     if (importedItems.Count > 0)
                     {
+                        // 移除无差别删除全部报警的逻辑 (会导致 TaskFlow 中的报警工具断开连接并清空配置)
+                        CleanupUnusedVAlarms(importedItems);
+                        
+                        // 先清空绑定的列表
                         ErrorList.Clear();
-                        RemoveAllVAlarms();
+                        
+                        // 执行导入（自动更新底层的对应报警，而不删除有效的）
                         BatchImport(importedItems);
                     }
                     else
@@ -579,6 +587,24 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                 SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Error,
                     $"删除所有 VAlarm 设备失败: {ex.Message}");
                 throw;
+            }
+        }
+        
+        /// <summary>
+        /// 同步清理设备引擎中未使用的 VAlarm 设备 (按需调用)
+        /// </summary>
+        private void CleanupUnusedVAlarms(List<ErrorItemCustomModel> validItems)
+        {
+            if (deviceEngine == null) return;
+            var importedCodes = validItems.Select(x => x.AlarmCode).ToHashSet();
+            var allVAlarms = deviceEngine.GetVDevices<VAlarm>().ToList();
+            
+            foreach (var alarm in allVAlarms)
+            {
+                if (!importedCodes.Contains(alarm.AlarmKey))
+                {
+                    deviceEngine.ReomoveVirtual(alarm.ID);
+                }
             }
         }
     }

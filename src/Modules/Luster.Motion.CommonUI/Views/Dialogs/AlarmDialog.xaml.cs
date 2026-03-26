@@ -35,6 +35,17 @@ namespace Luster.Motion.CommonUI.Views.Dialogs
         public AlarmDialog()
         {
             InitializeComponent();
+            // 订阅加载事件
+            this.Loaded += AlarmDialog_Loaded;
+        }
+        private void AlarmDialog_Loaded(object sender, RoutedEventArgs e)
+        {
+            // 获取宿主该 UserControl 的真实弹窗 Window (通常是 Luster.Common.Assets.Views.DialogWindow)
+            Window win = Window.GetWindow(this);
+            if (win != null)
+            {
+                win.Topmost = true;
+            }
         }
     }
 }

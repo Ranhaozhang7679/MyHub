@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:prism="http://prismlibrary.com/" 
         xmlns:local="clr-namespace:Luster.SimDevice.SubSystem.Extension"
+        xmlns:views="clr-namespace:Luster.SimDevice.SubSystem.Views"
         d:DesignHeight="800"
         d:DesignWidth="1600"
         prism:ViewModelLocator.AutoWireViewModel="True"
@@ -16,6 +17,42 @@
     <UserControl.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <local:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
+
+        <!-- 按钮选择样式 -->
+        <Style x:Key="TabButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="auto"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="border" 
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="3">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                              VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#BFBFBF"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#BFBFBF"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Background" Value="#BFBFBF"/>
+                                <Setter TargetName="border" Property="BorderBrush" Value="#BFBFBF"/>
+                                <Setter Property="Foreground" Value="#BFBFBF"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
         <!-- 竖排显示样式 -->
         <Style TargetType="Border" x:Key="ParameterGroupBorderStyle">
@@ -95,458 +132,550 @@
                 </Setter.Value>
             </Setter>
         </Style>
-
     </UserControl.Resources>
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <!-- 左侧按钮区域 -->
+            <ColumnDefinition Width="Auto"/>
+            <!-- 右侧内容区域 -->
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
 
-        <!-- 工具栏 -->
-        <Border Grid.Row="0"
+        <!-- 左侧按钮区域 -->
+        <Border Grid.Column="0"
                 Margin="5"
                 Background="White"
                 BorderBrush="#DDDDDD"
                 BorderThickness="1"
-                CornerRadius="5">
-            <Grid Margin="10">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+                CornerRadius="5"
+                Width="140">
+            <StackPanel Margin="10" Orientation="Vertical">
+                <!-- AELimit按钮 -->
+                <Button x:Name="AELimitButton"
+                        Content="AELimit"
+                        Style="{StaticResource TabButtonStyle}"
+                        Click="AELimitButton_Click">
+                    <Button.Background>
+                        <SolidColorBrush Color="White"/>
+                    </Button.Background>
+                    <Button.BorderBrush>
+                        <SolidColorBrush Color="#DDDDDD"/>
+                    </Button.BorderBrush>
+                </Button>
 
-                <!-- 工站选择下拉菜单 -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="工站：" VerticalAlignment="Center" FontSize="12" Margin="0,0,5,0"/>
-                    <ComboBox x:Name="StationComboBox"
-                              ItemsSource="{Binding StationList}"
-                              SelectedItem="{Binding SelectedStation}"
-                              Width="250"
-                              Height="30"
-                              FontSize="12"
-                              VerticalAlignment="Center"/>
-                </StackPanel>
+                <!-- SFC按钮 -->
+                <Button x:Name="SFCButton"
+                        Content="SFC"
+                        Style="{StaticResource TabButtonStyle}"
+                        Click="SFCButton_Click">
+                    <Button.Background>
+                        <SolidColorBrush Color="White"/>
+                    </Button.Background>
+                    <Button.BorderBrush>
+                        <SolidColorBrush Color="#DDDDDD"/>
+                    </Button.BorderBrush>
+                </Button>
+                <!-- Global按钮 -->
+                <Button x:Name="GlobalButton"
+                        Content="Global"
+                        Style="{StaticResource TabButtonStyle}"
+                        Click="GlobalButton_Click">
+                    <Button.Background>
+                        <SolidColorBrush Color="White"/>
+                    </Button.Background>
+                    <Button.BorderBrush>
+                        <SolidColorBrush Color="#DDDDDD"/>
+                    </Button.BorderBrush>
+                </Button>
+            </StackPanel>
+        </Border>
 
-                <Button Grid.Column="2"
-                        Margin="10,0,0,0"
-                        Width="80"
-                        Height="30"
-                        VerticalAlignment="Center"
-                        HorizontalAlignment="Right"
-                        Command="{Binding RefreshCommand}"
-                        Content="刷新"
-                        FontSize="12"/>
+        <!-- 右侧内容区域 -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-                <Button Grid.Column="3"
-                        Margin="10,0,0,0"
-                        Width="80"
-                        Height="30"
-                        VerticalAlignment="Center"
-                        HorizontalAlignment="Right"
-                        Command="{Binding ExportCommand}"
-                        Content="导出"
-                        FontSize="12"/>
+            <!-- 工具栏 - 放在外面，两个页面共享 -->
+            <Border Grid.Row="0"
+                    Margin="5"
+                    Background="White"
+                    BorderBrush="#DDDDDD"
+                    BorderThickness="1"
+                    CornerRadius="5">
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- PDCA工站选择下拉菜单 -->
+                    <StackPanel x:Name="PDCAStationPanel" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Visible">
+                        <TextBlock Text="工站：" VerticalAlignment="Center" FontSize="12" Margin="0,0,5,0"/>
+                        <ComboBox x:Name="StationComboBox"
+                                  Width="250"
+                                  Height="30"
+                                  FontSize="12"
+                                  VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- SFC工站选择下拉菜单 -->
+                    <StackPanel x:Name="SFCStationPanel" Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Visibility="Collapsed">
+                        <TextBlock Text="工站：" VerticalAlignment="Center" FontSize="12" Margin="0,0,5,0"/>
+                        <ComboBox x:Name="SFCStationComboBox"
+                                  Width="250"
+                                  Height="30"
+                                  FontSize="12"
+                                  VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- PDCA导出按钮 -->
+                    <Button x:Name="PDCAExportButton"
+                                Grid.Column="2"
+                                Margin="10,0,0,0"
+                                Width="80"
+                                Height="30"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Right"
+                                Command="{Binding ExportCommand}"
+                                Content="导出"
+                                FontSize="12"/>
+
+                    <!-- SFC导出按钮 -->
+                    <Button x:Name="SFCExportButton"
+                                Grid.Column="2"
+                                Margin="10,0,0,0"
+                                Width="80"
+                                Height="30"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Right"
+                                Command="{Binding ElementName=SFCContent, Path=DataContext.ExportCommand}"
+                                Content="导出"
+                                FontSize="12"
+                                Visibility="Collapsed"/>
+                    
+                    <!-- Global新增按钮 -->
+                    <Button x:Name="GlobalAddButton"
+                                Grid.Column="3"
+                                Margin="10,0,0,0"
+                                Width="80"
+                                Height="30"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Right"
+                                Command="{Binding ElementName=GlobalContent, Path=DataContext.AddGlobalVariableCommand}"
+                                Content="新增"
+                                FontSize="12"
+                                Visibility="Collapsed"/>
+                </Grid>
+            </Border>
+
+            <!-- PDCA内容区域 -->
+            <Grid x:Name="AELimitContent" Grid.Row="1" Visibility="Visible">
+                <Border Margin="5"
+                        Background="White"
+                        BorderBrush="#DDDDDD"
+                        BorderThickness="1"
+                        CornerRadius="5">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Auto"
+                                  Padding="10">
+                        <ItemsControl x:Name="ParametersList"
+                                      ItemsSource="{Binding ParameterRows}"
+                                      Background="Transparent">
+                            <ItemsControl.ItemTemplate>
+                                <!-- PDCA的DataTemplate内容保持不变 -->
+                                <DataTemplate>
+                                    <Border Style="{StaticResource ParameterGroupBorderStyle}">
+                                        <Grid Style="{StaticResource ParameterGridStyle}">
+                                            <!-- 这里保持原来的PDCA参数布局 -->
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <!-- 通信服务器地址 -->
+                                            <Grid Grid.Row="0" Margin="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="通信服务器地址：" Style="{StaticResource ParameterLabelStyle}"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding CommDevice}" 
+                                                           Style="{StaticResource ParameterValueStyle}"/>
+                                            </Grid>
+
+                                            <!-- 启用 -->
+                                            <Grid Grid.Row="1" Margin="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="启用：" Style="{StaticResource ParameterLabelStyle}"/>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding IsEnableDisplayText}"
+                                                               Style="{StaticResource ParameterValueStyle}"
+                                                               VerticalAlignment="Center"
+                                                               Visibility="{Binding IsEnableIsBinding, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                    <CheckBox IsChecked="{Binding IsEnableCheckBoxValue}"
+                                                              Style="{StaticResource ParameterCheckBoxStyle}"
+                                                              Visibility="{Binding ShowIsEnableCheckBox, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- PDCA读取超时时间 -->
+                                            <Grid Grid.Row="2" Margin="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="PDCA读取超时时间(ms)：" Style="{StaticResource ParameterLabelStyle}"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding TimeOutMS}" 
+                                                           Style="{StaticResource ParameterValueStyle}"/>
+                                            </Grid>
+
+                                            <!-- PDCA读取失败后是否主动断连 -->
+                                            <Grid Grid.Row="3" Margin="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="PDCA读取失败后是否主动断连：" Style="{StaticResource ParameterLabelStyle}"/>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding IsAutoDisConnectDisplayText}"
+                                                               Style="{StaticResource ParameterValueStyle}"
+                                                               VerticalAlignment="Center"
+                                                               Visibility="{Binding IsAutoDisConnectIsBinding, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                    <CheckBox IsChecked="{Binding IsAutoDisConnectCheckBoxValue}"
+                                                              Style="{StaticResource ParameterCheckBoxStyle}"
+                                                              Visibility="{Binding ShowIsAutoDisConnectCheckBox, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- 动作类型 -->
+                                            <Grid Grid.Row="4" Margin="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="动作类型：" Style="{StaticResource ParameterLabelStyle}"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding PDCAMode}" 
+                                                           Style="{StaticResource ParameterValueStyle}"/>
+                                            </Grid>
+
+                                            <!-- 启用Display_SN上传项 -->
+                                            <Grid Grid.Row="5" Margin="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="启用Display_SN上传项：" Style="{StaticResource ParameterLabelStyle}"/>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding IsCGDisplaySNDisplayText}"
+                                                               Style="{StaticResource ParameterValueStyle}"
+                                                               VerticalAlignment="Center"
+                                                               Visibility="{Binding IsCGDisplaySNIsBinding, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                    <CheckBox IsChecked="{Binding IsCGDisplaySNCheckBoxValue}"
+                                                              Style="{StaticResource ParameterCheckBoxStyle}"
+                                                              Visibility="{Binding ShowIsCGDisplaySNCheckBox, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- Display_SN -->
+                                            <Grid Grid.Row="6" Margin="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="Display_SN：" Style="{StaticResource ParameterLabelStyle}"/>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding CGDisplaySNDisplayText}"
+                                                               Style="{StaticResource ParameterValueStyle}"
+                                                               VerticalAlignment="Center"
+                                                               Visibility="{Binding CGDisplaySNIsBinding, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                    <TextBlock Text="{Binding CGDisplaySN}"
+                                                               Style="{StaticResource ParameterValueStyle}"
+                                                               Visibility="{Binding CGDisplaySNIsBinding, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- CPK模式 -->
+                                            <Grid Grid.Row="7" Margin="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="CPK模式：" Style="{StaticResource ParameterLabelStyle}"/>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding IsCPKModeDisplayText}"
+                                                               Style="{StaticResource ParameterValueStyle}"
+                                                               VerticalAlignment="Center"
+                                                               Visibility="{Binding IsCPKModeIsBinding, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                    <CheckBox IsChecked="{Binding IsCPKModeCheckBoxValue}"
+                                                              Style="{StaticResource ParameterCheckBoxStyle}"
+                                                              Visibility="{Binding ShowIsCPKModeCheckBox, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- GRR模式 -->
+                                            <Grid Grid.Row="8" Margin="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="GRR模式：" Style="{StaticResource ParameterLabelStyle}"/>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding IsGRRModeDisplayText}"
+                                                               Style="{StaticResource ParameterValueStyle}"
+                                                               VerticalAlignment="Center"
+                                                               Visibility="{Binding IsGRRModeIsBinding, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                    <CheckBox IsChecked="{Binding IsGRRModeCheckBoxValue}"
+                                                              Style="{StaticResource ParameterCheckBoxStyle}"
+                                                              Visibility="{Binding ShowIsGRRModeCheckBox, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- SN -->
+                                            <Grid Grid.Row="9" Margin="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="SN：" Style="{StaticResource ParameterLabelStyle}"/>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding SNDisplayText}"
+                                                               Style="{StaticResource ParameterValueStyle}"
+                                                               VerticalAlignment="Center"
+                                                               Visibility="{Binding SNIsBinding, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                    <TextBlock Text="{Binding SN}"
+                                                               Style="{StaticResource ParameterValueStyle}"
+                                                               Visibility="{Binding SNIsBinding, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- 虚拟码文件 -->
+                                            <Grid Grid.Row="10" Margin="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="虚拟码文件：" Style="{StaticResource ParameterLabelStyle}"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding WIPFile}" 
+                                                           Style="{StaticResource ParameterValueStyle}"/>
+                                            </Grid>
+
+                                            <!-- WIP长度 -->
+                                            <Grid Grid.Row="11" Margin="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="WIP长度：" Style="{StaticResource ParameterLabelStyle}"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding WIPLength}" 
+                                                           Style="{StaticResource ParameterValueStyle}"/>
+                                            </Grid>
+
+                                            <!-- CarrierSN -->
+                                            <Grid Grid.Row="12" Margin="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="CarrierSN：" Style="{StaticResource ParameterLabelStyle}"/>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding CarrierSNDisplayText}"
+                                                               Style="{StaticResource ParameterValueStyle}"
+                                                               VerticalAlignment="Center"
+                                                               Visibility="{Binding CarrierSNIsBinding, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                    <TextBlock Text="{Binding CarrierSN}"
+                                                               Style="{StaticResource ParameterValueStyle}"
+                                                               Visibility="{Binding CarrierSNIsBinding, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- CycleTime -->
+                                            <Grid Grid.Row="13" Margin="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="CycleTime：" Style="{StaticResource ParameterLabelStyle}"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding CycleTime, StringFormat={}{0:F2}}" 
+                                                           Style="{StaticResource ParameterValueStyle}"/>
+                                            </Grid>
+
+                                            <!-- 工位号 -->
+                                            <Grid Grid.Row="14" Margin="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="工位号：" Style="{StaticResource ParameterLabelStyle}"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding WorkId}" 
+                                                           Style="{StaticResource ParameterValueStyle}"/>
+                                            </Grid>
+
+                                            <!-- 原图片路径 -->
+                                            <Grid Grid.Row="15" Margin="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="原图片路径：" Style="{StaticResource ParameterLabelStyle}"/>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding SourceImagePathDisplayText}"
+                                                               Style="{StaticResource ParameterValueStyle}"
+                                                               VerticalAlignment="Center"
+                                                               Visibility="{Binding SourceImagePathIsBinding, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                    <TextBlock Text="{Binding SourceImagePath}"
+                                                               Style="{StaticResource ParameterValueStyle}"
+                                                               Visibility="{Binding SourceImagePathIsBinding, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- 目标图片文件夹名称 -->
+                                            <Grid Grid.Row="16" Margin="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="目标图片文件夹名称：" Style="{StaticResource ParameterLabelStyle}"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding DesImagePath}" 
+                                                           Style="{StaticResource ParameterValueStyle}"/>
+                                            </Grid>
+
+                                            <!-- 图片名称规则 -->
+                                            <Grid Grid.Row="17" Margin="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="图片名称规则：" Style="{StaticResource ParameterLabelStyle}"/>
+                                                <TextBlock Grid.Column="1" Text="{Binding IsImageRol}" 
+                                                           Style="{StaticResource ParameterValueStyle}"/>
+                                            </Grid>
+
+                                            <!-- 过程数据 -->
+                                            <Grid Grid.Row="18" Margin="0,8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220"/>
+                                                    <ColumnDefinition Width="auto"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="过程数据：" Style="{StaticResource ParameterLabelStyle}"/>
+                                                <StackPanel Grid.Column="1" Orientation="Vertical">
+                                                    <!-- 过程数据内容 -->
+                                                    <Border Background="#F9F9F9"
+                                                            BorderBrush="#E0E0E0"
+                                                            BorderThickness="1"
+                                                            CornerRadius="3"
+                                                            Padding="8">
+                                                        <Grid>
+                                                            <TextBlock x:Name="ProdDataText"
+                                                                       Text="{Binding ProdData}"
+                                                                       MaxHeight="60"
+                                                                       TextTrimming="CharacterEllipsis"
+                                                                       TextWrapping="Wrap"
+                                                                       FontSize="12"
+                                                                       Foreground="#333333"/>
+
+                                                            <!-- 展开/收起按钮（图形按钮） -->
+                                                            <Button Style="{StaticResource GraphicExpandButtonStyle}"
+                                                                    Click="ExpandProdDataButton_Click"
+                                                                    Tag="{Binding}"/>
+                                                        </Grid>
+                                                    </Border>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- 是否3ANG -->
+                                            <Grid Grid.Row="19" Margin="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="是否3ANG：" Style="{StaticResource ParameterLabelStyle}"/>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding Is3ANGDisplayText}"
+                                                               Style="{StaticResource ParameterValueStyle}"
+                                                               VerticalAlignment="Center"
+                                                               Visibility="{Binding ShowIs3ANGCheckBox, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
+                                                    <CheckBox IsChecked="{Binding Is3ANGCheckBoxValue}"
+                                                              Style="{StaticResource ParameterCheckBoxStyle}"
+                                                              Visibility="{Binding ShowIs3ANGCheckBox, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- 是否包含下划线 -->
+                                            <Grid Grid.Row="20" Margin="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="是否包含下划线：" Style="{StaticResource ParameterLabelStyle}"/>
+                                                <CheckBox Grid.Column="1" IsChecked="{Binding IsContainLineCheckBoxValue}"
+                                                          Style="{StaticResource ParameterCheckBoxStyle}"
+                                                          Visibility="{Binding ShowIsContainLineCheckBox, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                            </Grid>
+
+                                            <!-- 手动输入AELimite -->
+                                            <Grid Grid.Row="21" Margin="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="手动输入AELimite：" Style="{StaticResource ParameterLabelStyle}"/>
+                                                <CheckBox Grid.Column="1" IsChecked="{Binding IsManualCheckBoxValue}"
+                                                          Style="{StaticResource ParameterCheckBoxStyle}"
+                                                          Visibility="{Binding ShowIsManualCheckBox, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                            </Grid>
+
+                                            <!-- 启用载具查询WIP -->
+                                            <Grid Grid.Row="22" Margin="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220"/>
+                                                    <ColumnDefinition Width="*"/>
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="启用载具查询WIP：" Style="{StaticResource ParameterLabelStyle}"/>
+                                                <CheckBox Grid.Column="1" IsChecked="{Binding IsEnableCarrierCheckBoxValue}"
+                                                          Style="{StaticResource ParameterCheckBoxStyle}"
+                                                          Visibility="{Binding ShowIsEnableCarrierCheckBox, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                                            </Grid>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Border>
             </Grid>
-        </Border>
 
-        <Border Grid.Row="1"
-                Margin="5"
-                Background="White"
-                BorderBrush="#DDDDDD"
-                BorderThickness="1"
-                CornerRadius="5">
-            <ScrollViewer VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Auto"
-                          Padding="10">
-                <ItemsControl x:Name="ParametersList"
-                              ItemsSource="{Binding ParameterRows}"
-                              Background="Transparent">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border Style="{StaticResource ParameterGroupBorderStyle}">
-                                <Grid Style="{StaticResource ParameterGridStyle}">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-
-                                    <!-- 通信服务器地址 -->
-                                    <Grid Grid.Row="0" Margin="0,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="220"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="通信服务器地址：" Style="{StaticResource ParameterLabelStyle}"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding CommDevice}" 
-                                                   Style="{StaticResource ParameterValueStyle}"/>
-                                    </Grid>
-
-                                    <!-- 启用 -->
-                                    <Grid Grid.Row="1" Margin="0,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="220"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="启用：" Style="{StaticResource ParameterLabelStyle}"/>
-                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding IsEnableDisplayText}"
-                                                       Style="{StaticResource ParameterValueStyle}"
-                                                       VerticalAlignment="Center"
-                                                       Visibility="{Binding IsEnableIsBinding, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                            <CheckBox IsChecked="{Binding IsEnableCheckBoxValue}"
-                                                      Style="{StaticResource ParameterCheckBoxStyle}"
-                                                      Visibility="{Binding ShowIsEnableCheckBox, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                        </StackPanel>
-                                    </Grid>
-
-                                    <!-- PDCA读取超时时间 -->
-                                    <Grid Grid.Row="2" Margin="0,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="220"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="PDCA读取超时时间(ms)：" Style="{StaticResource ParameterLabelStyle}"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding TimeOutMS}" 
-                                                   Style="{StaticResource ParameterValueStyle}"/>
-                                    </Grid>
-
-                                    <!-- PDCA读取失败后是否主动断连 -->
-                                    <Grid Grid.Row="3" Margin="0,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="220"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="PDCA读取失败后是否主动断连：" Style="{StaticResource ParameterLabelStyle}"/>
-                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding IsAutoDisConnectDisplayText}"
-                                                       Style="{StaticResource ParameterValueStyle}"
-                                                       VerticalAlignment="Center"
-                                                       Visibility="{Binding IsAutoDisConnectIsBinding, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                            <CheckBox IsChecked="{Binding IsAutoDisConnectCheckBoxValue}"
-                                                      Style="{StaticResource ParameterCheckBoxStyle}"
-                                                      Visibility="{Binding ShowIsAutoDisConnectCheckBox, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                        </StackPanel>
-                                    </Grid>
-
-                                    <!-- 动作类型 -->
-                                    <Grid Grid.Row="4" Margin="0,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="220"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="动作类型：" Style="{StaticResource ParameterLabelStyle}"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding PDCAMode}" 
-                                                   Style="{StaticResource ParameterValueStyle}"/>
-                                    </Grid>
-
-                                    <!-- 启用Display_SN上传项 -->
-                                    <Grid Grid.Row="5" Margin="0,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="220"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="启用Display_SN上传项：" Style="{StaticResource ParameterLabelStyle}"/>
-                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding IsCGDisplaySNDisplayText}"
-                                                       Style="{StaticResource ParameterValueStyle}"
-                                                       VerticalAlignment="Center"
-                                                       Visibility="{Binding IsCGDisplaySNIsBinding, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                            <CheckBox IsChecked="{Binding IsCGDisplaySNCheckBoxValue}"
-                                                      Style="{StaticResource ParameterCheckBoxStyle}"
-                                                      Visibility="{Binding ShowIsCGDisplaySNCheckBox, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                        </StackPanel>
-                                    </Grid>
-
-                                    <!-- Display_SN -->
-                                    <Grid Grid.Row="6" Margin="0,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="220"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="Display_SN：" Style="{StaticResource ParameterLabelStyle}"/>
-                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding CGDisplaySNDisplayText}"
-                                                       Style="{StaticResource ParameterValueStyle}"
-                                                       VerticalAlignment="Center"
-                                                       Visibility="{Binding CGDisplaySNIsBinding, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                            <TextBlock Text="{Binding CGDisplaySN}"
-                                                       Style="{StaticResource ParameterValueStyle}"
-                                                       Visibility="{Binding CGDisplaySNIsBinding, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
-                                        </StackPanel>
-                                    </Grid>
-
-                                    <!-- CPK模式 -->
-                                    <Grid Grid.Row="7" Margin="0,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="220"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="CPK模式：" Style="{StaticResource ParameterLabelStyle}"/>
-                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding IsCPKModeDisplayText}"
-                                                       Style="{StaticResource ParameterValueStyle}"
-                                                       VerticalAlignment="Center"
-                                                       Visibility="{Binding IsCPKModeIsBinding, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                            <CheckBox IsChecked="{Binding IsCPKModeCheckBoxValue}"
-                                                      Style="{StaticResource ParameterCheckBoxStyle}"
-                                                      Visibility="{Binding ShowIsCPKModeCheckBox, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                        </StackPanel>
-                                    </Grid>
-
-                                    <!-- GRR模式 -->
-                                    <Grid Grid.Row="8" Margin="0,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="220"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="GRR模式：" Style="{StaticResource ParameterLabelStyle}"/>
-                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding IsGRRModeDisplayText}"
-                                                       Style="{StaticResource ParameterValueStyle}"
-                                                       VerticalAlignment="Center"
-                                                       Visibility="{Binding IsGRRModeIsBinding, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                            <CheckBox IsChecked="{Binding IsGRRModeCheckBoxValue}"
-                                                      Style="{StaticResource ParameterCheckBoxStyle}"
-                                                      Visibility="{Binding ShowIsGRRModeCheckBox, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                        </StackPanel>
-                                    </Grid>
-
-                                    <!-- SN -->
-                                    <Grid Grid.Row="9" Margin="0,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="220"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="SN：" Style="{StaticResource ParameterLabelStyle}"/>
-                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding SNDisplayText}"
-                                                       Style="{StaticResource ParameterValueStyle}"
-                                                       VerticalAlignment="Center"
-                                                       Visibility="{Binding SNIsBinding, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                            <TextBlock Text="{Binding SN}"
-                                                       Style="{StaticResource ParameterValueStyle}"
-                                                       Visibility="{Binding SNIsBinding, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
-                                        </StackPanel>
-                                    </Grid>
-
-                                    <!-- 虚拟码文件 -->
-                                    <Grid Grid.Row="10" Margin="0,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="220"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="虚拟码文件：" Style="{StaticResource ParameterLabelStyle}"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding WIPFile}" 
-                                                   Style="{StaticResource ParameterValueStyle}"/>
-                                    </Grid>
-
-                                    <!-- WIP长度 -->
-                                    <Grid Grid.Row="11" Margin="0,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="220"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="WIP长度：" Style="{StaticResource ParameterLabelStyle}"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding WIPLength}" 
-                                                   Style="{StaticResource ParameterValueStyle}"/>
-                                    </Grid>
-
-                                    <!-- CarrierSN -->
-                                    <Grid Grid.Row="12" Margin="0,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="220"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="CarrierSN：" Style="{StaticResource ParameterLabelStyle}"/>
-                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding CarrierSNDisplayText}"
-                                                       Style="{StaticResource ParameterValueStyle}"
-                                                       VerticalAlignment="Center"
-                                                       Visibility="{Binding CarrierSNIsBinding, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                            <TextBlock Text="{Binding CarrierSN}"
-                                                       Style="{StaticResource ParameterValueStyle}"
-                                                       Visibility="{Binding CarrierSNIsBinding, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
-                                        </StackPanel>
-                                    </Grid>
-
-                                    <!-- CycleTime -->
-                                    <Grid Grid.Row="13" Margin="0,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="220"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="CycleTime：" Style="{StaticResource ParameterLabelStyle}"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding CycleTime, StringFormat={}{0:F2}}" 
-                                                   Style="{StaticResource ParameterValueStyle}"/>
-                                    </Grid>
-
-                                    <!-- 工位号 -->
-                                    <Grid Grid.Row="14" Margin="0,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="220"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="工位号：" Style="{StaticResource ParameterLabelStyle}"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding WorkId}" 
-                                                   Style="{StaticResource ParameterValueStyle}"/>
-                                    </Grid>
-
-                                    <!-- 原图片路径 -->
-                                    <Grid Grid.Row="15" Margin="0,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="220"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="原图片路径：" Style="{StaticResource ParameterLabelStyle}"/>
-                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding SourceImagePathDisplayText}"
-                                                       Style="{StaticResource ParameterValueStyle}"
-                                                       VerticalAlignment="Center"
-                                                       Visibility="{Binding SourceImagePathIsBinding, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                            <TextBlock Text="{Binding SourceImagePath}"
-                                                       Style="{StaticResource ParameterValueStyle}"
-                                                       Visibility="{Binding SourceImagePathIsBinding, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
-                                        </StackPanel>
-                                    </Grid>
-
-                                    <!-- 目标图片文件夹名称 -->
-                                    <Grid Grid.Row="16" Margin="0,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="220"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="目标图片文件夹名称：" Style="{StaticResource ParameterLabelStyle}"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding DesImagePath}" 
-                                                   Style="{StaticResource ParameterValueStyle}"/>
-                                    </Grid>
-
-                                    <!-- 图片名称规则 -->
-                                    <Grid Grid.Row="17" Margin="0,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="220"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="图片名称规则：" Style="{StaticResource ParameterLabelStyle}"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding IsImageRol}" 
-                                                   Style="{StaticResource ParameterValueStyle}"/>
-                                    </Grid>
-
-                                    <!-- 过程数据 -->
-                                    <Grid Grid.Row="18" Margin="0,8">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="220"/>
-                                            <ColumnDefinition Width="auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="过程数据：" Style="{StaticResource ParameterLabelStyle}"/>
-                                        <StackPanel Grid.Column="1" Orientation="Vertical">
-                                            <!-- 过程数据内容 -->
-                                            <Border Background="#F9F9F9"
-                                                    BorderBrush="#E0E0E0"
-                                                    BorderThickness="1"
-                                                    CornerRadius="3"
-                                                    Padding="8">
-                                                <Grid>
-                                                    <TextBlock x:Name="ProdDataText"
-                                                               Text="{Binding ProdData}"
-                                                               MaxHeight="60"
-                                                               TextTrimming="CharacterEllipsis"
-                                                               TextWrapping="Wrap"
-                                                               FontSize="12"
-                                                               Foreground="#333333"/>
-
-                                                    <!-- 展开/收起按钮（图形按钮） -->
-                                                    <Button Style="{StaticResource GraphicExpandButtonStyle}"
-                                                            Click="ExpandProdDataButton_Click"
-                                                            Tag="{Binding}"/>
-                                                </Grid>
-                                            </Border>
-                                        </StackPanel>
-                                    </Grid>
-
-                                    <!-- 是否3ANG -->
-                                    <Grid Grid.Row="19" Margin="0,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="220"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="是否3ANG：" Style="{StaticResource ParameterLabelStyle}"/>
-                                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Is3ANGDisplayText}"
-                                                       Style="{StaticResource ParameterValueStyle}"
-                                                       VerticalAlignment="Center"
-                                                       Visibility="{Binding ShowIs3ANGCheckBox, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
-                                            <CheckBox IsChecked="{Binding Is3ANGCheckBoxValue}"
-                                                      Style="{StaticResource ParameterCheckBoxStyle}"
-                                                      Visibility="{Binding ShowIs3ANGCheckBox, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                        </StackPanel>
-                                    </Grid>
-
-                                    <!-- 是否包含下划线 -->
-                                    <Grid Grid.Row="20" Margin="0,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="220"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="是否包含下划线：" Style="{StaticResource ParameterLabelStyle}"/>
-                                        <CheckBox Grid.Column="1" IsChecked="{Binding IsContainLineCheckBoxValue}"
-                                                  Style="{StaticResource ParameterCheckBoxStyle}"
-                                                  Visibility="{Binding ShowIsContainLineCheckBox, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                    </Grid>
-
-                                    <!-- 手动输入AELimite -->
-                                    <Grid Grid.Row="21" Margin="0,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="220"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="手动输入AELimite：" Style="{StaticResource ParameterLabelStyle}"/>
-                                        <CheckBox Grid.Column="1" IsChecked="{Binding IsManualCheckBoxValue}"
-                                                  Style="{StaticResource ParameterCheckBoxStyle}"
-                                                  Visibility="{Binding ShowIsManualCheckBox, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                    </Grid>
-
-                                    <!-- 启用载具查询WIP -->
-                                    <Grid Grid.Row="22" Margin="0,2">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="220"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Text="启用载具查询WIP：" Style="{StaticResource ParameterLabelStyle}"/>
-                                        <CheckBox Grid.Column="1" IsChecked="{Binding IsEnableCarrierCheckBoxValue}"
-                                                  Style="{StaticResource ParameterCheckBoxStyle}"
-                                                  Visibility="{Binding ShowIsEnableCarrierCheckBox, Converter={StaticResource BooleanToVisibilityConverter}}"/>
-                                    </Grid>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
-        </Border>
+            <!-- SFC内容区域 -->
+            <views:KeyParameterSFC x:Name="SFCContent" Grid.Row="1" Visibility="Collapsed"/>
+            <!-- Global内容区域 -->
+            <views:KeyParameterGlobal x:Name="GlobalContent" Grid.Row="1" Visibility="Collapsed"/>
+        </Grid>
     </Grid>
 </UserControl>

@@ -32,7 +32,6 @@ using Luster.TaskFlow.Motion.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -93,7 +92,7 @@ namespace Luster.Module.Motion.Device.Functions
                 {
                     DigitalVal = io.GetDigitalOut();
                 }
-                MyOwner.OnLog(LogType.Info, $"{io.Name}:状态为{DigitalVal}");
+                MyOwner.OnLog(LogType.Info,$"{io.Name}:状态为{DigitalVal}");
             }
             else
             {

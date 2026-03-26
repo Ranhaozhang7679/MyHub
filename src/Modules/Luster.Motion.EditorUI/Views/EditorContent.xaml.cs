@@ -346,7 +346,7 @@ namespace Luster.Motion.EditorUI.Views
         /// </summary>
         /// <param name="item"></param>
         /// <param name="minRole"></param>
-        private void SetPermission(MenuItem item, SystemRole minRole = SystemRole.Sustaining)
+        private void SetPermission(MenuItem item, SystemRole minRole = SystemRole.Integrator)
         {
             // 是否启用
             BindingOperations.SetBinding(item, MenuItem.IsEnabledProperty, new Binding("SysRole")
@@ -366,7 +366,7 @@ namespace Luster.Motion.EditorUI.Views
             BuildCommand(runItem, "RunOneCommand");
 
             // 工程师可以单步运行
-            SetPermission(runItem, SystemRole.Sustaining);
+            SetPermission(runItem, SystemRole.Integrator);
 
             runItem.InputGestureText = "F6";
             contextMenu.Items.Add(runItem);

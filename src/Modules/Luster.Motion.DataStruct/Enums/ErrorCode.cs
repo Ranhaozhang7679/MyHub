@@ -24,31 +24,31 @@ namespace Luster.Motion.DataStruct.Enums
         [Description("使能失败")]
         SerOnFail,
 
-        [Description("超正限位")]
+        [Description("正极限报警")]
         PelFail,
 
-        [Description("超负限位")]
+        [Description("负极限报警")]
         MelFail,
 
-        [Description("运行超时")]
+        [Description("运动超时")]
         MoveTimeFail,
 
-        [Description("伸出失败")]
+        [Description("伸出异常")]
         ExtendFail,
 
-        [Description("缩回失败")]
+        [Description("缩回异常")]
         RetractFail,
 
         [Description("真空吹失败")]
         BlowFail,
 
-        [Description("真空吸失败")]
+        [Description("信号异常")]
         SuckFail,
 
-        [Description("连接超时")]
+        [Description("通讯异常")]
         ConnectTimeFail,
 
-        [Description("信号超时")]
+        [Description("信号异常")]
         SensorFail,
 
         [Description("维护提醒")]

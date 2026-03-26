@@ -48,6 +48,7 @@ namespace Luster.Motion.EditorUI
 
             // 设备对话框
             containerRegistry.RegisterDialog<TextDialog, TextDialogVM>();           // 文本提示
+            containerRegistry.RegisterDialog<InfoInputDialog, InfoInputDialogVM>();
             containerRegistry.RegisterDialog<SwitchDialog, SwitchDialogVM>();       // 条件
             containerRegistry.RegisterDialog<StringExDialog, StringExDialogVM>();       // 条件
             containerRegistry.RegisterDialog<AxisMDialog, AxisMDialogVM>();         // 多轴调试

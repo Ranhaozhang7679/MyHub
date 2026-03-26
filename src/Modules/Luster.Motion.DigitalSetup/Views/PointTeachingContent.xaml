@@ -60,6 +60,7 @@
                         <Setter Property="Height" Value="35" />
                         <Setter Property="Background" Value="#DEE0E7" />
                         <Setter Property="hc:BorderElement.CornerRadius" Value="0,5,5,0" />
+                        <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
                         <Style.Triggers>
                             <Trigger Property="IsMouseOver" Value="true">
                                 <Setter Property="Background" Value="{DynamicResource SecondaryRegionBrush}" />
@@ -94,7 +95,8 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
-            <DataGrid
+            <hc:Card Header="实际位置"  Grid.Row="0" Grid.Column="0">
+                <DataGrid
                 Grid.Row="0"
                 Grid.Column="0"
                 x:Name="dgPosition"
@@ -111,15 +113,15 @@
                 ItemsSource="{Binding AxisPositions_GodLine}"
                 RowStyle="{StaticResource CustomDataGridRowStyle}"
                 SelectionMode="Single">
-                <DataGrid.Columns>
-                    <DataGridTextColumn
+                    <DataGrid.Columns>
+                        <DataGridTextColumn
                         Width="*"
                         MinWidth="80"
                         Binding="{Binding Name}"
                         Header="{lang1:Lang Key={x:Static lang1:LangKeys.Name}}"
                         HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
                         IsReadOnly="False" />
-                    <DataGridTextColumn
+                        <DataGridTextColumn
                         Width="*"
                         MinWidth="85"
                         Binding="{Binding Position, Mode=TwoWay }"
@@ -127,44 +129,46 @@
                         Header="{lang1:Lang Key={x:Static lang1:LangKeys.Position}}"
                         HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
                         IsReadOnly="False">
-                        <DataGridTextColumn.CellStyle>
-                            <Style TargetType="{x:Type DataGridCell}">
-                                <Setter Property="BorderThickness" Value="0" />
-                                <Setter Property="Margin" Value="0,0,0,0" />
-                                <Setter Property="Background" Value="Transparent" />
-                                <Setter Property="VerticalAlignment" Value="Center" />
-                            </Style>
-                        </DataGridTextColumn.CellStyle>
-                    </DataGridTextColumn>
-                    <DataGridTemplateColumn
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="{x:Type DataGridCell}">
+                                    <Setter Property="BorderThickness" Value="0" />
+                                    <Setter Property="Margin" Value="0,0,0,0" />
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
+                        <DataGridTemplateColumn
                         Visibility="Collapsed"
                         Width="200"
                         hc:TitleElement.HorizontalAlignment="Center"
                         CanUserResize="False"
                         Header="{lang1:Lang Key={x:Static lang1:LangKeys.Operation}}"
                         HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <hc:ElementGroup HorizontalContentAlignment="Right" Orientation="Horizontal">
-                                    <Button
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <hc:ElementGroup HorizontalContentAlignment="Right" Orientation="Horizontal">
+                                        <Button
                                     Margin="0"
                                     Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.MoveTeachCommand}"
                                     CommandParameter="{Binding}"
                                     Content="{lang1:Lang Key={x:Static lang1:LangKeys.Move}}"
                                     IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Engineer}"
                                     Style="{StaticResource ButtonSuccess.Small}" />
-                                </hc:ElementGroup>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                </DataGrid.Columns>
-                <hc:Interaction.Triggers>
-                    <hc:EventTrigger EventName="SelectionChanged">
-                        <hc:EventToCommand Command="{Binding SelectedPosionCommand}" PassEventArgsToCommand="True" />
-                    </hc:EventTrigger>
-                </hc:Interaction.Triggers>
-            </DataGrid>
-            <DataGrid
+                                    </hc:ElementGroup>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                    <hc:Interaction.Triggers>
+                        <hc:EventTrigger EventName="SelectionChanged">
+                            <hc:EventToCommand Command="{Binding SelectedPosionCommand}" PassEventArgsToCommand="True" />
+                        </hc:EventTrigger>
+                    </hc:Interaction.Triggers>
+                </DataGrid>
+            </hc:Card>
+            <hc:Card Header="基准位置" Grid.Row="0" Grid.Column="1">
+                <DataGrid
                 Grid.Row="0"
                 Grid.Column="1"
                 x:Name="dgPosition1"
@@ -181,15 +185,15 @@
                 ItemsSource="{Binding AxisPositions}"
                 RowStyle="{StaticResource CustomDataGridRowStyle}"
                 SelectionMode="Single">
-                <DataGrid.Columns>
-                     <DataGridTextColumn
+                    <DataGrid.Columns>
+                        <DataGridTextColumn
                         Width="*"
                         MinWidth="80"
                         Binding="{Binding Name}"
                         Header="{lang1:Lang Key={x:Static lang1:LangKeys.Name}}"
                         HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
                         IsReadOnly="False" />
-                    <DataGridTextColumn
+                        <DataGridTextColumn
                         Width="*"
                         MinWidth="85"
                         Binding="{Binding Position, Mode=TwoWay}"
@@ -197,16 +201,16 @@
                         Header="{lang1:Lang Key={x:Static lang1:LangKeys.Position}}"
                         HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
                         IsReadOnly="False">
-                        <DataGridTextColumn.CellStyle>
-                            <Style TargetType="{x:Type DataGridCell}">
-                                <Setter Property="BorderThickness" Value="0" />
-                                <Setter Property="Margin" Value="0,0,0,0" />
-                                <Setter Property="Background" Value="Transparent" />
-                                <Setter Property="VerticalAlignment" Value="Center" />
-                            </Style>
-                        </DataGridTextColumn.CellStyle>
-                    </DataGridTextColumn>
-                    <!--<DataGridTemplateColumn
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="{x:Type DataGridCell}">
+                                    <Setter Property="BorderThickness" Value="0" />
+                                    <Setter Property="Margin" Value="0,0,0,0" />
+                                    <Setter Property="Background" Value="Transparent" />
+                                    <Setter Property="VerticalAlignment" Value="Center" />
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
+                        <!--<DataGridTemplateColumn
                         Width="200"
                         hc:TitleElement.HorizontalAlignment="Center"
                         CanUserResize="False"
@@ -226,13 +230,14 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>-->
-                </DataGrid.Columns>
-                <hc:Interaction.Triggers>
-                    <hc:EventTrigger EventName="SelectionChanged">
-                        <hc:EventToCommand Command="{Binding SelectedPosionCommand}" PassEventArgsToCommand="True" />
-                    </hc:EventTrigger>
-                </hc:Interaction.Triggers>
-            </DataGrid>
+                    </DataGrid.Columns>
+                    <hc:Interaction.Triggers>
+                        <hc:EventTrigger EventName="SelectionChanged">
+                            <hc:EventToCommand Command="{Binding SelectedPosionCommand}" PassEventArgsToCommand="True" />
+                        </hc:EventTrigger>
+                    </hc:Interaction.Triggers>
+                </DataGrid>
+            </hc:Card>
             <Border Grid.Row="1" Grid.Column="0" Padding="3" Margin="0,5,1,0" 
                  Background="#F4F6FA" CornerRadius="3"
                  Visibility="{Binding IsChartVisible, Converter={StaticResource BooleanToVisibilityConverter}}">

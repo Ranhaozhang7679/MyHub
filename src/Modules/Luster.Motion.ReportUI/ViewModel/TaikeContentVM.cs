@@ -441,7 +441,7 @@ namespace Luster.Motion.ReportUI.ViewModel
 
                     torq_line.Values = torq_line_values;
                     torq_line.ScalesYAt = 0;
-                    torq_line.ScalesXAt = 1;
+                    torq_line.ScalesXAt = 0;
                     chart_series.Add(torq_line);
                 }
                 torq_lineF.Values = torq_linef_values;
@@ -505,6 +505,8 @@ namespace Luster.Motion.ReportUI.ViewModel
             axis_x.Padding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
             axis_x.NamePadding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
             axis_x.SeparatorsPaint = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
+            axis_x.MinStep = 500;
+            axis_x.ForceStepToMin = true;
 
             axis_y.MinLimit = 0;
             axis_y.MaxLimit = 0.6;
@@ -715,7 +717,7 @@ namespace Luster.Motion.ReportUI.ViewModel
                     }
 
                     torq_line.Values = torq_line_values;
-                    torq_line.ScalesXAt = 1;
+                    torq_line.ScalesXAt = 0;
                     torq_line.ScalesYAt = 0;
                     chart_series.Add(torq_line);
                 }
@@ -735,8 +737,8 @@ namespace Luster.Motion.ReportUI.ViewModel
             axis_y.NameTextSize = 12;
             axis_y.TextSize = 12;
 
-            ((CartesianChart)screwControls[0]).XAxes = new List<Axis>() { axis_x };
-            ((CartesianChart)screwControls[0]).YAxes = new List<Axis>() { axis_y };
+            ((CartesianChart)screwControls[0]).XAxes = new List<Axis>() { axis_x}; // , axis_x 
+            ((CartesianChart)screwControls[0]).YAxes = new List<Axis>() { axis_y}; // , axis_y 
             ((CartesianChart)screwControls[0]).LegendPosition = LiveChartsCore.Measure.LegendPosition.Hidden;
             ((CartesianChart)screwControls[0]).LegendTextSize = 12;
             #endregion
@@ -1519,8 +1521,8 @@ namespace Luster.Motion.ReportUI.ViewModel
             axis_yp.NameTextSize = 12;
             axis_yp.TextSize = 12;
 
-            ((CartesianChart)pressControls[0]).XAxes = new List<Axis>() { axis_xp };
-            ((CartesianChart)pressControls[0]).YAxes = new List<Axis>() { axis_yp };
+            ((CartesianChart)pressControls[0]).XAxes = new List<Axis>() { axis_xp}; // , axis_xp 
+            ((CartesianChart)pressControls[0]).YAxes = new List<Axis>() { axis_yp}; // , axis_yp 
 
             ((CartesianChart)pressControls[0]).LegendPosition = LiveChartsCore.Measure.LegendPosition.Hidden;
             ((CartesianChart)pressControls[0]).LegendTextSize = 12;

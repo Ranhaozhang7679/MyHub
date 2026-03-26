@@ -65,6 +65,19 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Dialog
             set { SetProperty(ref _isGroup, value); }
         }
 
+        /// <summary>
+        /// 分组
+        /// </summary>
+        private string _module;
+        [Required]
+        public string Module
+        {
+            get => _module; set
+            {
+                SetProperty(ref _module, value);
+            }
+        }
+
         protected TeachPositionDialogVM(ISimDeviceEngineUI _engine) : base(_engine)
         {
 
@@ -97,6 +110,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Dialog
         {
             result.Parameters.Add(nameof(Name), Name);
             result.Parameters.Add(nameof(Position), Position);
+            result.Parameters.Add(nameof(Module), Module);
         }
 
     }

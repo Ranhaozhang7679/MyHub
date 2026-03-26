@@ -1,62 +1,105 @@
-﻿<Window x:Class="Luster.Motion.DigitalSetup.Views.IOCheckDialog"
+<Window x:Class="Luster.Motion.DigitalSetup.Views.IOCheckDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="IO检查" Height="150" Width="400"
+        xmlns:selectors="clr-namespace:Luster.Common.Assets.FloatingInfo.Selectors;assembly=Luster.Common.Assets"
+        xmlns:models="clr-namespace:Luster.Common.Assets.FloatingInfo.Models;assembly=Luster.Common.Assets"
+        Title="IO检查" Height="Auto" MinHeight="250" Width="800" SizeToContent="Height"
         Loaded="Window_Loaded" Closing="Window_Closing"
         WindowStartupLocation="CenterScreen">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-            <!-- 上部：消息内容，占据剩余空间 -->
-            <RowDefinition Height="Auto"/>
-            <!-- 下部：按钮 -->
-        </Grid.RowDefinitions>
+    <Window.Resources>
+        <selectors:ContentTemplateSelector x:Key="ContentTemplateSelector">
+            <selectors:ContentTemplateSelector.TextTemplate>
+                <DataTemplate DataType="{x:Type models:TextContentItem}">
+                    <TextBlock Text="{Binding Text}" TextWrapping="Wrap" Margin="{Binding Margin}" FontSize="12"/>
+                </DataTemplate>
+            </selectors:ContentTemplateSelector.TextTemplate>
+            <selectors:ContentTemplateSelector.ImageTemplate>
+                <DataTemplate DataType="{x:Type models:ImageContentItem}">
+                    <Image Source="{Binding ImagePath}" MaxWidth="{Binding MaxWidth}" MaxHeight="{Binding MaxHeight}" Margin="{Binding Margin}" Stretch="Uniform"/>
+                </DataTemplate>
+            </selectors:ContentTemplateSelector.ImageTemplate>
+        </selectors:ContentTemplateSelector>
+    </Window.Resources>
 
-        <!-- 提示消息（垂直居中） -->
-        <TextBlock x:Name="txtMessage" 
-                   Width="400"
-                   Height="80"
-                   Grid.Row="0"
-                   FontSize="18" 
-                   LineHeight="40"
-                   TextAlignment="Center"
-                   HorizontalAlignment="Center" 
-                   VerticalAlignment="Center"
-                   TextWrapping="Wrap"
-                   Margin="0,20"/>
-        <!-- 第二行：提示 达到输出IO最大设置次数 -->
-        <TextBlock x:Name="txtMessage2" 
-                   Width="400"
-                   Grid.Row="1"
-                   FontSize="14" 
-                   Foreground="Gray"
-                   TextAlignment="Right"
-                   Margin="0,10"/>
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="380"/>
+        </Grid.ColumnDefinitions>
+        
+        <Grid Grid.Column="0" Margin="0,0,10,0" VerticalAlignment="Center">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-        <!-- 三个按钮（水平居中，靠下，底部留白 40） -->
-        <StackPanel Grid.Row="2" 
-                    Orientation="Horizontal" 
-                    HorizontalAlignment="Center"
-                    Margin="0,0,0,20">
-            <Button Content="OK" 
-                    Width="80" 
-                    Height="35" 
-                    Margin="15,0" 
-                    FontSize="14"
-                    Click="BtnOK_Click"/>
-            <Button Content="NG" 
-                    Width="80" 
-                    Height="35" 
-                    Margin="15,0" 
-                    FontSize="14"
-                    Click="BtnNG_Click"/>
-            <Button Content="跳过" 
-                    Width="80" 
-                    Height="35" 
-                    Margin="15,0" 
-                    FontSize="14"
-                    Click="BtnSkip_Click"/>
-        </StackPanel>
+            <!-- 提示消息（垂直居中） -->
+            <TextBlock x:Name="txtMessage" 
+                       Width="380"
+                       MinHeight="80"
+                       Grid.Row="0"
+                       FontSize="16" 
+                       LineHeight="30"
+                       TextAlignment="Center"
+                       HorizontalAlignment="Center" 
+                       VerticalAlignment="Center"
+                       TextWrapping="Wrap"
+                       Margin="0,10"/>
+                       
+            <!-- 第二行：提示 达到输出IO最大设置次数 -->
+            <TextBlock x:Name="txtMessage2" 
+                       Width="380"
+                       Grid.Row="1"
+                       FontSize="14" 
+                       Foreground="Gray"
+                       TextAlignment="Right"
+                       Margin="0,5,0,15"/>
+
+            <!-- 四个按钮（水平居中） -->
+            <StackPanel Grid.Row="2" 
+                        Orientation="Horizontal" 
+                        HorizontalAlignment="Center"
+                        Margin="0,0,0,10">
+                <Button Content="配置说明" 
+                        Width="80" 
+                        Height="35" 
+                        Margin="5,0" 
+                        FontSize="14"
+                        Click="BtnSettings_Click"/>
+                <Button Content="OK" 
+                        Width="80" 
+                        Height="35" 
+                        Margin="5,0" 
+                        FontSize="14"
+                        Click="BtnOK_Click"/>
+                <Button Content="NG" 
+                        Width="80" 
+                        Height="35" 
+                        Margin="5,0" 
+                        FontSize="14"
+                        Click="BtnNG_Click"/>
+                <Button Content="跳过" 
+                        Width="80" 
+                        Height="35" 
+                        Margin="5,0" 
+                        FontSize="14"
+                        Click="BtnSkip_Click"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- 右侧图文说明区域 -->
+        <Border Grid.Column="1" Background="#F9F9F9" BorderBrush="#E0E0E0" BorderThickness="1" CornerRadius="4" Padding="10">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <ItemsControl ItemsSource="{Binding ContentItems, RelativeSource={RelativeSource AncestorType=Window}}"
+                              ItemTemplateSelector="{StaticResource ContentTemplateSelector}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Vertical"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
     </Grid>
 </Window>

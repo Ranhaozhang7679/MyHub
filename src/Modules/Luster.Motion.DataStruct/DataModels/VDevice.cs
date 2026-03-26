@@ -1,4 +1,4 @@
-﻿#region 作者和版权
+#region 作者和版权
 /*************************************************************************************
 * CLR 版本:       4.0.30319.42000
 * 类 名 称:       LDevice
@@ -40,17 +40,31 @@ namespace Luster.Motion.DataStruct.DataModels
     /// <summary>
     /// 设备参数对象
     /// </summary>
-    public class VDevice : IXMLParser, IEmptyObj
+    public class VDevice : IXMLParser, IEmptyObj, System.ComponentModel.INotifyPropertyChanged
     {
+        public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
+
         /// <summary>
         /// 对应的设备ID
         /// </summary>
         public Guid DeviceID { get; set; }
 
+        private string name;
         /// <summary>
         /// 对应的设备别名
         /// </summary>
-        public string Name { get; set; }
+        public string Name
+        {
+            get => name;
+            set
+            {
+                if (name != value)
+                {
+                    name = value;
+                    PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Name)));
+                }
+            }
+        }
 
         /// <summary>
         /// 虚拟设备,用于对象缓存

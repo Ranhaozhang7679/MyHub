@@ -61,6 +61,7 @@
                         <Setter Property="Height" Value="35" />
                         <Setter Property="Background" Value="#DEE0E7" />
                         <Setter Property="hc:BorderElement.CornerRadius" Value="0,5,5,0" />
+                        <Setter Property="IsEnabled" Value="{Binding IsEnabled}" />
                         <Style.Triggers>
                             <Trigger Property="IsMouseOver" Value="true">
                                 <Setter Property="Background" Value="{DynamicResource SecondaryRegionBrush}" />
@@ -181,6 +182,14 @@
                             ItemsSource="{Binding AvailableItems}"
                             SelectedItem="{Binding SelectedItem}"
                             VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <StackPanel  Orientation="Horizontal" Visibility="{Binding IsLinear}">
+                        <TextBlock Text="K" VerticalAlignment="Center" Margin="0,0,1,0"/>
+                        <TextBox Text="{Binding KValue}" Width="50" Height="30" Margin="5"/>
+                        <TextBlock Text="B" VerticalAlignment="Center" Margin="0,0,1,0"/>
+                        <TextBox Text="{Binding BValue}" Width="50" Height="30" Margin="5"/>
+                        <TextBlock Text="结果" VerticalAlignment="Center" Margin="0,0,1,0"/>
+                        <TextBox Text="{Binding ResValue}" Width="65" Margin="5" IsReadOnly="True" Background="{Binding ResColor}"/> 
                     </StackPanel>
 
                     <Button Content="保存工站配置"

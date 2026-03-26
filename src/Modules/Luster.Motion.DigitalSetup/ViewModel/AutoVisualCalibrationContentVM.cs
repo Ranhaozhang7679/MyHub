@@ -13,6 +13,7 @@ using Luster.Motion.TaskFlow.Engine.HyperTrain;
 using Luster.TaskFlow.Common.Enums;
 using Prism.Commands;
 using Prism.Regions;
+using Prism.Services.Dialogs;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -33,6 +34,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
     {
         // 新增3个按钮和1个进度条的定义
         private double _progressValue;
+        private const string PageName = "AutoVisualCalibration";
 
         public ICommand EndCommand { get; private set; }
         public ICommand OneKeyCheckCommand { get; private set; }
@@ -72,7 +74,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 //{
                 //    IsChartVisible = false;
                 //}
-
+                if (_seletedReportPage == null) return;
                 ConfigKey = _seletedReportPage.ViewType switch
                 {
                     Type type when type == typeof(AssTbAutoFocusing) => "AutoVisualCalibration",
@@ -104,13 +106,17 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         }
         public AutoVisualCalibrationContentVM(IRepository repository,
                                       IRegionManager regionManager, IMotionController motionController, IDeviceEngine deviceEngine, FlowBus _flowBus, ICommonBus commonBus,
-                                        CSVHelper cSVHelper) : base(repository, regionManager, commonBus, cSVHelper, _flowBus)
+                                        CSVHelper cSVHelper, IDialogService dialogService) : base(repository, regionManager, commonBus, cSVHelper, _flowBus, dialogService)
         {
             flowBus = _flowBus;
             _deviceEngine = deviceEngine;
             _mController = motionController;
             Pages = new ObservableCollection<CommonPageModel>();
-            Pages.Add(new CommonPageModel() { Name = "AutoVisualCalibration", IsSelected = true, Region = "", ViewType = typeof(AssTbAutoVisualCalibration) });
+            Pages.Add(new CommonPageModel() { Name = "AutoVisualCalibration", IsSelected = false, Region = "", ViewType = typeof(AssTbAutoVisualCalibration) });
+
+            // 注册子页面到DigitalAssPageModel
+            DigitalAssPageModel.RegisterSubPages("AutoVisualCalibrationContent", Pages);
+
             SelectedReportPage = Pages.Where(x => x.IsSelected).FirstOrDefault();
             InitModels();
 
@@ -123,6 +129,23 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             LoadStationConfigFromJson();
             //更新界面属性
             UpdateStationConfigs();
+            LoadCheckConfirmMessages();
+        }
+
+        private string GetOverallStatus()
+        {
+            if (ItemModels == null || ItemModels.Count == 0)
+                return "未点检";
+
+            foreach (var item in ItemModels)
+            {
+                if (item is AssTbAutoVisualCalibration visualCalibration)
+                {
+                    if (visualCalibration.状态 != "OK")
+                        return "NG";
+                }
+            }
+            return "OK";
         }
 
         public override void OnEnd()
@@ -134,7 +157,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
         public override async void OnOneKeyCheck(object obj)
         {
-            base.OnOneKeyCheck(obj);
+            await base.OnOneKeyCheckAsync(obj);
             // 子界面的一键点检逻辑
             try
             {
@@ -188,7 +211,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                         throw new FriendlyException("回零完成后方可运行测试流程");
                     }
                 }
-
+                string overallStatus = GetOverallStatus();
+                PageStatusService.Instance.UpdateStatus(PageName, overallStatus);
             }
             catch (Exception ex)
             {
@@ -318,6 +342,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             //{
             //    // 异常处理逻辑
             //}
+            PageStatusService.Instance.UpdateStatus(PageName, "未点检");
         }
 
         private static (double lower, double upper) ParseColumnRange(string standardValue)
