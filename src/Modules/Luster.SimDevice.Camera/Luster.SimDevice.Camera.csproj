@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <PlatformTarget>x64</PlatformTarget>
+        <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+
+        <!-- 启用统一拷贝功能 -->
+        <CopyToDevicesFolder>true</CopyToDevicesFolder>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Costura.Fody">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="MinVer" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Luster.Common.DataAccess\Luster.Common.DataAccess.csproj" />
+        <!--<ProjectReference Include="..\Luster.Motion.DataStruct\Luster.Motion.DataStruct.csproj" />-->
+        <ProjectReference Include="..\Luster.SimDevice\Luster.SimDevice.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Reference Include="MvCameraControl.Net">
+            <HintPath>MVS\MvCameraControl.Net.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+</Project>

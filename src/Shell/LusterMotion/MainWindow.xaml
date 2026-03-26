@@ -1,0 +1,90 @@
+﻿<hc:Window
+    x:Class="LusterMotion.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="clr-namespace:Luster.Common.Assets.Global;assembly=Luster.Common.Assets"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:g="clr-namespace:Luster.Motion.CommonUI;assembly=Luster.Motion.CommonUI"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:local="clr-namespace:LusterMotion"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    Name="window"
+    Width="1280"
+    Height="768"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{x:Null}"
+    NonClientAreaBackground="{Binding ToolBarBackColor}"
+    ShowSystemButton="False"
+    ShowTitle="False"
+    WindowStartupLocation="CenterScreen"
+    mc:Ignorable="d">
+    <Window.InputBindings>
+        <KeyBinding Command="{x:Static g:GlobalCommands.SaveCommand}" Gesture="Ctrl+S" />
+    </Window.InputBindings>
+    <Grid x:Name="MotionWindow">
+        <!--<Grid Background="Blue" >-->
+
+        <Grid Background="{Binding MainBackColor}">
+            <!--<Grid Background="{DynamicResource BackgroundBrush}">-->
+            <Grid.RowDefinitions>
+                <!--<RowDefinition Height="108" />-->
+                <RowDefinition Height="*" />
+                <RowDefinition Height="38" />
+            </Grid.RowDefinitions>
+            <!--<ContentControl Grid.Row="0" prism:RegionManager.RegionName="ToolBarRegion" />-->
+            <ContentControl
+                x:Name="MainContent"
+                Grid.Row="0"
+                Margin="5"
+                prism:RegionManager.RegionName="MainRegion" />
+            <ContentControl
+                x:Name="LogContent"
+                Grid.Row="1"
+                prism:RegionManager.RegionName="StatusRegion" />
+        </Grid>
+        <Grid
+            Height="{Binding Path=ActualHeight, ElementName=MotionWindow}"
+            VerticalAlignment="Center"
+            Background="{StaticResource RegionBrush}"
+            Opacity="0.5"
+            Visibility="{Binding IsLoading, Converter={StaticResource Boolean2VisibilityConverter}}">
+            <StackPanel VerticalAlignment="Center" Background="Transparent">
+                <hc:WaveProgressBar
+                    Width="150"
+                    Height="150"
+                    Margin="16,0,0,0"
+                    VerticalAlignment="Center"
+                    FontSize="20"
+                    WaveStroke="#FFFF0080"
+                    WaveThickness="4"
+                    Value="{Binding ProgressVal}">
+                    <hc:WaveProgressBar.WaveFill>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Offset="0" Color="#66FF0080" />
+                            <GradientStop Offset="1" Color="#FFFF0080" />
+                        </LinearGradientBrush>
+                    </hc:WaveProgressBar.WaveFill>
+                </hc:WaveProgressBar>
+                <TextBlock
+                    Margin="0,10"
+                    HorizontalAlignment="Center"
+                    FontSize="24"
+                    FontWeight="DemiBold"
+                    Text="{Binding LoadingMsg}" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+
+    <hc:Interaction.Triggers>
+        <hc:EventTrigger EventName="Loaded">
+            <hc:EventToCommand Command="{Binding LoadedCommand}" CommandParameter="{Binding ElementName=window}" />
+        </hc:EventTrigger>
+        <hc:EventTrigger EventName="Closing">
+            <hc:EventToCommand Command="{Binding ClosingCommand}" PassEventArgsToCommand="True" />
+        </hc:EventTrigger>
+        <hc:EventTrigger EventName="PreviewMouseMove">
+            <hc:EventToCommand Command="{Binding MouseMoveCommand}" PassEventArgsToCommand="True" />
+        </hc:EventTrigger>
+    </hc:Interaction.Triggers>
+</hc:Window>

@@ -1,0 +1,529 @@
+﻿<UserControl
+    x:Class="Luster.SimDevice.SubSystem.Views.HomeContent"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:extension="clr-namespace:Luster.SimDevice.SubSystem.Extension"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:lang="clr-namespace:Luster.SimDevice.SubSystem.Langs"
+    xmlns:local="clr-namespace:Luster.SimDevice.SubSystem.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    xmlns:sys="clr-namespace:System;assembly=mscorlib"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <Style
+            x:Key="HomeTextBlockStyle"
+            BasedOn="{StaticResource TextBlockDefaultBold}"
+            TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource RegionBrush}" />
+        </Style>
+        <Style
+            x:Key="BigFontSizeStle"
+            BasedOn="{StaticResource TextBlockDefaultBold}"
+            TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="{DynamicResource RegionBrush}" />
+            <Setter Property="FontSize" Value="30" />
+        </Style>
+        <Style
+            x:Key="HomeButtonStyle"
+            BasedOn="{StaticResource ButtonDefault}"
+            TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource RegionBrush}" />
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{DynamicResource PrimaryBrush}" />
+                    <Setter Property="Foreground" Value="{DynamicResource TextIconBrush}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+    <Grid Margin="20" Background="{DynamicResource RegionBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="150" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Border
+                Grid.Column="0"
+                Margin="0,0,5,0"
+                Background="#56A9FD"
+                CornerRadius="5">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Style="{StaticResource BigFontSizeStle}" Text="{Binding IoCount}" />
+                    <TextBlock Style="{StaticResource HomeTextBlockStyle}" Text="{lang:Lang Key={x:Static lang:LangKeys.VIO}}" />
+                </StackPanel>
+            </Border>
+            <Border
+                Grid.Column="1"
+                Margin="0,0,5,0"
+                Background="#15C384"
+                CornerRadius="5">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Style="{StaticResource BigFontSizeStle}" Text="{Binding CardCount}" />
+                    <TextBlock Style="{StaticResource HomeTextBlockStyle}" Text="{lang:Lang Key={x:Static lang:LangKeys.VAxis}}" />
+                </StackPanel>
+            </Border>
+            <Border
+                Grid.Column="2"
+                Margin="0,0,5,0"
+                Background="#526CCA"
+                CornerRadius="5">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Style="{StaticResource BigFontSizeStle}" Text="{Binding VacuumCount}" />
+                    <TextBlock Style="{StaticResource HomeTextBlockStyle}" Text="{lang:Lang Key={x:Static lang:LangKeys.VVacuum}}" />
+                </StackPanel>
+            </Border>
+            <Border
+                Grid.Column="3"
+                Margin="0,0,5,0"
+                Background="#F47F64"
+                CornerRadius="5">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock Style="{StaticResource BigFontSizeStle}" Text="{Binding CylinderCount}" />
+                    <TextBlock Style="{StaticResource HomeTextBlockStyle}" Text="{lang:Lang Key={x:Static lang:LangKeys.VCylinder}}" />
+                </StackPanel>
+            </Border>
+        </Grid>
+        <Grid Grid.Row="1" Margin="0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <hc:ButtonGroup>
+                <RadioButton
+                    Width="150"
+                    Height="35"
+                    Command="{Binding ChangeParamCommand}"
+                    CommandParameter="Home"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.DeviceManagement}}"
+                    IsChecked="{Binding IsHome}" />
+                <RadioButton
+                    Width="150"
+                    Height="35"
+                    Command="{Binding ChangeParamCommand}"
+                    CommandParameter="Check"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.CheckRecord}}"
+                    IsChecked="{Binding IsAutoCheck}" />
+                <RadioButton
+                    Width="150"
+                    Height="35"
+                    Command="{Binding ChangeParamCommand}"
+                    CommandParameter="Monitor"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.SafeDoor}}"
+                    IsChecked="{Binding IsMoniter}" />
+            </hc:ButtonGroup>
+        </Grid>
+        <Grid Grid.Row="2" Visibility="{Binding IsAutoCheck, Converter={StaticResource Boolean2VisibilityConverter}}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <DataGrid
+                Padding="-5"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="1.5"
+                ColumnHeaderStyle="{StaticResource CustomDataGridColumnHeaderStyle}"
+                HeadersVisibility="Column"
+                ItemsSource="{Binding AutoCheckModels}"
+                RowStyle="{StaticResource CustomDataGridRowStyle}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn
+                        Width="150"
+                        MinWidth="100"
+                        Binding="{Binding Name}"
+                        CanUserSort="False"
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="{lang:Lang Key={x:Static lang:LangKeys.Name}}"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                    <DataGridTemplateColumn
+                        Width="100"
+                        MinWidth="80"
+                        Header="{lang:Lang Key={x:Static lang:LangKeys.CheckResult}}"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Foreground="{Binding ForeColor}"
+                                    Style="{DynamicResource TextBlockDefault}"
+                                    Text="{Binding Result}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn
+                        Width="*"
+                        MinWidth="100"
+                        Binding="{Binding ErrorMessage}"
+                        CanUserSort="False"
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="{lang:Lang Key={x:Static lang:LangKeys.ErrorMessage}}"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                    <DataGridTextColumn
+                        Width="150"
+                        MinWidth="100"
+                        Binding="{Binding CheckTime}"
+                        CanUserSort="False"
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="{lang:Lang Key={x:Static lang:LangKeys.CheckTime}}"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                    <DataGridTemplateColumn
+                        Width="120"
+                        MinWidth="110"
+                        Header="{lang:Lang Key={x:Static lang:LangKeys.Operation}}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <hc:ElementGroup
+                                    HorizontalContentAlignment="Center"
+                                    Layout="Uniform"
+                                    Orientation="Horizontal">
+                                    <Button
+                                        Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.GoUpCommand}"
+                                        CommandParameter="{Binding}"
+                                        Content="{lang:Lang Key={x:Static lang:LangKeys.Up}}"
+                                        Style="{StaticResource ButtonInfo.Small}" />
+                                    <Button
+                                        Margin="5,0,0,0"
+                                        Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.GoDownCommand}"
+                                        CommandParameter="{Binding}"
+                                        Content="{lang:Lang Key={x:Static lang:LangKeys.Down}}"
+                                        Style="{StaticResource ButtonInfo.Small}" />
+                                </hc:ElementGroup>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+            <StackPanel
+                Grid.Row="1"
+                Margin="0,10,0,5"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Orientation="Horizontal">
+                <Button
+                    Width="120"
+                    Height="40"
+                    Command="{Binding EmergencyStopDeviceCommand}"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.EmergencyStop}}"
+                    Style="{DynamicResource HomeButtonStyle}" />
+                <Button
+                    Width="120"
+                    Height="40"
+                    Margin="10,0,0,0"
+                    Command="{Binding CheckDeviceCommand}"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.StartCheck}}"
+                    Style="{DynamicResource HomeButtonStyle}" />
+            </StackPanel>
+        </Grid>
+        <Grid Grid.Row="2" Visibility="{Binding IsHome, Converter={StaticResource Boolean2VisibilityConverter}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBlock
+                    Margin="5,10,0,10"
+                    HorizontalAlignment="Left"
+                    Foreground="{DynamicResource PrimaryTextBrush}"
+                    Text="{lang:Lang Key={x:Static lang:LangKeys.HomeDevice}}" />
+                <Popup
+                    x:Name="dgPopup"
+                    AllowsTransparency="True"
+                    IsHitTestVisible="False"
+                    Placement="RelativePoint"
+                    PlacementTarget="{Binding ElementName=dgHome}">
+                    <TextBlock
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        FontSize="8"
+                        FontWeight="Normal"
+                        Text="Dragging..." />
+                </Popup>
+
+                <DataGrid
+                    Name="dgHome"
+                    Grid.Row="1"
+                    Margin="0,0,5,0"
+                    Padding="-5"
+                    extension:DragDropRowBehavior.Edit="False"
+                    extension:DragDropRowBehavior.Enabled="True"
+                    extension:DragDropRowBehavior.PopupControl="{Binding ElementName=dgPopup}"
+                    hc:DataGridAttach.ShowRowNumber="False"
+                    hc:DataGridAttach.ShowSelectAllButton="False"
+                    AllowDrop="True"
+                    AlternationCount="2"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    ColumnHeaderStyle="{StaticResource CustomDataGridColumnHeaderStyle}"
+                    HeadersVisibility="Column"
+                    ItemsSource="{Binding HomeModels, Mode=TwoWay}"
+                    RowStyle="{StaticResource CustomDataGridRowStyle}"
+                    SelectionMode="Single">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn
+                            Width="50"
+                            MinWidth="40"
+                            Binding="{Binding Index}"
+                            ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.Index}}"
+                            HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                        <DataGridTextColumn
+                            Width="*"
+                            MinWidth="120"
+                            Binding="{Binding Name}"
+                            ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.Name}}"
+                            HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                        <DataGridTemplateColumn
+                            Width="100"
+                            MinWidth="80"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.NeedHome}}"
+                            HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox HorizontalAlignment="Center" IsChecked="{Binding NeedHome, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn
+                            Width="120"
+                            MinWidth="110"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.Operation}}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <hc:ElementGroup
+                                        HorizontalContentAlignment="Center"
+                                        Layout="Uniform"
+                                        Orientation="Horizontal">
+                                        <Button
+                                            Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.MoveUpCommand}"
+                                            CommandParameter="{Binding}"
+                                            Content="{lang:Lang Key={x:Static lang:LangKeys.Up}}"
+                                            Style="{StaticResource ButtonInfo.Small}" />
+                                        <Button
+                                            Margin="5,0,0,0"
+                                            Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.MoveDownCommand}"
+                                            CommandParameter="{Binding}"
+                                            Content="{lang:Lang Key={x:Static lang:LangKeys.Down}}"
+                                            Style="{StaticResource ButtonInfo.Small}" />
+                                    </hc:ElementGroup>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBlock
+                    Margin="5,10,0,10"
+                    HorizontalAlignment="Left"
+                    Foreground="{DynamicResource PrimaryTextBrush}"
+                    Text="{lang:Lang Key={x:Static lang:LangKeys.ShieldDevice}}" />
+                <DataGrid
+                    Grid.Row="1"
+                    Margin="5,0,0,0"
+                    Padding="-5"
+                    hc:DataGridAttach.ShowRowNumber="False"
+                    hc:DataGridAttach.ShowSelectAllButton="False"
+                    AllowDrop="True"
+                    AlternationCount="2"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    ColumnHeaderStyle="{StaticResource CustomDataGridColumnHeaderStyle}"
+                    HeadersVisibility="Column"
+                    ItemsSource="{Binding DeviceShieldModels, Mode=TwoWay}"
+                    RowStyle="{StaticResource CustomDataGridRowStyle}"
+                    SelectionMode="Single">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn
+                            Width="50"
+                            MinWidth="40"
+                            Binding="{Binding Index}"
+                            ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.Index}}"
+                            HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                        <DataGridTextColumn
+                            Width="*"
+                            MinWidth="120"
+                            Binding="{Binding Name}"
+                            ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.Name}}"
+                            HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                        <DataGridTemplateColumn
+                            Width="100"
+                            MinWidth="80"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.NeedShield}}"
+                            HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox HorizontalAlignment="Center" IsChecked="{Binding IsShield, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+        </Grid>
+        <Grid Grid.Row="2" Visibility="{Binding IsMoniter, Converter={StaticResource Boolean2VisibilityConverter}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBlock
+                    Margin="5,10,0,10"
+                    HorizontalAlignment="Left"
+                    Foreground="{DynamicResource PrimaryTextBrush}"
+                    Text="{lang:Lang Key={x:Static lang:LangKeys.MonitorDevice}}" />
+                <DataGrid
+                    Grid.Row="1"
+                    Margin="0,0,5,0"
+                    Padding="-5"
+                    hc:DataGridAttach.ShowRowNumber="False"
+                    hc:DataGridAttach.ShowSelectAllButton="False"
+                    AlternationCount="2"
+                    AutoGenerateColumns="False"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    ColumnHeaderStyle="{StaticResource CustomDataGridColumnHeaderStyle}"
+                    HeadersVisibility="Column"
+                    IsEnabled="{Binding MonitorEnabled}"
+                    ItemsSource="{Binding MonitorIOModels}"
+                    RowStyle="{StaticResource CustomDataGridRowStyle}"
+                    SelectionMode="Single">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn
+                            Width="50"
+                            MinWidth="50"
+                            Binding="{Binding Index}"
+                            ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.Index}}"
+                            HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                        <DataGridTextColumn
+                            Width="*"
+                            MinWidth="100"
+                            Binding="{Binding Name}"
+                            CanUserSort="False"
+                            ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.Name}}"
+                            HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                        <DataGridTemplateColumn
+                            Width="100"
+                            MinWidth="100"
+                            CanUserResize="False"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.MonitorValue}}"
+                            HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <ToggleButton
+                                        Width="100"
+                                        HorizontalAlignment="Center"
+                                        IsChecked="{Binding IsTrue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                        Style="{StaticResource ToggleButtonSwitch}" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn
+                            Width="60"
+                            MinWidth="60"
+                            CanUserResize="False"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.Operation}}"
+                            HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button
+                                        Width="60"
+                                        Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.RemoveMonitorIOCommand}"
+                                        CommandParameter="{Binding}"
+                                        Content="{lang:Lang Key={x:Static lang:LangKeys.Delete}}"
+                                        Style="{StaticResource ButtonDanger.Small}" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
+            <Grid
+                Grid.Column="1"
+                Width="240"
+                Visibility="{Binding SysRole, Converter={StaticResource RoleVisibilityConverter}, ConverterParameter=Admin}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock
+                    Margin="5,10,0,10"
+                    HorizontalAlignment="Left"
+                    Foreground="{DynamicResource PrimaryTextBrush}"
+                    Text="{lang:Lang Key={x:Static lang:LangKeys.UnMonitorDevice}}" />
+                <ListBox
+                    Grid.Row="1"
+                    Margin="5,0,0,0"
+                    IsEnabled="{Binding MonitorEnabled}"
+                    ItemsSource="{Binding VIOs}"
+                    SelectionMode="Single">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                    <hc:Interaction.Triggers>
+                        <hc:EventTrigger EventName="PreviewMouseDoubleClick">
+                            <hc:EventToCommand Command="{Binding Path=DataContext.AddMonitorIOCommand, RelativeSource={RelativeSource AncestorType=ListBox}}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ListBox}, Path=SelectedItem}" />
+                        </hc:EventTrigger>
+                    </hc:Interaction.Triggers>
+                </ListBox>
+
+                <UniformGrid
+                    Grid.Row="2"
+                    Margin="5,5,0,5"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Columns="2">
+                    <Button
+                        Width="110"
+                        HorizontalAlignment="Stretch"
+                        Command="{Binding StopMonitorCommand}"
+                        Content="{lang:Lang Key={x:Static lang:LangKeys.Edit}}"
+                        IsEnabled="{Binding MonitorEnabled, Converter={StaticResource Boolean2BooleanReConverter}}"
+                        Style="{DynamicResource HomeButtonStyle}" />
+                    <Button
+                        Grid.Column="1"
+                        Width="110"
+                        Margin="10,0,0,0"
+                        HorizontalAlignment="Stretch"
+                        Command="{Binding StartMonitorCommand}"
+                        Content="{lang:Lang Key={x:Static lang:LangKeys.Finish}}"
+                        IsEnabled="{Binding MonitorEnabled}"
+                        Style="{DynamicResource HomeButtonStyle}" />
+                </UniformGrid>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

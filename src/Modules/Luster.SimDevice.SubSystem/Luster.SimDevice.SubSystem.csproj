@@ -1,0 +1,174 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<UseWPF>true</UseWPF>
+		<Version>1.0.0.0</Version>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <LangVersion>10.0</LangVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Remove="Extension\Converter\**" />
+	  <EmbeddedResource Remove="Extension\Converter\**" />
+	  <None Remove="Extension\Converter\**" />
+	  <Page Remove="Extension\Converter\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Remove="Views\Virtual\VIOContent - 复制.xaml.cs" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+	  <Page Remove="Views\Dialog\NewDeviceDialog.xaml" />
+	  <Page Remove="Views\Virtual\VIOContent - 复制.xaml" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="HandyControl" />
+	  <PackageReference Include="Luster.Prism" />
+	  <PackageReference Include="Luster.WindowsAPICodePack" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Controls\ParamGroup\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Luster.Motion.TaskFlow.Engine\Luster.Motion.TaskFlow.Engine.csproj" />
+	  <ProjectReference Include="..\Luster.Module.Motion.Business\Luster.Module.Motion.Business.csproj" />
+	  <ProjectReference Include="..\Luster.TaskFlow.Motion\Luster.TaskFlow.Motion.csproj" />
+	  <ProjectReference Include="..\Luster.Common.Assets\Luster.Common.Assets.csproj" />
+	  <ProjectReference Include="..\Luster.Motion.EditorUI\Luster.Motion.EditorUI.csproj" />
+	  <ProjectReference Include="..\Luster.SimDevice.EngineUI\Luster.SimDevice.EngineUI.csproj" />
+	  <ProjectReference Include="..\Luster.SimDevice.Laser\Luster.SimDevice.Laser.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Langs\Lang.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>Lang.resx</DependentUpon>
+	  </Compile>
+	  <Compile Update="Langs\LangProvider.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>LangProvider.tt</DependentUpon>
+	  </Compile>
+	  <Compile Update="Views\Dialog\ImportExDialog.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
+	  <Compile Update="Views\Dialog\SafeRegionDialog.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
+	  <Compile Update="Views\Dialog\IOSimDialog.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
+	  <Compile Update="Views\Dialog\LineLaserDialog.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
+	  <Compile Update="Views\Dialog\LightDialog.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
+	  <Compile Update="Views\Dialog\MotionCardDialog.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
+	  <Compile Update="Views\Dialog\IODialog.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
+	  <Compile Update="Views\Virtual\VLineLaserContent.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
+	  <Compile Update="Views\Virtual\VCameraContent.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Update="Langs\Lang.en.resx">
+	    <Generator>PublicResXFileCodeGenerator</Generator>
+	  </EmbeddedResource>
+	  <EmbeddedResource Update="Langs\Lang.resx">
+	    <Generator>PublicResXFileCodeGenerator</Generator>
+	    <LastGenOutput>Lang.Designer.cs</LastGenOutput>
+	  </EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="Langs\LangProvider.tt">
+	    <Generator>TextTemplatingFileGenerator</Generator>
+	    <LastGenOutput>LangProvider.cs</LastGenOutput>
+	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Page Update="Views\Dialog\SafeRegionDialog.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	    <SubType>Designer</SubType>
+	  </Page>
+	  <Page Update="Views\Dialog\SocketActionDialog.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	    <SubType>Designer</SubType>
+	  </Page>
+	  <Page Update="Views\Dialog\IOActionDialog.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	  </Page>
+	  <Page Update="Views\Dialog\ImportExDialog.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	    <SubType>Designer</SubType>
+	  </Page>
+	  <Page Update="Views\Dialog\IOSimDialog.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	    <SubType>Designer</SubType>
+	  </Page>
+	  <Page Update="Views\Dialog\LineLaserDialog.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	    <SubType>Designer</SubType>
+	  </Page>
+	  <Page Update="Views\Dialog\LightDialog.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	    <SubType>Designer</SubType>
+	  </Page>
+	  <Page Update="Views\Dialog\MotionCardDialog.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	    <SubType>Designer</SubType>
+	  </Page>
+	  <Page Update="Views\Dialog\IODialog.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	    <SubType>Designer</SubType>
+	  </Page>
+	  <Page Update="Views\Dialog\PCylinderDialog.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	    <SubType>Designer</SubType>
+	  </Page>
+	  <Page Update="Views\Dialog\MotionConditionsDialog.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	  </Page>
+	  <Page Update="Views\Dialog\VPlcDialog.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	  </Page>
+	  <Page Update="Views\Dialog\SocketDialog.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	  </Page>
+	  <Page Update="Views\Virtual\VPCylinderContent.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	    <SubType>Designer</SubType>
+	  </Page>
+	  <Page Update="Views\Virtual\VLineLaserContent.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	    <SubType>Designer</SubType>
+	  </Page>
+	  <Page Update="Views\Virtual\VCameraContent.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	    <SubType>Designer</SubType>
+	  </Page>
+	  <Page Update="Views\Virtual\VCommuncationContent.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	  </Page>
+	</ItemGroup>
+
+</Project>

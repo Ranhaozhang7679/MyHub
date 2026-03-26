@@ -1,0 +1,33 @@
+{
+  "EmeryFail": [
+    {
+      "System": "Hive",
+      "Code": "ZZZ",
+      "Message": "XXXX"
+    }
+  ]
+  "HomeFail": [
+    {
+      "System": "Default",
+      "Message": "",
+      "Devices": [
+        {
+          "ID": "AA",
+          "Name": "XXX",
+          "Code": "AAA",
+          "Message": ""
+        }
+      ]
+    },
+    {
+      "System": "Hive",
+      "Code": "ZZZ",
+      "Message": "XXXX"
+    },
+    {
+      "System": "Vision",
+      "Code": "FFFF",
+      "Message": "XXXX"
+    },
+  ]
+}

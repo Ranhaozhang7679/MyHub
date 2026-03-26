@@ -1,0 +1,75 @@
+﻿<UserControl x:Class="Luster.Motion.CommonUI.Views.Dialogs.ChangeUserDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Luster.Motion.CommonUI.Views.Dialogs"
+             xmlns:hc="https://handyorg.github.io/handycontrol"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800" Loaded="UserControl_Loaded" >
+    <Grid Background="LightGray">
+        <hc:Interaction.Triggers>
+            <hc:EventTrigger EventName="KeyDown">
+                <hc:EventToCommand Command="{Binding ScanCommand}" PassEventArgsToCommand="True" />
+            </hc:EventTrigger>
+        </hc:Interaction.Triggers>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="80*"/>
+            <RowDefinition Height="20*"/>
+        </Grid.RowDefinitions>
+        <Grid Background="Gray" />
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="20*"/>
+                <RowDefinition Height="20*"/>
+                <RowDefinition Height="50*"/>
+                <RowDefinition Height="10*"/>
+
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="300*"/>
+                <ColumnDefinition Width="400*"/>
+                <ColumnDefinition Width="300*"/>
+
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="tbCardID" 
+                     Background="#FFF9F9F9" 
+                     Text="{Binding CardID}" 
+                     Grid.Row="1" Grid.Column="1" 
+                     Margin="10,10,10,10"
+                     hc:InfoElement.Placeholder="请输入用户名"/>
+            <Label Grid.Column="1" Content="刷卡登录 Login" Background="Transparent" BorderBrush="Transparent" FontSize="16"/>
+            <Image Opacity="1"  Source="/Luster.Motion.CommonUI;component/Views/Dialogs/card.png" Margin="66,4,135,9" Grid.Row="1"/>
+            <Label Grid.Row="1"  Content="OSS: 请刷卡:" Background="Transparent" BorderBrush="Transparent" HorizontalAlignment="Left" Margin="114,0,0,0" Width="110" HorizontalContentAlignment="Left" />
+            <Label x:Name="lbOffline" Visibility="{Binding Offline}" Content="离线登录" Background="#518FFF" BorderBrush="Transparent" HorizontalAlignment="Left" Margin="65,0,0,0"/>
+            <TextBlock Text="{Binding CardLog}" Margin="10,10,10,10" Background="#FFF9F9F9" TextWrapping="Wrap" Grid.Row="2" Grid.Column="1"/>
+            <Label Content="查询状态" Background="#518FFF" BorderBrush="Transparent" Grid.Column="2" HorizontalAlignment="Left" Margin="10,0,0,0" Grid.Row="3"/>
+            <TextBlock x:Name="lbCheckResault" Text="{Binding CheckResault}"  Grid.Row="3"   Background="#FFF9F9F9"  HorizontalAlignment="Left" Margin="111,0,0,0" Grid.Column="2" Width="100" />
+            <Label HorizontalAlignment="Left" Grid.Row="2" Content="结果描述 Login detail:" Background="Transparent" BorderBrush="Transparent" Margin="62,10,0,0" VerticalAlignment="Top"/>
+            <TextBox x:Name="tbPassWord" Background="#FFF9F9F9" 
+                     Text="{Binding PassWord}" 
+                     Grid.Row="3" Grid.Column="1" 
+                     Margin="10,5,10,5" 
+                     Grid.RowSpan="2"
+                     Visibility="{Binding Offline}"
+                     hc:InfoElement.Placeholder="请输入密码"/>
+            <Label HorizontalAlignment="Left" Visibility="{Binding Offline}" 
+                   Grid.Row="2" Content="用户密码 User Password:" 
+                   Background="Transparent" BorderBrush="Transparent" 
+                   Margin="66,168,0,0" VerticalAlignment="Top" Grid.RowSpan="2"/>
+        </Grid>
+        <Button
+            Grid.Row="2"
+            Width="300"
+            Height="56"
+            Margin="0,18,0,0"
+            IsEnabled="{Binding IsButtonEnable}" 
+            VerticalAlignment="Top"
+            HorizontalContentAlignment="Center"
+            Background="#518FFF"
+            Command="{Binding Path=DataContext.ClickCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            Content="{Binding CountDown}"
+             />
+    </Grid>
+</UserControl>

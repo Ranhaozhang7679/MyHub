@@ -1,0 +1,112 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <UseWPF>true</UseWPF>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Remove="Resources\**" />
+        <EmbeddedResource Remove="Resources\**" />
+        <None Remove="Resources\**" />
+        <Page Remove="Resources\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Remove="Views\Dialogs\pause.PNG" />
+        <None Remove="Views\Dialogs\run.png" />
+        <None Remove="Views\Dialogs\stop.PNG" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="FreeSql"/>
+        <PackageReference Include="HandyControl"/>
+        <PackageReference Include="LiveCharts.Wpf" />
+        <PackageReference Include="LiveChartsCore" />
+        <PackageReference Include="LiveChartsCore.SkiaSharpView" />
+        <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" />
+        <PackageReference Include="Luster.Prism" />
+        <PackageReference Include="Luster.WindowsAPICodePack"/>
+        <PackageReference Include="MinVer" />
+
+        <PackageReference Include="AvalonEdit" />
+        <PackageReference Include="Microsoft.CodeAnalysis.Common" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" />
+        <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.Common" />
+        <PackageReference Include="QRCoder"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Luster.Motion.Integration\Luster.Motion.Integration.csproj" />
+        <!--<ProjectReference Include="..\Luster.Common.DataAccess\Luster.Common.DataAccess.csproj" />-->
+        <ProjectReference Include="..\Luster.Motion.TaskFlow.Engine\Luster.Motion.TaskFlow.Engine.csproj" />
+        <ProjectReference Include="..\Luster.Common.Assets\Luster.Common.Assets.csproj" />
+        <ProjectReference Include="..\Luster.Control.Wpf.Motion\Luster.Control.Wpf.Motion.csproj" />
+        <ProjectReference Include="..\Luster.Motion.Assests\Luster.Motion.Assests.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Reference Include="Microsoft.VisualBasic" />
+        <Reference Include="System.Windows.Forms" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Resource Include="Views\Dialogs\card.png" />
+        <Resource Include="Views\Dialogs\pause.PNG" />
+        <Resource Include="Views\Dialogs\run.png" />
+        <Resource Include="Views\Dialogs\stop.PNG" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Update="Views\Dialogs\CSharpEditor.xaml.cs">
+            <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Views\Dialogs\DeviceDialog.xaml.cs">
+            <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Views\Dialogs\HivePauseDialog.xaml.cs">
+            <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Views\LogContent.xaml.cs">
+            <SubType>Code</SubType>
+        </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Page Update="Views\Dialogs\LightCurtainDialog.xaml">
+            <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+            <SubType>Designer</SubType>
+        </Page>
+        <Page Update="Views\Dialogs\SetSysOperateIODialog.xaml">
+            <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+            <SubType>Designer</SubType>
+        </Page>
+        <Page Update="Views\Dialogs\SetOutPutChartDialog.xaml">
+            <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+            <SubType>Designer</SubType>
+        </Page>
+        <Page Update="Views\Dialogs\PlcAlarmDialog.xaml">
+            <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+            <SubType>Designer</SubType>
+        </Page>
+        <Page Update="Views\Dialogs\CreateProjectDialog.xaml">
+            <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+        </Page>
+        <Page Update="Views\Dialogs\DeviceDialog.xaml">
+            <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+            <SubType>Designer</SubType>
+        </Page>
+        <Page Update="Views\Dialogs\ClassDialog.xaml">
+            <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+        </Page>
+        <Page Update="Views\Dialogs\SetOpenCloseDoorDialog.xaml">
+            <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+            <SubType>Designer</SubType>
+        </Page>
+        <Page Update="Views\LogContent.xaml">
+            <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+            <SubType>Designer</SubType>
+        </Page>
+    </ItemGroup>
+
+</Project>

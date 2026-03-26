@@ -1,0 +1,93 @@
+﻿<UserControl
+    x:Class="Luster.Motion.EditorUI.Views.Dialogs.SetModeGlobalVarDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:lang="clr-namespace:Luster.Motion.Assests.Langs;assembly=Luster.Motion.Assests"
+    xmlns:local="clr-namespace:Luster.Motion.EditorUI.Views.Dialogs"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    Width="500"
+    Height="450"
+    d:DesignWidth="500"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{DynamicResource RegionBrush}"
+    mc:Ignorable="d">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="60" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <ListView
+                Name="ListOrign"
+                AllowDrop="True"
+                ItemsSource="{Binding VarDatas}">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn DisplayMemberBinding="{Binding Name}" Header="{lang:Lang Key={x:Static lang:LangKeys.GlobalVar}}" />
+                    </GridView>
+                </ListView.View>
+                <hc:Interaction.Triggers>
+                    <hc:EventTrigger EventName="Drop">
+                        <hc:EventToCommand Command="{Binding ReCallDropCommand}" PassEventArgsToCommand="True" />
+                    </hc:EventTrigger>
+                </hc:Interaction.Triggers>
+            </ListView>
+            <StackPanel
+                Grid.Column="1"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Orientation="Vertical">
+                <Button
+                    Grid.Column="1"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    hc:IconElement.Geometry="{StaticResource Transfer}"
+                    Foreground="Gray"
+                    Style="{StaticResource ButtonIcon}" />
+
+            </StackPanel>
+            <ListView
+                Name="ListTo"
+                Grid.Column="2"
+                AllowDrop="True"
+                ItemsSource="{Binding SelectVarDatas}">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn DisplayMemberBinding="{Binding Name}" Header="{lang:Lang Key={x:Static lang:LangKeys.GlobalVar}}" />
+                    </GridView>
+                </ListView.View>
+                <hc:Interaction.Triggers>
+                    <hc:EventTrigger EventName="Drop">
+                        <hc:EventToCommand Command="{Binding ReciveDropCommand}" PassEventArgsToCommand="True" />
+                    </hc:EventTrigger>
+                </hc:Interaction.Triggers>
+            </ListView>
+        </Grid>
+        <DockPanel Grid.Row="1" Margin="0,20,0,0">
+            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                <Button
+                    Width="80"
+                    HorizontalAlignment="Right"
+                    Command="{Binding CloseCommand}"
+                    CommandParameter="cancel"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.Cancel}}" />
+                <Button
+                    Width="80"
+                    Margin="10,0,0,0"
+                    HorizontalAlignment="Right"
+                    Command="{Binding CloseCommand}"
+                    CommandParameter="ok"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.Confirm}}" />
+            </StackPanel>
+        </DockPanel>
+    </Grid>
+</UserControl>

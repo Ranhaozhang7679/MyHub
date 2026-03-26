@@ -1,0 +1,1380 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Confirm" xml:space="preserve">
+    <value>Confirm</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="PngImg" xml:space="preserve">
+    <value>PNG image</value>
+  </data>
+  <data name="ErrorImgPath" xml:space="preserve">
+    <value>Wrong picture path</value>
+  </data>
+  <data name="ErrorImgSize" xml:space="preserve">
+    <value>Wrong picture size</value>
+  </data>
+  <data name="UnknownSize" xml:space="preserve">
+    <value>Unknown size</value>
+  </data>
+  <data name="TooLarge" xml:space="preserve">
+    <value>Too large</value>
+  </data>
+  <data name="Unknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="Interval30s" xml:space="preserve">
+    <value>30 seconds interval</value>
+  </data>
+  <data name="Interval1m" xml:space="preserve">
+    <value>1 minute interval</value>
+  </data>
+  <data name="Interval5m" xml:space="preserve">
+    <value>5 minutes interval</value>
+  </data>
+  <data name="Interval10m" xml:space="preserve">
+    <value>10 minutes interval</value>
+  </data>
+  <data name="Interval30m" xml:space="preserve">
+    <value>30 minutes interval</value>
+  </data>
+  <data name="Interval1h" xml:space="preserve">
+    <value>1 hour interval</value>
+  </data>
+  <data name="Interval2h" xml:space="preserve">
+    <value>2 hour interval</value>
+  </data>
+  <data name="Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="CloseAll" xml:space="preserve">
+    <value>Close all</value>
+  </data>
+  <data name="CloseOther" xml:space="preserve">
+    <value>Close other</value>
+  </data>
+  <data name="Am" xml:space="preserve">
+    <value>Am</value>
+  </data>
+  <data name="Pm" xml:space="preserve">
+    <value>Pm</value>
+  </data>
+  <data name="Tip" xml:space="preserve">
+    <value>Prompt</value>
+  </data>
+  <data name="IsNecessary" xml:space="preserve">
+    <value>cannot be empty</value>
+  </data>
+  <data name="OutOfRange" xml:space="preserve">
+    <value>out of range</value>
+  </data>
+  <data name="FormatError" xml:space="preserve">
+    <value>format error</value>
+  </data>
+  <data name="Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="No" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="ZoomIn" xml:space="preserve">
+    <value>Zoom in</value>
+  </data>
+  <data name="ZoomOut" xml:space="preserve">
+    <value>Zoom out</value>
+  </data>
+  <data name="PreviousPage" xml:space="preserve">
+    <value>Previous page</value>
+  </data>
+  <data name="NextPage" xml:space="preserve">
+    <value>Next page</value>
+  </data>
+  <data name="PageMode" xml:space="preserve">
+    <value>Page mode</value>
+  </data>
+  <data name="TwoPageMode" xml:space="preserve">
+    <value>Two page mode</value>
+  </data>
+  <data name="ScrollMode" xml:space="preserve">
+    <value>Scroll mode</value>
+  </data>
+  <data name="Find" xml:space="preserve">
+    <value>Find</value>
+  </data>
+  <data name="LangComment" xml:space="preserve">
+    <value>Looks up a localized string similar to "{0}".</value>
+  </data>
+  <data name="Jump" xml:space="preserve">
+    <value>Jump</value>
+  </data>
+  <data name="Miscellaneous" xml:space="preserve">
+    <value>Miscellaneous</value>
+  </data>
+  <data name="All" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="NoData" xml:space="preserve">
+    <value>No Data</value>
+  </data>
+  <data name="Project" xml:space="preserve">
+    <value>Project</value>
+  </data>
+  <data name="Title" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="ParameterConfig" xml:space="preserve">
+    <value>Parameter Config</value>
+  </data>
+  <data name="Solution" xml:space="preserve">
+    <value>Solution</value>
+  </data>
+  <data name="TaskFlow" xml:space="preserve">
+    <value>Task Flow</value>
+  </data>
+  <data name="Module" xml:space="preserve">
+    <value>Module</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="Pause" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="Run" xml:space="preserve">
+    <value>Run</value>
+  </data>
+  <data name="RunOne" xml:space="preserve">
+    <value>Run One</value>
+  </data>
+  <data name="Update" xml:space="preserve">
+    <value>Update</value>
+  </data>
+  <data name="Branch" xml:space="preserve">
+    <value>Branch</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="Extract" xml:space="preserve">
+    <value>Extract</value>
+  </data>
+  <data name="Loop" xml:space="preserve">
+    <value>Loop</value>
+  </data>
+  <data name="Skip" xml:space="preserve">
+    <value>Skip</value>
+  </data>
+  <data name="Step" xml:space="preserve">
+    <value>Step</value>
+  </data>
+  <data name="Switch" xml:space="preserve">
+    <value>Switch</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="Apply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="HomePage" xml:space="preserve">
+    <value>Home Page</value>
+  </data>
+  <data name="Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="AlignByCoord" xml:space="preserve">
+    <value>AlignByCoord</value>
+  </data>
+  <data name="AlignByInit" xml:space="preserve">
+    <value>AlignByInit</value>
+  </data>
+  <data name="AlignByRPS" xml:space="preserve">
+    <value>AlignByRPS</value>
+  </data>
+  <data name="Alignment" xml:space="preserve">
+    <value>Alignment</value>
+  </data>
+  <data name="Circle" xml:space="preserve">
+    <value>Circle</value>
+  </data>
+  <data name="FileIO" xml:space="preserve">
+    <value>FileIO</value>
+  </data>
+  <data name="Line" xml:space="preserve">
+    <value>Line</value>
+  </data>
+  <data name="Loading" xml:space="preserve">
+    <value>Loading</value>
+  </data>
+  <data name="Logic" xml:space="preserve">
+    <value>Logic</value>
+  </data>
+  <data name="Point" xml:space="preserve">
+    <value>Point</value>
+  </data>
+  <data name="ReadCAD" xml:space="preserve">
+    <value>ReadCAD</value>
+  </data>
+  <data name="ReadCloud" xml:space="preserve">
+    <value>ReadPointCloud</value>
+  </data>
+  <data name="ReadSTL" xml:space="preserve">
+    <value>ReadSTL</value>
+  </data>
+  <data name="Report" xml:space="preserve">
+    <value>Report</value>
+  </data>
+  <data name="Train" xml:space="preserve">
+    <value>Train</value>
+  </data>
+  <data name="StepGroup" xml:space="preserve">
+    <value>StepGroup</value>
+  </data>
+  <data name="Value" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="OutParam" xml:space="preserve">
+    <value>Out Parameter</value>
+  </data>
+  <data name="PointCloud" xml:space="preserve">
+    <value>Point Cloud</value>
+  </data>
+  <data name="Mesh" xml:space="preserve">
+    <value>MeshData</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Del</value>
+  </data>
+  <data name="Color" xml:space="preserve">
+    <value>Color</value>
+  </data>
+  <data name="AlignByBestFit" xml:space="preserve">
+    <value>AlignByBestFit</value>
+  </data>
+  <data name="CloudMesh" xml:space="preserve">
+    <value>CloudMesh</value>
+  </data>
+  <data name="Compare" xml:space="preserve">
+    <value>Compare</value>
+  </data>
+  <data name="GenPoint" xml:space="preserve">
+    <value>GenPoint</value>
+  </data>
+  <data name="Geometry" xml:space="preserve">
+    <value>Geometry</value>
+  </data>
+  <data name="RunNext" xml:space="preserve">
+    <value>RunNext</value>
+  </data>
+  <data name="CloudCalib" xml:space="preserve">
+    <value>PointCloud Merge</value>
+  </data>
+  <data name="Registration" xml:space="preserve">
+    <value>PointCloud Registration</value>
+  </data>
+  <data name="Denoising" xml:space="preserve">
+    <value>Denoising</value>
+  </data>
+  <data name="DownSampling" xml:space="preserve">
+    <value>DownSampling</value>
+  </data>
+  <data name="Smooth" xml:space="preserve">
+    <value>Smooth</value>
+  </data>
+  <data name="Filtering" xml:space="preserve">
+    <value>Filtering</value>
+  </data>
+  <data name="CloudRegistration" xml:space="preserve">
+    <value>CloudRegistration</value>
+  </data>
+  <data name="CloudReRepeat" xml:space="preserve">
+    <value>CloudReRepeat</value>
+  </data>
+  <data name="GenPointByCross" xml:space="preserve">
+    <value>GenPointByCross</value>
+  </data>
+  <data name="GetPointByObj" xml:space="preserve">
+    <value>GetPointByObj</value>
+  </data>
+  <data name="GenPointByProj" xml:space="preserve">
+    <value>GenPointByProjection</value>
+  </data>
+  <data name="GenReport" xml:space="preserve">
+    <value>GenReport</value>
+  </data>
+  <data name="Coord" xml:space="preserve">
+    <value>Coord</value>
+  </data>
+  <data name="GenCoordByData" xml:space="preserve">
+    <value>GenCoordByData</value>
+  </data>
+  <data name="GenCoordByPlane3" xml:space="preserve">
+    <value>GenCoordByPlane3</value>
+  </data>
+  <data name="TransformCoord" xml:space="preserve">
+    <value>TransformCoord</value>
+  </data>
+  <data name="Revoke" xml:space="preserve">
+    <value>Revoke</value>
+  </data>
+  <data name="Redo" xml:space="preserve">
+    <value>Redo</value>
+  </data>
+  <data name="GenLineByFit" xml:space="preserve">
+    <value>GenLineByFit</value>
+  </data>
+  <data name="GenPointByData" xml:space="preserve">
+    <value>GenPointByData</value>
+  </data>
+  <data name="Load" xml:space="preserve">
+    <value>Load</value>
+  </data>
+  <data name="GenLineBy2Point" xml:space="preserve">
+    <value>GenLineBy2Point</value>
+  </data>
+  <data name="GenPlaneBy3Point" xml:space="preserve">
+    <value>GenPlaneBy3Point</value>
+  </data>
+  <data name="DisMeasure" xml:space="preserve">
+    <value>DisMeasure</value>
+  </data>
+  <data name="Parallelism" xml:space="preserve">
+    <value>Parallelism</value>
+  </data>
+  <data name="Point2Point" xml:space="preserve">
+    <value>Point2Point</value>
+  </data>
+  <data name="Tolerance" xml:space="preserve">
+    <value>Tolerance</value>
+  </data>
+  <data name="Plane" xml:space="preserve">
+    <value>Plane</value>
+  </data>
+  <data name="Create" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="CreateProject" xml:space="preserve">
+    <value>Create  Project</value>
+  </data>
+  <data name="CurrentProject" xml:space="preserve">
+    <value>Current  Project</value>
+  </data>
+  <data name="Finish" xml:space="preserve">
+    <value>Finish</value>
+  </data>
+  <data name="Insert" xml:space="preserve">
+    <value>Insert</value>
+  </data>
+  <data name="OpenProject" xml:space="preserve">
+    <value>Open   Project</value>
+  </data>
+  <data name="ProjectAddress" xml:space="preserve">
+    <value>Project Address</value>
+  </data>
+  <data name="ProjectName" xml:space="preserve">
+    <value>Project   Name</value>
+  </data>
+  <data name="Composing" xml:space="preserve">
+    <value>Composing</value>
+  </data>
+  <data name="File" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="Help" xml:space="preserve">
+    <value>Help</value>
+  </data>
+  <data name="Print" xml:space="preserve">
+    <value>Print</value>
+  </data>
+  <data name="SaveAs" xml:space="preserve">
+    <value>Save As</value>
+  </data>
+  <data name="CloudProcess" xml:space="preserve">
+    <value>CloudProcess</value>
+  </data>
+  <data name="Roundness" xml:space="preserve">
+    <value>Roundness</value>
+  </data>
+  <data name="Segment" xml:space="preserve">
+    <value>CloudSegment</value>
+  </data>
+  <data name="DoublePage" xml:space="preserve">
+    <value>DoublePage</value>
+  </data>
+  <data name="Generate" xml:space="preserve">
+    <value>Generate</value>
+  </data>
+  <data name="Lead" xml:space="preserve">
+    <value>Lead</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>Preview</value>
+  </data>
+  <data name="ReportContents" xml:space="preserve">
+    <value>ReportContents</value>
+  </data>
+  <data name="ReportSource" xml:space="preserve">
+    <value>ReportSource</value>
+  </data>
+  <data name="SinglePage" xml:space="preserve">
+    <value>SinglePage</value>
+  </data>
+  <data name="SaveAsProject" xml:space="preserve">
+    <value>SaveAs Project</value>
+  </data>
+  <data name="SaveProject" xml:space="preserve">
+    <value>Save Project</value>
+  </data>
+  <data name="CADModel" xml:space="preserve">
+    <value>CAD Model</value>
+  </data>
+  <data name="Input" xml:space="preserve">
+    <value>Input</value>
+  </data>
+  <data name="Output" xml:space="preserve">
+    <value>Output</value>
+  </data>
+  <data name="PrintPreview" xml:space="preserve">
+    <value>Print Preview</value>
+  </data>
+  <data name="PrintSet" xml:space="preserve">
+    <value>Print Set</value>
+  </data>
+  <data name="ProjectProperty" xml:space="preserve">
+    <value>Project Property</value>
+  </data>
+  <data name="Quit" xml:space="preserve">
+    <value>Quit</value>
+  </data>
+  <data name="RecentFile" xml:space="preserve">
+    <value>Recent File</value>
+  </data>
+  <data name="RecentProject" xml:space="preserve">
+    <value>Recent Project</value>
+  </data>
+  <data name="STL" xml:space="preserve">
+    <value>STL</value>
+  </data>
+  <data name="GenCylinderByFit" xml:space="preserve">
+    <value>GenCylinderByFit</value>
+  </data>
+  <data name="Cylinder" xml:space="preserve">
+    <value>Cylinder</value>
+  </data>
+  <data name="CopyCreate" xml:space="preserve">
+    <value>CopyCreate</value>
+  </data>
+  <data name="GenCircleByData" xml:space="preserve">
+    <value>GenCircleByData</value>
+  </data>
+  <data name="GenCircleByFit" xml:space="preserve">
+    <value>GenCircleByFit</value>
+  </data>
+  <data name="GenLineByCross" xml:space="preserve">
+    <value>GenLineByCross</value>
+  </data>
+  <data name="GenLineByData" xml:space="preserve">
+    <value>GenLineByData</value>
+  </data>
+  <data name="GenLineByMove" xml:space="preserve">
+    <value>GenLineByMove</value>
+  </data>
+  <data name="GenLineByProj" xml:space="preserve">
+    <value>GenLineByProj</value>
+  </data>
+  <data name="GenPlaneByFit" xml:space="preserve">
+    <value>GenPlaneByFit</value>
+  </data>
+  <data name="GenPlaneByMove" xml:space="preserve">
+    <value>GenPlaneByMove</value>
+  </data>
+  <data name="ArcLine2Line" xml:space="preserve">
+    <value>ArcLine2Line</value>
+  </data>
+  <data name="ArcLine2Plane" xml:space="preserve">
+    <value>ArcLine2Plane</value>
+  </data>
+  <data name="ArcPlane2Plane" xml:space="preserve">
+    <value>ArcPlane2Plane</value>
+  </data>
+  <data name="DisLine2Line" xml:space="preserve">
+    <value>DisLine2Plane</value>
+  </data>
+  <data name="DisLine2Plane" xml:space="preserve">
+    <value>DisLine2Plane</value>
+  </data>
+  <data name="DisPoint2Line" xml:space="preserve">
+    <value>DisPoint2Line</value>
+  </data>
+  <data name="DisPoint2Plane" xml:space="preserve">
+    <value>DisPoint2Plane</value>
+  </data>
+  <data name="DisPoint2Point" xml:space="preserve">
+    <value>DisPoint2Point</value>
+  </data>
+  <data name="GenPlaneByObj" xml:space="preserve">
+    <value>GenPlaneByObj</value>
+  </data>
+  <data name="GetLineByObj" xml:space="preserve">
+    <value>GetLineByObj</value>
+  </data>
+  <data name="AngleMeasure" xml:space="preserve">
+    <value>AngleMeasure</value>
+  </data>
+  <data name="GetPlaneByObj" xml:space="preserve">
+    <value>GetPlaneByObj</value>
+  </data>
+  <data name="SaveProjectTask" xml:space="preserve">
+    <value>Save Project Task ?</value>
+  </data>
+  <data name="AsyncGroup" xml:space="preserve">
+    <value>AsyncGroup</value>
+  </data>
+  <data name="Paste" xml:space="preserve">
+    <value>Paste</value>
+  </data>
+  <data name="Rename" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="InsertPoint" xml:space="preserve">
+    <value>InsertPoint</value>
+  </data>
+  <data name="GetDirectionByObj" xml:space="preserve">
+    <value>GetDirectionByObj</value>
+  </data>
+  <data name="Export" xml:space="preserve">
+    <value>EXP</value>
+  </data>
+  <data name="Choose" xml:space="preserve">
+    <value>SEL</value>
+  </data>
+  <data name="SaveSuccess" xml:space="preserve">
+    <value>Save Success</value>
+  </data>
+  <data name="SwitchGroup" xml:space="preserve">
+    <value>SwitchGroup</value>
+  </data>
+  <data name="GenCloudByPoints" xml:space="preserve">
+    <value>GenCloudByPoints</value>
+  </data>
+  <data name="BranchGroup" xml:space="preserve">
+    <value>BranchGroup</value>
+  </data>
+  <data name="GenLineByTransform" xml:space="preserve">
+    <value>GenLineByTransform</value>
+  </data>
+  <data name="InOutParameterConfigure" xml:space="preserve">
+    <value>In Out Parameter Configure</value>
+  </data>
+  <data name="CancelCoordTemplate" xml:space="preserve">
+    <value>CancelCoordTemplate</value>
+  </data>
+  <data name="SetCoordTemplate" xml:space="preserve">
+    <value>SetCoordTemplate</value>
+  </data>
+  <data name="BatchImportPoints" xml:space="preserve">
+    <value>Batch Import Points</value>
+  </data>
+  <data name="FileAddress" xml:space="preserve">
+    <value>File Address</value>
+  </data>
+  <data name="GenerationMode" xml:space="preserve">
+    <value>Gen Mode</value>
+  </data>
+  <data name="Separator" xml:space="preserve">
+    <value>Separator</value>
+  </data>
+  <data name="StartRow" xml:space="preserve">
+    <value>Start Row</value>
+  </data>
+  <data name="StartColumn" xml:space="preserve">
+    <value>Start Column</value>
+  </data>
+  <data name="CheckForUpdates" xml:space="preserve">
+    <value>Check For Updates</value>
+  </data>
+  <data name="Display" xml:space="preserve">
+    <value>Display</value>
+  </data>
+  <data name="DisplayDirection" xml:space="preserve">
+    <value>Display Direction</value>
+  </data>
+  <data name="EditFeature" xml:space="preserve">
+    <value>Edit Feature</value>
+  </data>
+  <data name="LightingSettings" xml:space="preserve">
+    <value>Lighting Settings</value>
+  </data>
+  <data name="ModelDisplayMode" xml:space="preserve">
+    <value>Model Display Mode</value>
+  </data>
+  <data name="PointCloudDisplayMode" xml:space="preserve">
+    <value>PointCloud Display Mode</value>
+  </data>
+  <data name="ReleaseNotes" xml:space="preserve">
+    <value>Release Notes</value>
+  </data>
+  <data name="Select" xml:space="preserve">
+    <value>Select</value>
+  </data>
+  <data name="TaskSimulator" xml:space="preserve">
+    <value>Task Simulator</value>
+  </data>
+  <data name="Tool" xml:space="preserve">
+    <value>Tool</value>
+  </data>
+  <data name="UsingTutorials" xml:space="preserve">
+    <value>Using Tutorials</value>
+  </data>
+  <data name="View" xml:space="preserve">
+    <value>View</value>
+  </data>
+  <data name="Zoom" xml:space="preserve">
+    <value>Zoom</value>
+  </data>
+  <data name="ExtractAsyncGroup" xml:space="preserve">
+    <value>ExtractAsyncGroup</value>
+  </data>
+  <data name="ExtractBranchGroup" xml:space="preserve">
+    <value>ExtractBranchGroup</value>
+  </data>
+  <data name="ExtractStepGroup" xml:space="preserve">
+    <value>ExtractStepGroup</value>
+  </data>
+  <data name="ExtractSwitchGroup" xml:space="preserve">
+    <value>ExtractSwitchGroup</value>
+  </data>
+  <data name="GenConeByFit" xml:space="preserve">
+    <value>GenConeByFit</value>
+  </data>
+  <data name="GenSphereByFit" xml:space="preserve">
+    <value>GenSphereByFit</value>
+  </data>
+  <data name="GenCuboidByData" xml:space="preserve">
+    <value>GenCuboidByData</value>
+  </data>
+  <data name="GenCylinderByData" xml:space="preserve">
+    <value>GenCylinderByData</value>
+  </data>
+  <data name="ImportParameterName" xml:space="preserve">
+    <value>Import Parameter Name</value>
+  </data>
+  <data name="ModuleName" xml:space="preserve">
+    <value>Module Name</value>
+  </data>
+  <data name="OutportParameterName" xml:space="preserve">
+    <value>Outport Parameter Name</value>
+  </data>
+  <data name="GenPointByMove" xml:space="preserve">
+    <value>GenPointByMove</value>
+  </data>
+  <data name="CloudDenoising" xml:space="preserve">
+    <value>CloudDenoising</value>
+  </data>
+  <data name="CloudDownSampling" xml:space="preserve">
+    <value>CloudDownSampling</value>
+  </data>
+  <data name="CloudSegment" xml:space="preserve">
+    <value>CloudSegment</value>
+  </data>
+  <data name="CloudSmooth" xml:space="preserve">
+    <value>CloudSmooth</value>
+  </data>
+  <data name="CloudTransform" xml:space="preserve">
+    <value>CloudTransform</value>
+  </data>
+  <data name="Transform" xml:space="preserve">
+    <value>Transform</value>
+  </data>
+  <data name="GenPointByCaliper" xml:space="preserve">
+    <value>GenPointByCaliper</value>
+  </data>
+  <data name="GenPointByCMM" xml:space="preserve">
+    <value>GenPointByCMM</value>
+  </data>
+  <data name="GenSphereByData" xml:space="preserve">
+    <value>GenSphereByData</value>
+  </data>
+  <data name="Flatness" xml:space="preserve">
+    <value>Flatness</value>
+  </data>
+  <data name="Straightness" xml:space="preserve">
+    <value>Straightness</value>
+  </data>
+  <data name="Error" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="Info" xml:space="preserve">
+    <value>Info</value>
+  </data>
+  <data name="Warning" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+  <data name="SetMeasure" xml:space="preserve">
+    <value>SetMeasure</value>
+  </data>
+  <data name="Active" xml:space="preserve">
+    <value>Active</value>
+  </data>
+  <data name="DataProcess" xml:space="preserve">
+    <value>DataProcess</value>
+  </data>
+  <data name="MergePoints" xml:space="preserve">
+    <value>MergePoints</value>
+  </data>
+  <data name="ProjectAlreadyExists" xml:space="preserve">
+    <value>Project already exists!</value>
+  </data>
+  <data name="ProjectCannotBeEmpty" xml:space="preserve">
+    <value>Project name or address cannot be empty!</value>
+  </data>
+  <data name="Profileanysurface" xml:space="preserve">
+    <value>Profileanysurface</value>
+  </data>
+  <data name="ReadMatrix" xml:space="preserve">
+    <value>ReadMatrix</value>
+  </data>
+  <data name="InputParameter" xml:space="preserve">
+    <value>InputParameter</value>
+  </data>
+  <data name="OutputParameter" xml:space="preserve">
+    <value>OutputParameter</value>
+  </data>
+  <data name="CancelSkip" xml:space="preserve">
+    <value>CancelSkip</value>
+  </data>
+  <data name="HideLabel" xml:space="preserve">
+    <value>Hide Label</value>
+  </data>
+  <data name="VisibleLabel" xml:space="preserve">
+    <value>Visible Label</value>
+  </data>
+  <data name="ROIConfig" xml:space="preserve">
+    <value>ROI Config</value>
+  </data>
+  <data name="TolParameter" xml:space="preserve">
+    <value>Tolerance Parameters</value>
+  </data>
+  <data name="OutlierFit" xml:space="preserve">
+    <value>OutlierFit</value>
+  </data>
+  <data name="Cone" xml:space="preserve">
+    <value>Cone</value>
+  </data>
+  <data name="Cuboid" xml:space="preserve">
+    <value>Cuboid</value>
+  </data>
+  <data name="Sphere" xml:space="preserve">
+    <value>Sphere</value>
+  </data>
+  <data name="DisplayElementParaSetting" xml:space="preserve">
+    <value>EleParam Setting</value>
+  </data>
+  <data name="DisplayTypeSetting" xml:space="preserve">
+    <value>Type Setting</value>
+  </data>
+  <data name="DrawCuboidROI" xml:space="preserve">
+    <value>Draw CuboidROI</value>
+  </data>
+  <data name="DrawCylinderROI" xml:space="preserve">
+    <value>Draw CylinderROI</value>
+  </data>
+  <data name="DrawSphereROI" xml:space="preserve">
+    <value>Draw SphereROI</value>
+  </data>
+  <data name="RotateViewClockwise" xml:space="preserve">
+    <value>Rotate View Clockwise</value>
+  </data>
+  <data name="RotateViewCounterclockwise" xml:space="preserve">
+    <value>Rotate View Counterclockwise</value>
+  </data>
+  <data name="ViewCentered" xml:space="preserve">
+    <value>View Centered</value>
+  </data>
+  <data name="ViewDirectionSetting" xml:space="preserve">
+    <value>View Direction Setting</value>
+  </data>
+  <data name="ViewFlip" xml:space="preserve">
+    <value>View Flip</value>
+  </data>
+  <data name="Comma" xml:space="preserve">
+    <value>Comma</value>
+  </data>
+  <data name="Custom" xml:space="preserve">
+    <value>Custom</value>
+  </data>
+  <data name="GeometricFeatures" xml:space="preserve">
+    <value>Geometric Features</value>
+  </data>
+  <data name="LineScale" xml:space="preserve">
+    <value>Line Scale</value>
+  </data>
+  <data name="LineWidth" xml:space="preserve">
+    <value>Line Width</value>
+  </data>
+  <data name="Opacity" xml:space="preserve">
+    <value>Opacity</value>
+  </data>
+  <data name="PleaseCheckTheDataFormatorType" xml:space="preserve">
+    <value>Please Check The Data Format or Type！</value>
+  </data>
+  <data name="PleaseEnterAnIntegerGreaterThan0" xml:space="preserve">
+    <value>Please Enter An Integer Greater Than 0！</value>
+  </data>
+  <data name="PleaseEnterASingleByteDelimiter" xml:space="preserve">
+    <value>Please Enter A Single Byte Delimiter！</value>
+  </data>
+  <data name="PointCloudSize" xml:space="preserve">
+    <value>PointCloud Size</value>
+  </data>
+  <data name="PointSize" xml:space="preserve">
+    <value>Point Size</value>
+  </data>
+  <data name="Semicolon" xml:space="preserve">
+    <value>Semicolon</value>
+  </data>
+  <data name="Space" xml:space="preserve">
+    <value>Space</value>
+  </data>
+  <data name="ModelGroup" xml:space="preserve">
+    <value>Model Group</value>
+  </data>
+  <data name="PointCloudGroup" xml:space="preserve">
+    <value>PointCloud Group</value>
+  </data>
+  <data name="ArrangeDocument" xml:space="preserve">
+    <value>Arrange Docu</value>
+  </data>
+  <data name="AverageTime" xml:space="preserve">
+    <value>Average Time</value>
+  </data>
+  <data name="DataDirectory" xml:space="preserve">
+    <value>Data Directory</value>
+  </data>
+  <data name="ForMemoryLeakDetection" xml:space="preserve">
+    <value>For Memory Leak Detection</value>
+  </data>
+  <data name="KeywordMatching" xml:space="preserve">
+    <value>Match Keyword</value>
+  </data>
+  <data name="LowerLimit" xml:space="preserve">
+    <value>Lower Limit</value>
+  </data>
+  <data name="NumberOfCycles" xml:space="preserve">
+    <value>Num Of Cycles</value>
+  </data>
+  <data name="SearchFileKeywords" xml:space="preserve">
+    <value>Search File Keywords</value>
+  </data>
+  <data name="Senior" xml:space="preserve">
+    <value>Senior</value>
+  </data>
+  <data name="SerialNumber" xml:space="preserve">
+    <value>Serial Num</value>
+  </data>
+  <data name="StandardValue" xml:space="preserve">
+    <value>Standard Value</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Time" xml:space="preserve">
+    <value>Time</value>
+  </data>
+  <data name="TotalTime" xml:space="preserve">
+    <value>Total Time</value>
+  </data>
+  <data name="UpperLimit" xml:space="preserve">
+    <value>Upper Limit</value>
+  </data>
+  <data name="PickLine" xml:space="preserve">
+    <value>Pick Line</value>
+  </data>
+  <data name="PickPlane" xml:space="preserve">
+    <value>Pick Plane</value>
+  </data>
+  <data name="PickPoint" xml:space="preserve">
+    <value>Pick Point</value>
+  </data>
+  <data name="ReadDatas" xml:space="preserve">
+    <value>Read Datas</value>
+  </data>
+  <data name="BoundBox" xml:space="preserve">
+    <value>Bound Box</value>
+  </data>
+  <data name="PointerCoord" xml:space="preserve">
+    <value>Pointer Coord</value>
+  </data>
+  <data name="SetDisPlayOption" xml:space="preserve">
+    <value>Set DisPlay Option</value>
+  </data>
+  <data name="VersionInfoDialog" xml:space="preserve">
+    <value>Version Info Dialog</value>
+  </data>
+  <data name="SoftWareUpdateInfo" xml:space="preserve">
+    <value>SoftWare Update Info</value>
+  </data>
+  <data name="SoftWareVersion" xml:space="preserve">
+    <value>SoftWare Version</value>
+  </data>
+  <data name="QuitSoftWare" xml:space="preserve">
+    <value>Quit SoftWare？</value>
+  </data>
+  <data name="Calib" xml:space="preserve">
+    <value>Calib</value>
+  </data>
+  <data name="BestFit" xml:space="preserve">
+    <value>BestFit</value>
+  </data>
+  <data name="GenPointByCloud" xml:space="preserve">
+    <value>GenPointByCloud</value>
+  </data>
+  <data name="ReportNavigation" xml:space="preserve">
+    <value>Report Navigation Dialog</value>
+  </data>
+  <data name="CoordRef" xml:space="preserve">
+    <value>Coord Reference</value>
+  </data>
+  <data name="Cylindricity" xml:space="preserve">
+    <value>Cylindricity</value>
+  </data>
+  <data name="Inclination" xml:space="preserve">
+    <value>Inclination</value>
+  </data>
+  <data name="Verticality" xml:space="preserve">
+    <value>Verticality</value>
+  </data>
+  <data name="LineProfile" xml:space="preserve">
+    <value>LineProfile</value>
+  </data>
+  <data name="SurfaceProfile" xml:space="preserve">
+    <value>SurfaceProfile</value>
+  </data>
+  <data name="AddInParam" xml:space="preserve">
+    <value>AddInParam</value>
+  </data>
+  <data name="CuboidTransform" xml:space="preserve">
+    <value>CuboidTransform</value>
+  </data>
+  <data name="Ok" xml:space="preserve">
+    <value>Ok</value>
+  </data>
+  <data name="CloudExtractEdge" xml:space="preserve">
+    <value>CloudExtractEdge</value>
+  </data>
+  <data name="CloudProjPlane" xml:space="preserve">
+    <value>CloudProjPlane</value>
+  </data>
+  <data name="GenPointByPlaneZ" xml:space="preserve">
+    <value>GenPointByPlaneZ</value>
+  </data>
+  <data name="BatchGeometry" xml:space="preserve">
+    <value>Batch Geometries</value>
+  </data>
+  <data name="ReadPoint" xml:space="preserve">
+    <value>Read Point</value>
+  </data>
+  <data name="ReadDirection" xml:space="preserve">
+    <value>Read Direction</value>
+  </data>
+  <data name="BatchCreateMeasurements" xml:space="preserve">
+    <value>Batch Create Measurements</value>
+  </data>
+  <data name="BatchLoadingPointClouds" xml:space="preserve">
+    <value>Batch Loading PointClouds</value>
+  </data>
+  <data name="HeightCorSpect" xml:space="preserve">
+    <value>Height Colour Spectrum</value>
+  </data>
+  <data name="Patch" xml:space="preserve">
+    <value>Patch</value>
+  </data>
+  <data name="ScreenShot" xml:space="preserve">
+    <value>Screen Shot</value>
+  </data>
+  <data name="Vertex" xml:space="preserve">
+    <value>Vertex</value>
+  </data>
+  <data name="Wireframe" xml:space="preserve">
+    <value>Wireframe</value>
+  </data>
+  <data name="Operate" xml:space="preserve">
+    <value>OP</value>
+  </data>
+  <data name="Property" xml:space="preserve">
+    <value>Property</value>
+  </data>
+  <data name="ReportName" xml:space="preserve">
+    <value>Report Name</value>
+  </data>
+  <data name="StorageAddress" xml:space="preserve">
+    <value>Storage Address</value>
+  </data>
+  <data name="PreviewReport" xml:space="preserve">
+    <value>Preview Report</value>
+  </data>
+  <data name="SetSinglePage" xml:space="preserve">
+    <value>Set SinglePage</value>
+  </data>
+  <data name="Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="MeasureBenchmarkⅠ" xml:space="preserve">
+    <value>Measure BenchmarkⅠ</value>
+  </data>
+  <data name="MeasureBenchmarkⅡ" xml:space="preserve">
+    <value>Measure BenchmarkⅡ</value>
+  </data>
+  <data name="MeasureType" xml:space="preserve">
+    <value>Measure Type</value>
+  </data>
+  <data name="AxisDirection" xml:space="preserve">
+    <value>AxisDirection</value>
+  </data>
+  <data name="DigitalPoint" xml:space="preserve">
+    <value>DigitalPoint</value>
+  </data>
+  <data name="HDirection" xml:space="preserve">
+    <value>HDirection</value>
+  </data>
+  <data name="Height" xml:space="preserve">
+    <value>Height</value>
+  </data>
+  <data name="LDirection" xml:space="preserve">
+    <value>LDirection</value>
+  </data>
+  <data name="Radius" xml:space="preserve">
+    <value>Radius</value>
+  </data>
+  <data name="Size" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="WDirection" xml:space="preserve">
+    <value>WDirection</value>
+  </data>
+  <data name="InCloud" xml:space="preserve">
+    <value>In Cloud</value>
+  </data>
+  <data name="RefTemplate" xml:space="preserve">
+    <value>Ref Temp</value>
+  </data>
+  <data name="RepTemplate" xml:space="preserve">
+    <value>Rep Temp</value>
+  </data>
+  <data name="SurfaceDistance" xml:space="preserve">
+    <value>Surface Dis</value>
+  </data>
+  <data name="GeometricFeaturesInclude" xml:space="preserve">
+    <value>Geometric features include: points, lines, faces, cuboids, cylinders, cones, balls, etc</value>
+  </data>
+  <data name="SoftwareFunctions" xml:space="preserve">
+    <value>Initial version integration of lingyunguang 3D measurement software: geometric feature creation, coordinate system generation, calibration, point cloud processing, alignment, comparison, distance measurement, angle measurement and tolerance measurement</value>
+  </data>
+  <data name="ToleranceMeasurementsInclude" xml:space="preserve">
+    <value>Tolerance measurement mainly includes parallelism, straightness, surface profile, line profile, flatness, roundness, etc</value>
+  </data>
+  <data name="AdjustModelAndPointCloud" xml:space="preserve">
+    <value>2、Adjust the model and point cloud to the same perspective</value>
+  </data>
+  <data name="CalibrationOperationInstructions" xml:space="preserve">
+    <value>Calibration Operation Instructions</value>
+  </data>
+  <data name="CancelCalibration" xml:space="preserve">
+    <value>5. "Cancel" button to cancel calibration</value>
+  </data>
+  <data name="ClickModelAndPointCloud" xml:space="preserve">
+    <value>3、"Click" button, click on the model and point cloud in turn</value>
+  </data>
+  <data name="CloseCalibration" xml:space="preserve">
+    <value>7. "Close" button to exit the current page</value>
+  </data>
+  <data name="ConfirmCalibration" xml:space="preserve">
+    <value>6. "Confirm" button to complete the current point cloud calibration</value>
+  </data>
+  <data name="ForegroundAndBackground" xml:space="preserve">
+    <value>4. Bright color is the foreground color and black is the background color</value>
+  </data>
+  <data name="PointToPoint" xml:space="preserve">
+    <value>Point to point</value>
+  </data>
+  <data name="SelectCalibratePointCloud" xml:space="preserve">
+    <value>1、Select the point cloud to calibrate in the task tree</value>
+  </data>
+  <data name="ThreeGroups" xml:space="preserve">
+    <value>At least three groups</value>
+  </data>
+  <data name="AliasCannotDuplicate" xml:space="preserve">
+    <value>Alias cannot be duplicate</value>
+  </data>
+  <data name="AliasCannotEmpty" xml:space="preserve">
+    <value>Alias cannot be empty</value>
+  </data>
+  <data name="CheckBenchmarkEmpty" xml:space="preserve">
+    <value>The existing benchmark set is empty, please check</value>
+  </data>
+  <data name="ClearBenchmarkParameters" xml:space="preserve">
+    <value>Are you sure to clear benchmark parameters</value>
+  </data>
+  <data name="ClearInOutParameters" xml:space="preserve">
+    <value>Are you sure to clear input / output parameters</value>
+  </data>
+  <data name="GenerationMethodPoint" xml:space="preserve">
+    <value>The generation method needs to be set to: point!</value>
+  </data>
+  <data name="IsGenerateMeasurement" xml:space="preserve">
+    <value>The number of benchmark I sets is different from that of benchmark II sets. Are you sure to generate measurement items?</value>
+  </data>
+  <data name="NoDigitalPointsUpdated" xml:space="preserve">
+    <value>There are no digital points to be updated in the task</value>
+  </data>
+  <data name="NoMeasurementUnderNode" xml:space="preserve">
+    <value>There are non measurement item benchmarks under the node, which will be automatically removed when dragging</value>
+  </data>
+  <data name="NumberOfDataPoints" xml:space="preserve">
+    <value>The number of data points per file ranges from [4,1000]</value>
+  </data>
+  <data name="SaveReportAsCompleted" xml:space="preserve">
+    <value>Save report as completed</value>
+  </data>
+  <data name="SelectCorrectMeasurementBenchmark" xml:space="preserve">
+    <value>Please select the type of point, line, plane, etc. that can be used as the measurement benchmark</value>
+  </data>
+  <data name="ConfigureInputParametersFirst" xml:space="preserve">
+    <value>Please configure input parameters (point cloud) first</value>
+  </data>
+  <data name="ConfirmActivePointCloud" xml:space="preserve">
+    <value>Confirm that the active point cloud loaded from the file exists in the task</value>
+  </data>
+  <data name="CreateProjectReplaceCurrent" xml:space="preserve">
+    <value>The current project source file has been deleted. Please create a new project to replace the current project first!</value>
+  </data>
+  <data name="TutorialDontExist" xml:space="preserve">
+    <value>Tutorial document does not exist</value>
+  </data>
+  <data name="CenterPoint" xml:space="preserve">
+    <value>CenterPoint</value>
+  </data>
+  <data name="StringMerge" xml:space="preserve">
+    <value>StringMerge</value>
+  </data>
+  <data name="StringExDialog" xml:space="preserve">
+    <value>StringExDialog</value>
+  </data>
+  <data name="StringParse" xml:space="preserve">
+    <value>String Parse</value>
+  </data>
+  <data name="HideBoundBox" xml:space="preserve">
+    <value>Hide BoundBox</value>
+  </data>
+  <data name="ShowBoundBox" xml:space="preserve">
+    <value>Show BoundBox</value>
+  </data>
+  <data name="BatchGenPoints" xml:space="preserve">
+    <value>Batch Generate Points</value>
+  </data>
+  <data name="CloudSectionSegment" xml:space="preserve">
+    <value>Cloud Section Segment</value>
+  </data>
+  <data name="Calculator" xml:space="preserve">
+    <value>Calculator</value>
+  </data>
+  <data name="ExpressDialog" xml:space="preserve">
+    <value>ExpressDialog</value>
+  </data>
+  <data name="StringMatchDialog" xml:space="preserve">
+    <value>StringMatchDialog</value>
+  </data>
+  <data name="BatchChangeGeometry" xml:space="preserve">
+    <value>Batch Change Geom</value>
+  </data>
+  <data name="BatchGenMeaPoints" xml:space="preserve">
+    <value>Batch Gen MeaPoints</value>
+  </data>
+  <data name="CollisionDirection" xml:space="preserve">
+    <value>Collision Dire</value>
+  </data>
+  <data name="DetectionDepth" xml:space="preserve">
+    <value>Detection Depth</value>
+  </data>
+  <data name="FallbackDistance" xml:space="preserve">
+    <value>Fallback Distance</value>
+  </data>
+  <data name="GenGeomFromPoint" xml:space="preserve">
+    <value>Gen Geom From Point</value>
+  </data>
+  <data name="PointDirection" xml:space="preserve">
+    <value>Point Dire</value>
+  </data>
+  <data name="ROIType" xml:space="preserve">
+    <value>ROI Type</value>
+  </data>
+  <data name="RotateAroundX" xml:space="preserve">
+    <value>Rotate X</value>
+  </data>
+  <data name="RotateAroundY" xml:space="preserve">
+    <value>Rotate Y</value>
+  </data>
+  <data name="RotateAroundZ" xml:space="preserve">
+    <value>Rotate Z</value>
+  </data>
+  <data name="SwitchDialog" xml:space="preserve">
+    <value>SwitchDialog</value>
+  </data>
+  <data name="CloudAlignMatch" xml:space="preserve">
+    <value>Cloud Align Match</value>
+  </data>
+  <data name="CloudNormal" xml:space="preserve">
+    <value>Cloud Normal</value>
+  </data>
+  <data name="DisCircleAttribute" xml:space="preserve">
+    <value>DisCircleAttribute</value>
+  </data>
+  <data name="RobotMove" xml:space="preserve">
+    <value>RobotMove</value>
+  </data>
+  <data name="SplitIntToBit" xml:space="preserve">
+    <value>SplitIntToBit</value>
+  </data>
+  <data name="SmokeAlarmDevice" xml:space="preserve">
+    <value>SmokeAlarm</value>
+  </data>
+  <data name="TxtReader" xml:space="preserve">
+    <value>TxtReader</value>
+  </data>
+  <data name="TxtWriter" xml:space="preserve">
+    <value>TxtWriter</value>
+  </data>
+  <data name="ModbusRTU" xml:space="preserve">
+    <value>ModbusRTU</value>
+  </data>
+</root>

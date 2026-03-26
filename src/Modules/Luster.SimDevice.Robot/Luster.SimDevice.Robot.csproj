@@ -1,0 +1,43 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Version>0.0.0.1</Version>
+        <PlatformTarget>x64</PlatformTarget>
+        <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+        <!-- 启用统一拷贝功能 -->
+        <CopyToDevicesFolder>true</CopyToDevicesFolder>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Remove="Costura64\BasicSdk.dll" />
+        <None Remove="Costura64\DianaApi.py" />
+        <None Remove="Costura64\GenericAlgorithm.dll" />
+        <None Remove="Costura64\libiconv.dll" />
+        <None Remove="Costura64\libxml2.dll" />
+        <None Remove="Costura64\ToolSdk.dll" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Costura.Fody">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="MinVer" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="Costura64\BasicSdk.dll" />
+        <EmbeddedResource Include="Costura64\DianaApi.py" />
+        <EmbeddedResource Include="Costura64\GenericAlgorithm.dll" />
+        <EmbeddedResource Include="Costura64\libiconv.dll" />
+        <EmbeddedResource Include="Costura64\libxml2.dll" />
+        <EmbeddedResource Include="Costura64\PMCLib.dll" />
+        <EmbeddedResource Include="Costura64\DianaApi.dll" />
+        <EmbeddedResource Include="Costura64\ToolSdk.dll" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Luster.SimDevice\Luster.SimDevice.csproj" />
+    </ItemGroup>
+
+</Project>

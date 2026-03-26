@@ -1,0 +1,131 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <Version>1.0.0.99</Version>
+        <UseWPF>true</UseWPF>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Remove="Fonts\iconfont.ttf" />
+        <None Remove="Image\cloud.png" />
+        <None Remove="Image\file.png" />
+        <None Remove="Image\Flag\cn.png" />
+        <None Remove="Image\Flag\en.png" />
+        <None Remove="Image\logo.ico" />
+        <None Remove="Image\ReportFirstPage.JPG" />
+        <None Remove="ParamGrid\Generic.xaml" />
+        <None Remove="Image\logo3d.ico" />
+        <None Remove="Image\lustercompany.png" />
+        <None Remove="Themes\Basic\Basic.xaml" />
+        <None Remove="Themes\Basic\Brushes.xaml" />
+        <None Remove="Themes\Basic\Colors\Colors.xaml" />
+        <None Remove="Themes\Basic\Colors\ColorsDark.xaml" />
+        <None Remove="Themes\Basic\Converters.xaml" />
+        <None Remove="Themes\Basic\Fonts.xaml" />
+        <None Remove="Themes\Basic\Geometries.xaml" />
+        <None Remove="Themes\SkinDark.xaml" />
+        <None Remove="Themes\SkinDefault.xaml" />
+        <None Remove="Themes\Styles\Style.xaml" />
+        <None Remove="Themes\Theme.xaml" />
+        <None Remove="Views\DialogWindow.xaml" />
+        <None Remove="Views\MessageDialog.xaml" />
+        <None Remove="Views\TextDialog.xaml" />
+        <None Remove="Window\DialogNonClientArea.xaml" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Costura.Fody">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="HandyControl" />
+        <PackageReference Include="Luster.Prism" />
+        <PackageReference Include="MinVer" />
+    </ItemGroup>
+
+
+    <ItemGroup>
+        <ProjectReference Include="..\Luster.Controls.Wpf\Luster.Controls.Wpf.csproj" />
+        <ProjectReference Include="..\Luster.TaskFlow.Common\Luster.TaskFlow.Common.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Reference Include="ICSharpCode.AvalonEdit">
+            <HintPath>..\..\..\lib\ICSharpCode.AvalonEdit.dll</HintPath>
+        </Reference>
+        <Reference Include="PresentationCore" />
+        <Reference Include="PresentationFramework" />
+        <Reference Include="System.Xaml" />
+        <Reference Include="WindowsBase" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Resource Include="Fonts\iconfont.ttf" />
+        <Resource Include="Image\cloud.png" />
+        <Resource Include="Image\file.png" />
+        <Resource Include="Image\Flag\cn.png" />
+        <Resource Include="Image\Flag\en.png" />
+        <Resource Include="Image\logo.ico" />
+        <Resource Include="Image\logo3d.ico" />
+        <Resource Include="Image\lustercompany.png" />
+        <Resource Include="Image\reportfirstpage.JPG" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="Langs\LangProvider.tt">
+            <Generator>TextTemplatingFileGenerator</Generator>
+            <LastGenOutput>LangProvider.cs</LastGenOutput>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Update="Langs\Lang.en.resx">
+            <Generator>PublicResXFileCodeGenerator</Generator>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Langs\Lang.resx">
+            <Generator>PublicResXFileCodeGenerator</Generator>
+            <LastGenOutput>Lang.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Update="Langs\Lang.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>Lang.resx</DependentUpon>
+        </Compile>
+        <Compile Update="Langs\LangProvider.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>LangProvider.tt</DependentUpon>
+        </Compile>
+        <Compile Update="Window\DialogNonClientArea.xaml.cs">
+            <SubType>Code</SubType>
+        </Compile>
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.SourceLink.GitLab" PrivateAssets="All" />
+    </ItemGroup>
+    <ItemGroup>
+        <Page Update="Views\CalcDialog.xaml">
+            <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+        </Page>
+        <Page Update="Views\ExpDialog.xaml">
+            <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+            <SubType>Designer</SubType>
+        </Page>
+        <Page Update="Views\StringMatchDialog.xaml">
+            <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+            <SubType>Designer</SubType>
+        </Page>
+        <Page Update="Views\StringExDialog.xaml">
+            <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+            <SubType>Designer</SubType>
+        </Page>
+    </ItemGroup>
+</Project>

@@ -1,0 +1,135 @@
+﻿<UserControl x:Class="Luster.SimDevice.SubSystem.Views.ControlParaContent"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Luster.SimDevice.SubSystem.Views"
+             xmlns:hc="https://handyorg.github.io/handycontrol"    
+             xmlns:lang="clr-namespace:Luster.SimDevice.SubSystem.Langs"         
+             mc:Ignorable="d" 
+             d:DesignHeight="1080" d:DesignWidth="1920">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="2*"></ColumnDefinition>
+            <ColumnDefinition Width="8*"></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <GroupBox Header="模块">
+            <DataGrid
+                Padding="-5"
+                hc:DataGridAttach.ShowRowNumber="True"
+                hc:DataGridAttach.ShowSelectAllButton="False"
+                AlternationCount="2"
+                ColumnHeaderStyle="{StaticResource CustomDataGridColumnHeaderStyle}"
+                HeadersVisibility="Column"         
+                IsReadOnly="True"
+                ItemsSource="{Binding ModuleList}"
+                RowStyle="{StaticResource CustomDataGridRowStyle}"
+                SelectionMode="Single"                
+                Visibility="{Binding IsShowParam, Converter={StaticResource Boolean2VisibilityReConverter}}" >
+                
+                <DataGrid.Columns>
+                    
+                    <DataGridTemplateColumn Width="auto" HeaderStyle="{StaticResource DataColumnHeaderSelectAllStyle}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox Margin="16,0,0,0" IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    
+                    <DataGridTextColumn
+                        MinWidth="80"
+                        Binding="{Binding ModuleName}"
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="{lang:Lang Key={x:Static lang:LangKeys.ModuleName}}"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                </DataGrid.Columns>
+
+            </DataGrid>
+        </GroupBox>
+        <GroupBox Grid.Column="2" Header="控制参数">
+            <DataGrid 
+                IsReadOnly="False"  
+                MouseDoubleClick="DataGrid_MouseDoubleClick"
+                ItemsSource="{Binding ControlParaList}"                
+                >
+                <DataGrid.Columns>
+                    <DataGridTextColumn
+                        Width="auto"
+                        Binding="{Binding Module}"
+                        CanUserSort="False"
+                        IsReadOnly="True"
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="模块"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                    <DataGridTextColumn
+                        Width="auto"
+                        Binding="{Binding Prim}"
+                        IsReadOnly="True"                    
+                        CanUserSort="False"
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="基元"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                    <DataGridTextColumn
+                        Width="auto"
+                        Binding="{Binding Grade}"
+                        IsReadOnly="True"               
+                        CanUserSort="False"
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="等级"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                    <DataGridTextColumn
+                        Width="auto"
+                        Binding="{Binding Type}"
+                        IsReadOnly="True"                                    
+                        CanUserSort="False"
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="类型"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                    <DataGridTextColumn
+                        Width="auto"
+                        Binding="{Binding Name}"
+                        IsReadOnly="True"                                                   
+                        CanUserSort="False"
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="名称"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                    <DataGridTextColumn
+                        Width="auto"
+                        Binding="{Binding ActualVal}"
+                        CanUserSort="False"
+                        
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="设定值"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
+                        
+                        />
+                    <DataGridTextColumn
+                        Width="auto"
+                        IsReadOnly="True"                                                            
+                        Binding="{Binding LowLimitVal}"
+                        CanUserSort="False"
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="下限值"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                    <DataGridTextColumn
+                        Width="auto"
+                        IsReadOnly="True"                                                          
+                        Binding="{Binding UpLimitVal}"
+                        CanUserSort="False"
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="上限值"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                    <DataGridTextColumn
+                        Width="auto"
+                        IsReadOnly="True"                                                       
+                        Binding="{Binding StandardVal}"
+                        CanUserSort="False"
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="标准值"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </GroupBox>
+    </Grid>
+</UserControl>

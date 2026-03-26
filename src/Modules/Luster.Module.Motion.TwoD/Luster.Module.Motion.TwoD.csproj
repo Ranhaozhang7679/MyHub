@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+        <!-- 启用统一拷贝功能 -->
+        <CopyToMotionsFolder>true</CopyToMotionsFolder>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Luster.Motion.Integration\Luster.Motion.Integration.csproj" />
+		<ProjectReference Include="..\Luster.TaskFlow.Engine\Luster.TaskFlow.Engine.csproj" />
+		<ProjectReference Include="..\Luster.TaskFlow.Motion\Luster.TaskFlow.Motion.csproj" />
+	</ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="MinVer" />
+    </ItemGroup>
+
+	<ItemGroup>
+		<Reference Include="System.ComponentModel.DataAnnotations" />
+	</ItemGroup>
+
+</Project>

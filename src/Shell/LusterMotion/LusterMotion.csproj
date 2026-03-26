@@ -1,0 +1,158 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <!-- 标记为 Shell 项目，模块将收集到 Modules/ 子目录 -->
+        <IsShellProject>true</IsShellProject>
+        <OutputType>WinExe</OutputType>
+        <UseWPF>true</UseWPF>
+        <PlatformTarget>x64</PlatformTarget>
+        <ApplicationIcon>LOGO.ico</ApplicationIcon>
+        <AssemblyVersion>03.15</AssemblyVersion>
+        <Copyright>Luster</Copyright>
+        <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
+        <PostBuildEvent>
+            rd /s /q Langs\en 2 &amp;gt; nul
+            rd /s /q Langs\es 2 &amp;gt; nul
+            rd /s /q Langs\fa 2 &amp;gt; nul
+            rd /s /q Langs\fr 2 &amp;gt; nul
+            rd /s /q Langs\ja 2 &amp;gt; nul
+            rd /s /q Langs\ko-KR 2 &amp;gt; nul
+            rd /s /q Langs\pt-BR 2 &amp;gt; nul
+            rd /s /q Langs\pl 2 &amp;gt; nul
+            rd /s /q Langs\ru 2 &amp;gt; nul
+            rd /s /q Langs\tr 2 &amp;gt; nul
+            rd /s /q Langs\ca-Es 2 &amp;gt; nul
+            rd /s /q Langs\cs-CZ 2 &amp;gt; nul
+            rd /s /q Langs\de 2 &amp;gt; nul
+            rd /s /q Langs\hu 2 &amp;gt; nul
+            rd /s /q Langs\it 2 &amp;gt; nul
+            rd /s /q Langs\ko 2 &amp;gt; nul
+            rd /s /q Langs\nl-BE 2 &amp;gt; nul
+            rd /s /q Langs\pt 2 &amp;gt; nul
+            rd /s /q Langs\ro 2 &amp;gt; nul
+            rd /s /q Langs\sv 2 &amp;gt; nul
+            rd /s /q Langs\zh-Hans 2 &amp;gt; nul
+            rd /s /q Langs\zh-Hant 2 &amp;gt; nul
+            if exist en move en Langs
+            if exist es move es Langs
+            if exist fa move fa Langs
+            if exist fr move fr Langs
+            if exist ja move ja Langs
+            if exist ko-KR move ko-KR Langs
+            if exist pt-BR move pt-BR Langs
+            if exist pl move pl Langs
+            if exist ru move ru Langs
+            if exist tr move tr Langs
+            if exist ca-Es move ca-Es Langs
+            if exist cs-CZ move cs-CZ Langs
+            if exist de move de Langs
+            if exist hu move hu Langs
+            if exist it move it Langs
+            if exist ko move ko Langs
+            if exist nl-BE move nl-BE Langs
+            if exist pt move pt Langs
+            if exist ro move ro Langs
+            if exist sv move sv Langs
+            if exist zh-Hans move zh-Hans Langs
+            if exist zh-Hant move zh-Hant Langs
+        </PostBuildEvent>
+        <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Remove="Resources\iconfont.ttf" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="LOGO.ico" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="HandyControl"/>
+        <PackageReference Include="Luster.Prism" />
+        <PackageReference Include="MinVer" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\Modules\Luster.Common.DataAccess\Luster.Common.DataAccess.csproj" />
+        <ProjectReference Include="..\..\Modules\Luster.SimDevice\Luster.SimDevice.csproj" />
+        <ProjectReference Include="..\..\Modules\Luster.Motion.DigitalSetup\Luster.Motion.DigitalSetup.csproj" />
+        <ProjectReference Include="..\..\Modules\Luster.Common.Assets\Luster.Common.Assets.csproj" />
+        <ProjectReference Include="..\..\Modules\Luster.Control.Wpf.Motion\Luster.Control.Wpf.Motion.csproj" />
+        <ProjectReference Include="..\..\Modules\Luster.Motion.AlarmUI\Luster.Motion.AlarmUI.csproj" />
+        <ProjectReference Include="..\..\Modules\Luster.Motion.Assests\Luster.Motion.Assests.csproj" />
+        <ProjectReference Include="..\..\Modules\Luster.Motion.CommonUI\Luster.Motion.CommonUI.csproj" />
+        <ProjectReference Include="..\..\Modules\Luster.Motion.EditorUI\Luster.Motion.EditorUI.csproj" />
+        <ProjectReference Include="..\..\Modules\Luster.Motion.ReportUI\Luster.Motion.ReportUI.csproj" />
+        <ProjectReference Include="..\..\Modules\Luster.Motion.SubSystem\Luster.Motion.SubSystem.csproj" />
+        <ProjectReference Include="..\..\Modules\Luster.SimDevice.SubSystem\Luster.SimDevice.SubSystem.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Resource Include="Resources\iconfont.ttf" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Update="Config\Error.json">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Config\Version.json">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Config\Version.xml">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="LOGO.ico">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+    <PropertyGroup Condition="$(TargetFramework.StartsWith('net4'))">
+        <PostBuildEvent>
+            rd /s /q Langs\en 2 &amp;gt; nul
+            rd /s /q Langs\es 2 &amp;gt; nul
+            rd /s /q Langs\fa 2 &amp;gt; nul
+            rd /s /q Langs\fr 2 &amp;gt; nul
+            rd /s /q Langs\ja 2 &amp;gt; nul
+            rd /s /q Langs\ko-KR 2 &amp;gt; nul
+            rd /s /q Langs\pt-BR 2 &amp;gt; nul
+            rd /s /q Langs\pl 2 &amp;gt; nul
+            rd /s /q Langs\ru 2 &amp;gt; nul
+            rd /s /q Langs\tr 2 &amp;gt; nul
+            rd /s /q Langs\ca-Es 2 &amp;gt; nul
+            rd /s /q Langs\cs-CZ 2 &amp;gt; nul
+            rd /s /q Langs\de 2 &amp;gt; nul
+            rd /s /q Langs\hu 2 &amp;gt; nul
+            rd /s /q Langs\it 2 &amp;gt; nul
+            rd /s /q Langs\ko 2 &amp;gt; nul
+            rd /s /q Langs\nl-BE 2 &amp;gt; nul
+            rd /s /q Langs\pt 2 &amp;gt; nul
+            rd /s /q Langs\ro 2 &amp;gt; nul
+            rd /s /q Langs\sv 2 &amp;gt; nul
+            rd /s /q Langs\zh-Hans 2 &amp;gt; nul
+            rd /s /q Langs\zh-Hant 2 &amp;gt; nul
+            if exist en move en Langs
+            if exist es move es Langs
+            if exist fa move fa Langs
+            if exist fr move fr Langs
+            if exist ja move ja Langs
+            if exist ko-KR move ko-KR Langs
+            if exist pt-BR move pt-BR Langs
+            if exist pl move pl Langs
+            if exist ru move ru Langs
+            if exist tr move tr Langs
+            if exist ca-Es move ca-Es Langs
+            if exist cs-CZ move cs-CZ Langs
+            if exist de move de Langs
+            if exist hu move hu Langs
+            if exist it move it Langs
+            if exist ko move ko Langs
+            if exist nl-BE move nl-BE Langs
+            if exist pt move pt Langs
+            if exist ro move ro Langs
+            if exist sv move sv Langs
+            if exist zh-Hans move zh-Hans Langs
+            if exist zh-Hant move zh-Hant Langs
+        </PostBuildEvent>
+    </PropertyGroup>
+    
+</Project>

@@ -1,0 +1,218 @@
+﻿<UserControl
+    x:Class="Luster.Motion.EditorUI.Views.ModuleContent"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:data="clr-namespace:Luster.Common.DataStruct.DataModels;assembly=Luster.Common.DataStruct"
+    xmlns:ex="clr-namespace:Luster.Motion.Assests.Langs;assembly=Luster.Motion.Assests"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:lang="clr-namespace:Luster.Motion.Assests.Langs;assembly=Luster.Motion.Assests"
+    xmlns:local="clr-namespace:Luster.Motion.EditorUI.Views"
+    xmlns:m="clr-namespace:Luster.Motion.EditorUI.Models"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    d:DesignHeight="450"
+    d:DesignWidth="250"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{DynamicResource RegionBrush}"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <Style x:Key="ItemStyle" TargetType="Border">
+            <Setter Property="Width" Value="54" />
+            <Setter Property="Margin" Value="5" />
+            <Setter Property="Padding" Value="2" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderThickness" Value="1" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource EditorSelectionBorder}" />
+                    <Setter Property="Cursor" Value="Hand" />
+                    <Setter Property="Background" Value="WhiteSmoke" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="CompItemStyle" TargetType="Border">
+            <Setter Property="Width" Value="Auto" />
+            <Setter Property="Height" Value="36" />
+            <Setter Property="Margin" Value="5,2" />
+            <Setter Property="Padding" Value="5,2" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <EventSetter Event="MouseRightButtonDown" Handler="Border_PreviewMouseDown" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderThickness" Value="1" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource EditorSelectionBorder}" />
+                    <Setter Property="Cursor" Value="Hand" />
+                    <Setter Property="Background" Value="WhiteSmoke" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- 导入按钮样式 -->
+        <Style x:Key="ImportButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="54" />
+            <Setter Property="Height" Value="54" />
+            <Setter Property="Margin" Value="5" />
+            <Setter Property="Padding" Value="2" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Content" Value="📥" />
+            <Setter Property="ToolTip" Value="导入XML模块" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderThickness" Value="1" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource EditorSelectionBorder}" />
+                    <Setter Property="Cursor" Value="Hand" />
+                    <Setter Property="Background" Value="WhiteSmoke" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- 导出按钮样式 -->
+        <Style x:Key="ExportButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="54" />
+            <Setter Property="Height" Value="54" />
+            <Setter Property="Margin" Value="5" />
+            <Setter Property="Padding" Value="2" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Content" Value="📤" />
+            <Setter Property="ToolTip" Value="导出组合模块到XML" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="BorderThickness" Value="1" />
+                    <Setter Property="BorderBrush" Value="{DynamicResource EditorSelectionBorder}" />
+                    <Setter Property="Cursor" Value="Hand" />
+                    <Setter Property="Background" Value="WhiteSmoke" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <DataTemplate x:Key="Normal" DataType="{x:Type m:ModuleNode}">
+            <Border Style="{StaticResource ItemStyle}" ToolTip="{Binding Tips}">
+                <StackPanel>
+                    <TextBlock
+                        Style="{StaticResource MotionIconMid}"
+                        Text="{Binding Icon}"
+                        ToolTip="{ex:Lang Key={Binding Text}}" />
+                    <TextBlock
+                        Margin="0,2,0,0"
+                        HorizontalAlignment="Center"
+                        FontSize="10"
+                        Text="{ex:Lang Key={Binding Text}}" />
+                </StackPanel>
+                <hc:Interaction.Triggers>
+                    <hc:EventTrigger EventName="PreviewMouseDown">
+                        <hc:EventToCommand Command="{Binding Path=DataContext.DoubleAddCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" PassEventArgsToCommand="True" />
+                    </hc:EventTrigger>
+                </hc:Interaction.Triggers>
+            </Border>
+        </DataTemplate>
+        <DataTemplate x:Key="Composition" DataType="{x:Type m:ModuleNode}">
+            <Border Style="{StaticResource CompItemStyle}" ToolTip="{Binding Tips}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        Style="{StaticResource MotionIconMid}"
+                        Text="{Binding Icon}"
+                        ToolTip="{Binding Text}" />
+                    <TextBlock
+                        Grid.Column="1"
+                        Margin="5,2,0,0"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        Text="{Binding Text}" />
+                </Grid>
+                <hc:Interaction.Triggers>
+                    <hc:EventTrigger EventName="PreviewMouseDown">
+                        <hc:EventToCommand Command="{Binding Path=DataContext.DoubleAddCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" PassEventArgsToCommand="True" />
+                    </hc:EventTrigger>
+                </hc:Interaction.Triggers>
+            </Border>
+        </DataTemplate>
+
+        <local:ModuleDataTemplateSelector x:Key="ModuleDataTemplate" />
+    </UserControl.Resources>
+    <Grid IsEnabled="{Binding CanUse}">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Modules}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type m:ModuleNode}">
+                        <Expander
+                            Margin="2,2,2,0"
+                            Padding="5,0"
+                            HorizontalContentAlignment="Left"
+                            Header="{ex:Lang Key={Binding Text}}"
+                            IsExpanded="{Binding IsExpand}"
+                            Visibility="{Binding IsEnabled, Converter={StaticResource Boolean2VisibilityConverter}}">
+                            <Border
+                                Background="{DynamicResource RegionBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}"
+                                BorderThickness="1,0,1,1">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- 按钮容器 -->
+                                    <StackPanel 
+                                        Grid.Row="0"
+                                        Orientation="Horizontal"
+                                        Visibility="{Binding IsLastCategory, Converter={StaticResource Boolean2VisibilityConverter}}">
+                                        <!-- 导入按钮 -->
+                                        <Button Style="{StaticResource ImportButtonStyle}">
+                                            <hc:Interaction.Triggers>
+                                                <hc:EventTrigger EventName="Click">
+                                                    <hc:EventToCommand Command="{Binding Path=DataContext.ImportXmlCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                                </hc:EventTrigger>
+                                            </hc:Interaction.Triggers>
+                                        </Button>
+
+                                        <!-- 导出按钮 -->
+                                        <Button Style="{StaticResource ExportButtonStyle}">
+                                            <hc:Interaction.Triggers>
+                                                <hc:EventTrigger EventName="Click">
+                                                    <hc:EventToCommand Command="{Binding Path=DataContext.ExportXmlCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                                                </hc:EventTrigger>
+                                            </hc:Interaction.Triggers>
+                                        </Button>
+                                    </StackPanel>
+
+                                    <!-- 原有的模块内容 -->
+                                    <ItemsControl 
+                                        Grid.Row="1"
+                                        ItemTemplateSelector="{StaticResource ModuleDataTemplate}" 
+                                        ItemsSource="{Binding Childrens}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                    </ItemsControl>
+                                </Grid>
+                            </Border>
+                            <hc:Interaction.Triggers>
+                                <hc:EventTrigger EventName="Expanded">
+                                    <hc:EventToCommand Command="{Binding Path=DataContext.ExpandedCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}" CommandParameter="{Binding .}" />
+                                </hc:EventTrigger>
+                            </hc:Interaction.Triggers>
+                        </Expander>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

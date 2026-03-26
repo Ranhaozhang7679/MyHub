@@ -1,0 +1,70 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <UseWPF>true</UseWPF>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="HandyControl" />
+        <PackageReference Include="Luster.Prism" />
+        <PackageReference Include="MinVer" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Luster.Motion.TaskFlow.Engine\Luster.Motion.TaskFlow.Engine.csproj" />
+        <ProjectReference Include="..\Luster.TaskFlow.Motion\Luster.TaskFlow.Motion.csproj" />
+        <ProjectReference Include="..\Luster.Common.Assets\Luster.Common.Assets.csproj" />
+        <ProjectReference Include="..\Luster.Control.Wpf.Motion\Luster.Control.Wpf.Motion.csproj" />
+        <ProjectReference Include="..\Luster.Motion.Assests\Luster.Motion.Assests.csproj" />
+        <ProjectReference Include="..\Luster.Motion.CommonUI\Luster.Motion.CommonUI.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Reference Include="Microsoft.VisualBasic" />
+        <Reference Include="System.Windows.Forms" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Update="Views\Dialogs\AxisPosDialog.xaml.cs">
+            <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Views\Dialogs\AxisConfigDialog.xaml.cs">
+            <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Views\AxisSetContent.xaml.cs">
+            <SubType>Code</SubType>
+        </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Page Update="Views\Dialogs\AxisPosDialog.xaml">
+            <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+        </Page>
+        <Page Update="Views\Dialogs\SetGlobalVarDialog.xaml">
+            <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+            <SubType>Designer</SubType>
+        </Page>
+        <Page Update="Views\Dialogs\SetModeGlobalVarDialog.xaml">
+            <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+            <SubType>Designer</SubType>
+        </Page>
+        <Page Update="Views\Dialogs\SetRunModeDialog.xaml">
+            <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+            <SubType>Designer</SubType>
+        </Page>
+        <Page Update="Views\Dialogs\StationDialog.xaml">
+            <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+            <Generator>MSBuild:Compile</Generator>
+        </Page>
+        <Page Update="Views\Dialogs\AxisConfigDialog.xaml">
+            <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+            <SubType>Designer</SubType>
+            <Generator>MSBuild:Compile</Generator>
+        </Page>
+        <Page Update="Views\AxisSetContent.xaml">
+            <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+            <SubType>Designer</SubType>
+        </Page>
+    </ItemGroup>
+
+</Project>

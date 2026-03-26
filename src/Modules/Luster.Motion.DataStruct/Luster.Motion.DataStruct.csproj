@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Version>1.0.0.249</Version>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Remove="Enums\DeviceEngineStatus.cs" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.SourceLink.GitLab" PrivateAssets="All" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="MinVer" />
+        <!--<ProjectReference Include="..\Luster.Common.DataStruct\Luster.Common.DataStruct.csproj" />-->
+        <ProjectReference Include="..\Luster.Common.Tools\Luster.Common.Tools.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <Reference Include="HslCommunication">
+            <HintPath>..\..\..\lib\HslCommunication.dll</HintPath>
+        </Reference>
+        <Reference Include="Microsoft.CSharp" />
+    </ItemGroup>
+</Project>

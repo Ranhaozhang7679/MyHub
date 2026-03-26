@@ -1,0 +1,95 @@
+﻿<UserControl
+    x:Class="Luster.Motion.CommonUI.Views.Dialogs.CreateProjectDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:lang="clr-namespace:Luster.Motion.Assests.Langs;assembly=Luster.Motion.Assests"
+    xmlns:local="clr-namespace:Luster.Motion.CommonUI.Views.Dialogs"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    Width="700"
+    Height="500"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{DynamicResource RegionBrush}"
+    mc:Ignorable="d">
+    <Grid Margin="30,30,100,50">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="60" />
+        </Grid.RowDefinitions>
+        <TextBlock
+            VerticalAlignment="Bottom"
+            FontSize="35"
+            FontWeight="Medium"
+            Text="{Binding Title}" />
+        <hc:UniformSpacingPanel
+            Grid.Row="1"
+            Orientation="Vertical"
+            Spacing="20">
+            <TextBox
+                Height="70"
+                Margin="0,30,0,0"
+                hc:InfoElement.Necessary="True"
+                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.Recipe}}"
+                hc:TitleElement.TitlePlacement="Top"
+                Style="{StaticResource TextBoxValidationStyle}"
+                Text="{Binding Recipe, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}">
+                <hc:Interaction.Triggers>
+                    <hc:EventTrigger EventName="TextChanged">
+                        <hc:InvokeCommandAction Command="{Binding RecipeChangeCommand}" />
+                    </hc:EventTrigger>
+                </hc:Interaction.Triggers>
+            </TextBox>
+            <hc:ElementGroup Layout="Stack" Orientation="Horizontal">
+                <TextBox
+                    Height="70"
+                    MinWidth="530"
+                    hc:InfoElement.Necessary="True"
+                    hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.DataDirectory}}"
+                    hc:TitleElement.TitlePlacement="Top"
+                    Foreground="Black"
+                    IsEnabled="{Binding IsEnable}"
+                    Style="{StaticResource TextBoxValidationStyle}"
+                    Text="{Binding ProjectPath, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                <Button
+                    Height="43"
+                    MinWidth="43"
+                    VerticalAlignment="Bottom"
+                    Command="{Binding SelectPathCommand}"
+                    Content="..."
+                    Foreground="Black" />
+            </hc:ElementGroup>
+
+            <TextBox
+                Height="70"
+                hc:InfoElement.Necessary="True"
+                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.ProjectName}}"
+                hc:TitleElement.TitlePlacement="Top"
+                Foreground="Black"
+                IsEnabled="{Binding IsEnable}"
+                Style="{StaticResource TextBoxValidationStyle}"
+                Text="{Binding ProjectName, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+        </hc:UniformSpacingPanel>
+        <Grid Grid.Row="2" Margin="0,0,-60,0">
+            <StackPanel
+                HorizontalAlignment="Right"
+                VerticalAlignment="Bottom"
+                Orientation="Horizontal">
+                <Button
+                    Width="100"
+                    Margin="5"
+                    Command="{Binding CloseCommand}"
+                    CommandParameter="cancel"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.Cancel}}" />
+                <Button
+                    Width="100"
+                    Margin="5"
+                    Command="{Binding CloseCommand}"
+                    CommandParameter="OK"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.Confirm}}" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,83 @@
+﻿<UserControl
+    x:Class="Luster.SimDevice.SubSystem.Views.Dialog.PlcAddressDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:lang="clr-namespace:Luster.SimDevice.SubSystem.Langs"
+    xmlns:local="clr-namespace:Luster.SimDevice.SubSystem.Views.Dialog"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    Width="350"
+    d:DesignWidth="350"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{DynamicResource RegionBrush}"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <Style BasedOn="{StaticResource NumericUpDownPlus}" TargetType="hc:NumericUpDown">
+            <Setter Property="hc:InfoElement.TitleWidth" Value="80" />
+            <Setter Property="hc:InfoElement.TitlePlacement" Value="Left" />
+        </Style>
+    </UserControl.Resources>
+    <StackPanel Margin="10">
+        <hc:UniformSpacingPanel Orientation="Vertical" Spacing="20">
+            <hc:ComboBox
+                hc:InfoElement.Necessary="True"
+                hc:InfoElement.Placeholder="{lang:Lang Key={x:Static lang:LangKeys.DataType}}"
+                hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.DataType}}"
+                DisplayMemberPath="Desc"
+                ItemsSource="{Binding DataTypes}"
+                SelectedValue="{Binding DataType}"
+                SelectedValuePath="Value"
+                Style="{StaticResource ComboBoxValidationStyle}" />
+            <hc:ComboBox
+                hc:InfoElement.Necessary="True"
+                hc:InfoElement.Placeholder="{lang:Lang Key={x:Static lang:LangKeys.ReadOrWrite}}"
+                hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.ReadOrWrite}}"
+                DisplayMemberPath="Desc"
+                ItemsSource="{Binding PlcAddrTypes}"
+                SelectedValue="{Binding PlcAddrType}"
+                SelectedValuePath="Value"
+                Style="{StaticResource ComboBoxValidationStyle}" />
+            <TextBox
+                hc:InfoElement.Necessary="True"
+                hc:InfoElement.Placeholder="{lang:Lang Key={x:Static lang:LangKeys.StartAddress}}"
+                hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.StartAddress}}"
+                Style="{StaticResource TextBoxValidationStyle}"
+                Text="{Binding Address}" />
+            <hc:NumericUpDown
+                hc:InfoElement.Necessary="True"
+                hc:InfoElement.Placeholder="{lang:Lang Key={x:Static lang:LangKeys.AddressCount}}"
+                hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.AddressCount}}"
+                Minimum="1"
+                Value="{Binding AddressNum}" />
+            <hc:NumericUpDown
+                hc:InfoElement.Placeholder="{lang:Lang Key={x:Static lang:LangKeys.Default}}"
+                hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.Default}}"
+                Minimum="0"
+                Value="{Binding Value}" />
+            <TextBox
+                hc:InfoElement.Placeholder="{lang:Lang Key={x:Static lang:LangKeys.AddressDescription}}"
+                hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.AddressDescription}}"
+                Style="{StaticResource TextBoxValidationStyle}"
+                Text="{Binding Desc}" />
+        </hc:UniformSpacingPanel>
+        <Grid Margin="0,10,0,0">
+            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                <Button
+                    Width="80"
+                    HorizontalAlignment="Right"
+                    Command="{Binding CloseCommand}"
+                    CommandParameter="cancel"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.Cancel}}" />
+                <Button
+                    Width="80"
+                    Margin="10,0,0,0"
+                    HorizontalAlignment="Right"
+                    Command="{Binding CloseCommand}"
+                    CommandParameter="ok"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.Sure}}" />
+            </StackPanel>
+        </Grid>
+    </StackPanel>
+</UserControl>

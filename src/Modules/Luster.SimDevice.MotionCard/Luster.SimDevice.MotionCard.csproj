@@ -1,0 +1,48 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <!-- 基本属性 -->
+    <PropertyGroup>
+        <TargetFramework>net472</TargetFramework>
+        <PlatformTarget>x64</PlatformTarget>
+        <Nullable>disable</Nullable>
+
+        <!-- 启用统一拷贝功能 -->
+        <CopyToDevicesFolder>true</CopyToDevicesFolder>
+        <CopyErrorCodeFolder>true</CopyErrorCodeFolder>
+    </PropertyGroup>
+
+    <!-- 内容文件：仅标记为 None，不自动拷，由下面 Target 统一处理 -->
+    <ItemGroup>
+        <Content Include="CardErrorCode\**\*" CopyToOutputDirectory="Never" />
+    </ItemGroup>
+
+    <!-- 嵌入的 native 库（供 Costura 使用，后续可移除） -->
+    <ItemGroup>
+        <EmbeddedResource Include="Costura64\ecat_io.dll" />
+        <EmbeddedResource Include="Costura64\ecat_motion.dll" />
+        <EmbeddedResource Include="Costura64\gts.dll" />
+        <EmbeddedResource Include="Costura64\gt_rn.dll" />
+        <EmbeddedResource Include="Costura64\LAFunc.dll" />
+        <EmbeddedResource Include="Costura64\LTDMC.dll" />
+        <EmbeddedResource Include="Costura64\MachineBuilding.dll" />
+        <EmbeddedResource Include="Costura64\PIFunc.dll" />
+        <EmbeddedResource Include="Costura64\VFunc.dll" />
+    </ItemGroup>
+
+    <!-- 包引用 -->
+    <ItemGroup>
+        <PackageReference Include="Costura.Fody">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Newtonsoft.Json" />
+        <PackageReference Include="MinVer" />
+    </ItemGroup>
+
+    <!-- 项目引用 -->
+    <ItemGroup>
+        <!--<ProjectReference Include="..\Luster.Motion.DataStruct\Luster.Motion.DataStruct.csproj" />-->
+        <ProjectReference Include="..\Luster.SimDevice\Luster.SimDevice.csproj" />
+    </ItemGroup>
+
+</Project>

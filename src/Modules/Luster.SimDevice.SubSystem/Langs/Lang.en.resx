@@ -1,0 +1,1218 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Axis" xml:space="preserve">
+    <value>Axis</value>
+  </data>
+  <data name="Camera" xml:space="preserve">
+    <value>Camera</value>
+  </data>
+  <data name="Device" xml:space="preserve">
+    <value>Hardware Device</value>
+  </data>
+  <data name="LangComment" xml:space="preserve">
+    <value>Looks up a localized string similar to "{0}".</value>
+  </data>
+  <data name="LightController" xml:space="preserve">
+    <value>LightController</value>
+  </data>
+  <data name="LineLaser" xml:space="preserve">
+    <value>LineLaser</value>
+  </data>
+  <data name="MotionCard" xml:space="preserve">
+    <value>MotionCard</value>
+  </data>
+  <data name="Null" xml:space="preserve">
+    <value>Null</value>
+  </data>
+  <data name="Title" xml:space="preserve">
+    <value>Title</value>
+  </data>
+  <data name="VAxis" xml:space="preserve">
+    <value>VAxis</value>
+  </data>
+  <data name="VAxis3" xml:space="preserve">
+    <value>VAxis3</value>
+  </data>
+  <data name="VAxisM" xml:space="preserve">
+    <value>VVxisM</value>
+  </data>
+  <data name="VBelt" xml:space="preserve">
+    <value>VBelt</value>
+  </data>
+  <data name="VCamera" xml:space="preserve">
+    <value>VCamera</value>
+  </data>
+  <data name="VCylinder" xml:space="preserve">
+    <value>VCylinder</value>
+  </data>
+  <data name="VDevice" xml:space="preserve">
+    <value>Virtual Device</value>
+  </data>
+  <data name="VFeeder" xml:space="preserve">
+    <value>VFeeder</value>
+  </data>
+  <data name="VInputIO" xml:space="preserve">
+    <value>VInputIO</value>
+  </data>
+  <data name="VIO" xml:space="preserve">
+    <value>VIO</value>
+  </data>
+  <data name="VLineLaser" xml:space="preserve">
+    <value>VLineLaser</value>
+  </data>
+  <data name="VOutputIO" xml:space="preserve">
+    <value>VOutputIO</value>
+  </data>
+  <data name="VVacuum" xml:space="preserve">
+    <value>VVacuum</value>
+  </data>
+  <data name="VESD" xml:space="preserve">
+    <value>VEScrewdriver</value>
+  </data>
+  <data name="VTricolorlamp" xml:space="preserve">
+    <value>VTricolorlamp</value>
+  </data>
+  <data name="VPrinter" xml:space="preserve">
+    <value>VPrinter</value>
+  </data>
+  <data name="Printer" xml:space="preserve">
+    <value>Printer</value>
+  </data>
+  <data name="VMCylinder" xml:space="preserve">
+    <value>VMCylinder</value>
+  </data>
+  <data name="VSerialPort" xml:space="preserve">
+    <value>VSerialPort</value>
+  </data>
+  <data name="VSocket" xml:space="preserve">
+    <value>VSocket</value>
+  </data>
+  <data name="VIOSimulation" xml:space="preserve">
+    <value>VIOSimulation</value>
+  </data>
+  <data name="VCommuncation" xml:space="preserve">
+    <value>VCommuncation</value>
+  </data>
+  <data name="VPCylinder" xml:space="preserve">
+    <value>VPCylinder</value>
+  </data>
+  <data name="VPlc" xml:space="preserve">
+    <value>PLC</value>
+  </data>
+  <data name="CommuncationAction" xml:space="preserve">
+    <value>CommuncationAction</value>
+  </data>
+  <data name="ImportPlcAddress" xml:space="preserve">
+    <value>ImportPlcAddress</value>
+  </data>
+  <data name="PlcAddress" xml:space="preserve">
+    <value>PlcAddress</value>
+  </data>
+  <data name="Communcation" xml:space="preserve">
+    <value>Communcation</value>
+  </data>
+  <data name="Maintain" xml:space="preserve">
+    <value>Device Maintain</value>
+  </data>
+  <data name="Management" xml:space="preserve">
+    <value>Device Management</value>
+  </data>
+  <data name="CheckRecord" xml:space="preserve">
+    <value>CheckRecord</value>
+  </data>
+  <data name="CheckResult" xml:space="preserve">
+    <value>Result</value>
+  </data>
+  <data name="CheckTime" xml:space="preserve">
+    <value>Time</value>
+  </data>
+  <data name="DeviceManagement" xml:space="preserve">
+    <value>DeviceManagement</value>
+  </data>
+  <data name="Down" xml:space="preserve">
+    <value>Down</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="EmergencyStop" xml:space="preserve">
+    <value>EmergencyStop</value>
+  </data>
+  <data name="ErrorMessage" xml:space="preserve">
+    <value>ErrerMessage</value>
+  </data>
+  <data name="Finish" xml:space="preserve">
+    <value>Finish</value>
+  </data>
+  <data name="Home" xml:space="preserve">
+    <value>Home</value>
+  </data>
+  <data name="HomeDevice" xml:space="preserve">
+    <value>HomeDevice</value>
+  </data>
+  <data name="Index" xml:space="preserve">
+    <value>Index</value>
+  </data>
+  <data name="MonitorDevice" xml:space="preserve">
+    <value>MonitorDevice</value>
+  </data>
+  <data name="MonitorValue" xml:space="preserve">
+    <value>MonitorValue</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="NeedHome" xml:space="preserve">
+    <value>NeedHome</value>
+  </data>
+  <data name="NeedShield" xml:space="preserve">
+    <value>NeedShield</value>
+  </data>
+  <data name="Operation" xml:space="preserve">
+    <value>Operation</value>
+  </data>
+  <data name="ShieldDevice" xml:space="preserve">
+    <value>ShieldDevice</value>
+  </data>
+  <data name="StartCheck" xml:space="preserve">
+    <value>StartCheck</value>
+  </data>
+  <data name="UnMonitorDevice" xml:space="preserve">
+    <value>UnMonitorDevice（Double click to add)</value>
+  </data>
+  <data name="Up" xml:space="preserve">
+    <value>Up</value>
+  </data>
+  <data name="2.5DDepthMap" xml:space="preserve">
+    <value>2.5D DepthMap</value>
+  </data>
+  <data name="2DSkeletonMap" xml:space="preserve">
+    <value>2D SkeletonMap</value>
+  </data>
+  <data name="AbsoluteMove" xml:space="preserve">
+    <value>AbsoluteMove</value>
+  </data>
+  <data name="Acc" xml:space="preserve">
+    <value>Acc(mm²)</value>
+  </data>
+  <data name="ActionArea" xml:space="preserve">
+    <value>ActionArea</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Brand" xml:space="preserve">
+    <value>Brand</value>
+  </data>
+  <data name="Browse" xml:space="preserve">
+    <value>Browse</value>
+  </data>
+  <data name="ChannelCount" xml:space="preserve">
+    <value>ChannelCount</value>
+  </data>
+  <data name="ClearError" xml:space="preserve">
+    <value>ClearError</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="CollectRows" xml:space="preserve">
+    <value>Collect Rows</value>
+  </data>
+  <data name="CommuncationAddress" xml:space="preserve">
+    <value>CommuncationAddress</value>
+  </data>
+  <data name="CommuncationTest" xml:space="preserve">
+    <value>Communcation Debug</value>
+  </data>
+  <data name="CommuncationType" xml:space="preserve">
+    <value>CommuncationType</value>
+  </data>
+  <data name="Connect" xml:space="preserve">
+    <value>Connect</value>
+  </data>
+  <data name="ContinuousSend" xml:space="preserve">
+    <value>Sustain</value>
+  </data>
+  <data name="CreateROI" xml:space="preserve">
+    <value>CreateROI</value>
+  </data>
+  <data name="DataTrigger" xml:space="preserve">
+    <value>DataTrigger</value>
+  </data>
+  <data name="DataType" xml:space="preserve">
+    <value>DataType</value>
+  </data>
+  <data name="Dcc" xml:space="preserve">
+    <value>Dcc(mm²)</value>
+  </data>
+  <data name="Delay" xml:space="preserve">
+    <value>Delay(ms)</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Detector" xml:space="preserve">
+    <value>Detector</value>
+  </data>
+  <data name="DeviceList" xml:space="preserve">
+    <value>DeviceList</value>
+  </data>
+  <data name="Diatance" xml:space="preserve">
+    <value>Diatance(mm)</value>
+  </data>
+  <data name="DisplayType" xml:space="preserve">
+    <value>DisplayType</value>
+  </data>
+  <data name="EncoderType" xml:space="preserve">
+    <value>EncoderType</value>
+  </data>
+  <data name="ExposureTime" xml:space="preserve">
+    <value>ExposureTime</value>
+  </data>
+  <data name="Frame" xml:space="preserve">
+    <value>Frame</value>
+  </data>
+  <data name="HomeZero" xml:space="preserve">
+    <value>HomeZero</value>
+  </data>
+  <data name="IntensityImage" xml:space="preserve">
+    <value>IntensityImage</value>
+  </data>
+  <data name="IOName" xml:space="preserve">
+    <value>IOName</value>
+  </data>
+  <data name="Jog" xml:space="preserve">
+    <value>JOG</value>
+  </data>
+  <data name="LaserConfigutation" xml:space="preserve">
+    <value>Laser Configutation</value>
+  </data>
+  <data name="LaserDataTriggerTip" xml:space="preserve">
+    <value>Laser data trigger type</value>
+  </data>
+  <data name="LaserHardTrrigerConfigutation" xml:space="preserve">
+    <value>LaserHardTrrigerConfigutation</value>
+  </data>
+  <data name="LaserJob" xml:space="preserve">
+    <value>Laser Job</value>
+  </data>
+  <data name="LaserName" xml:space="preserve">
+    <value>LaserName</value>
+  </data>
+  <data name="LaserStartIO" xml:space="preserve">
+    <value>Laser start trigger io</value>
+  </data>
+  <data name="LaserStartTip" xml:space="preserve">
+    <value>Laser start trigger type</value>
+  </data>
+  <data name="Load" xml:space="preserve">
+    <value>Load</value>
+  </data>
+  <data name="LocationRange" xml:space="preserve">
+    <value>LocationRange(mm)</value>
+  </data>
+  <data name="MapType" xml:space="preserve">
+    <value>Skeleton or depth map</value>
+  </data>
+  <data name="ModuleName" xml:space="preserve">
+    <value>ModuleName</value>
+  </data>
+  <data name="ModuleOrName" xml:space="preserve">
+    <value>ModuleOrName</value>
+  </data>
+  <data name="MotionTest" xml:space="preserve">
+    <value>Motion Debug</value>
+  </data>
+  <data name="Move" xml:space="preserve">
+    <value>Move</value>
+  </data>
+  <data name="MoveDistance" xml:space="preserve">
+    <value>MoveDistance</value>
+  </data>
+  <data name="MoveType" xml:space="preserve">
+    <value>MoveType</value>
+  </data>
+  <data name="NextCommand" xml:space="preserve">
+    <value>NextCommand</value>
+  </data>
+  <data name="OfflineConfigutation" xml:space="preserve">
+    <value>OfflineConfigutation</value>
+  </data>
+  <data name="OfflinePointCloud" xml:space="preserve">
+    <value>OfflinePointCloud</value>
+  </data>
+  <data name="Open" xml:space="preserve">
+    <value>Open</value>
+  </data>
+  <data name="PacketData" xml:space="preserve">
+    <value>PacketData</value>
+  </data>
+  <data name="Point" xml:space="preserve">
+    <value>Point</value>
+  </data>
+  <data name="Position" xml:space="preserve">
+    <value>Position(mm)</value>
+  </data>
+  <data name="PressDistance" xml:space="preserve">
+    <value>Press Distance</value>
+  </data>
+  <data name="Pressure" xml:space="preserve">
+    <value>Pressure(N)</value>
+  </data>
+  <data name="Protocol" xml:space="preserve">
+    <value>Protocol</value>
+  </data>
+  <data name="ReadData" xml:space="preserve">
+    <value>ReadData</value>
+  </data>
+  <data name="ReadOnly" xml:space="preserve">
+    <value>ReadOnly</value>
+  </data>
+  <data name="RelativeMove" xml:space="preserve">
+    <value>RelativeMove</value>
+  </data>
+  <data name="ROIHeight" xml:space="preserve">
+    <value>ROI Height</value>
+  </data>
+  <data name="ROIStartX" xml:space="preserve">
+    <value>ROI StartX</value>
+  </data>
+  <data name="ROIStartY" xml:space="preserve">
+    <value>ROI StartY</value>
+  </data>
+  <data name="ROIWidth" xml:space="preserve">
+    <value>ROI Width</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Select" xml:space="preserve">
+    <value>Select</value>
+  </data>
+  <data name="SelectAxis" xml:space="preserve">
+    <value>Please select move Axis</value>
+  </data>
+  <data name="SelectEncoderTip" xml:space="preserve">
+    <value>Please select encoder</value>
+  </data>
+  <data name="SelectLaserConfigutation" xml:space="preserve">
+    <value>Select laser configutation</value>
+  </data>
+  <data name="SelectOfflinePointCloud" xml:space="preserve">
+    <value>Please select offline point cloud</value>
+  </data>
+  <data name="SendPacket" xml:space="preserve">
+    <value>Send</value>
+  </data>
+  <data name="SerialNumber" xml:space="preserve">
+    <value>Serial-Number</value>
+  </data>
+  <data name="ShowPointCloud" xml:space="preserve">
+    <value>ShowPointCloud</value>
+  </data>
+  <data name="Speed" xml:space="preserve">
+    <value>Speed(mm)</value>
+  </data>
+  <data name="StartIO" xml:space="preserve">
+    <value>StartIO</value>
+  </data>
+  <data name="StartTrigger" xml:space="preserve">
+    <value>StartTrigger</value>
+  </data>
+  <data name="StationNO" xml:space="preserve">
+    <value>StationNO</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="Stop" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="Sure" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="TriggerPluseRatio" xml:space="preserve">
+    <value>TriggerPluseRatio</value>
+  </data>
+  <data name="Value" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="Write" xml:space="preserve">
+    <value>Write</value>
+  </data>
+  <data name="WriteData" xml:space="preserve">
+    <value>WriteData</value>
+  </data>
+  <data name="WritePacket" xml:space="preserve">
+    <value>Write</value>
+  </data>
+  <data name="WriteValue" xml:space="preserve">
+    <value>WriteValue</value>
+  </data>
+  <data name="AddAddress" xml:space="preserve">
+    <value>AddAddress</value>
+  </data>
+  <data name="Address" xml:space="preserve">
+    <value>Address</value>
+  </data>
+  <data name="AddressDescription" xml:space="preserve">
+    <value>AddressDescription</value>
+  </data>
+  <data name="AddressList" xml:space="preserve">
+    <value>AddressList</value>
+  </data>
+  <data name="DataValue" xml:space="preserve">
+    <value>DataValue</value>
+  </data>
+  <data name="Export" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="Frequency" xml:space="preserve">
+    <value>Frequency(ms)</value>
+  </data>
+  <data name="Inport" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="ReadAll" xml:space="preserve">
+    <value>ReadAll</value>
+  </data>
+  <data name="ReadOrWrite" xml:space="preserve">
+    <value>ReadOrWrite</value>
+  </data>
+  <data name="AccSpeed" xml:space="preserve">
+    <value>AccSpeed</value>
+  </data>
+  <data name="AxisNo" xml:space="preserve">
+    <value>AxisNo</value>
+  </data>
+  <data name="AxisPosition" xml:space="preserve">
+    <value>AxisPosition</value>
+  </data>
+  <data name="AxisType" xml:space="preserve">
+    <value>AxisType</value>
+  </data>
+  <data name="CurrentPosition" xml:space="preserve">
+    <value>CurrentPosition</value>
+  </data>
+  <data name="DccSpeed" xml:space="preserve">
+    <value>DccSpeed</value>
+  </data>
+  <data name="Disable" xml:space="preserve">
+    <value>Disable</value>
+  </data>
+  <data name="ForwardTrip" xml:space="preserve">
+    <value>ForwardTrip</value>
+  </data>
+  <data name="HighSpeed" xml:space="preserve">
+    <value>HighSpeed</value>
+  </data>
+  <data name="HomeParas" xml:space="preserve">
+    <value>HomeParas</value>
+  </data>
+  <data name="HomeType" xml:space="preserve">
+    <value>HomeType</value>
+  </data>
+  <data name="JogSpped" xml:space="preserve">
+    <value>JogSpped</value>
+  </data>
+  <data name="LowSpeed" xml:space="preserve">
+    <value>LowSpeed</value>
+  </data>
+  <data name="MaxPosition" xml:space="preserve">
+    <value>MaxPosition</value>
+  </data>
+  <data name="MinPosition" xml:space="preserve">
+    <value>MinPosition</value>
+  </data>
+  <data name="MovePrecondition" xml:space="preserve">
+    <value>MovePrecondition</value>
+  </data>
+  <data name="NegativeTrip" xml:space="preserve">
+    <value>NegativeTrip</value>
+  </data>
+  <data name="NormalParas" xml:space="preserve">
+    <value>NormalParas</value>
+  </data>
+  <data name="PlaceTime" xml:space="preserve">
+    <value>PlaceTime</value>
+  </data>
+  <data name="Priority" xml:space="preserve">
+    <value>Priority</value>
+  </data>
+  <data name="PulseCount" xml:space="preserve">
+    <value>PulseCount</value>
+  </data>
+  <data name="PulseRatio" xml:space="preserve">
+    <value>PulseRatio</value>
+  </data>
+  <data name="RunSpeed" xml:space="preserve">
+    <value>RunSpeed</value>
+  </data>
+  <data name="SpeedCoefficient" xml:space="preserve">
+    <value>SpeedCoef</value>
+  </data>
+  <data name="SpeedTip" xml:space="preserve">
+    <value>RealSpeed=Speed * Coef</value>
+  </data>
+  <data name="ZeroOffset" xml:space="preserve">
+    <value>ZeroOffset</value>
+  </data>
+  <data name="AnalogIO" xml:space="preserve">
+    <value>AnalogIO</value>
+  </data>
+  <data name="CurrentValue" xml:space="preserve">
+    <value>CurrentValue</value>
+  </data>
+  <data name="DigitalIO" xml:space="preserve">
+    <value>DigitalIO</value>
+  </data>
+  <data name="PerPageCount" xml:space="preserve">
+    <value>PerPageCount</value>
+  </data>
+  <data name="PutValue" xml:space="preserve">
+    <value>PutValue</value>
+  </data>
+  <data name="SimulationValue" xml:space="preserve">
+    <value>SimulationValue</value>
+  </data>
+  <data name="Count" xml:space="preserve">
+    <value>Count</value>
+  </data>
+  <data name="CylinderType" xml:space="preserve">
+    <value>CylinderType</value>
+  </data>
+  <data name="Extend" xml:space="preserve">
+    <value>Extend</value>
+  </data>
+  <data name="ExtendDI" xml:space="preserve">
+    <value>ExtendDI</value>
+  </data>
+  <data name="ExtendDO" xml:space="preserve">
+    <value>ExtendDO</value>
+  </data>
+  <data name="ExtendStatus" xml:space="preserve">
+    <value>ExtendStatus</value>
+  </data>
+  <data name="LinearComplement" xml:space="preserve">
+    <value>LinearComplement</value>
+  </data>
+  <data name="Retract" xml:space="preserve">
+    <value>Retract</value>
+  </data>
+  <data name="RetractDI" xml:space="preserve">
+    <value>RetractDI</value>
+  </data>
+  <data name="RetractDO" xml:space="preserve">
+    <value>RetractDO</value>
+  </data>
+  <data name="RetractStatus" xml:space="preserve">
+    <value>RetractStatus</value>
+  </data>
+  <data name="VAxisListTip" xml:space="preserve">
+    <value>Axis list(Double click to add)</value>
+  </data>
+  <data name="Blow" xml:space="preserve">
+    <value>Blow</value>
+  </data>
+  <data name="BlowClose" xml:space="preserve">
+    <value>Blow/Close</value>
+  </data>
+  <data name="BlowDO" xml:space="preserve">
+    <value>BlowDO</value>
+  </data>
+  <data name="Suck" xml:space="preserve">
+    <value>Suck</value>
+  </data>
+  <data name="SuckDO" xml:space="preserve">
+    <value>SuckDO</value>
+  </data>
+  <data name="VacuumSensor" xml:space="preserve">
+    <value>VacuumSensor</value>
+  </data>
+  <data name="VacuumSensorDI" xml:space="preserve">
+    <value>VacuumSensorDI</value>
+  </data>
+  <data name="Brightness" xml:space="preserve">
+    <value>Brightness</value>
+  </data>
+  <data name="CameraConfigutation" xml:space="preserve">
+    <value>CameraConfigutation</value>
+  </data>
+  <data name="CameraWindow" xml:space="preserve">
+    <value>CameraWindow</value>
+  </data>
+  <data name="Channel" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="Clear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="CurrentScale" xml:space="preserve">
+    <value>CurrentScale</value>
+  </data>
+  <data name="Grab" xml:space="preserve">
+    <value>Grab</value>
+  </data>
+  <data name="LightConfigutation" xml:space="preserve">
+    <value>LightConfigutation</value>
+  </data>
+  <data name="LightDelayToOff" xml:space="preserve">
+    <value>Delay To Off(ms)</value>
+  </data>
+  <data name="MaintainScale" xml:space="preserve">
+    <value>MaintainScale</value>
+  </data>
+  <data name="MaxScale" xml:space="preserve">
+    <value>MaxScale</value>
+  </data>
+  <data name="OfflineImage" xml:space="preserve">
+    <value>ImagePath</value>
+  </data>
+  <data name="OtherConfigutation" xml:space="preserve">
+    <value>OtherConfigutation</value>
+  </data>
+  <data name="Print" xml:space="preserve">
+    <value>Print</value>
+  </data>
+  <data name="Process" xml:space="preserve">
+    <value>Process</value>
+  </data>
+  <data name="SelectOfflineImage" xml:space="preserve">
+    <value>Please select offline image</value>
+  </data>
+  <data name="Set" xml:space="preserve">
+    <value>Set</value>
+  </data>
+  <data name="Shot" xml:space="preserve">
+    <value>Shot</value>
+  </data>
+  <data name="TagHeight" xml:space="preserve">
+    <value>TagHeight</value>
+  </data>
+  <data name="TagWidth" xml:space="preserve">
+    <value>TagWidth</value>
+  </data>
+  <data name="Used" xml:space="preserve">
+    <value>Used</value>
+  </data>
+  <data name="ActionName" xml:space="preserve">
+    <value>ActionName</value>
+  </data>
+  <data name="ActionType" xml:space="preserve">
+    <value>ActionType</value>
+  </data>
+  <data name="AddressCount" xml:space="preserve">
+    <value>AddressCount</value>
+  </data>
+  <data name="AutoScan" xml:space="preserve">
+    <value>AutoScan</value>
+  </data>
+  <data name="AxisCount" xml:space="preserve">
+    <value>AxisCount</value>
+  </data>
+  <data name="BaudRate" xml:space="preserve">
+    <value>BaudRate</value>
+  </data>
+  <data name="Behavior" xml:space="preserve">
+    <value>Behavior</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Comm" xml:space="preserve">
+    <value>Comm</value>
+  </data>
+  <data name="CommType" xml:space="preserve">
+    <value>CommType</value>
+  </data>
+  <data name="DataBits" xml:space="preserve">
+    <value>DataBits</value>
+  </data>
+  <data name="Default" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="DoubleControl" xml:space="preserve">
+    <value>Double Control</value>
+  </data>
+  <data name="EighthIO" xml:space="preserve">
+    <value>Eighth IO</value>
+  </data>
+  <data name="ExcelFile" xml:space="preserve">
+    <value>ExcelFile</value>
+  </data>
+  <data name="ExtendDetetor" xml:space="preserve">
+    <value>ExtendDetetor</value>
+  </data>
+  <data name="FifthIO" xml:space="preserve">
+    <value>Fifth IO</value>
+  </data>
+  <data name="FirstIO" xml:space="preserve">
+    <value>First IO</value>
+  </data>
+  <data name="FourthIO" xml:space="preserve">
+    <value>Fourth IO</value>
+  </data>
+  <data name="InIOName" xml:space="preserve">
+    <value>Inpnt IO name</value>
+  </data>
+  <data name="IOCount" xml:space="preserve">
+    <value>IO Count</value>
+  </data>
+  <data name="IOType" xml:space="preserve">
+    <value>IOType</value>
+  </data>
+  <data name="IPAddress" xml:space="preserve">
+    <value>IP Address</value>
+  </data>
+  <data name="NeedDetetor" xml:space="preserve">
+    <value>NeedDetetor</value>
+  </data>
+  <data name="OutIOName" xml:space="preserve">
+    <value>Output IO name</value>
+  </data>
+  <data name="Parity" xml:space="preserve">
+    <value>Parity</value>
+  </data>
+  <data name="PleaseInputAxisName" xml:space="preserve">
+    <value>Please input axis name</value>
+  </data>
+  <data name="PleaseSelectCommType" xml:space="preserve">
+    <value>Please select comm type</value>
+  </data>
+  <data name="Port" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="RetractDetetor" xml:space="preserve">
+    <value>RetractDetetor</value>
+  </data>
+  <data name="SecondIO" xml:space="preserve">
+    <value>Second IO</value>
+  </data>
+  <data name="SelectExcelFile" xml:space="preserve">
+    <value>Please select Excel file</value>
+  </data>
+  <data name="SelectMotinCard" xml:space="preserve">
+    <value>Please select motion card</value>
+  </data>
+  <data name="SeventhIO" xml:space="preserve">
+    <value>Seventh IO</value>
+  </data>
+  <data name="SingleControl" xml:space="preserve">
+    <value>Single Control</value>
+  </data>
+  <data name="SixthIO" xml:space="preserve">
+    <value>Sixth IO</value>
+  </data>
+  <data name="Slot" xml:space="preserve">
+    <value>Slot</value>
+  </data>
+  <data name="StartAddress" xml:space="preserve">
+    <value>StartAddress</value>
+  </data>
+  <data name="StartIndex" xml:space="preserve">
+    <value>StartIndex</value>
+  </data>
+  <data name="StopBits" xml:space="preserve">
+    <value>StopBits</value>
+  </data>
+  <data name="ThirdIO" xml:space="preserve">
+    <value>Third IO</value>
+  </data>
+  <data name="USB" xml:space="preserve">
+    <value>USB</value>
+  </data>
+  <data name="DownEnable" xml:space="preserve">
+    <value>DownEnable</value>
+  </data>
+  <data name="Teach" xml:space="preserve">
+    <value>Teach</value>
+  </data>
+  <data name="UppperEnable" xml:space="preserve">
+    <value>UppperEnable</value>
+  </data>
+  <data name="LaserConfigutationPath" xml:space="preserve">
+    <value>Laser Configutation Path</value>
+  </data>
+  <data name="SelectLaserConfigutationPath" xml:space="preserve">
+    <value>Select Laser Configutation Path</value>
+  </data>
+  <data name="Button" xml:space="preserve">
+    <value>Button</value>
+  </data>
+  <data name="ButtonLight" xml:space="preserve">
+    <value>Button Light</value>
+  </data>
+  <data name="FirstAxis" xml:space="preserve">
+    <value>First Axis</value>
+  </data>
+  <data name="FourthAxis" xml:space="preserve">
+    <value>Fourth Axis</value>
+  </data>
+  <data name="Match" xml:space="preserve">
+    <value>Match</value>
+  </data>
+  <data name="MaxPositionWithUnit" xml:space="preserve">
+    <value>MaxPosition(Unit mm)</value>
+  </data>
+  <data name="MinPositionWithUnit" xml:space="preserve">
+    <value>MinPosition(Unit mm)</value>
+  </data>
+  <data name="Read" xml:space="preserve">
+    <value>Read</value>
+  </data>
+  <data name="SafeDevice" xml:space="preserve">
+    <value>SafeDevice</value>
+  </data>
+  <data name="SecondAxis" xml:space="preserve">
+    <value>Second Axis</value>
+  </data>
+  <data name="SelectBrand" xml:space="preserve">
+    <value>Please select brand</value>
+  </data>
+  <data name="SelectSafeDevice" xml:space="preserve">
+    <value>Please select safe device</value>
+  </data>
+  <data name="ThirdAxis" xml:space="preserve">
+    <value>Third Axis</value>
+  </data>
+  <data name="IOMontor" xml:space="preserve">
+    <value>IOMontor</value>
+  </data>
+  <data name="SafeDoor" xml:space="preserve">
+    <value>SafeDoor</value>
+  </data>
+  <data name="BatchImport" xml:space="preserve">
+    <value>BatchImport</value>
+  </data>
+  <data name="Modify" xml:space="preserve">
+    <value>Modify</value>
+  </data>
+  <data name="Update" xml:space="preserve">
+    <value>Update</value>
+  </data>
+  <data name="AnalogIn" xml:space="preserve">
+    <value>AnalogIn</value>
+  </data>
+  <data name="AnalogOut" xml:space="preserve">
+    <value>AnalogOut</value>
+  </data>
+  <data name="DigitalIn" xml:space="preserve">
+    <value>DigitalIn</value>
+  </data>
+  <data name="DigitalOut" xml:space="preserve">
+    <value>DigitalOut</value>
+  </data>
+  <data name="AlarmConfig" xml:space="preserve">
+    <value>AlarmConfig</value>
+  </data>
+  <data name="AlarmConfigCustom" xml:space="preserve">
+    <value>AlarmConfigCustom</value>
+  </data>
+  <data name="AlarmCode" xml:space="preserve">
+    <value>AlarmCode</value>
+  </data>
+  <data name="DeviceName" xml:space="preserve">
+    <value>DeviceName</value>
+  </data>
+  <data name="EndianType" xml:space="preserve">
+    <value>EndianType</value>
+  </data>
+  <data name="AxisPosConfig" xml:space="preserve">
+    <value>AxisPosConfig</value>
+  </data>
+  <data name="MotionPremise" xml:space="preserve">
+    <value>MotionPremise</value>
+  </data>
+  <data name="Empty" xml:space="preserve">
+    <value>Empty</value>
+  </data>
+  <data name="AxisMotionPremise" xml:space="preserve">
+    <value>AxisMotionPremise</value>
+  </data>
+  <data name="PosionMotionPremise" xml:space="preserve">
+    <value>PosionMotionPremise</value>
+  </data>
+  <data name="Robot" xml:space="preserve">
+    <value>Robot</value>
+  </data>
+  <data name="VRobot" xml:space="preserve">
+    <value>VRobot</value>
+  </data>
+  <data name="RobotName" xml:space="preserve">
+    <value>RobotName</value>
+  </data>
+  <data name="RobotRunModel" xml:space="preserve">
+    <value>RobotRunModel</value>
+  </data>
+  <data name="RobotRunModelTip" xml:space="preserve">
+    <value>RobotRunModelTip</value>
+  </data>
+  <data name="CoordinateSystem" xml:space="preserve">
+    <value>CoordinateSystem</value>
+  </data>
+  <data name="Drag" xml:space="preserve">
+    <value>Drag</value>
+  </data>
+  <data name="SocketType" xml:space="preserve">
+    <value>SocketType</value>
+  </data>
+  <data name="Jump" xml:space="preserve">
+    <value>Jump</value>
+  </data>
+  <data name="ModuleConfig" xml:space="preserve">
+    <value>ModuleConfig</value>
+  </data>
+  <data name="VFlyingPhoto" xml:space="preserve">
+    <value>VFlyingPhoto</value>
+  </data>
+  <data name="FlyingPhoto" xml:space="preserve">
+    <value>FlyingPhoto</value>
+  </data>
+  <data name="FlyingPhotoName" xml:space="preserve">
+    <value>FlyingPhotoName</value>
+  </data>
+  <data name="SlaveNo" xml:space="preserve">
+    <value>SlaveNo</value>
+  </data>
+  <data name="TriggerNo" xml:space="preserve">
+    <value>TriggerNo</value>
+  </data>
+  <data name="PositionPulse" xml:space="preserve">
+    <value>PositionPulse</value>
+  </data>
+  <data name="TriggerNoType" xml:space="preserve">
+    <value>TriggerNoType</value>
+  </data>
+  <data name="LCTNo" xml:space="preserve">
+    <value>LCTNo</value>
+  </data>
+  <data name="TriggerCount" xml:space="preserve">
+    <value>TriggerCount</value>
+  </data>
+  <data name="TriggerFifoCount" xml:space="preserve">
+    <value>TriggerFifoCount</value>
+  </data>
+  <data name="TriggerNoCount" xml:space="preserve">
+    <value>TriggerNoCount</value>
+  </data>
+  <data name="PulseWidth" xml:space="preserve">
+    <value>PulseWidth</value>
+  </data>
+  <data name="SubDefinite" xml:space="preserve">
+    <value>SubDefinite</value>
+  </data>
+  <data name="ExtendName" xml:space="preserve">
+    <value>ExtendName</value>
+  </data>
+  <data name="InExtendName" xml:space="preserve">
+    <value>InExtendName</value>
+  </data>
+  <data name="InRetractName" xml:space="preserve">
+    <value>InRetractName</value>
+  </data>
+  <data name="RetractName" xml:space="preserve">
+    <value>RetractName</value>
+  </data>
+  <data name="CircleDisplacement" xml:space="preserve">
+    <value>CircleDisplacement</value>
+  </data>
+  <data name="CommandPulse" xml:space="preserve">
+    <value>CommandPulse</value>
+  </data>
+  <data name="PulseCal" xml:space="preserve">
+    <value>PulseCal</value>
+  </data>
+  <data name="GearRatioDenominator" xml:space="preserve">
+    <value>GearRatioDenominator</value>
+  </data>
+  <data name="GearRatioNumerator" xml:space="preserve">
+    <value>GearRatioNumerator</value>
+  </data>
+  <data name="HaveTransmission" xml:space="preserve">
+    <value>HaveTransmission</value>
+  </data>
+  <data name="Calculate" xml:space="preserve">
+    <value>Calculate</value>
+  </data>
+  <data name="EncoderNo" xml:space="preserve">
+    <value>EncoderNo</value>
+  </data>
+  <data name="TxtReader" xml:space="preserve">
+    <value>TxtReader</value>
+  </data>
+  <data name="ExportToTxt" xml:space="preserve">
+    <value>ExportToTxt</value>
+  </data>
+  <data name="XJCPressureSensor" xml:space="preserve">
+    <value>XJCPressureSensor</value>
+  </data>
+  <data name="TaikeCurve" xml:space="preserve">
+    <value>TaikeCurve</value>
+  </data>
+  <data name="TaikeContent" xml:space="preserve">
+    <value>TaikeContent</value>
+  </data>
+  <data name="ModbusRTU" xml:space="preserve">
+    <value>ModbusRTU</value>
+  </data>
+  <data name="PressDriver" xml:space="preserve">
+    <value>PressDriver</value>
+  </data>
+  <data name="LastMonthMaintenance" xml:space="preserve">
+    <value>LastMonthMaintenance</value>
+  </data>
+  <data name="LastWeekMaintenance" xml:space="preserve">
+    <value>LastWeekMaintenance</value>
+  </data>
+  <data name="Maintenance" xml:space="preserve">
+    <value>Maintenance</value>
+  </data>
+  <data name="VisionProcessData" xml:space="preserve">
+    <value>VisionProcessData</value>
+  </data>
+  <data name="Axis1" xml:space="preserve">
+    <value>Axis</value>
+  </data>
+  <data name="Enabled" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="SlaveName" xml:space="preserve">
+    <value>SlaveName</value>
+  </data>
+  <data name="AxisPML" xml:space="preserve">
+    <value>AxisPML</value>
+  </data>
+  <data name="AxisIODebug" xml:space="preserve">
+    <value>AxisIODebug</value>
+  </data>
+  <data name="VAxisIOAxisListTip" xml:space="preserve">
+    <value>VAxisIOAxisListTip</value>
+  </data>
+  <data name="PositionParameterConfig" xml:space="preserve">
+    <value>PositionParameterConfig</value>
+  </data>
+  <data name="AxisForward" xml:space="preserve">
+    <value>AxisForward</value>
+  </data>
+  <data name="KeyParameterConfig" xml:space="preserve">
+    <value>KeyParameterConfig</value>
+  </data>
+</root>

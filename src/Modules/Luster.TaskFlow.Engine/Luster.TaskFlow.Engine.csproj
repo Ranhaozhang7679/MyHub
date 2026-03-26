@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!--<ProjectReference Include="..\Luster.Common.Tools\Luster.Common.Tools.csproj" />-->
+        <ProjectReference Include="..\Luster.ThreeD.Algorithm\Luster.ThreeD.Algorithm.csproj" />
+        <ProjectReference Include="..\Luster.TaskFlow.Common\Luster.TaskFlow.Common.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="MinVer" />
+    </ItemGroup>
+</Project>

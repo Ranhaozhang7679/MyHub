@@ -1,0 +1,26 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctrl="clr-namespace:Luster.Controls.Wpf.Controls">
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/Luster.Controls.Wpf;component/TreeEx/Generic.xaml" />
+        <ResourceDictionary Source="/Luster.Controls.Wpf;component/CanvasDrag/Generic.xaml" />
+        <ResourceDictionary Source="/Luster.Controls.Wpf;component/ListEx/Generic.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+
+    <ItemsPanelTemplate x:Key="CheckGroupHorizontalItemsPanelTemplate">
+        <UniformGrid FocusVisualStyle="{x:Null}" Rows="1" />
+    </ItemsPanelTemplate>
+    <ItemsPanelTemplate x:Key="CheckGroupVerticalItemsPanelTemplate">
+        <UniformGrid Columns="1" FocusVisualStyle="{x:Null}" />
+    </ItemsPanelTemplate>
+
+    <Style TargetType="{x:Type ctrl:CheckGroup}">
+        <Setter Property="ItemsPanel" Value="{StaticResource CheckGroupHorizontalItemsPanelTemplate}" />
+        <Style.Triggers>
+            <Trigger Property="Orientation" Value="Vertical">
+                <Setter Property="ItemsPanel" Value="{StaticResource CheckGroupVerticalItemsPanelTemplate}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+</ResourceDictionary>

@@ -1,0 +1,42 @@
+﻿<prism:PrismApplication
+    x:Class="LusterMotion.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:commonlangs="clr-namespace:Luster.Common.Assets.Langs;assembly=Luster.Common.Assets"
+    xmlns:devicelangs="clr-namespace:Luster.SimDevice.SubSystem.Langs;assembly=Luster.SimDevice.SubSystem"
+    xmlns:langs="clr-namespace:Luster.Motion.Assests.Langs;assembly=Luster.Motion.Assests"
+    xmlns:local="clr-namespace:LusterMotion"
+    xmlns:prism="http://prismlibrary.com/">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary>
+                    <ResourceDictionary.MergedDictionaries>
+                        <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/SkinDefault.xaml" />
+                        <ResourceDictionary Source="pack://application:,,,/Luster.Common.Assets;component/Themes/SkinDefault.xaml" />
+                        <ResourceDictionary Source="pack://application:,,,/Luster.Common.Assets;component/Themes/Theme.xaml" />
+                    </ResourceDictionary.MergedDictionaries>
+                </ResourceDictionary>
+                <ResourceDictionary>
+                    <ResourceDictionary.MergedDictionaries>
+                        <ResourceDictionary Source="pack://application:,,,/HandyControl;component/Themes/Theme.xaml" />
+                        <ResourceDictionary Source="pack://application:,,,/Luster.Common.Assets;component/Themes/Theme.xaml" />
+                    </ResourceDictionary.MergedDictionaries>
+                </ResourceDictionary>
+                <ResourceDictionary>
+                    <ResourceDictionary.MergedDictionaries>
+                        <ResourceDictionary Source="/Luster.Controls.Wpf;component/Themes/Generic.xaml" />
+                        <ResourceDictionary Source="/Luster.Control.Wpf.Motion;component/Generic.xaml" />
+                        <ResourceDictionary Source="/Luster.Common.Assets;component/Themes/Styles/Style.xaml" />
+                        <ResourceDictionary Source="/Luster.Motion.Assests;component/Themes/Theme.xaml" />
+                        <ResourceDictionary Source="/Luster.SimDevice.SubSystem;component/Resources/Style.xaml" />
+                        <!--<ResourceDictionary Source="/Luster.SubSystem.ThreeD;component/Controls/Generic.xaml" />-->
+                    </ResourceDictionary.MergedDictionaries>
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+            <langs:LangProvider x:Key="MotionLangs" />
+            <devicelangs:LangProvider x:Key="DeviceLangs" />
+            <commonlangs:LangProvider x:Key="Langs" />
+        </ResourceDictionary>
+    </Application.Resources>
+</prism:PrismApplication>

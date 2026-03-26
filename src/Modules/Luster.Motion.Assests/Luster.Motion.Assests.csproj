@@ -1,0 +1,167 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <UseWPF>true</UseWPF>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <!--<UserSecretsId>a945f542-2175-4eb5-ab91-d0600f0ecf8b</UserSecretsId>-->
+    </PropertyGroup>
+
+
+    <ItemGroup>
+        <None Remove="Fonts\iconfont.ttf" />
+        <None Remove="Images\AirpordsFalseF.png" />
+        <None Remove="Images\AirpordsFalseR.png" />
+        <None Remove="Images\AlarmNormal.png" />
+        <None Remove="Images\AlarmSelect.png" />
+        <None Remove="Images\AppleLogo.png" />
+        <None Remove="Images\chinese.png" />
+        <None Remove="Images\ConfigNormal.png" />
+        <None Remove="Images\ConfigSelect.png" />
+        <None Remove="Images\DataNormal.png" />
+        <None Remove="Images\DataSelect.png" />
+        <None Remove="Images\english.png" />
+        <None Remove="Images\FlowDisable.png" />
+        <None Remove="Images\FlowNormal.png" />
+        <None Remove="Images\FlowSelect.png" />
+        <None Remove="Images\HomeNormal.png" />
+        <None Remove="Images\HomeSelect.png" />
+        <None Remove="Images\loading-small.png" />
+        <None Remove="Images\login-Big.png" />
+        <None Remove="Images\logo.ico" />
+        <None Remove="Images\PausedDisable.png" />
+        <None Remove="Images\PausedNormal.png" />
+        <None Remove="Images\PausedSelect.png" />
+        <None Remove="Images\ProjectDisable.png" />
+        <None Remove="Images\ProjectNormal.png" />
+        <None Remove="Images\ProjectSelect.png" />
+        <None Remove="Images\RecoveryDisable.png" />
+        <None Remove="Images\RecoveryNormal.png" />
+        <None Remove="Images\RecoverySelect.png" />
+        <None Remove="Images\RunDisable.png" />
+        <None Remove="Images\RunNormal.png" />
+        <None Remove="Images\RunSelect.png" />
+        <None Remove="Images\SetNormal.png" />
+        <None Remove="Images\SetSelect.png" />
+        <None Remove="Images\station.png" />
+        <None Remove="Images\StopDisable.png" />
+        <None Remove="Images\StopNormal.png" />
+        <None Remove="Images\StopSelect.png" />
+        <None Remove="Images\user.png" />
+        <None Remove="Images\VisionNormal.png" />
+        <None Remove="Images\VisionSelect.png" />
+        <None Remove="Images\ZeroDisable.png" />
+        <None Remove="Images\ZeroNormal.png" />
+        <None Remove="Images\ZeroSelect.png" />
+        <None Remove="Images\信息.png" />
+        <None Remove="Images\右箭头.png" />
+        <None Remove="Images\成功.png" />
+        <None Remove="Images\用户圆形图标.png" />
+        <None Remove="Images\警告.png" />
+        <None Remove="Images\运行模式圆形图标.png" />
+        <None Remove="Images\错误.png" />
+        <None Remove="Themes\Basic\Colors\Colors.xaml~RF611aab5.TMP" />
+        <None Remove="Themes\Basic\nyq145w4.1fb~" />
+        <None Remove="Themes\Styles\Style.xaml~RF19dbd6e4.TMP" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Resource Include="Images\FlowDisable.png" />
+        <Resource Include="Images\FlowNormal.png" />
+        <Resource Include="Images\PausedDisable.png" />
+        <Resource Include="Images\ProjectSelect.png" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Dirkster.AvalonDock" />
+        <PackageReference Include="HandyControl" />
+        <PackageReference Include="MinVer" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Resource Include="Fonts\iconfont.ttf" />
+        <Resource Include="Images\AlarmNormal.png" />
+        <Resource Include="Images\AlarmSelect.png" />
+        <Resource Include="Images\AppleLogo.png" />
+        <Resource Include="Images\chinese.png" />
+        <Resource Include="Images\ConfigNormal.png" />
+        <Resource Include="Images\ConfigSelect.png" />
+        <Resource Include="Images\DataNormal.png" />
+        <Resource Include="Images\DataSelect.png" />
+        <Resource Include="Images\english.png" />
+        <Resource Include="Images\FlowSelect.png" />
+        <Resource Include="Images\HomeNormal.png" />
+        <Resource Include="Images\HomeSelect.png" />
+        <Resource Include="Images\loading-small.png" />
+        <Resource Include="Images\login-Big.png" />
+        <Resource Include="Images\logo.ico">
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        </Resource>
+        <Resource Include="Images\PausedNormal.png" />
+        <Resource Include="Images\PausedSelect.png" />
+        <Resource Include="Images\ProjectDisable.png" />
+        <Resource Include="Images\ProjectNormal.png" />
+        <Resource Include="Images\RecoveryDisable.png" />
+        <Resource Include="Images\RecoveryNormal.png" />
+        <Resource Include="Images\RecoverySelect.png" />
+        <Resource Include="Images\RunDisable.png" />
+        <Resource Include="Images\RunNormal.png" />
+        <Resource Include="Images\RunSelect.png" />
+        <Resource Include="Images\SetNormal.png" />
+        <Resource Include="Images\SetSelect.png" />
+        <Resource Include="Images\station.png" />
+        <Resource Include="Images\StopDisable.png" />
+        <Resource Include="Images\StopNormal.png" />
+        <Resource Include="Images\StopSelect.png" />
+        <Resource Include="Images\user.png" />
+        <Resource Include="Images\VisionNormal.png" />
+        <Resource Include="Images\VisionSelect.png" />
+        <Resource Include="Images\ZeroDisable.png" />
+        <Resource Include="Images\ZeroNormal.png" />
+        <Resource Include="Images\ZeroSelect.png" />
+        <Resource Include="Images\信息.png" />
+        <Resource Include="Images\右箭头.png" />
+        <Resource Include="Images\成功.png" />
+        <Resource Include="Images\用户圆形图标.png" />
+        <Resource Include="Images\警告.png" />
+        <Resource Include="Images\运行模式圆形图标.png" />
+        <Resource Include="Images\错误.png" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Update="Langs\Lang.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>Lang.resx</DependentUpon>
+        </Compile>
+        <Compile Update="Langs\LangProvider.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>LangProvider.tt</DependentUpon>
+        </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Update="Langs\Lang.en.resx">
+            <Generator>PublicResXFileCodeGenerator</Generator>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Langs\Lang.resx">
+            <Generator>PublicResXFileCodeGenerator</Generator>
+            <LastGenOutput>Lang.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+    </ItemGroup>
+    <ItemGroup>
+        <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+    </ItemGroup>
+    <ItemGroup>
+        <Folder Include="Images\tips\" />
+    </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Luster.Common.Assets\Luster.Common.Assets.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Update="Langs\LangProvider.tt">
+            <Generator>TextTemplatingFileGenerator</Generator>
+            <LastGenOutput>LangProvider.cs</LastGenOutput>
+        </None>
+    </ItemGroup>
+</Project>

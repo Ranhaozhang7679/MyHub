@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Compile Remove="Flow\**" />
+        <EmbeddedResource Remove="Flow\**" />
+        <None Remove="Flow\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="MinVer" />
+        <Reference Include="PresentationCore" />
+        <Reference Include="PresentationFramework" />
+        <Reference Include="System.Xaml" />
+        <Reference Include="WindowsBase" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Page Include="ListEx\Common.xaml" />
+        <Page Include="ListEx\Generic.xaml" />
+        <Page Include="Themes\Generic.xaml">
+            <Generator>MSBuild:Compile</Generator>
+        </Page>
+        <Page Include="TreeEx\Common.xaml">
+            <Generator>MSBuild:Compile</Generator>
+        </Page>
+        <Page Include="TreeEx\Generic.xaml">
+            <Generator>MSBuild:Compile</Generator>
+        </Page>
+        <Page Include="CanvasDrag\Generic.xaml">
+            <Generator>MSBuild:Compile</Generator>
+        </Page>
+    </ItemGroup>
+</Project>

@@ -1,0 +1,38 @@
+﻿<UserControl x:Class="Luster.Motion.CommonUI.Views.Dialogs.HiveStopDialog3"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Luster.Motion.CommonUI.Views.Dialogs"
+             mc:Ignorable="d" 
+             d:DesignHeight="350" d:DesignWidth="200">
+    <StackPanel Background="LightGray">
+        <Label Background="DarkGray" BorderBrush="Transparent" Width="200" />
+        <Label Content="&#x00a0;&#x00a0;&#x00a0;&#x00a0;&#x00a0;&#x00a0;设备已停机&#x0a;Machine stopped"  
+               Background="LightGray"  
+               Width="200"/>
+
+        <Border Background="White" Margin="5" Padding="5" MaxHeight="150">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <CheckBox Content="安全：检查所有安全装置功能是否正常，标识是否齐全" Margin="2"/>
+                    <CheckBox Content="5S：检查电控箱、轴、导轨和机台内部是否有灰尘等脏污" Margin="2"/>
+                    <CheckBox Content="气路：检查听气管接头是否有漏气、气管与运动连接处是否有磨损" Margin="2"/>
+                    <CheckBox Content="电路：检查是否有露铜和明显磨损" Margin="2"/>
+                    <CheckBox Content="限位感应器：检查固定螺丝、是否有松动，线路是否有磨损" Margin="2"/>
+                    <CheckBox Content="流水线：检查是否正常工作，是否出现卡载具情况" Margin="2"/>
+                    <CheckBox Content="皮带：检查是否龟裂，齿痕是否清晰，转动时是否有打滑现象" Margin="2"/>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <Button  
+            Command="{Binding Path=DataContext.ClickCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            Height="40" 
+            Width="200" 
+            Content="确认/Acknowledge"  
+            HorizontalContentAlignment="Center"  
+            Background="DarkGray" 
+            Margin="10"/>
+    </StackPanel>
+</UserControl>

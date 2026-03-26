@@ -1,0 +1,36 @@
+﻿<UserControl x:Class="Luster.Motion.CommonUI.Views.Dialogs.HiveStopDialog4"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Luster.Motion.CommonUI.Views.Dialogs"
+             mc:Ignorable="d" 
+             d:DesignHeight="350" d:DesignWidth="200">
+    <StackPanel Background="LightGray">
+        <Label Background="DarkGray" BorderBrush="Transparent" Width="200" />
+        <Label Content="&#x00a0;&#x00a0;&#x00a0;&#x00a0;&#x00a0;&#x00a0;设备已停机&#x0a;Machine stopped"  
+               Background="LightGray"  
+               Width="200"/>
+
+        <Border Background="White" Margin="5" Padding="5" MaxHeight="150">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <CheckBox Content="润滑：检查料盘上下移动丝杆等机械传动部件是否会吐黄油" Margin="2"/>
+                    <CheckBox Content="联轴器：检查传动固定螺丝是否松动，弹片是否损坏" Margin="2"/>
+                    <CheckBox Content="皮带：检查是否磨损出须，张力是否合适，拉动有无打滑或未贴紧" Margin="2"/>
+                    <CheckBox Content="气缸：检查阻挡和升降气缸是否能正常伸缩，所有气缸感应器划线是否松动" Margin="2"/>
+                    <CheckBox Content="螺丝：所有螺丝划线是否松动" Margin="2"/>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <Button  
+            Command="{Binding Path=DataContext.ClickCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            Height="40" 
+            Width="200" 
+            Content="确认/Acknowledge"  
+            HorizontalContentAlignment="Center"  
+            Background="DarkGray" 
+            Margin="10"/>
+    </StackPanel>
+</UserControl>

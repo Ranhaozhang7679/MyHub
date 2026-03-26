@@ -1,0 +1,15 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converter="clr-namespace:Luster.Common.Assets.Converter;assembly=Luster.Common.Assets">
+    <converter:Boolean2Geometry x:Key="Boolean2Geometry" />
+    <converter:StringRepeatConverter x:Key="StringRepeatConverter" />
+    <converter:String2BrushConverter x:Key="String2BrushConverter" />
+    <converter:HatchBrushConverter x:Key="HatchBrushConverter" />
+    <converter:StringToImageSourceConverter x:Key="StringToImageSourceConverter" />
+    <converter:String2ViewTypeConverter x:Key="String2ViewTypeConverter" />
+    <converter:MultiBindingConverter x:Key="MultiBindingConverter" />
+    <converter:Boolean2PassColorCoverter x:Key="Boolean2PassColorCoverter" />
+    <converter:Int2FontWeight x:Key="Int2FontWeightConverter" />
+    <converter:Boolean2TextDecoration x:Key="Boolean2TextDecoration" />
+</ResourceDictionary>

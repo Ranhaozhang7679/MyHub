@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Version>1.0.0.0</Version>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <Platforms>AnyCPU;x64</Platforms>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Reference Include="System.ComponentModel.DataAnnotations" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="FreeSql" />
+        <PackageReference Include="FreeSql.Provider.Sqlite" />
+        <PackageReference Include="FreeSql.Repository" />
+        <PackageReference Include="Luster.Prism" />
+        <PackageReference Include="MinVer" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Luster.Motion.DataStruct\Luster.Motion.DataStruct.csproj" />
+    </ItemGroup>
+
+</Project>

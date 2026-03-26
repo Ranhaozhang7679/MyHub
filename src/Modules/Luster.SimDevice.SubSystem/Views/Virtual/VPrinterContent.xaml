@@ -1,0 +1,194 @@
+﻿<Border
+    x:Class="Luster.SimDevice.SubSystem.Views.Virtual.VPrinterContent"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:lang="clr-namespace:Luster.SimDevice.SubSystem.Langs"
+    xmlns:local="clr-namespace:Luster.SimDevice.SubSystem.Views.Virtual"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    MinWidth="600"
+    d:DesignHeight="720"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{DynamicResource RegionBrush}"
+    CornerRadius="10"
+    mc:Ignorable="d">
+    <Border.Resources>
+        <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="Button">
+            <Setter Property="Width" Value="70" />
+            <Setter Property="hc:IconElement.Height" Value="12" />
+            <Setter Property="hc:IconElement.Width" Value="12" />
+        </Style>
+    </Border.Resources>
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="5" />
+            <RowDefinition Height="340" />
+        </Grid.RowDefinitions>
+        <Grid Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <hc:ButtonGroup Style="{StaticResource ButtonGroupSolid}">
+                <RadioButton
+                    Command="{Binding ChangeParamCommand}"
+                    CommandParameter="Normal"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.NormalParas}}"
+                    IsChecked="{Binding IsShowParam, Converter={StaticResource Boolean2BooleanReConverter}}" />
+            </hc:ButtonGroup>
+            <StackPanel
+                Grid.Column="1"
+                HorizontalAlignment="Right"
+                Orientation="Horizontal">
+                <hc:SearchBar
+                    x:Name="txtSearch"
+                    Width="150"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    hc:InfoElement.Placeholder="{lang:Lang Key={x:Static lang:LangKeys.ModuleOrName}}"
+                    Command="{Binding SearchCommand}"
+                    CommandParameter="{Binding ElementName=txtSearch, Path=Text}"
+                    Style="{StaticResource SearchBarExtend}" />
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <DataGrid
+                Padding="-5"
+                hc:DataGridAttach.ShowRowNumber="False"
+                hc:DataGridAttach.ShowSelectAllButton="False"
+                AlternationCount="2"
+                ColumnHeaderStyle="{StaticResource CustomDataGridColumnHeaderStyle}"
+                HeadersVisibility="Column"
+                IsReadOnly="True"
+                ItemsSource="{Binding PrinterList}"
+                RowStyle="{StaticResource CustomDataGridRowStyle}"
+                SelectionMode="Single"
+                Visibility="{Binding IsShowParam, Converter={StaticResource Boolean2VisibilityReConverter}}">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Width="40" HeaderStyle="{StaticResource DataColumnHeaderSelectAllStyle}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox Margin="16,0,0,0" IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn
+                        MinWidth="120"
+                        Binding="{Binding PrinterName}"
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="{lang:Lang Key={x:Static lang:LangKeys.Printer}}"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                    <DataGridTextColumn
+                        MinWidth="80"
+                        Binding="{Binding Module}"
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="{lang:Lang Key={x:Static lang:LangKeys.ModuleName}}"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
+                        IsReadOnly="True" />
+                    <DataGridTextColumn
+                        Width="*"
+                        MinWidth="120"
+                        Binding="{Binding Name}"
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="{lang:Lang Key={x:Static lang:LangKeys.Name}}"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                    <DataGridTextColumn
+                        MinWidth="120"
+                        Binding="{Binding PageWidth}"
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="{lang:Lang Key={x:Static lang:LangKeys.TagWidth}}"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                    <DataGridTextColumn
+                        MinWidth="120"
+                        Binding="{Binding PageHeight}"
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="{lang:Lang Key={x:Static lang:LangKeys.TagHeight}}"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                    <DataGridTemplateColumn
+                        Width="*"
+                        MinWidth="110"
+                        hc:TitleElement.HorizontalAlignment="Center"
+                        CanUserResize="False"
+                        Header="{lang:Lang Key={x:Static lang:LangKeys.Operation}}"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <hc:ElementGroup HorizontalContentAlignment="Center" Orientation="Horizontal">
+                                    <Button
+                                        Margin="0"
+                                        Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.EditCommand}"
+                                        CommandParameter="{Binding .}"
+                                        Content="{lang:Lang Key={x:Static lang:LangKeys.Edit}}"
+                                        Style="{StaticResource ButtonInfo.Small}" />
+                                </hc:ElementGroup>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+                <hc:Interaction.Triggers>
+                    <hc:EventTrigger EventName="CellEditEnding">
+                        <hc:EventToCommand Command="{Binding EditCommand}" PassEventArgsToCommand="True" />
+                    </hc:EventTrigger>
+                </hc:Interaction.Triggers>
+            </DataGrid>
+        </Grid>
+        <GridSplitter
+            Grid.Row="2"
+            Height="5"
+            Margin="10,2"
+            HorizontalAlignment="Stretch" />
+        <ItemsControl
+            Grid.Row="3"
+            Padding="0"
+            ItemsSource="{Binding SelectedList}"
+            ScrollViewer.HorizontalScrollBarVisibility="Auto"
+            ScrollViewer.VerticalScrollBarVisibility="Hidden">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Margin="0" Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <GroupBox
+                        Width="240"
+                        Padding="10,5"
+                        hc:TitleElement.Background="{DynamicResource RegionBrush}"
+                        Header="{Binding Name}"
+                        Style="{StaticResource GroupBoxTab}">
+                        <hc:UniformSpacingPanel Orientation="Vertical" Spacing="10">
+                            <Grid>
+                                <RichTextBox
+                                    Width="Auto"
+                                    Height="Auto"
+                                    Margin="32"
+                                    ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                    <FlowDocument>
+                                        <Paragraph>
+                                            <Run FontSize="20" Text="{Binding Content}" />
+                                        </Paragraph>
+                                    </FlowDocument>
+                                </RichTextBox>
+                            </Grid>
+                            <Grid Margin="0,15,0,0">
+                                <Button
+                                    HorizontalAlignment="Center"
+                                    Command="{Binding DataContext.PrinterPrintCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                    CommandParameter="{Binding .}"
+                                    Content="{lang:Lang Key={x:Static lang:LangKeys.Print}}" />
+                            </Grid>
+                        </hc:UniformSpacingPanel>
+                    </GroupBox>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Grid>
+
+</Border>
+
+

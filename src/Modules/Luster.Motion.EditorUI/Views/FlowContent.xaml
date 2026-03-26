@@ -1,0 +1,176 @@
+﻿<UserControl
+    x:Class="Luster.Motion.EditorUI.Views.FlowContent"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalon="https://github.com/Dirkster99/AvalonDock"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:g="clr-namespace:Luster.Motion.CommonUI;assembly=Luster.Motion.CommonUI"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:lang="clr-namespace:Luster.Motion.Assests.Langs;assembly=Luster.Motion.Assests"
+    xmlns:local="clr-namespace:Luster.Motion.EditorUI.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    d:DesignHeight="800"
+    d:DesignWidth="1024"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{DynamicResource RegionBrush}"
+    FocusManager.IsFocusScope="True"
+    IsEnabled="{Binding Path=(g:GlobalProperty.IsEnabeld), UpdateSourceTrigger=PropertyChanged}"
+    mc:Ignorable="d">
+    <UserControl.InputBindings>
+        <KeyBinding Command="{x:Static g:GlobalCommands.SearchCommand}" Gesture="Ctrl+F" />
+        <KeyBinding Command="{x:Static g:GlobalCommands.SaveCommand}" Gesture="Ctrl+S" />
+        <KeyBinding Command="{x:Static g:GlobalCommands.CopyCommand}" Gesture="Ctrl+C" />
+        <KeyBinding Command="{x:Static g:GlobalCommands.PasteCommand}" Gesture="Ctrl+V" />
+        <KeyBinding Command="{x:Static g:GlobalCommands.DeleteCommand}" Gesture="Delete" />
+        <!--<KeyBinding Command="{x:Static g:GlobalCommands.RunCommand}" Gesture="F5" />-->
+        <!--<KeyBinding Command="{x:Static g:GlobalCommands.RunOneCommand}" Gesture="F6" />-->
+        <!--<KeyBinding Command="{x:Static g:GlobalCommands.RunNextCommand}" Gesture="F7" />-->
+        <KeyBinding Command="{x:Static g:GlobalCommands.ForwardCommand}" Gesture="Ctrl+Y" />
+        <KeyBinding Command="{x:Static g:GlobalCommands.BackCommand}" Gesture="Ctrl+Z" />
+    </UserControl.InputBindings>
+    <Grid Background="#F4F6FA">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="280" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="525" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <TabControl BorderThickness="0" Style="{StaticResource TabControlCapsuleSolid}">
+            <TabItem
+                Margin="0,10,0,0"
+                Header="{lang:Lang Key={x:Static lang:LangKeys.FunctionalModule}}"
+                IsSelected="{Binding SelectModule}">
+                <Border
+                    Margin="5"
+                    Background="{DynamicResource RegionBrush}"
+                    CornerRadius="5">
+                    <ContentControl prism:RegionManager.RegionName="TopRegion" />
+                </Border>
+            </TabItem>
+            <TabItem
+                Margin="0,10,0,0"
+                Header="{lang:Lang Key={x:Static lang:LangKeys.ParameterConfigure}}"
+                IsSelected="{Binding SelectPara}">
+                <Border
+                    Margin="5"
+                    Background="{DynamicResource RegionBrush}"
+                    CornerRadius="5">
+                    <ContentControl MinHeight="250" prism:RegionManager.RegionName="InParamRegion" />
+                </Border>
+            </TabItem>
+            <TabItem
+                Margin="0,10,0,0"
+                Header="{lang:Lang Key={x:Static lang:LangKeys.SearchModule}}"
+                IsSelected="{Binding SelectSearch}">
+                <Border
+                    Margin="5"
+                    Background="{DynamicResource RegionBrush}"
+                    CornerRadius="5">
+                    <ContentControl MinHeight="250" prism:RegionManager.RegionName="SearchRegion" />
+                </Border>
+            </TabItem>
+        </TabControl>
+
+        <GridSplitter
+            Grid.Column="1"
+            Width="2"
+            Margin="0,10"
+            HorizontalAlignment="Stretch"
+            Foreground="{DynamicResource RegionBrush}" />
+        <Border
+            Grid.Column="2"
+            Margin="5"
+            Background="{DynamicResource RegionBrush}"
+            CornerRadius="5">
+            <ContentControl Margin="5" prism:RegionManager.RegionName="EditorRegion" />
+        </Border>
+        <GridSplitter
+            Grid.Column="3"
+            Width="2"
+            Margin="0,10"
+            HorizontalAlignment="Stretch"
+            Foreground="{DynamicResource RegionBrush}" />
+        <Grid
+            Grid.Column="4"
+            Margin="5"
+            Background="{DynamicResource RegionBrush}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <hc:ButtonGroup
+                Width="565"
+                Margin="10,5"
+                HorizontalAlignment="Left">
+                <RadioButton
+                    MinWidth="70"
+                    Command="{Binding ConfigCommand}"
+                    CommandParameter="LogContent"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.Log}}"
+                    GroupName="Config"
+                    IsChecked="{Binding IsCheckLog}" />
+                <RadioButton
+                    MinWidth="70"
+                    Command="{Binding ConfigCommand}"
+                    CommandParameter="GlobalContent"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.GlobalVar}}"
+                    GroupName="Config"
+                    IsChecked="{Binding IsCheckGlobal}" />
+                <RadioButton
+                    MinWidth="70"
+                    Command="{Binding ConfigCommand}"
+                    CommandParameter="AxisSetContent"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.AxisDebug}}"
+                    GroupName="Config"
+                    IsChecked="{Binding IsCheckAxis}" />
+                <RadioButton
+                    MinWidth="70"
+                    Command="{Binding ConfigCommand}"
+                    CommandParameter="CTConfigContent"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.CT}}"
+                    GroupName="Config"
+                    IsChecked="{Binding IsCheckCT}" />
+                <RadioButton
+                    MinWidth="70"
+                    Command="{Binding ConfigCommand}"
+                    CommandParameter="CacheDataContent"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.CacheData}}"
+                    GroupName="Config"
+                    IsChecked="{Binding IsCacheData}" />
+                <RadioButton
+                    MinWidth="70"
+                    Command="{Binding ConfigCommand}"
+                    CommandParameter="FlowViewContent"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.StationOverview}}"
+                    GroupName="Config"
+                    IsChecked="{Binding IsModuleDiffer}" />
+                <!--<RadioButton
+                    MinWidth="70"
+                    Command="{Binding ConfigCommand}"
+                    CommandParameter="ErrorConfigContent"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.ModuleError}}"
+                    GroupName="Config"
+                    IsChecked="{Binding IsModuleError}" />-->
+            </hc:ButtonGroup>
+            <hc:Divider
+                Grid.Row="1"
+                Margin="1,2"
+                LineStroke="{StaticResource lusterColor}"
+                Orientation="Horizontal"
+                Style="{StaticResource DividerBaseStyle}" />
+            <ContentControl
+                Grid.Row="2"
+                Margin="5"
+                prism:RegionManager.RegionName="EditorConfigRegion" />
+        </Grid>
+
+        <hc:Interaction.Triggers>
+            <hc:EventTrigger EventName="Loaded">
+                <hc:EventToCommand Command="{Binding LoadedCommand}" PassEventArgsToCommand="True" />
+            </hc:EventTrigger>
+        </hc:Interaction.Triggers>
+    </Grid>
+</UserControl>

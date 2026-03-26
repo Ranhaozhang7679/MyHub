@@ -1,0 +1,258 @@
+﻿<Border
+    x:Class="Luster.SimDevice.SubSystem.Views.Virtual.VVacuumContent"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:lang="clr-namespace:Luster.SimDevice.SubSystem.Langs"
+    xmlns:local="clr-namespace:Luster.SimDevice.SubSystem.Views.Virtual"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    MinWidth="600"
+    d:DesignHeight="720"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{DynamicResource RegionBrush}"
+    CornerRadius="10"
+    IsEnabled="{Binding Path=DataContext.PageEnabled, RelativeSource={RelativeSource Mode=Self}}"
+    mc:Ignorable="d">
+    <Border.Resources>
+        <Style BasedOn="{StaticResource {x:Type Button}}" TargetType="Button">
+            <Setter Property="Width" Value="70" />
+            <Setter Property="hc:IconElement.Height" Value="12" />
+            <Setter Property="hc:IconElement.Width" Value="12" />
+        </Style>
+    </Border.Resources>
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <hc:ButtonGroup Style="{StaticResource ButtonGroupSolid}">
+                <RadioButton
+                    Command="{Binding ChangeParamCommand}"
+                    CommandParameter="Normal"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.NormalParas}}"
+                    IsChecked="{Binding IsShowParam, Converter={StaticResource Boolean2BooleanReConverter}}" />
+
+            </hc:ButtonGroup>
+
+            <StackPanel
+                Grid.Column="1"
+                HorizontalAlignment="Right"
+                Orientation="Horizontal">
+                <hc:SearchBar
+                    x:Name="txtSearch"
+                    Width="150"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    hc:InfoElement.Placeholder="{lang:Lang Key={x:Static lang:LangKeys.ModuleOrName}}"
+                    Command="{Binding SearchCommand}"
+                    CommandParameter="{Binding ElementName=txtSearch, Path=Text}"
+                    Style="{StaticResource SearchBarExtend}" />
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="600" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <DataGrid
+                Padding="-5"
+                hc:DataGridAttach.ShowRowNumber="False"
+                hc:DataGridAttach.ShowSelectAllButton="False"
+                AlternationCount="2"
+                ColumnHeaderStyle="{StaticResource CustomDataGridColumnHeaderStyle}"
+                HeadersVisibility="Column"
+                IsReadOnly="True"
+                ItemsSource="{Binding VacuumList}"
+                RowStyle="{StaticResource CustomDataGridRowStyle}"
+                SelectionMode="Single"
+                Visibility="{Binding IsShowParam, Converter={StaticResource Boolean2VisibilityReConverter}}">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Width="40" HeaderStyle="{StaticResource DataColumnHeaderSelectAllStyle}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox Margin="16,0,0,0" IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn
+                        MinWidth="80"
+                        Binding="{Binding Module}"
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="{lang:Lang Key={x:Static lang:LangKeys.ModuleName}}"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                    <DataGridTextColumn
+                        Width="*"
+                        MinWidth="120"
+                        Binding="{Binding Name}"
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="{lang:Lang Key={x:Static lang:LangKeys.Name}}"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+
+                    <DataGridTextColumn
+                        MinWidth="120"
+                        Binding="{Binding VacuumSuckName}"
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="{lang:Lang Key={x:Static lang:LangKeys.SuckDO}}"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                    <DataGridTextColumn
+                        MinWidth="120"
+                        Binding="{Binding VacuumBlowName}"
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="{lang:Lang Key={x:Static lang:LangKeys.BlowDO}}"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                    <DataGridTextColumn
+                        MinWidth="120"
+                        Binding="{Binding VacuumCheckName}"
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="{lang:Lang Key={x:Static lang:LangKeys.VacuumSensorDI}}"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                    <!--<DataGridTextColumn
+                        MinWidth="120"
+                        Binding="{Binding TimeOuts}"
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="超时设定(ms)"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+                    <DataGridTextColumn
+                        MinWidth="120"
+                        Binding="{Binding VacuumShield}"
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="是否屏蔽真空检知"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />-->
+                    <DataGridTemplateColumn
+                        Width="110"
+                        MinWidth="100"
+                        hc:TitleElement.HorizontalAlignment="Center"
+                        CanUserResize="False"
+                        Header="{lang:Lang Key={x:Static lang:LangKeys.Operation}}"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <hc:ElementGroup HorizontalContentAlignment="Center" Orientation="Horizontal">
+                                    <Button
+                                        Margin="0"
+                                        Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.EditCommand}"
+                                        CommandParameter="{Binding .}"
+                                        Content="{lang:Lang Key={x:Static lang:LangKeys.Edit}}"
+                                        Style="{StaticResource ButtonInfo.Small}" />
+                                </hc:ElementGroup>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                </DataGrid.Columns>
+                <hc:Interaction.Triggers>
+                    <hc:EventTrigger EventName="CellEditEnding">
+                        <hc:EventToCommand Command="{Binding EditCommand}" PassEventArgsToCommand="True" />
+                    </hc:EventTrigger>
+                </hc:Interaction.Triggers>
+            </DataGrid>
+
+            <GridSplitter
+                Grid.Column="1"
+                Width="5"
+                Margin="2,2"
+                HorizontalAlignment="Stretch" />
+            <Border
+                Grid.Column="2"
+                BorderThickness="1"
+                Style="{StaticResource BorderRegion}">
+                <ScrollViewer>
+                    <ItemsControl
+                        Padding="0"
+                        ItemsSource="{Binding SelectedList}"
+                        ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                        ScrollViewer.VerticalScrollBarVisibility="Hidden">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <hc:UniformSpacingPanel
+                                    VerticalAlignment="Top"
+                                    ChildWrapping="Wrap"
+                                    ScrollViewer.VerticalScrollBarVisibility="Visible" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <GroupBox
+                                    Width="160"
+                                    Margin="5"
+                                    Padding="10,5"
+                                    hc:TitleElement.Background="{DynamicResource RegionBrush}"
+                                    Header="{Binding Name}"
+                                    Style="{StaticResource GroupBoxTab}">
+                                    <hc:UniformSpacingPanel Orientation="Vertical" Spacing="10">
+                                        <Grid Margin="0,5,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Path
+                                                Margin="0,8,0,0"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Data="M 0,0 A 8,8 45 1 1 0,1 Z"
+                                                Fill="{Binding Status, Converter={StaticResource Boolean2PassColorCoverter}}" />
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                VerticalAlignment="Center"
+                                                FontSize="12"
+                                                Text="{lang:Lang Key={x:Static lang:LangKeys.VacuumSensor}}" />
+                                        </Grid>
+                                        <hc:Divider
+                                            Height="3"
+                                            Margin="0"
+                                            LineStrokeDashArray="2,2" />
+                                        <hc:ButtonGroup Layout="Uniform">
+                                            <Button
+                                                Width="60"
+                                                HorizontalAlignment="Center"
+                                                Command="{Binding DataContext.VacuumSuckCommand, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
+                                                CommandParameter="{Binding .}"
+                                                Content="{lang:Lang Key={x:Static lang:LangKeys.Suck}}" />
+                                            <Button
+                                                Grid.Column="0"
+                                                Width="60"
+                                                HorizontalAlignment="Center"
+                                                Command="{Binding DataContext.VacuumBlowCommand, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
+                                                CommandParameter="{Binding .}"
+                                                Content="{lang:Lang Key={x:Static lang:LangKeys.Blow}}" />
+                                        </hc:ButtonGroup>
+                                        <hc:Divider
+                                            Height="3"
+                                            Margin="0"
+                                            LineStrokeDashArray="2,2" />
+                                        <hc:ButtonGroup>
+                                            <Button
+                                                Grid.Column="1"
+                                                Width="60"
+                                                HorizontalAlignment="Center"
+                                                Command="{Binding DataContext.VacuumBlowCloseCommand, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
+                                                CommandParameter="{Binding .}"
+                                                Content="{lang:Lang Key={x:Static lang:LangKeys.BlowClose}}" />
+                                            <Button
+                                                Grid.Column="1"
+                                                Width="60"
+                                                HorizontalAlignment="Center"
+                                                Command="{Binding DataContext.VacuumCloseCommand, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
+                                                CommandParameter="{Binding .}"
+                                                Content="{lang:Lang Key={x:Static lang:LangKeys.Close}}" />
+                                        </hc:ButtonGroup>
+                                    </hc:UniformSpacingPanel>
+                                </GroupBox>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </Grid>
+</Border>
+

@@ -1,0 +1,411 @@
+﻿<Border
+    x:Class="Luster.Motion.SubSystem.Views.ProPLCContent"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converter1="clr-namespace:Luster.Motion.CommonUI.Converter;assembly=Luster.Motion.CommonUI"
+    xmlns:ctrl="clr-namespace:Luster.Control.Wpf.Motion.Controls;assembly=Luster.Control.Wpf.Motion"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:g="clr-namespace:Luster.Motion.CommonUI;assembly=Luster.Motion.CommonUI"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:lang="clr-namespace:Luster.Motion.Assests.Langs;assembly=Luster.Motion.Assests"
+    xmlns:local="clr-namespace:Luster.Motion.SubSystem.Views"
+    xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    xmlns:views="clr-namespace:Luster.Motion.CommonUI.Views;assembly=Luster.Motion.CommonUI"
+    d:DesignHeight="550"
+    d:DesignWidth="600"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{StaticResource RegionBrush}"
+    mc:Ignorable="d">
+    <Border.Resources>
+        <converter1:ProductStringConverter x:Key="ResultConverter" />
+        <Style x:Key="DataColumnTextElementStyleResult" TargetType="{x:Type TextBlock}">
+            <Setter Property="Padding" Value="5,3" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="White" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ., Converter={StaticResource ResultConverter}}" Value="OK">
+                    <Setter Property="Background" Value="Green" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding ., Converter={StaticResource ResultConverter}}" Value="NG">
+                    <Setter Property="Background" Value="Red" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding ., Converter={StaticResource ResultConverter}}" Value="Toss">
+                    <Setter Property="Background" Value="OrangeRed" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="PlcTextStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="Margin" Value="5,3" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="FontWeight" Value="Bold" />
+        </Style>
+
+        <Style
+            x:Key="DigitalStyle"
+            BasedOn="{StaticResource ToggleButtonFlip.Small}"
+            TargetType="ToggleButton">
+            <Setter Property="Width" Value="32" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="IsEnabled" Value="False" />
+            <Setter Property="Visibility" Value="{Binding IsEdit, Converter={StaticResource ResourceKey=Boolean2VisibilityReConverter}}" />
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="1" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style
+            x:Key="ComboboxPLC"
+            BasedOn="{StaticResource ComboBoxExtend}"
+            TargetType="ComboBox">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="Visibility" Value="{Binding IsEdit, Converter={StaticResource ResourceKey=Boolean2VisibilityConverter}}" />
+        </Style>
+    </Border.Resources>
+    <Grid Margin="5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+
+            </Grid.ColumnDefinitions>
+
+            <TextBlock
+                Width="120"
+                Height="42"
+                Padding="5"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Background="{Binding MStatusBrush}"
+                Block.TextAlignment="Center"
+                FontSize="24"
+                Foreground="White"
+                Text="{Binding MStatus}" />
+
+            <TextBlock
+                Grid.Column="1"
+                Width="160"
+                Height="42"
+                Margin="10,0,0,0"
+                Padding="5"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Center"
+                Background="{Binding PLCStatusBrush}"
+                Block.TextAlignment="Center"
+                FontSize="24"
+                Foreground="White"
+                Text="{Binding PLCStatusText}" />
+            <!--<StackPanel
+                Grid.Column="2"
+                HorizontalAlignment="Right"
+                Orientation="Horizontal">
+                <Button
+                    Grid.Column="0"
+                    Width="90"
+                    Height="42"
+                    Margin="5,0,0,0"
+                    HorizontalAlignment="Left"
+                    hc:BorderElement.CornerRadius="0"
+                    Command="{Binding InitCommand}"
+                    Content="初始化 "
+                    FontSize="20"
+                    Style="{StaticResource ButtonDanger}" />
+                <Button
+                    Grid.Column="1"
+                    Width="90"
+                    Height="42"
+                    Margin="5,0,0,0"
+                    HorizontalAlignment="Left"
+                    hc:BorderElement.CornerRadius="0"
+                    Command="{Binding StartCommand}"
+                    Content="启 动"
+                    FontSize="20"
+                    Style="{StaticResource ButtonPrimary}" />
+            </StackPanel>-->
+        </Grid>
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="50" />
+                <RowDefinition Height="50" />
+                <RowDefinition Height="50" />
+                <RowDefinition Height="50" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock
+                HorizontalAlignment="Left"
+                Style="{StaticResource PlcTextStyle}"
+                Text="流线" />
+            <TextBlock
+                Grid.Column="1"
+                Style="{StaticResource PlcTextStyle}"
+                Text="上游有料" />
+            <TextBlock
+                Grid.Column="2"
+                Style="{StaticResource PlcTextStyle}"
+                Text="本站要料" />
+            <TextBlock
+                Grid.Column="3"
+                Style="{StaticResource PlcTextStyle}"
+                Text="本站有料" />
+            <TextBlock
+                Grid.Column="4"
+                Style="{StaticResource PlcTextStyle}"
+                Text="下游要料" />
+            <TextBlock
+                Grid.Column="5"
+                Style="{StaticResource PlcTextStyle}"
+                Text="空闲 s" />
+            <TextBlock
+                Grid.Column="6"
+                Style="{StaticResource PlcTextStyle}"
+                Text="阻塞 s" />
+
+            <TextBlock
+                Grid.Row="1"
+                HorizontalAlignment="Left"
+                Style="{StaticResource PlcTextStyle}"
+                Text="主流线" />
+            <TextBlock
+                Grid.Row="2"
+                HorizontalAlignment="Left"
+                Style="{StaticResource PlcTextStyle}"
+                Text="回流线" />
+
+            <StackPanel
+                Grid.Row="1"
+                Grid.Column="1"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+                <ToggleButton
+                    IsChecked="{Binding MainPrevHave}"
+                    Style="{StaticResource DigitalStyle}"
+                    Visibility="{Binding IsEdit, Converter={StaticResource Boolean2VisibilityReConverter}}">
+                    <hc:StatusSwitchElement.CheckedElement>
+                        <Border Background="Green" />
+                    </hc:StatusSwitchElement.CheckedElement>
+                    <Border Background="Gray" />
+                </ToggleButton>
+
+            </StackPanel>
+
+            <StackPanel
+                Grid.Row="1"
+                Grid.Column="2"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+                <ToggleButton
+                    IsChecked="{Binding MainThisGet}"
+                    Style="{StaticResource DigitalStyle}"
+                    Visibility="{Binding IsEdit, Converter={StaticResource Boolean2VisibilityReConverter}}">
+                    <hc:StatusSwitchElement.CheckedElement>
+                        <Border Background="Green" />
+                    </hc:StatusSwitchElement.CheckedElement>
+                    <Border Background="Gray" />
+                </ToggleButton>
+
+            </StackPanel>
+
+            <StackPanel
+                Grid.Row="1"
+                Grid.Column="3"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+                <ToggleButton
+                    IsChecked="{Binding MainThisHave}"
+                    Style="{StaticResource DigitalStyle}"
+                    Visibility="{Binding IsEdit, Converter={StaticResource Boolean2VisibilityReConverter}}">
+                    <hc:StatusSwitchElement.CheckedElement>
+                        <Border Background="Green" />
+                    </hc:StatusSwitchElement.CheckedElement>
+                    <Border Background="Gray" />
+                </ToggleButton>
+            </StackPanel>
+
+            <StackPanel
+                Grid.Row="1"
+                Grid.Column="4"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+                <ToggleButton
+                    IsChecked="{Binding MainNextGet}"
+                    Style="{StaticResource DigitalStyle}"
+                    Visibility="{Binding IsEdit, Converter={StaticResource Boolean2VisibilityReConverter}}">
+                    <hc:StatusSwitchElement.CheckedElement>
+                        <Border Background="Green" />
+                    </hc:StatusSwitchElement.CheckedElement>
+                    <Border Background="Gray" />
+                </ToggleButton>
+
+            </StackPanel>
+
+            <TextBlock
+                Grid.Row="1"
+                Grid.Column="5"
+                Foreground="{DynamicResource EditorForeground}"
+                IsEnabled="False"
+                Style="{StaticResource PlcTextStyle}"
+                Text="{Binding MainIdleTime, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBlock
+                Grid.Row="1"
+                Grid.Column="6"
+                Foreground="{DynamicResource EditorForeground}"
+                IsEnabled="False"
+                Style="{StaticResource PlcTextStyle}"
+                Text="{Binding MainBlockTime, UpdateSourceTrigger=PropertyChanged}" />
+            <StackPanel
+                Grid.Row="2"
+                Grid.Column="1"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+                <ToggleButton
+                    IsChecked="{Binding SubPrevHave}"
+                    Style="{StaticResource DigitalStyle}"
+                    Visibility="{Binding IsEdit, Converter={StaticResource Boolean2VisibilityReConverter}}">
+                    <hc:StatusSwitchElement.CheckedElement>
+                        <Border Background="Green" />
+                    </hc:StatusSwitchElement.CheckedElement>
+                    <Border Background="Gray" />
+                </ToggleButton>
+
+            </StackPanel>
+            <StackPanel
+                Grid.Row="2"
+                Grid.Column="2"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+                <ToggleButton
+                    IsChecked="{Binding SubThisGet}"
+                    Style="{StaticResource DigitalStyle}"
+                    Visibility="{Binding IsEdit, Converter={StaticResource Boolean2VisibilityReConverter}}">
+                    <hc:StatusSwitchElement.CheckedElement>
+                        <Border Background="Green" />
+                    </hc:StatusSwitchElement.CheckedElement>
+                    <Border Background="Gray" />
+                </ToggleButton>
+
+            </StackPanel>
+            <StackPanel
+                Grid.Row="2"
+                Grid.Column="3"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+                <ToggleButton
+                    IsChecked="{Binding SubThisHave}"
+                    Style="{StaticResource DigitalStyle}"
+                    Visibility="{Binding IsEdit, Converter={StaticResource Boolean2VisibilityReConverter}}">
+                    <hc:StatusSwitchElement.CheckedElement>
+                        <Border Background="Green" />
+                    </hc:StatusSwitchElement.CheckedElement>
+                    <Border Background="Gray" />
+                </ToggleButton>
+
+
+            </StackPanel>
+            <StackPanel
+                Grid.Row="2"
+                Grid.Column="4"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+                <ToggleButton
+                    IsChecked="{Binding SubNextGet}"
+                    Style="{StaticResource DigitalStyle}"
+                    Visibility="{Binding IsEdit, Converter={StaticResource Boolean2VisibilityReConverter}}">
+                    <hc:StatusSwitchElement.CheckedElement>
+                        <Border Background="Green" />
+                    </hc:StatusSwitchElement.CheckedElement>
+                    <Border Background="Gray" />
+                </ToggleButton>
+            </StackPanel>
+            <TextBlock
+                Grid.Row="2"
+                Grid.Column="5"
+                Foreground="{DynamicResource EditorForeground}"
+                IsEnabled="False"
+                Style="{DynamicResource PlcTextStyle}"
+                Text="{Binding SubIdleTime, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBlock
+                Grid.Row="2"
+                Grid.Column="6"
+                IsEnabled="False"
+                Style="{DynamicResource PlcTextStyle}"
+                Text="{Binding SubBlockTime, UpdateSourceTrigger=PropertyChanged}" />
+
+            <TextBlock
+                Grid.Row="3"
+                HorizontalAlignment="Left"
+                Style="{StaticResource PlcTextStyle}"
+                Text="载具数量" />
+
+            <TextBlock
+                Grid.Row="3"
+                Grid.Column="1"
+                Grid.ColumnSpan="1"
+                Margin="20,0,0,0"
+                HorizontalAlignment="Left"
+                Foreground="Black"
+                Style="{StaticResource PlcTextStyle}"
+                Text="{Binding TotalCarrierCount, StringFormat={}{0} 个-总}"
+                TextWrapping="Wrap" />
+
+            <TextBlock
+                Grid.Row="3"
+                Grid.Column="2"
+                Grid.ColumnSpan="1"
+                Margin="20,0,0,0"
+                HorizontalAlignment="Left"
+                Foreground="Black"
+                Style="{StaticResource PlcTextStyle}"
+                Text="{Binding MainCarrierCount, StringFormat={}{0} 个-主流}"
+                TextWrapping="Wrap" />
+
+            <TextBlock
+                Grid.Row="3"
+                Grid.Column="3"
+                Grid.ColumnSpan="1"
+                Margin="20,0,0,0"
+                HorizontalAlignment="Left"
+                Foreground="Black"
+                Style="{StaticResource PlcTextStyle}"
+                Text="{Binding SubCarrierCount, StringFormat={}{0} 个-物流}"
+                TextWrapping="Wrap" />
+
+            <TextBlock
+                Grid.Row="3"
+                Grid.Column="4"
+                Grid.ColumnSpan="1"
+                Margin="20,0,0,0"
+                HorizontalAlignment="Left"
+                Foreground="Black"
+                Style="{StaticResource PlcTextStyle}"
+                Text="{Binding BackCarrierCount, StringFormat={}{0} 个-回流}"
+                TextWrapping="Wrap" />
+
+        </Grid>
+    </Grid>
+</Border>

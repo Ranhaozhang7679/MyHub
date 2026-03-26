@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <CopyToMotionsFolder>true</CopyToMotionsFolder>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Luster.TaskFlow.Motion\Luster.TaskFlow.Motion.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Luster.Prism" />
+        <PackageReference Include="MinVer" />
+        <Reference Include="System.ComponentModel.DataAnnotations" />
+    </ItemGroup>
+
+</Project>

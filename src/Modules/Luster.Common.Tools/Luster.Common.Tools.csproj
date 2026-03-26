@@ -1,0 +1,79 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    </PropertyGroup>
+    <ItemGroup>
+        <None Remove="Costura64\sntl_adminapi_net_windows.dll" />
+        <None Remove="Costura64\sntl_adminapi_windows.dll" />
+        <None Remove="Costura64\sntl_adminapi_windows_x64.dll" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="Costura64\slm_runtime.dll" />
+        <EmbeddedResource Include="Costura64\slm_runtime_dev.dll" />
+        <EmbeddedResource Include="Costura64\sntl_adminapi_net_windows.dll" />
+        <EmbeddedResource Include="Costura64\sntl_adminapi_windows.dll" />
+        <EmbeddedResource Include="Costura64\sntl_adminapi_windows_x64.dll" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="MinVer" />
+        <PackageReference Include="Costura.Fody">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Magick.NET-Q16-AnyCPU" />
+        <PackageReference Include="NLog" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Luster.Common.DataStruct\Luster.Common.DataStruct.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Reference Include="Aspose.Cells">
+            <HintPath>..\..\..\libCommon\Aspose.Cells.dll</HintPath>
+        </Reference>
+        <Reference Include="ICSharpCode.SharpZipLib">
+            <HintPath>..\..\..\libCommon\ICSharpCode.SharpZipLib.dll</HintPath>
+        </Reference>
+        <Reference Include="Luster.DynamicExpresso">
+            <HintPath>..\..\..\libCommon\Luster.DynamicExpresso.dll</HintPath>
+        </Reference>
+        <Reference Include="Microsoft.Msagl">
+            <HintPath>..\..\..\lib\Microsoft.Msagl.dll</HintPath>
+        </Reference>
+        <Reference Include="Microsoft.Msagl.Drawing">
+            <HintPath>..\..\..\lib\Microsoft.Msagl.Drawing.dll</HintPath>
+        </Reference>
+        <Reference Include="Microsoft.Msagl.GraphViewerGdi">
+            <HintPath>..\..\..\lib\Microsoft.Msagl.GraphViewerGdi.dll</HintPath>
+        </Reference>
+        <Reference Include="Microsoft.VisualBasic" />
+        <Reference Include="Newtonsoft.Json">
+            <HintPath>..\..\..\libCommon\Newtonsoft.Json.dll</HintPath>
+        </Reference>
+        <Reference Include="NLog">
+            <HintPath>..\..\..\libCommon\NLog.dll</HintPath>
+        </Reference>
+        <Reference Include="Renci.SshNet">
+            <HintPath>..\..\..\libCommon\Renci.SshNet.dll</HintPath>
+        </Reference>
+        <Reference Include="SkiaSharp">
+            <HintPath>..\..\..\lib\SkiaSharp.dll</HintPath>
+        </Reference>
+        <Reference Include="sntl_adminapi_net_windows">
+            <HintPath>Costura64\sntl_adminapi_net_windows.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="System.Net.Http" />
+        <Reference Include="System.Web" />
+        <Reference Include="System.Web.Services" />
+        <Reference Include="System.Windows.Forms" />
+    </ItemGroup>
+
+    <PropertyGroup Condition=" '$(TargetFramework)' == 'net472'">
+        <DefineConstants>NET45;NETFULL;NET40Plus</DefineConstants>
+    </PropertyGroup>
+</Project>

@@ -1,0 +1,196 @@
+﻿<UserControl
+    x:Class="Luster.Motion.SubSystem.Views.StatusContent"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converter="clr-namespace:Luster.Motion.CommonUI.Converter;assembly=Luster.Motion.CommonUI"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:local="clr-namespace:Luster.Motion.SubSystem.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="45"
+    d:DesignWidth="800"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <converter:EnumLangConverter x:Key="MultiLangConverter" />
+    </UserControl.Resources>
+    <Border Grid.Row="2" Background="{DynamicResource RegionBrush}">
+        <Grid>
+            <StatusBar>
+                <StatusBar.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                        </Grid>
+                    </ItemsPanelTemplate>
+                </StatusBar.ItemsPanel>
+                <StatusBarItem>
+                    <Path
+                        VerticalAlignment="Center"
+                        Stroke="Red"
+                        StrokeThickness="1">
+                        <Path.Data>
+                            <RectangleGeometry Rect="0,0,12,10" />
+                        </Path.Data>
+                        <Path.RenderTransform>
+                            <SkewTransform AngleX="-15" />
+                        </Path.RenderTransform>
+                    </Path>
+                </StatusBarItem>
+                <Separator Grid.Column="1" />
+                <StatusBarItem Grid.Column="2" Padding="10,0">
+                    <ComboBox
+                        MinWidth="100"
+                        MinHeight="24"
+                        Margin="0"
+                        Padding="10,2"
+                        DisplayMemberPath="{Binding Desc}"
+                        IsEnabled="{Binding ModeEnabled}"
+                        ItemsSource="{Binding ModeList, Converter={StaticResource MultiLangConverter}}"
+                        SelectedValue="{Binding SelectMode}"
+                        SelectedValuePath="Value"
+                        Style="{StaticResource ComboBox.Small}">
+                        <hc:Interaction.Triggers>
+                            <hc:EventTrigger EventName="SelectionChanged">
+                                <hc:EventToCommand Command="{Binding RelativeSource={RelativeSource AncestorType=ComboBox}, Path=DataContext.ChangeModeCommand}" PassEventArgsToCommand="True" />
+                            </hc:EventTrigger>
+                        </hc:Interaction.Triggers>
+                    </ComboBox>
+                </StatusBarItem>
+                <Separator Grid.Column="3" />
+                <StatusBarItem Grid.Column="4" Padding="10,0" />
+                <StatusBarItem Grid.Column="5" Padding="10,0">
+                    <ItemsControl ItemsSource="{Binding SysItems}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="5,0,0,0" VerticalAlignment="Center">
+                                    <Rectangle
+                                        Width="100"
+                                        Height="24"
+                                        Fill="{Binding Brush}" />
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Foreground="{Binding ForeTextBrush, Converter={StaticResource String2BrushConverter}}"
+                                        Text="{Binding Name}" />
+                                    <hc:Interaction.Triggers>
+                                        <hc:EventTrigger EventName="PreviewMouseDown">
+                                            <hc:EventToCommand Command="{Binding Path=DataContext.SysCommand, RelativeSource={RelativeSource AncestorType=StatusBar}}" CommandParameter="{Binding .}" />
+                                        </hc:EventTrigger>
+                                    </hc:Interaction.Triggers>
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StatusBarItem>
+
+                <StatusBarItem Grid.Column="6">
+                    <Grid VerticalAlignment="Center">
+                        <Rectangle
+                            Width="80"
+                            Height="24"
+                            Fill="{Binding PdcaBackBrush, Converter={StaticResource String2BrushConverter}}" />
+
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                             Foreground="{Binding ForeTextBrush, Converter={StaticResource String2BrushConverter}}"
+                            Text="PDCA" />
+                    </Grid>
+                </StatusBarItem>
+
+                <StatusBarItem Grid.Column="7">
+                    <Grid VerticalAlignment="Center">
+                        <Rectangle
+                            Width="80"
+                            Height="24"
+                            Fill="{Binding SfcBackBrush, Converter={StaticResource String2BrushConverter}}" />
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                             Foreground="{Binding ForeTextBrush, Converter={StaticResource String2BrushConverter}}"
+                            Text="SFC" />
+                    </Grid>
+                </StatusBarItem>
+
+                <StatusBarItem Grid.Column="8">
+                    <Grid VerticalAlignment="Center">
+                        <Rectangle
+                            Width="120"
+                            Height="24"
+                            Fill="{Binding FFUBackBrush, Converter={StaticResource String2BrushConverter}}" />
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                             Foreground="{Binding ForeTextBrush, Converter={StaticResource String2BrushConverter}}"
+                            Text="{Binding FFUState}" />
+                    </Grid>
+                </StatusBarItem>
+
+                <StatusBarItem Grid.Column="9" Padding="10,0">
+                    <TextBlock Foreground="{Binding ForeBrush, Converter={StaticResource String2BrushConverter}}" Text="{Binding Message}" />
+                </StatusBarItem>
+                <Separator Grid.Column="10" />
+                <StatusBarItem Grid.Column="11">
+                    <ComboBox
+                        Width="105"
+                        MinHeight="24"
+                        ItemsSource="{Binding Languages}"
+                        SelectedValue="{Binding CurrentLang}"
+                        Style="{StaticResource ComboBox.Small}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <Image
+                                        Height="14"
+                                        Source="{Binding Image}"
+                                        Stretch="Fill" />
+                                    <TextBlock
+                                        Margin="8,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Text="{Binding Text}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                        <hc:Interaction.Triggers>
+                            <hc:EventTrigger EventName="SelectionChanged">
+                                <hc:EventToCommand Command="{Binding RelativeSource={RelativeSource AncestorType=ComboBox}, Path=DataContext.ChangeLangCommand}" PassEventArgsToCommand="True" />
+                            </hc:EventTrigger>
+                        </hc:Interaction.Triggers>
+                    </ComboBox>
+                </StatusBarItem>
+                <StatusBarItem Grid.Column="12">
+                    <TextBlock
+                        Margin="10,0"
+                        HorizontalAlignment="Right"
+                        FontWeight="Bold"
+                        Foreground="{StaticResource lusterColor}"
+                        Text="{Binding Version, StringFormat={}Version {0}}" />
+                    <hc:Interaction.Triggers>
+                        <hc:EventTrigger EventName="PreviewMouseDown">
+                            <hc:EventToCommand Command="{Binding Path=DataContext.ShowVersionCommand, RelativeSource={RelativeSource AncestorType=StatusBar}}" CommandParameter="{Binding .}" />
+                        </hc:EventTrigger>
+                    </hc:Interaction.Triggers>
+                </StatusBarItem>
+            </StatusBar>
+        </Grid>
+    </Border>
+</UserControl>

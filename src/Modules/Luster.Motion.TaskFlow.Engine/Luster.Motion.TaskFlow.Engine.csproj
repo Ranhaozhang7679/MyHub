@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Version>1.0.0.0</Version>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Luster.Prism"/>
+        <PackageReference Include="MinVer" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Remove="HyperTrain\**" />
+        <EmbeddedResource Remove="HyperTrain\**" />
+        <None Remove="HyperTrain\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Include="HyperTrain\IWebService.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!--<ProjectReference Include="..\Luster.Common.DataAccess\Luster.Common.DataAccess.csproj" />-->
+        <!--<ProjectReference Include="..\Luster.Motion.DataStruct\Luster.Motion.DataStruct.csproj" />-->
+        <ProjectReference Include="..\Luster.TaskFlow.Common\Luster.TaskFlow.Common.csproj" />
+        <ProjectReference Include="..\Luster.TaskFlow.Motion\Luster.TaskFlow.Motion.csproj" />
+    </ItemGroup>
+
+</Project>

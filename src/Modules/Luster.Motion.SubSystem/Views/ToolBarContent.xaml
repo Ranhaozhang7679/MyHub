@@ -1,0 +1,621 @@
+﻿<Grid
+    x:Class="Luster.Motion.SubSystem.Views.ToolBarContent"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:g="clr-namespace:Luster.Motion.CommonUI;assembly=Luster.Motion.CommonUI"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:lang="clr-namespace:Luster.Motion.Assests.Langs;assembly=Luster.Motion.Assests"
+    xmlns:local="clr-namespace:Luster.Motion.SubSystem.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/" xmlns:viewmodel="clr-namespace:Luster.Motion.SubSystem.ViewModel" d:DataContext="{d:DesignInstance Type=viewmodel:ToolBarContentVM}"
+    Height="112"
+    Margin="0,0,0,0"
+    d:DesignHeight="112"
+    d:DesignWidth="1228"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    mc:Ignorable="d">
+    <!--<Button Command="{Binding HomeCommand}" Content="测试" />-->
+    <!--  标题和工具栏  -->
+    <Grid.Resources>
+        <Style x:Key="ModeStyle" TargetType="RadioButton">
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="Foreground" Value="Black" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Grid>
+                            <Border x:Name="border" Background="#DDE0E7" />
+                            <ContentPresenter
+                                x:Name="contentPresenter"
+                                Margin="{TemplateBinding Padding}"
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                Focusable="False"
+                                RecognizesAccessKey="True"
+                                SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#1890FF" />
+                                <Setter Property="Foreground" Value="White" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="False" />
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Cursor" Value="Hand" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="AnimationStyle" TargetType="TextBlock">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding MStatus}" Value="报警中">
+                    <DataTrigger.EnterActions>
+                        <BeginStoryboard x:Name="b">
+                            <Storyboard>
+                                <ColorAnimation
+                                    AutoReverse="True"
+                                    RepeatBehavior="Forever"
+                                    Storyboard.TargetProperty="(TextBlock.Foreground).Color"
+                                    To="Yellow"
+                                    Duration="0:0:1" />
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </DataTrigger.EnterActions>
+                    <DataTrigger.ExitActions>
+                        <StopStoryboard BeginStoryboardName="b" />
+                    </DataTrigger.ExitActions>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Grid.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="100" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid Grid.Column="0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBlock
+                    Margin="10,10,0,0"
+                    FontSize="24"
+                    FontWeight="Bold"
+                    Foreground="WhiteSmoke">
+                    LUSTER
+                    <TextBlock.InputBindings>
+                        <MouseBinding Command="{Binding OpenLogFolderCommand}" MouseAction="LeftDoubleClick" />
+                    </TextBlock.InputBindings>
+                </TextBlock>
+
+                <TextBlock
+                    Grid.Row="1"
+                    Margin="10,0,0,0"
+                    VerticalAlignment="Center"
+                    FontSize="28"
+                    Foreground="White"
+                    Text="{Binding Title}"/>
+
+            </Grid>
+        </Grid>
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200" />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Grid
+                Background="{Binding BackColor}"
+                Grid.Column="0"
+                Grid.ColumnSpan="2"
+                Margin="20,0,162,0"
+                VerticalAlignment="Center"
+                IsHitTestVisible="True"
+                Visibility="{Binding TitleVisible, Converter={StaticResource Boolean2VisibilityConverter}}"
+                WindowChrome.IsHitTestVisibleInChrome="True">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    FontSize="12"
+                    Foreground="{Binding ForeColor}"
+                    IsHitTestVisible="True"
+                    Text="{Binding ProjName}" />
+                <TextBlock
+                    Grid.Column="1"
+                    Margin="20,0,0,0"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    FontSize="12"
+                    Foreground="{Binding ForeColor}"
+                    IsHitTestVisible="True"
+                    Text="{Binding StationId}" />
+                <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="2" FontSize="12" Foreground="{Binding ForeColor}" Text="{Binding RemainT}"/>
+                <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Grid.Column="3" FontSize="12" Foreground="{Binding ForeColor}" Text="{Binding UserMsg}"/>
+                <Grid.InputBindings>
+                    <MouseBinding Command="{Binding OpenRecipeFolderCommand}" MouseAction="LeftDoubleClick" />
+                </Grid.InputBindings>
+            </Grid>
+            <Border
+                Grid.Row="0"
+                Grid.Column="1"
+                HorizontalAlignment="Right"
+                WindowChrome.IsHitTestVisibleInChrome="True">
+                <StackPanel
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Bottom"
+                    Orientation="Horizontal">
+                    <Button
+                        Name="btnSave"
+                        Width="37"
+                        Margin="0,0,3,0"
+                        HorizontalAlignment="Right"
+                        hc:IconElement.Geometry="{StaticResource WindowSaveGeometry}"
+                        Command="{x:Static g:GlobalCommands.SaveCommand}"
+                        Style="{StaticResource btn_nap}"
+                        WindowChrome.IsHitTestVisibleInChrome="True" Foreground="White" />
+                    <Button
+                        Name="button_MiniSize"
+                        Width="36"
+                        Margin="0,0,3,0"
+                        HorizontalAlignment="Right"
+                        hc:IconElement.Geometry="{StaticResource WindowMinGeometry}"
+                        Command="{Binding MinCommand}"
+                        Foreground="White"
+                        Style="{StaticResource btn_nap}"
+                        WindowChrome.IsHitTestVisibleInChrome="True" />
+                    <Button
+                        Name="button_MaxSize"
+                        Width="36"
+                        Margin="0,0,3,0"
+                        HorizontalAlignment="Right"
+                        hc:IconElement.Geometry="{StaticResource WindowMaxGeometry}"
+                        Command="{Binding MaxCommand}"
+                        Foreground="White"
+                        Style="{StaticResource btn_nap}"
+                        WindowChrome.IsHitTestVisibleInChrome="True" />
+                    <Button
+                        x:Name="btn_Close"
+                        Width="36"
+                        Margin="0,0,3,0"
+                        HorizontalAlignment="Right"
+                        hc:IconElement.Geometry="{StaticResource WindowCloseGeometry}"
+                        Command="{Binding CloseCommand}"
+                        Foreground="White"
+                        Style="{StaticResource btn_nap}"
+                        WindowChrome.IsHitTestVisibleInChrome="True" />
+                </StackPanel>
+            </Border>
+            <Grid
+                Name="gStatus"
+                Grid.Row="1"
+                Grid.Column="0">
+                <Path Name="pathStatus" Fill="{Binding StatusBrush}">
+                    <Path.Data>
+                        <PathGeometry>
+                            <PathFigure IsClosed="True" StartPoint="20,0">
+                                <LineSegment Point="200,0" />
+                                <LineSegment Point="180,82" />
+                                <LineSegment Point="0,82" />
+                            </PathFigure>
+                        </PathGeometry>
+                    </Path.Data>
+                </Path>
+                <Path Fill="{Binding PageBtnBrush}">
+                    <Path.Data>
+                        <PathGeometry>
+                            <PathFigure IsClosed="True" StartPoint="200,0">
+                                <LineSegment Point="200,82" />
+                                <LineSegment Point="180,82" />
+                            </PathFigure>
+                        </PathGeometry>
+                    </Path.Data>
+                </Path>
+                <TextBlock
+                    Name="TxtStatus"
+                    Grid.Row="1"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    FontSize="32"
+                    FontWeight="Bold"
+                    Foreground="White"
+                    PreviewMouseDown="TxtStatus_PreviewMouseDown"
+                    Style="{StaticResource AnimationStyle}"
+                    Text="{Binding MStatus}" />
+            </Grid>
+
+            <Grid
+                Grid.Row="1"
+                Grid.Column="1"
+                Background="{Binding PageBtnBrush}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid Width="90">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="24" />
+                    </Grid.RowDefinitions>
+                    <TextBlock
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontSize="20"
+                        FontWeight="Bold"
+                        Foreground="White"
+                        Text="{Binding CurrentMode}"
+                        TextWrapping="Wrap" />
+                    <Path
+                        x:Name="btnMode"
+                        Grid.Row="1"
+                        Fill="White"
+                        PreviewMouseDown="btnMode_PreviewMouseDown"
+                        Visibility="{Binding ModeEnabled, Converter={StaticResource Boolean2VisibilityConverter}}">
+                        <Path.Data>
+                            <PathGeometry>
+                                <PathFigure IsClosed="True" StartPoint="35,0">
+                                    <LineSegment Point="55,0" />
+                                    <LineSegment Point="45,15" />
+                                </PathFigure>
+                            </PathGeometry>
+                        </Path.Data>
+                    </Path>
+                </Grid>
+                <ItemsControl
+                    x:Name="list"
+                    Grid.Column="1"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    IsEnabled="{Binding Path=(g:GlobalProperty.IsEnabeld), UpdateSourceTrigger=PropertyChanged}"
+                    ItemsSource="{Binding Pages}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel IsItemsHost="True" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <RadioButton
+                                Margin="0,0"
+                                Padding="6,0"
+                                Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                CommandParameter="{Binding}"
+                                IsChecked="{Binding page_IsSelected}"
+                                IsEnabled="{Binding page_IsEnabled}"
+                                Style="{StaticResource defaultRadioStyle}"
+                                Visibility="{Binding page_IsVisible, Converter={StaticResource Boolean2VisibilityConverter}}">
+                                <StackPanel>
+                                    <TextBlock
+                                        Name="txticon"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        FontSize="35"
+                                        Style="{StaticResource MotionIconLarge}"
+                                        Text="{Binding Iconfont}" />
+                                    <TextBlock
+                                        Name="txtname"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        FontSize="10"
+                                        Text="{lang:Lang Key={Binding Name}}" />
+                                </StackPanel>
+                            </RadioButton>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <hc:Divider
+                    Grid.Column="2"
+                    HorizontalAlignment="Left"
+                    Orientation="Vertical" />
+                <ItemsControl
+                    x:Name="listoperate"
+                    Grid.Column="3"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    IsEnabled="{Binding Path=(g:GlobalProperty.IsEnabeld), UpdateSourceTrigger=PropertyChanged}"
+                    ItemsSource="{Binding Commands}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel IsItemsHost="True" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <RadioButton
+                                Margin="2,0"
+                                Padding="2,5"
+                                Command="{Binding DataContext.OperateCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                CommandParameter="{Binding}"
+                                IsChecked="{Binding cmd_IsSelected}"
+                                IsEnabled="{Binding cmd_IsEnabled}"
+                                Style="{StaticResource CommandRadioStyle}"
+                                Visibility="{Binding cmd_IsVisible, Converter={StaticResource Boolean2VisibilityConverter}}">
+                                <StackPanel>
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        FontSize="35"
+                                        Style="{StaticResource MotionIconLarge}"
+                                        Text="{Binding Iconfont}" />
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        FontSize="10"
+                                        Text="{lang:Lang Key={Binding Name}}" />
+                                </StackPanel>
+                            </RadioButton>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <hc:Divider
+                    Grid.Column="4"
+                    HorizontalAlignment="Right"
+                    Orientation="Vertical" />
+                <RadioButton
+                    Grid.Column="5"
+                    Margin="0,0"
+                    Padding="2,0"
+                    Command="{Binding LoginCommand}"
+                    CommandParameter="{Binding StartContent}"
+                    IsChecked="{Binding LoginCheck}"
+                    IsEnabled="{Binding LoginEnable}"
+                    Style="{StaticResource defaultRadioStyle}">
+                    <StackPanel>
+                        <StackPanel>
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                FontSize="35"
+                                Style="{StaticResource MotionIconLarge}"
+                                Text="&#xe645;" />
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Text="{Binding UserName}" />
+                        </StackPanel>
+                    </StackPanel>
+                </RadioButton>
+                <hc:Divider
+                    Grid.Column="6"
+                    HorizontalAlignment="Right"
+                    Orientation="Vertical" />
+                <Grid   Background="Transparent" Height="60" Width="170" Grid.Column="7">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="50"/>
+                        <ColumnDefinition Width="30"/>
+                        <ColumnDefinition Width="15"/>
+                        <!-- 最右侧：放二维码 -->
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition/>
+                        <RowDefinition/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Weekly:" FontSize="10" Background="Transparent" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1" Margin="0" FontSize="10" Text="{Binding RemainWeekMaintenanceDays}"  Foreground="{Binding WeekMaintenanceColor}" Background="Transparent" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="2" Margin="0" FontSize="10" Text="D" Background="Transparent" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Row="1" Margin="0" FontSize="10" Text="Monthly:" Background="Transparent" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Row="1" Margin="0" FontSize="10" Grid.Column="1" Text="{Binding RemainMonthMaintenanceDays}" Foreground="{Binding MonthMaintenanceColor}" Background="Transparent" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Row="1" Margin="0,0,2,0" FontSize="10" Grid.Column="2" Text="D" Foreground="White" Background="Transparent" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Image Grid.Column="3" Grid.Row="0" Grid.RowSpan="2" Stretch="Uniform" Source="{Binding QrSource}" Margin="1,-14,0,-12"/>
+                </Grid>
+            </Grid>
+        </Grid>
+        <Popup
+            Name="popup"
+            Width="150"
+            MinHeight="50"
+            local:PopupHelper.PopupPlacementTarget="{Binding ElementName=btnMode}"
+            AllowsTransparency="True"
+            HorizontalOffset="-20"
+            PlacementTarget="{Binding ElementName=btnMode}"
+            StaysOpen="True"
+            VerticalOffset="0">
+            <Grid>
+                <Border
+                    Margin="0,0,0,0"
+                    Padding="5"
+                    Background="{DynamicResource RegionBrush}"
+                    Effect="{StaticResource EffectShadow2}">
+                    <ItemsControl ItemsSource="{Binding RunModes}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <hc:UniformSpacingPanel Orientation="Vertical" Spacing="5" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <RadioButton
+                                    Padding="10,5"
+                                    Command="{Binding RelativeSource={RelativeSource AncestorType=Popup}, Path=DataContext.ChangeModeCommand}"
+                                    CommandParameter="{Binding RelativeSource={RelativeSource Mode=Self}}"
+                                    Content="{Binding Name}"
+                                    FontSize="18"
+                                    IsChecked="{Binding IsSelected}"
+                                    Style="{StaticResource ModeStyle}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Border>
+            </Grid>
+        </Popup>
+        <Popup
+            Name="popupAlarm"
+            MinWidth="800"
+            MinHeight="60"
+            local:PopupHelper.PopupPlacementTarget="{Binding ElementName=gStatus}"
+            AllowsTransparency="True"
+            HorizontalOffset="-150"
+            IsOpen="{Binding IsAlarm}"
+            PlacementTarget="{Binding ElementName=gStatus}"
+            StaysOpen="True"
+            VerticalOffset="0">
+            <Grid VerticalAlignment="Center" Background="{StaticResource DangerBrush}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <ListBox
+                    MaxHeight="450"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    ItemsSource="{Binding AlarmInfos}"
+                    Style="{StaticResource ListBoxCustom}">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <hc:UniformSpacingPanel Orientation="Vertical" Spacing="1" />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                    <RowDefinition />
+                                </Grid.RowDefinitions>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock
+                                    x:Name="txtIcon"
+                                    Margin="5,0,0,0"
+                                    Padding="2,0"
+                                    VerticalAlignment="Center"
+                                    FontSize="32"
+                                    Foreground="White"
+                                    Style="{StaticResource MotionIconMid}"
+                                    Text="{Binding Icon}" />
+                                <TextBlock
+                                    Grid.Column="1"
+                                    Margin="5"
+                                    VerticalAlignment="Center"
+                                    FontSize="24"
+                                    Foreground="White"
+                                    Text="{Binding Message}"
+                                    TextWrapping="Wrap" />
+                                <TextBlock
+                                    Grid.Column="2"
+                                    Margin="5"
+                                    VerticalAlignment="Center"
+                                    FontSize="24"
+                                    Foreground="WhiteSmoke"
+                                    Text="{Binding Code}"
+                                    TextWrapping="Wrap" />
+                                <TextBlock
+                                    Grid.Row="1"
+                                    Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    FontSize="24"
+                                    Foreground="WhiteSmoke"
+                                    Text="{Binding AlarmTime}"
+                                    TextWrapping="Wrap" />
+                                <ListBox
+                                    Grid.Row="2"
+                                    Grid.ColumnSpan="3"
+                                    Padding="15,5"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    ItemsSource="{Binding UserActions}"
+                                    Style="{StaticResource ListBoxCustom}">
+                                    <ListBox.ItemsPanel>
+                                        <ItemsPanelTemplate>
+                                            <StackPanel />
+                                        </ItemsPanelTemplate>
+                                    </ListBox.ItemsPanel>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock
+                                                MinHeight="24"
+                                                FontSize="15"
+                                                Foreground="WhiteSmoke"
+                                                Text="{Binding .}" />
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+
+                            </Grid>
+                            <DataTemplate.Triggers>
+                                <DataTrigger Binding="{Binding AlarmType, Converter={StaticResource Object2StringConverter}}" Value="InfoTip">
+                                    <Setter TargetName="txtIcon" Property="TextBlock.Foreground" Value="White" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding AlarmType, Converter={StaticResource Object2StringConverter}}" Value="WarningTip">
+                                    <Setter TargetName="txtIcon" Property="TextBlock.Foreground" Value="Yellow" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding AlarmType, Converter={StaticResource Object2StringConverter}}" Value="Timeout">
+                                    <Setter TargetName="txtIcon" Property="TextBlock.Foreground" Value="Yellow" />
+                                </DataTrigger>
+                            </DataTemplate.Triggers>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <Grid Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <Button
+                        Grid.Row="0"
+                        Grid.Column="1"
+                        Margin="5,5,5,0"
+                        Padding="0"
+                        VerticalAlignment="Top"
+                        HorizontalContentAlignment="Center"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Click="Button_Click"
+                        FontSize="24">
+                        <Button.Content>
+                            <TextBlock
+                                Foreground="White"
+                                Style="{StaticResource MotionIconLarge}"
+                                Text="&#xe61d;" />
+                        </Button.Content>
+                    </Button>
+
+                    <Button
+                        Grid.Row="2"
+                        Grid.Column="1"
+                        Margin="5,5,5,5"
+                        Padding="10,2"
+                        VerticalAlignment="Bottom"
+                        HorizontalContentAlignment="Center"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Click="Button_Click"
+                        Command="{Binding Path=PlacementTarget.DataContext.ClearAlarmCommand, RelativeSource={RelativeSource AncestorType=Popup}}"
+                        Content="{lang:Lang Key={x:Static lang:LangKeys.Clear}}"
+                        Foreground="White" />
+                </Grid>
+            </Grid>
+
+        </Popup>
+    </Grid>
+</Grid>

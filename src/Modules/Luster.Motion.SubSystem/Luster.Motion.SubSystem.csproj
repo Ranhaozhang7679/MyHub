@@ -1,0 +1,125 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<UseWPF>true</UseWPF>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Remove="Converter\**" />
+		<EmbeddedResource Remove="Converter\**" />
+		<None Remove="Converter\**" />
+		<Page Remove="Converter\**" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<Compile Update="Views\BoolToEnableDisableConverter.cs">
+			<SubType>Code</SubType>
+		</Compile>
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <Compile Remove="Views\MainLeftContent.xaml.cs" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+		<PackageReference Include="Dirkster.AvalonDock" />
+		<PackageReference Include="HandyControl" />
+		<PackageReference Include="LiveChartsCore" />
+		<PackageReference Include="LiveChartsCore.SkiaSharpView" />
+		<PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" />
+		<PackageReference Include="Luster.Prism" />
+		<PackageReference Include="Luster.WindowsAPICodePack" />
+		<PackageReference Include="ZXing.Net" />
+        <PackageReference Include="MinVer" />
+    </ItemGroup>
+
+	<ItemGroup>
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Luster.Motion.Integration\Luster.Motion.Integration.csproj" />
+	  <ProjectReference Include="..\TaiKeCommon\TaiKeCommon.csproj" />
+	  <ProjectReference Include="..\Luster.SimDevice.EngineUI\Luster.SimDevice.EngineUI.csproj" />
+	  <ProjectReference Include="..\Luster.SimDevice.SubSystem\Luster.SimDevice.SubSystem.csproj" />
+	  <ProjectReference Include="..\Luster.Common.Assets\Luster.Common.Assets.csproj" />
+	  <ProjectReference Include="..\Luster.Motion.Assests\Luster.Motion.Assests.csproj" />
+	  <ProjectReference Include="..\Luster.Motion.EditorUI\Luster.Motion.EditorUI.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Reference Include="HarfBuzzSharp">
+	    <HintPath>..\..\..\lib\HarfBuzzSharp.dll</HintPath>
+	  </Reference>
+	  <Reference Include="SkiaSharp">
+	    <HintPath>..\..\..\lib\SkiaSharp.dll</HintPath>
+	    <Private>False</Private>
+	  </Reference>
+	  <Reference Include="Microsoft.VisualBasic" />
+	  <Reference Include="System.Management" />
+	  <Reference Include="System.Windows.Forms" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Update="Views\ChartTorque2Content.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
+	  <Compile Update="Views\ProductInfoContent.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
+    <Compile Update="Views\VisionConfig.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+	  <Compile Update="Views\SoftConfigureContent.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
+	  <Compile Update="Views\WorkFlowContent.xaml.cs">
+	    <SubType>Code</SubType>
+	  </Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Page Update="Views\ChartCopyContent.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	  </Page>
+	  <Page Update="Views\ChartToeInForceContent.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	  </Page>
+	  <Page Update="Views\Dialog\ModuleConfigureDialog.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	  </Page>
+	  <Page Update="Views\Dialog\HiveDialog.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	  </Page>
+	  <Page Update="Views\HeartMonitorContent.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	  </Page>
+	  <Page Update="Views\ProductInfoContent.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	    <SubType>Designer</SubType>
+	  </Page>
+    <Page Update="Views\VisionConfig.xaml">
+      <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+      <SubType>Designer</SubType>
+    </Page>
+	  <Page Update="Views\ConfirmBtnContent.xaml">
+	    <SubType>Designer</SubType>
+	  </Page>
+	  <Page Update="Views\RollSetContent.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	  </Page>
+	  <Page Update="Views\SoftConfigureContent.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	    <SubType>Designer</SubType>
+	  </Page>
+	  <Page Update="Views\UserContent.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	    <SubType>Designer</SubType>
+	  </Page>
+	  <Page Update="Views\WorkFlowContent.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	    <SubType>Designer</SubType>
+	  </Page>
+	</ItemGroup>
+</Project>

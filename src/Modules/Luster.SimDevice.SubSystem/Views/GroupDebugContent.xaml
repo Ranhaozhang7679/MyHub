@@ -1,0 +1,747 @@
+﻿<UserControl
+    x:Class="Luster.SimDevice.SubSystem.Views.GroupDebugContent"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:lang="clr-namespace:Luster.SimDevice.SubSystem.Langs"
+    xmlns:local="clr-namespace:Luster.SimDevice.SubSystem.Views.Virtual"
+    xmlns:m="clr-namespace:Luster.SimDevice.EngineUI.Models;assembly=Luster.SimDevice.EngineUI"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    d:DesignHeight="650"
+    d:DesignWidth="1200"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{DynamicResource RegionBrush}"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <Style
+            x:Key="DigitalStyle"
+            BasedOn="{StaticResource ToggleButtonFlip.Small}"
+            TargetType="ToggleButton">
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="1" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <!--  数字量输入模板  -->
+        <DataTemplate x:Key="DigitalInTemplate" DataType="{x:Type m:IOModel}">
+            <Border
+                Name="BorderItem"
+                Height="36"
+                Margin="2"
+                Padding="5,4"
+                BorderThickness="1"
+                Style="{StaticResource BorderRegion}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="25" />
+                        <ColumnDefinition Width="180" />
+                        <ColumnDefinition Width="30" />
+                    </Grid.ColumnDefinitions>
+                    <Border HorizontalAlignment="Left">
+                        <TextBlock
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource PrimaryBrush}"
+                            Text="{Binding Index, StringFormat={}X{0}}" />
+                    </Border>
+                    <TextBlock
+                        Grid.Column="1"
+                        Margin="5,0"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        Text="{Binding Name}"
+                        ToolTip="{Binding Name}"
+                        Visibility="{Binding IsSelected, Converter={StaticResource Boolean2VisibilityReConverter}}" />
+                    <TextBox
+                        Grid.Column="1"
+                        Width="180"
+                        MaxHeight="22"
+                        Style="{StaticResource TextBoxExtend.Small}"
+                        Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        Visibility="{Binding IsSelected, Converter={StaticResource Boolean2VisibilityConverter}}" />
+                    <ToggleButton
+                        Grid.Column="2"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        BorderThickness="0"
+                        IsChecked="{Binding DigitalValue}"
+                        IsEnabled="{Binding Path=DataContext.IsReal, Converter={StaticResource Boolean2BooleanReConverter}, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListBox}}"
+                        Style="{StaticResource DigitalStyle}">
+                        <hc:StatusSwitchElement.CheckedElement>
+                            <Border Background="Green" />
+                        </hc:StatusSwitchElement.CheckedElement>
+                        <Border Background="Gray" />
+                    </ToggleButton>
+                </Grid>
+            </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                    <Setter TargetName="BorderItem" Property="Border.BorderBrush" Value="Green" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!--  数字量输出模板  -->
+        <DataTemplate x:Key="DigitalOutTemplate" DataType="{x:Type m:IOModel}">
+            <Border
+                Height="36"
+                Margin="2"
+                Padding="5,4"
+                BorderThickness="1"
+                Style="{StaticResource BorderRegion}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="25" />
+                        <ColumnDefinition Width="180" />
+                        <ColumnDefinition Width="40" />
+                    </Grid.ColumnDefinitions>
+                    <Border HorizontalAlignment="Left">
+                        <TextBlock
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource PrimaryBrush}"
+                            Text="{Binding Index, StringFormat={}Y{0}}" />
+                    </Border>
+                    <TextBlock
+                        Grid.Column="1"
+                        Margin="5,0"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        Text="{Binding Name}"
+                        ToolTip="{Binding Name}"
+                        Visibility="{Binding IsSelected, Converter={StaticResource Boolean2VisibilityReConverter}}" />
+                    <TextBox
+                        Grid.Column="1"
+                        Width="180"
+                        MaxHeight="22"
+                        Style="{StaticResource TextBoxExtend.Small}"
+                        Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        Visibility="{Binding IsSelected, Converter={StaticResource Boolean2VisibilityConverter}}" />
+                    <ToggleButton
+                        Grid.Column="2"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        BorderThickness="0"
+                        IsChecked="{Binding DigitalValue}"
+                        Style="{StaticResource DigitalStyle}">
+                        <hc:StatusSwitchElement.CheckedElement>
+                            <Border Background="Green" />
+                        </hc:StatusSwitchElement.CheckedElement>
+                        <Border Background="Gray" />
+                    </ToggleButton>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!--  模拟量输入模板  -->
+        <DataTemplate x:Key="AnalogInTemplate" DataType="{x:Type m:IOModel}">
+            <Border
+                Margin="2"
+                Padding="5,4"
+                BorderThickness="1"
+                Style="{StaticResource BorderRegion}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="25" />
+                        <ColumnDefinition Width="180" />
+                        <ColumnDefinition Width="40" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="30" />
+                    </Grid.ColumnDefinitions>
+                    <Border HorizontalAlignment="Left">
+                        <TextBlock
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource PrimaryBrush}"
+                            Text="{Binding Index, StringFormat={}Ai{0}}" />
+                    </Border>
+                    <TextBlock
+                        Grid.Column="1"
+                        Margin="5,0"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        Text="{Binding Name}"
+                        ToolTip="{Binding Name}"
+                        Visibility="{Binding IsSelected, Converter={StaticResource Boolean2VisibilityReConverter}}" />
+                    <TextBox
+                        Grid.Column="1"
+                        Width="180"
+                        MaxHeight="22"
+                        Style="{StaticResource TextBoxExtend.Small}"
+                        Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        Visibility="{Binding IsSelected, Converter={StaticResource Boolean2VisibilityConverter}}" />
+                    <TextBlock
+                        Grid.Column="2"
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        FontWeight="Bold"
+                        Foreground="{StaticResource PrimaryBrush}"
+                        Text="{Binding AnalogValue}" />
+                    <hc:ElementGroup Grid.Column="3" Margin="10,0,0,0">
+                        <hc:ElementGroup.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                </Grid>
+                            </ItemsPanelTemplate>
+                        </hc:ElementGroup.ItemsPanel>
+                        <TextBox
+                            MinWidth="160"
+                            IsReadOnly="True"
+                            Text="{Binding Express}" />
+                        <Button
+                            Grid.Column="1"
+                            Command="{Binding Path=DataContext.ConfigCommand, ElementName=GridIO}"
+                            CommandParameter="{Binding .}"
+                            Content="配置"
+                            Style="{StaticResource ButtonPrimary}" />
+                    </hc:ElementGroup>
+                    <TextBlock
+                        Grid.Column="4"
+                        Margin="5,0,0,0"
+                        VerticalAlignment="Center"
+                        Text="{Binding FinalValue}" />
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <!--  模拟量输入模板  -->
+        <DataTemplate x:Key="AnalogOutTemplate" DataType="{x:Type m:IOModel}">
+            <Border
+                Margin="2"
+                Padding="5,4"
+                BorderThickness="1"
+                Style="{StaticResource BorderRegion}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="25" />
+                        <ColumnDefinition Width="180" />
+                        <ColumnDefinition Width="40" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="30" />
+                    </Grid.ColumnDefinitions>
+                    <Border HorizontalAlignment="Left">
+                        <TextBlock
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            FontSize="12"
+                            FontWeight="Bold"
+                            Foreground="{DynamicResource PrimaryBrush}"
+                            Text="{Binding Index, StringFormat={}Ao{0}}" />
+                    </Border>
+                    <TextBlock
+                        Grid.Column="1"
+                        Margin="5,0"
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        Text="{Binding Name}"
+                        ToolTip="{Binding Name}"
+                        Visibility="{Binding IsSelected, Converter={StaticResource Boolean2VisibilityReConverter}}" />
+                    <TextBox
+                        Grid.Column="1"
+                        Width="180"
+                        MaxHeight="22"
+                        Style="{StaticResource TextBoxExtend.Small}"
+                        Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                        Visibility="{Binding IsSelected, Converter={StaticResource Boolean2VisibilityConverter}}" />
+                    <hc:NumericUpDown
+                        Grid.Column="2"
+                        VerticalAlignment="Center"
+                        FontSize="14"
+                        FontWeight="Bold"
+                        Style="{StaticResource NumericUpDownExtend.Small}"
+                        Value="{Binding AnalogValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <hc:ElementGroup Grid.Column="3" Margin="10,0,0,0">
+                        <hc:ElementGroup.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                </Grid>
+                            </ItemsPanelTemplate>
+                        </hc:ElementGroup.ItemsPanel>
+                        <TextBox
+                            MinWidth="160"
+                            IsReadOnly="True"
+                            Text="{Binding Express}" />
+                        <Button
+                            Grid.Column="1"
+                            Command="{Binding Path=DataContext.ConfigCommand, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Grid, AncestorLevel=2}}"
+                            CommandParameter="{Binding .}"
+                            Content="配置"
+                            Style="{StaticResource ButtonPrimary}" />
+                    </hc:ElementGroup>
+                    <TextBlock
+                        Grid.Column="4"
+                        Margin="5,0,0,0"
+                        VerticalAlignment="Center"
+                        Text="{Binding FinalValue}" />
+                </Grid>
+            </Border>
+        </DataTemplate>
+
+        <local:ValueTemplateSelector
+            x:Key="IoTemplate"
+            AnaInTemplate="{StaticResource AnalogInTemplate}"
+            AnaOutTemplate="{StaticResource DigitalInTemplate}"
+            DigInTemplate="{StaticResource DigitalInTemplate}"
+            DigOutTemplate="{StaticResource DigitalOutTemplate}" />
+
+        <Style
+            x:Key="cbkInSelectStyle"
+            BasedOn="{StaticResource DataGridColumnHeaderStyle.Small}"
+            TargetType="DataGridColumnHeader">
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <CheckBox
+                            HorizontalAlignment="Center"
+                            Command="{Binding Path=DataContext.SelectAllCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                            CommandParameter="Input"
+                            IsChecked="{Binding Path=DataContext.IsInSelectAll, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style
+            x:Key="cbkOutSelectStyle"
+            BasedOn="{StaticResource DataGridColumnHeaderStyle.Small}"
+            TargetType="DataGridColumnHeader">
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <CheckBox
+                            HorizontalAlignment="Center"
+                            Command="{Binding Path=DataContext.SelectAllCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                            CommandParameter="Output"
+                            IsChecked="{Binding Path=DataContext.IsOutSelectAll, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="10*" />
+            <RowDefinition Height="10*" />
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <GroupBox Grid.Column="0" Header="Axis">
+                        <Border BorderThickness="1" Style="{StaticResource BorderRegion}">
+                            <ScrollViewer>
+                                <ItemsControl
+                                        Padding="0"
+                                        ItemsSource="{Binding AxisList}"
+                                        ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                        ScrollViewer.VerticalScrollBarVisibility="Auto">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                            <UniformGrid
+                                                    HorizontalAlignment="Left"
+                                                    VerticalAlignment="Top"
+                                                    Columns="1"
+                                                    ScrollViewer.VerticalScrollBarVisibility="Visible" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <GroupBox
+                                                    Width="auto"
+                                                    Margin="5"
+                                                    Padding="10,5"
+                                                    hc:TitleElement.Background="{DynamicResource RegionBrush}"
+                                                    Header="{Binding Name}"
+                                                    Style="{StaticResource GroupBoxTab}">
+                                                   <hc:UniformSpacingPanel Orientation="Horizontal" Spacing="1">
+                                                    <TextBlock
+                                                        VerticalAlignment="Center"
+                                                        FontSize="14"
+                                                        FontWeight="Bold"
+                                                        Foreground="Blue"
+                                                        Text="{Binding CurrentPos, StringFormat={}{0:N3} }" />
+
+                                                    <hc:ButtonGroup >
+                                                        <Button   
+                                                                Width="Auto"
+                                                                Command="{Binding DataContext.EnableCommand, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
+                                                                CommandParameter="{Binding .}"
+                                                                Content="{lang:Lang Key={x:Static lang:LangKeys.UppperEnable}}" />
+                                                        <Button   
+                                                                Width="Auto"                                                               
+                                                                Command="{Binding DataContext.HomeCommand, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
+                                                                CommandParameter="{Binding .}"
+                                                                Content="{lang:Lang Key={x:Static lang:LangKeys.HomeZero}}" />
+                                                        <Button  
+                                                            Content="+" >
+                                                            <hc:Interaction.Triggers>
+                                                                <hc:EventTrigger EventName="PreviewMouseLeftButtonDown">
+                                                                    <hc:EventToCommand Command="{Binding JogCommand}" CommandParameter="{Binding .}" />
+                                                                </hc:EventTrigger>
+                                                                <hc:EventTrigger EventName="PreviewMouseLeftButtonUp">
+                                                                    <hc:EventToCommand Command="{Binding StopCommand}" CommandParameter="{Binding .}" />
+                                                                </hc:EventTrigger>
+                                                            </hc:Interaction.Triggers>
+                                                        </Button>
+                                                        <Button   
+                                                            Content="-" >
+                                                            <hc:Interaction.Triggers>
+                                                                <hc:EventTrigger EventName="PreviewMouseLeftButtonDown">
+                                                                    <hc:EventToCommand Command="{Binding JogCommand}" CommandParameter="{Binding .}" />
+                                                                </hc:EventTrigger>
+                                                                <hc:EventTrigger EventName="PreviewMouseLeftButtonUp">
+                                                                    <hc:EventToCommand Command="{Binding StopCommand}" CommandParameter="{Binding .}" />
+                                                                </hc:EventTrigger>
+                                                            </hc:Interaction.Triggers>
+                                                        </Button>
+                                                    </hc:ButtonGroup>
+                                                    <hc:NumericUpDown
+                                                        DecimalPlaces="3"
+                                                        Value="{Binding MovePos}" />
+                                                    <Button   
+                                                                Width="Auto"
+                                                                Command="{Binding DataContext.EnableCommand, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
+                                                                CommandParameter="{Binding .}"
+                                                                Content="{lang:Lang Key={x:Static lang:LangKeys.AbsoluteMove}}" />
+                                                    <Button   
+                                                                Width="Auto"
+                                                                Command="{Binding DataContext.EnableCommand, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
+                                                                CommandParameter="{Binding .}"
+                                                                Content="{lang:Lang Key={x:Static lang:LangKeys.RelativeMove}}" />
+                                                    <ComboBox  />
+                                                    <Button   
+                                                                Width="Auto"
+                                                                Command="{Binding DataContext.EnableCommand, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
+                                                                CommandParameter="{Binding .}"
+                                                                Content="{lang:Lang Key={x:Static lang:LangKeys.Teach}}" />
+                                                    <Button   
+                                                                Width="Auto"
+                                                                Command="{Binding DataContext.EnableCommand, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
+                                                                CommandParameter="{Binding .}"
+                                                                Content="{lang:Lang Key={x:Static lang:LangKeys.Add}}" />
+
+                                                </hc:UniformSpacingPanel>
+                                            </GroupBox>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Border>
+                    </GroupBox>
+                </Grid>
+
+            </StackPanel>
+            <StackPanel Grid.Column="1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Label Grid.Column="0" Content="相机" />
+                    <ComboBox
+                        Grid.Column="1"
+                        DisplayMemberPath="Name"
+                        ItemsSource="{Binding CameraList}"
+                        SelectedIndex="0" />
+                </Grid>
+            </StackPanel>
+        </Grid>
+        <Grid Grid.Row="2">
+            <TabControl TabStripPlacement="Left">
+                <TabItem Header="常用">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="260" />
+                            <ColumnDefinition Width="260" />
+                            <ColumnDefinition Width="350" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <GroupBox Grid.Column="0" Header="DI">
+                            <ListBox
+                                Name="diItems"
+                                Padding="0"
+                                Background="Transparent"
+                                ItemTemplateSelector="{StaticResource IoTemplate}"
+                                ItemsSource="{Binding DIDatas}"
+                                ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                Style="{StaticResource ListBoxCustom}">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <hc:UniformSpacingPanel
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Top"
+                                            ChildWrapping="Wrap"
+                                            Orientation="Vertical"
+                                            ScrollViewer.VerticalScrollBarVisibility="Visible" />
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <hc:Interaction.Triggers>
+                                    <hc:EventTrigger EventName="Loaded">
+                                        <hc:EventToCommand Command="{Binding LoadedCommand}" PassEventArgsToCommand="True" />
+                                    </hc:EventTrigger>
+                                    <hc:EventTrigger EventName="SizeChanged">
+                                        <hc:EventToCommand Command="{Binding SizeChangedCommand}" PassEventArgsToCommand="True" />
+                                    </hc:EventTrigger>
+                                </hc:Interaction.Triggers>
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="Padding" Value="0" />
+                                        <Setter Property="IsSelected" Value="{Binding IsSelected}" />
+                                        <Setter Property="BorderThickness" Value="0" />
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                            </ListBox>
+                        </GroupBox>
+                        <GroupBox Grid.Column="1" Header="DO">
+                            <ListBox
+                                Name="doItems"
+                                Padding="0"
+                                Background="Transparent"
+                                ItemTemplateSelector="{StaticResource IoTemplate}"
+                                ItemsSource="{Binding DODatas}"
+                                ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                Style="{StaticResource ListBoxCustom}">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <hc:UniformSpacingPanel
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Top"
+                                            ChildWrapping="Wrap"
+                                            Orientation="Vertical"
+                                            ScrollViewer.VerticalScrollBarVisibility="Visible" />
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <hc:Interaction.Triggers>
+                                    <hc:EventTrigger EventName="Loaded">
+                                        <hc:EventToCommand Command="{Binding LoadedCommand}" PassEventArgsToCommand="True" />
+                                    </hc:EventTrigger>
+                                    <hc:EventTrigger EventName="SizeChanged">
+                                        <hc:EventToCommand Command="{Binding SizeChangedCommand}" PassEventArgsToCommand="True" />
+                                    </hc:EventTrigger>
+                                </hc:Interaction.Triggers>
+                                <ListBox.ItemContainerStyle>
+                                    <Style TargetType="ListBoxItem">
+                                        <Setter Property="Padding" Value="0" />
+                                        <Setter Property="IsSelected" Value="{Binding IsSelected}" />
+                                        <Setter Property="BorderThickness" Value="0" />
+                                    </Style>
+                                </ListBox.ItemContainerStyle>
+                            </ListBox>
+                        </GroupBox>
+                        <GroupBox Grid.Column="2" Header="Cylinder">
+                        <Border Style="{StaticResource BorderRegion}">
+                                <ScrollViewer
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
+                                    HorizontalScrollBarVisibility="Auto"
+                                    VerticalScrollBarVisibility="Auto">
+                                    <ItemsControl ItemsSource="{Binding CylinderLists}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <UniformGrid
+                                                    HorizontalAlignment="Left"
+                                                    VerticalAlignment="Top"
+                                                    Columns="2"
+                                                    ScrollViewer.VerticalScrollBarVisibility="Visible" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <GroupBox
+                                                    Width="150"
+                                                    Margin="5"
+                                                    hc:TitleElement.Background="{DynamicResource RegionBrush}"
+                                                    Style="{StaticResource GroupBoxTab}">
+                                                    <GroupBox.Header>
+                                                        <TextBlock
+                                                            Height="32"
+                                                            Padding="0,4,0,0"
+                                                            FontSize="14"
+                                                            Text="{Binding Name}" />
+                                                    </GroupBox.Header>
+                                                    <hc:UniformSpacingPanel
+                                                        Margin="0,15,0,0"
+                                                        Orientation="Vertical"
+                                                        Spacing="10">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="1*" />
+                                                                <ColumnDefinition Width="1*" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <StackPanel>
+                                                                <Path
+                                                                    HorizontalAlignment="Center"
+                                                                    VerticalAlignment="Center"
+                                                                    Data="M 0,0 A 8,8 45 1 1 0,1 Z"
+                                                                    Fill="{Binding StatusExtend, Converter={StaticResource Boolean2PassColorCoverter}}" />
+                                                                <TextBlock
+                                                                    Margin="0,5,0,0"
+                                                                    HorizontalAlignment="Center"
+                                                                    FontSize="10"
+                                                                    Text="{lang:Lang Key={x:Static lang:LangKeys.ExtendStatus}}" />
+                                                            </StackPanel>
+                                                            <StackPanel Grid.Column="1">
+                                                                <Path
+                                                                    HorizontalAlignment="Center"
+                                                                    VerticalAlignment="Center"
+                                                                    Data="M 0,0 A 8,8 45 1 1 0,1 Z"
+                                                                    Fill="{Binding StatusRetract, Converter={StaticResource Boolean2PassColorCoverter}}" />
+                                                                <TextBlock
+                                                                    Margin="0,5,0,0"
+                                                                    HorizontalAlignment="Center"
+                                                                    FontSize="10"
+                                                                    Text="{lang:Lang Key={x:Static lang:LangKeys.RetractStatus}}" />
+                                                            </StackPanel>
+                                                        </Grid>
+                                                        <hc:ButtonGroup>
+                                                            <Button
+                                                                HorizontalAlignment="Center"
+                                                                Command="{Binding DataContext.CylinderExtendCommand, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
+                                                                CommandParameter="{Binding .}"
+                                                                Content="{lang:Lang Key={x:Static lang:LangKeys.Extend}}"
+                                                                FontSize="16" />
+                                                            <Button
+                                                                Grid.Column="0"
+                                                                HorizontalAlignment="Center"
+                                                                Command="{Binding DataContext.CylinderRetractCommand, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
+                                                                CommandParameter="{Binding .}"
+                                                                Content="{lang:Lang Key={x:Static lang:LangKeys.Retract}}"
+                                                                FontSize="16" />
+                                                        </hc:ButtonGroup>
+                                                    </hc:UniformSpacingPanel>
+                                                </GroupBox>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </Border>
+                        </GroupBox>
+                        <GroupBox Grid.Column="3" Header="Vacuum" >
+                            <Border BorderThickness="1" Style="{StaticResource BorderRegion}">
+                                <ScrollViewer>
+                                    <ItemsControl
+                                        Padding="0"
+                                        ItemsSource="{Binding VacuumLists}"
+                                        ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                        ScrollViewer.VerticalScrollBarVisibility="Hidden">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <hc:UniformSpacingPanel
+                                                    VerticalAlignment="Top"
+                                                    ChildWrapping="Wrap"
+                                                    ScrollViewer.VerticalScrollBarVisibility="Visible" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <GroupBox
+                                                    Width="160"
+                                                    Margin="5"
+                                                    Padding="10,5"
+                                                    hc:TitleElement.Background="{DynamicResource RegionBrush}"
+                                                    Header="{Binding Name}"
+                                                    Style="{StaticResource GroupBoxTab}">
+                                                    <hc:UniformSpacingPanel Orientation="Vertical" Spacing="10">
+                                                        <Grid Margin="0,5,0,0">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="*" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <Path
+                                                                Margin="0,8,0,0"
+                                                                HorizontalAlignment="Center"
+                                                                VerticalAlignment="Center"
+                                                                Data="M 0,0 A 8,8 45 1 1 0,1 Z"
+                                                                Fill="{Binding Status, Converter={StaticResource Boolean2PassColorCoverter}}" />
+                                                            <TextBlock
+                                                                Grid.Column="1"
+                                                                VerticalAlignment="Center"
+                                                                FontSize="12"
+                                                                Text="{lang:Lang Key={x:Static lang:LangKeys.VacuumSensor}}" />
+                                                        </Grid>
+                                                        <hc:Divider
+                                                            Height="3"
+                                                            Margin="0"
+                                                            LineStrokeDashArray="2,2" />
+                                                        <hc:ButtonGroup Layout="Uniform">
+                                                            <Button
+                                                                Width="60"
+                                                                HorizontalAlignment="Center"
+                                                                Command="{Binding DataContext.VacuumSuckCommand, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
+                                                                CommandParameter="{Binding .}"
+                                                                Content="{lang:Lang Key={x:Static lang:LangKeys.Suck}}" />
+                                                            <Button
+                                                                Grid.Column="0"
+                                                                Width="60"
+                                                                HorizontalAlignment="Center"
+                                                                Command="{Binding DataContext.VacuumBlowCommand, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
+                                                                CommandParameter="{Binding .}"
+                                                                Content="{lang:Lang Key={x:Static lang:LangKeys.Blow}}" />
+                                                        </hc:ButtonGroup>
+                                                        <hc:Divider
+                                                            Height="3"
+                                                            Margin="0"
+                                                            LineStrokeDashArray="2,2" />
+                                                        <hc:ButtonGroup>
+                                                            <Button
+                                                                Grid.Column="1"
+                                                                Width="60"
+                                                                HorizontalAlignment="Center"
+                                                                Command="{Binding DataContext.VacuumBlowCloseCommand, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
+                                                                CommandParameter="{Binding .}"
+                                                                Content="{lang:Lang Key={x:Static lang:LangKeys.BlowClose}}" />
+                                                            <Button
+                                                                Grid.Column="1"
+                                                                Width="60"
+                                                                HorizontalAlignment="Center"
+                                                                Command="{Binding DataContext.VacuumCloseCommand, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
+                                                                CommandParameter="{Binding .}"
+                                                                Content="{lang:Lang Key={x:Static lang:LangKeys.Close}}" />
+                                                        </hc:ButtonGroup>
+                                                    </hc:UniformSpacingPanel>
+                                                </GroupBox>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </ScrollViewer>
+                            </Border>
+                        </GroupBox>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="其他" />
+            </TabControl>
+        </Grid>
+        <Grid Grid.Row="0">
+            <ComboBox ItemsSource="{Binding Modules}" SelectedValue="{Binding Module}" />
+        </Grid>
+    </Grid>
+
+</UserControl>

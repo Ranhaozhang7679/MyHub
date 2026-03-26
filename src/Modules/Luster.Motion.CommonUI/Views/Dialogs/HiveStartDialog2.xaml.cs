@@ -1,0 +1,44 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+
+namespace Luster.Motion.CommonUI.Views.Dialogs
+{
+    /// <summary>
+    /// HiveStartDialog2.xaml 的交互逻辑
+    /// </summary>
+    public partial class HiveStartDialog2 : UserControl
+    {
+        public HiveStartDialog2()
+        {
+            InitializeComponent();
+        }
+
+
+        private void tb_MouseLeave(object sender, MouseEventArgs e)
+        {
+            Keyboard.ClearFocus();//Keyboard.ClearFocus 方法    清除焦点
+            Keyboard.Focus(tbCardId);
+        }
+
+
+        private void tb_MouseLeave(object sender, SelectionChangedEventArgs e)
+        {
+            Keyboard.ClearFocus();//Keyboard.ClearFocus 方法    清除焦点
+            Keyboard.Focus(tbCardId);
+        }
+    }
+
+
+}

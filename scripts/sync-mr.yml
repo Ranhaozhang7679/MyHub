@@ -1,0 +1,45 @@
+create_sync_mr:
+  stage: sync
+  tags:
+    - windows-shell
+  rules:
+    # 仅在 release 或 hotfix 分支推送时触发
+    - if: '$CI_COMMIT_BRANCH =~ /^release\/.*$/ || $CI_COMMIT_BRANCH =~ /^hotfix\/.*$/'
+  script:
+    - |
+      # 1. 环境编码与变量清洗
+      [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+      $api_token = ("$($env:GITLAB_API_TOKEN)").Trim()
+      $project_id = "$($env:CI_PROJECT_ID)"
+      $s_branch = "$($env:CI_COMMIT_BRANCH)"
+      $t_branch = "develop"
+      
+      # 2. 强制清洗 API 基础地址，防止 Hostname 解析失败
+      $base_api = ("$($env:CI_API_V4_URL)").Trim()
+      $uri = "$base_api/projects/$project_id/merge_requests"
+      
+      # 3. 构造检查 URI
+      $check_uri = "$uri`?source_branch=$s_branch&target_branch=$t_branch&state=opened"
+
+      try {
+          Write-Host "正在检查是否存在重复 MR..."
+          $existing = Invoke-RestMethod -Uri $check_uri -Header @{"PRIVATE-TOKEN"=$api_token}
+          
+          if ($null -eq $existing -or $existing.Count -eq 0) {
+              Write-Host "正在创建从 $s_branch 到 $t_branch 的同步 MR..."
+              $params = @{
+                  source_branch = $s_branch
+                  target_branch = $t_branch
+                  title         = "【自动同步】从 $s_branch 合并至 $t_branch"
+                  remove_source_branch = $false
+              }
+              $body = $params | ConvertTo-Json
+              $result = Invoke-RestMethod -Uri $uri -Method Post -Body $body -ContentType "application/json" -Header @{"PRIVATE-TOKEN"=$api_token}
+              Write-Host "同步 MR 创建成功: $($result.web_url)"
+          } else {
+              Write-Host "同步 MR 已存在，跳过创建。"
+          }
+      } catch {
+          Write-Host "API 请求失败，错误信息: $($_.Exception.Message)"
+          exit 1
+      }

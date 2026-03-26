@@ -1,0 +1,98 @@
+push_notification:
+  stage: notify
+  tags:
+    - windows-shell
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+
+  script:
+    - |
+      # 1. 环境编码初始化
+      [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+      $project = "$($env:CI_PROJECT_NAME)"
+      $branch = "$($env:CI_COMMIT_BRANCH)"
+      $author = "$($env:GITLAB_USER_NAME)"
+      $before = "$($env:CI_COMMIT_BEFORE_SHA)"
+      $current = "$($env:CI_COMMIT_SHA)"
+
+      # 2. 提交历史提取 (标准列表格式)
+      $commit_list = ""
+      # 1. 精准锁定区间：从分叉基点到当前最新提交
+      $base = "$($env:CI_MERGE_REQUEST_DIFF_BASE_SHA)"
+      $head = "$($env:CI_COMMIT_SHA)"
+      
+      # 兜底逻辑：如果不是在 MR 环境下运行，则取上一次提交
+      if (-not $base) { $base = "$($env:CI_COMMIT_BEFORE_SHA)" }
+      
+      # 2. 获取纯净的增量提交日志 (不包含基分支内容)
+      $logs = git log $base..$head --pretty=format:"%h|%s"
+      
+      if ($null -ne $logs -and $logs.Count -gt 0) {
+          # logs[-1] 是该分支的第一条新提交，logs[0] 是最后一条
+          $start_node = $logs[-1].Replace('|', ' (') + ')'
+          $end_node = $logs[0].Replace('|', ' (') + ')'
+          
+          # 每一行开头加 "> " 确保钉钉端淡灰色、变小且垂直对齐
+          $commit_list = "> ● **始 (分支首个提交)**: $start_node `n"
+          
+          # 展示中间最多 3 条记录，保持卡片简洁
+          if ($logs.Count -gt 2) {
+              $mid = $logs[1..($logs.Count-2)] | Select-Object -First 3
+              foreach ($line in $mid) { 
+                  $commit_list += "> ○ $($line.Replace('|', ' (')))`n" 
+              }
+          }
+          
+          if ($logs.Count -gt 1) { 
+              $commit_list += "> ● **终 (分支最新提交)**: $end_node" 
+          }
+      } else {
+          $commit_list = "> ● **当前提交**: $($env:CI_COMMIT_SHORT_SHA) ($($env:CI_COMMIT_MESSAGE))"
+      }
+
+      # 3. 精确核心文件检测
+      $files = git diff --name-only $before $current
+      $is_core = ($files -match "\.sln$|\.slnx$|\.csproj$|\.config$") ? "⚠️ **涉及核心结构**" : "否"
+      $files = git diff --name-only $base $head
+      $is_core = ($files -match "\.sln$|\.slnx$|\.csproj$|\.config$") ? "⚠️ <font color='#FF0000'>**涉及核心结构**</font>" : "否"
+      # 使用引用块符号 "> " 开头，确保第一行也能对齐并变灰
+      if ($files.Count -gt 0) {
+          # 逻辑：为前5个文件的每一个都加上 "> * " 前缀
+          $file_display = ($files | Select-Object -First 5 | ForEach-Object { "> * $_" }) -join "`n`n"
+          
+          # 如果文件超过5个，追加省略提示
+          if ($files.Count -gt 5) {
+              $file_display += "`n`n> * ... 以及其他 $($files.Count - 5) 个文件"
+          }
+      } else {
+          $file_display = "> 无文件变更"
+      }
+
+      # 4. 构造标准 Markdown 格式 (加粗小标题)
+      $text = "### 🛠️ Luster 代码推送动态`n" +
+              "---`n" +
+              "**项目分支**:`n`n $project / $branch `n`n" +
+              "**修改作者**: $author `n`n" +
+              "**提交历史**:`n$commit_list`n`n" +
+              "**核心变更**: $is_core `n`n" +
+              "**修改文件** ($($files.Count)):`n$file_display `n" +
+              "---`n" +
+              "[[查看详情]]($($env:CI_PROJECT_URL)/-/commit/$current)"
+
+      $payload = @{ msgtype="markdown"; markdown=@{ title="Luster推送"; text=$text } } | ConvertTo-Json -Compress
+
+      # 5. 【暴力修复】直接清洗变量并手动拼接 URI
+      # 强制移除所有非字母数字，确保没有引号、空格或转义字符干扰
+      $token = ($env:DINGTALK_TOKEN -replace '[^a-zA-Z0-9]', '').Trim()
+      $uri = "https://oapi.dingtalk.com/robot/send?access_token=" + $token
+      
+      try {
+          Write-Host "正在请求 URI: https://oapi.dingtalk.com/robot/send?access_token=******"
+          $post_body = [System.Text.Encoding]::UTF8.GetBytes($payload)
+          $response = Invoke-RestMethod -Uri $uri -Method Post -Body $post_body -ContentType "application/json"
+          Write-Host "钉钉返回结果: $($response | ConvertTo-Json -Compress)"
+      } catch {
+          Write-Host "依然失败，请检查 GitLab 变量 DINGTALK_TOKEN 的值是否正确。"
+          Write-Host "错误摘要: $($_.Exception.Message)"
+          exit 1
+      }

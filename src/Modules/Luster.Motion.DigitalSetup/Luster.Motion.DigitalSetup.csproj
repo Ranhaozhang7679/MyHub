@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <UseWPF>true</UseWPF>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="HandyControl" />
+        <PackageReference Include="LiveChartsCore" />
+        <PackageReference Include="LiveChartsCore.SkiaSharpView" />
+        <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" />
+        <PackageReference Include="Luster.Prism" />
+        <PackageReference Include="MinVer" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Luster.Common.DataAccess\Luster.Common.DataAccess.csproj" />
+        <ProjectReference Include="..\Luster.SimDevice.EngineUI\Luster.SimDevice.EngineUI.csproj" />
+        <ProjectReference Include="..\Luster.SimDevice.SubSystem\Luster.SimDevice.SubSystem.csproj" />
+        <ProjectReference Include="..\Luster.Motion.Assests\Luster.Motion.Assests.csproj" />
+        <ProjectReference Include="..\Luster.Motion.CommonUI\Luster.Motion.CommonUI.csproj" />
+        <ProjectReference Include="..\Luster.Motion.EditorUI\Luster.Motion.EditorUI.csproj" />
+    </ItemGroup>
+
+</Project>

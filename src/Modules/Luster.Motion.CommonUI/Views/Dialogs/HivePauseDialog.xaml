@@ -1,0 +1,29 @@
+﻿<UserControl
+    x:Class="Luster.Motion.CommonUI.Views.Dialogs.HivePauseDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Luster.Motion.CommonUI.Views.Dialogs"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    d:DesignHeight="150"
+    d:DesignWidth="200"
+    mc:Ignorable="d">
+    <StackPanel Background="LightGray">
+        <Label
+            Width="200"
+            Background="DarkGray"
+            BorderBrush="Transparent" />
+        <Label
+            Width="200"
+            Background="LightGray"
+            Content="&#x00a0;&#x00a0;&#x00a0;&#x00a0;&#x00a0;&#x00a0;设备已暂停&#x0a;Machine stopped" />
+        <Button
+            Width="200"
+            Height="40"
+            Margin="10"
+            HorizontalContentAlignment="Center"
+            Background="DarkGray"
+            Command="{Binding Path=DataContext.ClickCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            Content="确认/Acknowledge" />
+    </StackPanel>
+</UserControl>

@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Version>1.0.0.0</Version>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Luster.Common.DataAccess\Luster.Common.DataAccess.csproj" />
+        <ProjectReference Include="..\Luster.TaskFlow.Common\Luster.TaskFlow.Common.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Reference Include="PresentationCore" />
+        <Reference Include="System.ComponentModel.DataAnnotations" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="MinVer" />
+    </ItemGroup>
+</Project>

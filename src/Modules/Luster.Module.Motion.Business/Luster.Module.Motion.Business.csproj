@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+        <!-- 启用统一拷贝功能 -->
+        <CopyToMotionsFolder>true</CopyToMotionsFolder>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Luster.Motion.Integration\Luster.Motion.Integration.csproj">
+	    <Private>False</Private>
+	  </ProjectReference>
+	  <ProjectReference Include="..\Luster.TaskFlow.Motion\Luster.TaskFlow.Motion.csproj" />
+	  <ProjectReference Include="..\Luster.Motion.CommonUI\Luster.Motion.CommonUI.csproj" />
+	  <ProjectReference Include="..\Luster.Module.Motion.Protocol\Luster.Module.Motion.Protocol.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Reference Include="System.Web" />
+	</ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="MinVer" />
+    </ItemGroup>
+</Project>

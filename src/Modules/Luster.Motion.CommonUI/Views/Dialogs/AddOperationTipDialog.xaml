@@ -1,0 +1,58 @@
+﻿<UserControl
+    x:Class="Luster.Motion.CommonUI.Views.Dialogs.AddOperationTipDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:lang="clr-namespace:Luster.Motion.Assests.Langs;assembly=Luster.Motion.Assests"
+    xmlns:local="clr-namespace:Luster.Motion.CommonUI.Views.Dialogs"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{DynamicResource RegionBrush}"
+    mc:Ignorable="d">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <hc:UniformSpacingPanel Orientation="Vertical" Spacing="10">
+            <TextBox
+                hc:InfoElement.Necessary="True"
+                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.OperatingTips}}"
+                hc:TitleElement.TitlePlacement="Left"
+                hc:TitleElement.TitleWidth="70"
+                Style="{StaticResource TextBoxExtend}"
+                Text="{Binding Tip}" />
+            <hc:ComboBox
+                hc:InfoElement.Necessary="True"
+                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.OperateType}}"
+                hc:TitleElement.TitlePlacement="Left"
+                hc:TitleElement.TitleWidth="70"
+                DisplayMemberPath="Desc"
+                ItemsSource="{Binding KeyValues}"
+                SelectedValue="{Binding OperationType}"
+                SelectedValuePath="Value"
+                Style="{StaticResource ComboBoxValidationStyle}" />
+        </hc:UniformSpacingPanel>
+        <DockPanel Grid.Row="1" Margin="0,20,0,0">
+            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                <Button
+                    Width="80"
+                    HorizontalAlignment="Right"
+                    Command="{Binding CloseCommand}"
+                    CommandParameter="cancel"
+                    Content="取消" />
+                <Button
+                    Width="80"
+                    Margin="10,0,0,0"
+                    HorizontalAlignment="Right"
+                    Command="{Binding CloseCommand}"
+                    CommandParameter="ok"
+                    Content="确定" />
+            </StackPanel>
+        </DockPanel>
+    </Grid>
+</UserControl>

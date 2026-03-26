@@ -1,0 +1,36 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+
+namespace Luster.SimDevice.SubSystem.Views
+{
+    /// <summary>
+    /// LeftMenuView.xaml 的交互逻辑
+    /// </summary>
+    public partial class LeftMenuContent 
+    {
+        public LeftMenuContent()
+        {
+            InitializeComponent();
+            lstDevice.Items.GroupDescriptions?.Clear();
+            lstDevice.Items.GroupDescriptions?.Add(new PropertyGroupDescription("Group"));
+        }
+
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+        }
+    }
+}

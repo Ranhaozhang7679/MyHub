@@ -1,0 +1,251 @@
+﻿<UserControl
+    x:Class="Luster.SimDevice.SubSystem.Views.Dialog.MotionConditionsDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:lang="clr-namespace:Luster.SimDevice.SubSystem.Langs"
+    xmlns:local="clr-namespace:Luster.SimDevice.SubSystem.Views.Dialog"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    Width="580"
+    Height="400"
+    d:DesignHeight="550"
+    d:DesignWidth="750"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{DynamicResource RegionBrush}"
+    mc:Ignorable="d">
+    <!--<UserControl.Resources>
+        <Style BasedOn="{StaticResource NumericUpDownPlus}" TargetType="hc:NumericUpDown">
+            <Setter Property="hc:InfoElement.TitleWidth" Value="60" />
+            <Setter Property="hc:InfoElement.TitlePlacement" Value="Left" />
+        </Style>
+    </UserControl.Resources>-->
+    <StackPanel Margin="20">
+        <hc:UniformSpacingPanel Orientation="Vertical" Spacing="20">
+            <StackPanel Orientation="Horizontal">
+                <hc:ComboBox
+                    Name="axis1"
+                    MinWidth="200"
+                    hc:InfoElement.Placeholder="{lang:Lang Key={x:Static lang:LangKeys.Axis}}"
+                    hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.Axis}}"
+                    hc:InfoElement.TitlePlacement="Left"
+                    DisplayMemberPath="Name"
+                    ItemsSource="{Binding AxisList}"
+                    SelectedValue="{Binding SelectAxis1}"
+                    Style="{StaticResource ComboBoxPlusBaseStyle}" />
+                <Label BorderThickness="0" Content="运动范围:" />
+                <hc:NumericUpDown MinWidth="80" Value="{Binding AxisMin1}" />
+                <Label BorderThickness="0" Content="-" />
+                <hc:NumericUpDown MinWidth="80" Value="{Binding AxisMax1}" />
+                <Button
+                    Width="70"
+                    Margin="10,0,5,0"
+                    HorizontalAlignment="Left"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding ClearCommand}"
+                    CommandParameter="axis1"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.Empty}}"
+                    Style="{StaticResource ButtonDanger}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <hc:ComboBox
+                    Name="axis2"
+                    MinWidth="200"
+                    hc:InfoElement.Placeholder="{lang:Lang Key={x:Static lang:LangKeys.Axis}}"
+                    hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.Axis}}"
+                    hc:InfoElement.TitlePlacement="Left"
+                    DisplayMemberPath="Name"
+                    ItemsSource="{Binding AxisList}"
+                    SelectedValue="{Binding SelectAxis2}"
+                    Style="{StaticResource ComboBoxPlusBaseStyle}" />
+                <Label BorderThickness="0" Content="运动范围:" />
+                <hc:NumericUpDown MinWidth="80" Value="{Binding AxisMin2}" />
+                <Label BorderThickness="0" Content="-" />
+                <hc:NumericUpDown MinWidth="80" Value="{Binding AxisMax2}" />
+                <Button
+                    Width="70"
+                    Margin="10,0,5,0"
+                    HorizontalAlignment="Left"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding ClearCommand}"
+                    CommandParameter="axis2"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.Empty}}"
+                    Style="{StaticResource ButtonDanger}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <hc:ComboBox
+                    Name="axis3"
+                    MinWidth="200"
+                    hc:InfoElement.Placeholder="{lang:Lang Key={x:Static lang:LangKeys.Axis}}"
+                    hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.Axis}}"
+                    hc:InfoElement.TitlePlacement="Left"
+                    DisplayMemberPath="Name"
+                    ItemsSource="{Binding AxisList}"
+                    SelectedValue="{Binding SelectAxis3}"
+                    Style="{StaticResource ComboBoxPlusBaseStyle}" />
+                <Label BorderThickness="0" Content="运动范围:" />
+                <hc:NumericUpDown MinWidth="80" Value="{Binding AxisMin3}" />
+                <Label BorderThickness="0" Content="-" />
+                <hc:NumericUpDown MinWidth="80" Value="{Binding AxisMax3}" />
+                <Button
+                    Width="70"
+                    Margin="10,0,5,0"
+                    HorizontalAlignment="Left"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding ClearCommand}"
+                    CommandParameter="axis3"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.Empty}}"
+                    Style="{StaticResource ButtonDanger}" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal">
+                <hc:ComboBox
+                    Name="io1"
+                    Width="250"
+                    hc:InfoElement.Necessary="True"
+                    hc:InfoElement.Placeholder="{lang:Lang Key={x:Static lang:LangKeys.IOName}}"
+                    hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.IOName}}"
+                    DisplayMemberPath="Name"
+                    ItemsSource="{Binding IOList1}"
+                    SelectedValue="{Binding SelectIO1}"
+                    Style="{StaticResource ComboBoxValidationStyle}" />
+                <hc:ButtonGroup
+                    Width="80"
+                    Margin="20,0"
+                    Style="{StaticResource ButtonGroupSolid}">
+                    <RadioButton
+                        Padding="0,2"
+                        Command="{Binding IOCommand}"
+                        CommandParameter="InIO1"
+                        Content="输入"
+                        IsChecked="{Binding IsIn1}" />
+                    <RadioButton
+                        Padding="0,2"
+                        Command="{Binding IOCommand}"
+                        CommandParameter="OutIO1"
+                        Content="输出"
+                        IsChecked="{Binding IsIn1, Converter={StaticResource Boolean2BooleanReConverter}}" />
+                </hc:ButtonGroup>
+                <ToggleButton
+                    Margin="5,0"
+                    HorizontalAlignment="Right"
+                    IsChecked="{Binding IsIOCheck1}"
+                    Style="{StaticResource ToggleButtonSwitch}" />
+                <Button
+                    Width="70"
+                    Margin="50,0,5,0"
+                    HorizontalAlignment="Left"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding ClearCommand}"
+                    CommandParameter="io1"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.Empty}}"
+                    Style="{StaticResource ButtonDanger}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <hc:ComboBox
+                    Name="io2"
+                    Width="250"
+                    hc:InfoElement.Necessary="True"
+                    hc:InfoElement.Placeholder="{lang:Lang Key={x:Static lang:LangKeys.IOName}}"
+                    hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.IOName}}"
+                    DisplayMemberPath="Name"
+                    ItemsSource="{Binding IOList2}"
+                    SelectedValue="{Binding SelectIO2}"
+                    Style="{StaticResource ComboBoxValidationStyle}" />
+                <hc:ButtonGroup
+                    Width="80"
+                    Margin="20,0"
+                    Style="{StaticResource ButtonGroupSolid}">
+                    <RadioButton
+                        Padding="0,2"
+                        Command="{Binding IOCommand}"
+                        CommandParameter="InIO2"
+                        Content="输入"
+                        IsChecked="{Binding IsIn2}" />
+                    <RadioButton
+                        Padding="0,2"
+                        Command="{Binding IOCommand}"
+                        CommandParameter="OutIO2"
+                        Content="输出"
+                        IsChecked="{Binding IsIn2, Converter={StaticResource Boolean2BooleanReConverter}}" />
+                </hc:ButtonGroup>
+                <ToggleButton
+                    Margin="5,0"
+                    HorizontalAlignment="Right"
+                    IsChecked="{Binding IsIOCheck2}"
+                    Style="{StaticResource ToggleButtonSwitch}" />
+                <Button
+                    Width="70"
+                    Margin="50,0,5,0"
+                    HorizontalAlignment="Left"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding ClearCommand}"
+                    CommandParameter="io2"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.Empty}}"
+                    Style="{StaticResource ButtonDanger}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <hc:ComboBox
+                    Name="io3"
+                    Width="250"
+                    hc:InfoElement.Necessary="True"
+                    hc:InfoElement.Placeholder="{lang:Lang Key={x:Static lang:LangKeys.IOName}}"
+                    hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.IOName}}"
+                    DisplayMemberPath="Name"
+                    ItemsSource="{Binding IOList3}"
+                    SelectedValue="{Binding SelectIO3}"
+                    Style="{StaticResource ComboBoxValidationStyle}" />
+                <hc:ButtonGroup
+                    Width="80"
+                    Margin="20,0"
+                    Style="{StaticResource ButtonGroupSolid}">
+                    <RadioButton
+                        Padding="0,2"
+                        Command="{Binding IOCommand}"
+                        CommandParameter="InIO3"
+                        Content="输入"
+                        IsChecked="{Binding IsIn3}" />
+                    <RadioButton
+                        Padding="0,2"
+                        Command="{Binding IOCommand}"
+                        CommandParameter="OutIO3"
+                        Content="输出"
+                        IsChecked="{Binding IsIn3, Converter={StaticResource Boolean2BooleanReConverter}}" />
+                </hc:ButtonGroup>
+                <ToggleButton
+                    Margin="5,0"
+                    HorizontalAlignment="Right"
+                    IsChecked="{Binding IsIOCheck3}"
+                    Style="{StaticResource ToggleButtonSwitch}" />
+                <Button
+                    Width="70"
+                    Margin="50,0,5,0"
+                    HorizontalAlignment="Left"
+                    HorizontalContentAlignment="Center"
+                    Command="{Binding ClearCommand}"
+                    CommandParameter="io3"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.Empty}}"
+                    Style="{StaticResource ButtonDanger}" />
+            </StackPanel>
+        </hc:UniformSpacingPanel>
+
+        <StackPanel
+            Margin="0,20,0,0"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal">
+            <Button
+                Width="80"
+                HorizontalAlignment="Right"
+                Command="{Binding CloseCommand}"
+                CommandParameter="cancel"
+                Content="{lang:Lang Key={x:Static lang:LangKeys.Cancel}}" />
+            <Button
+                Width="80"
+                Margin="10,0,0,0"
+                Command="{Binding CloseCommand}"
+                CommandParameter="ok"
+                Content="{lang:Lang Key={x:Static lang:LangKeys.Sure}}" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

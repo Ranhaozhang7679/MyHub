@@ -1,0 +1,1383 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Confirm" xml:space="preserve">
+    <value>确定</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="PngImg" xml:space="preserve">
+    <value>PNG图片</value>
+  </data>
+  <data name="ErrorImgPath" xml:space="preserve">
+    <value>错误的图片路径</value>
+  </data>
+  <data name="ErrorImgSize" xml:space="preserve">
+    <value>非法的图片尺寸</value>
+  </data>
+  <data name="UnknownSize" xml:space="preserve">
+    <value>未知大小</value>
+  </data>
+  <data name="TooLarge" xml:space="preserve">
+    <value>过大</value>
+  </data>
+  <data name="Unknown" xml:space="preserve">
+    <value>未知</value>
+  </data>
+  <data name="Interval30s" xml:space="preserve">
+    <value>间隔30秒</value>
+  </data>
+  <data name="Interval1m" xml:space="preserve">
+    <value>间隔1分钟</value>
+  </data>
+  <data name="Interval5m" xml:space="preserve">
+    <value>间隔5分钟</value>
+  </data>
+  <data name="Interval10m" xml:space="preserve">
+    <value>间隔10分钟</value>
+  </data>
+  <data name="Interval30m" xml:space="preserve">
+    <value>间隔30分钟</value>
+  </data>
+  <data name="Interval1h" xml:space="preserve">
+    <value>间隔1小时</value>
+  </data>
+  <data name="Interval2h" xml:space="preserve">
+    <value>间隔2小时</value>
+  </data>
+  <data name="Clear" xml:space="preserve">
+    <value>清空</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="CloseAll" xml:space="preserve">
+    <value>关闭所有</value>
+  </data>
+  <data name="CloseOther" xml:space="preserve">
+    <value>关闭其他</value>
+  </data>
+  <data name="Am" xml:space="preserve">
+    <value>上午</value>
+  </data>
+  <data name="Pm" xml:space="preserve">
+    <value>下午</value>
+  </data>
+  <data name="Tip" xml:space="preserve">
+    <value>提示</value>
+  </data>
+  <data name="IsNecessary" xml:space="preserve">
+    <value>不能为空</value>
+  </data>
+  <data name="OutOfRange" xml:space="preserve">
+    <value>不在范围内</value>
+  </data>
+  <data name="FormatError" xml:space="preserve">
+    <value>格式错误</value>
+  </data>
+  <data name="Yes" xml:space="preserve">
+    <value>是</value>
+  </data>
+  <data name="No" xml:space="preserve">
+    <value>否</value>
+  </data>
+  <data name="ZoomIn" xml:space="preserve">
+    <value>放大</value>
+  </data>
+  <data name="ZoomOut" xml:space="preserve">
+    <value>缩小</value>
+  </data>
+  <data name="NextPage" xml:space="preserve">
+    <value>下一页</value>
+  </data>
+  <data name="PreviousPage" xml:space="preserve">
+    <value>上一页</value>
+  </data>
+  <data name="PageMode" xml:space="preserve">
+    <value>页面模式</value>
+  </data>
+  <data name="TwoPageMode" xml:space="preserve">
+    <value>双页模式</value>
+  </data>
+  <data name="ScrollMode" xml:space="preserve">
+    <value>滚动模式</value>
+  </data>
+  <data name="Find" xml:space="preserve">
+    <value>查找</value>
+  </data>
+  <data name="LangComment" xml:space="preserve">
+    <value>查找类似 {0} 的本地化字符串。</value>
+  </data>
+  <data name="Jump" xml:space="preserve">
+    <value>跳转</value>
+  </data>
+  <data name="Miscellaneous" xml:space="preserve">
+    <value>杂项</value>
+  </data>
+  <data name="All" xml:space="preserve">
+    <value>全部</value>
+  </data>
+  <data name="NoData" xml:space="preserve">
+    <value>暂无数据</value>
+  </data>
+  <data name="Project" xml:space="preserve">
+    <value>工程</value>
+  </data>
+  <data name="Title" xml:space="preserve">
+    <value>标题</value>
+  </data>
+  <data name="ParameterConfig" xml:space="preserve">
+    <value>参数配置</value>
+  </data>
+  <data name="Solution" xml:space="preserve">
+    <value>方案</value>
+  </data>
+  <data name="TaskFlow" xml:space="preserve">
+    <value>任务流</value>
+  </data>
+  <data name="Module" xml:space="preserve">
+    <value>模块</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>新增</value>
+  </data>
+  <data name="Branch" xml:space="preserve">
+    <value>分支</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>拷贝</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>编辑</value>
+  </data>
+  <data name="ExtractBranchGroup" xml:space="preserve">
+    <value>提取分支组</value>
+  </data>
+  <data name="Loop" xml:space="preserve">
+    <value>循环</value>
+  </data>
+  <data name="Pause" xml:space="preserve">
+    <value>暂停</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="Run" xml:space="preserve">
+    <value>运行</value>
+  </data>
+  <data name="RunOne" xml:space="preserve">
+    <value>单步运行</value>
+  </data>
+  <data name="Skip" xml:space="preserve">
+    <value>忽略</value>
+  </data>
+  <data name="Step" xml:space="preserve">
+    <value>步骤</value>
+  </data>
+  <data name="Switch" xml:space="preserve">
+    <value>多分支</value>
+  </data>
+  <data name="Update" xml:space="preserve">
+    <value>更新</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="Apply" xml:space="preserve">
+    <value>应用</value>
+  </data>
+  <data name="HomePage" xml:space="preserve">
+    <value>起始页</value>
+  </data>
+  <data name="Open" xml:space="preserve">
+    <value>打开</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="AlignByCoord" xml:space="preserve">
+    <value>坐标系对齐</value>
+  </data>
+  <data name="AlignByInit" xml:space="preserve">
+    <value>初始对齐</value>
+  </data>
+  <data name="AlignByRPS" xml:space="preserve">
+    <value>RPS对齐</value>
+  </data>
+  <data name="Alignment" xml:space="preserve">
+    <value>对齐</value>
+  </data>
+  <data name="Circle" xml:space="preserve">
+    <value>圆</value>
+  </data>
+  <data name="FileIO" xml:space="preserve">
+    <value>文件输入</value>
+  </data>
+  <data name="Line" xml:space="preserve">
+    <value>线</value>
+  </data>
+  <data name="Loading" xml:space="preserve">
+    <value>运行中</value>
+  </data>
+  <data name="Logic" xml:space="preserve">
+    <value>逻辑</value>
+  </data>
+  <data name="Point" xml:space="preserve">
+    <value>点</value>
+  </data>
+  <data name="ReadCAD" xml:space="preserve">
+    <value>加载CAD</value>
+  </data>
+  <data name="ReadCloud" xml:space="preserve">
+    <value>加载点云</value>
+  </data>
+  <data name="ReadSTL" xml:space="preserve">
+    <value>加载STL</value>
+  </data>
+  <data name="Report" xml:space="preserve">
+    <value>报告</value>
+  </data>
+  <data name="Train" xml:space="preserve">
+    <value>训练</value>
+  </data>
+  <data name="StepGroup" xml:space="preserve">
+    <value>串行任务</value>
+  </data>
+  <data name="Value" xml:space="preserve">
+    <value>值</value>
+  </data>
+  <data name="OutParam" xml:space="preserve">
+    <value>输出参数</value>
+  </data>
+  <data name="PointCloud" xml:space="preserve">
+    <value>点云</value>
+  </data>
+  <data name="Mesh" xml:space="preserve">
+    <value>网格数据</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="Color" xml:space="preserve">
+    <value>颜色</value>
+  </data>
+  <data name="AlignByBestFit" xml:space="preserve">
+    <value>最佳拟合对齐</value>
+  </data>
+  <data name="CloudMesh" xml:space="preserve">
+    <value>网格比较</value>
+  </data>
+  <data name="Compare" xml:space="preserve">
+    <value>比较</value>
+  </data>
+  <data name="GenPoint" xml:space="preserve">
+    <value>生成点</value>
+  </data>
+  <data name="Geometry" xml:space="preserve">
+    <value>几何</value>
+  </data>
+  <data name="RunNext" xml:space="preserve">
+    <value>下一步</value>
+  </data>
+  <data name="CloudCalib" xml:space="preserve">
+    <value>点云拼接</value>
+  </data>
+  <data name="Registration" xml:space="preserve">
+    <value>配准</value>
+  </data>
+  <data name="Denoising" xml:space="preserve">
+    <value>去噪</value>
+  </data>
+  <data name="DownSampling" xml:space="preserve">
+    <value>下采样</value>
+  </data>
+  <data name="Smooth" xml:space="preserve">
+    <value>平滑</value>
+  </data>
+  <data name="Filtering" xml:space="preserve">
+    <value>滤波</value>
+  </data>
+  <data name="CloudRegistration" xml:space="preserve">
+    <value>点云配准</value>
+  </data>
+  <data name="CloudReRepeat" xml:space="preserve">
+    <value>点云去重</value>
+  </data>
+  <data name="GenPointByCross" xml:space="preserve">
+    <value>求交点</value>
+  </data>
+  <data name="GetPointByObj" xml:space="preserve">
+    <value>获取点</value>
+  </data>
+  <data name="GenPointByProj" xml:space="preserve">
+    <value>求投影点</value>
+  </data>
+  <data name="GenReport" xml:space="preserve">
+    <value>生成报告</value>
+  </data>
+  <data name="Coord" xml:space="preserve">
+    <value>坐标系</value>
+  </data>
+  <data name="GenCoordByData" xml:space="preserve">
+    <value>坐标系生成</value>
+  </data>
+  <data name="GenCoordByPlane3" xml:space="preserve">
+    <value>三面构建</value>
+  </data>
+  <data name="TransformCoord" xml:space="preserve">
+    <value>坐标系变换</value>
+  </data>
+  <data name="Revoke" xml:space="preserve">
+    <value>撤销</value>
+  </data>
+  <data name="Redo" xml:space="preserve">
+    <value>重做</value>
+  </data>
+  <data name="GenLineByFit" xml:space="preserve">
+    <value>拟合直线</value>
+  </data>
+  <data name="GenPointByData" xml:space="preserve">
+    <value>数字点</value>
+  </data>
+  <data name="Load" xml:space="preserve">
+    <value>加载</value>
+  </data>
+  <data name="GenLineBy2Point" xml:space="preserve">
+    <value>两点构线</value>
+  </data>
+  <data name="GenPlaneBy3Point" xml:space="preserve">
+    <value>三点构面</value>
+  </data>
+  <data name="DisMeasure" xml:space="preserve">
+    <value>距离测量</value>
+  </data>
+  <data name="Parallelism" xml:space="preserve">
+    <value>平行度</value>
+  </data>
+  <data name="Point2Point" xml:space="preserve">
+    <value>两点距离</value>
+  </data>
+  <data name="Tolerance" xml:space="preserve">
+    <value>公差</value>
+  </data>
+  <data name="Plane" xml:space="preserve">
+    <value>面</value>
+  </data>
+  <data name="Create" xml:space="preserve">
+    <value>新建</value>
+  </data>
+  <data name="CreateProject" xml:space="preserve">
+    <value>创建项目</value>
+  </data>
+  <data name="CurrentProject" xml:space="preserve">
+    <value>最 近 项 目</value>
+  </data>
+  <data name="Finish" xml:space="preserve">
+    <value>完 成</value>
+  </data>
+  <data name="Insert" xml:space="preserve">
+    <value>插入</value>
+  </data>
+  <data name="OpenProject" xml:space="preserve">
+    <value>打开项目</value>
+  </data>
+  <data name="ProjectAddress" xml:space="preserve">
+    <value>项 目 地 址</value>
+  </data>
+  <data name="ProjectName" xml:space="preserve">
+    <value>项 目 名 称</value>
+  </data>
+  <data name="Composing" xml:space="preserve">
+    <value>排版</value>
+  </data>
+  <data name="File" xml:space="preserve">
+    <value>文件</value>
+  </data>
+  <data name="Help" xml:space="preserve">
+    <value>帮助</value>
+  </data>
+  <data name="Print" xml:space="preserve">
+    <value>打印</value>
+  </data>
+  <data name="SaveAs" xml:space="preserve">
+    <value>另存为</value>
+  </data>
+  <data name="CloudProcess" xml:space="preserve">
+    <value>点云处理</value>
+  </data>
+  <data name="Roundness" xml:space="preserve">
+    <value>圆度</value>
+  </data>
+  <data name="Segment" xml:space="preserve">
+    <value>分割</value>
+  </data>
+  <data name="DoublePage" xml:space="preserve">
+    <value>双页</value>
+  </data>
+  <data name="Generate" xml:space="preserve">
+    <value>生成</value>
+  </data>
+  <data name="Lead" xml:space="preserve">
+    <value>导入</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>预览</value>
+  </data>
+  <data name="ReportContents" xml:space="preserve">
+    <value>报告目录</value>
+  </data>
+  <data name="ReportSource" xml:space="preserve">
+    <value>报告源</value>
+  </data>
+  <data name="SinglePage" xml:space="preserve">
+    <value>单页</value>
+  </data>
+  <data name="SaveAsProject" xml:space="preserve">
+    <value>另存项目</value>
+  </data>
+  <data name="SaveProject" xml:space="preserve">
+    <value>保存项目</value>
+  </data>
+  <data name="CADModel" xml:space="preserve">
+    <value>CAD模型</value>
+  </data>
+  <data name="Input" xml:space="preserve">
+    <value>输入</value>
+  </data>
+  <data name="Output" xml:space="preserve">
+    <value>输出</value>
+  </data>
+  <data name="PrintPreview" xml:space="preserve">
+    <value>打印预览</value>
+  </data>
+  <data name="PrintSet" xml:space="preserve">
+    <value>打印设置</value>
+  </data>
+  <data name="ProjectProperty" xml:space="preserve">
+    <value>项目属性</value>
+  </data>
+  <data name="Quit" xml:space="preserve">
+    <value>退出</value>
+  </data>
+  <data name="RecentFile" xml:space="preserve">
+    <value>最近文件</value>
+  </data>
+  <data name="RecentProject" xml:space="preserve">
+    <value>最近项目</value>
+  </data>
+  <data name="STL" xml:space="preserve">
+    <value>STL格式</value>
+  </data>
+  <data name="GenCylinderByFit" xml:space="preserve">
+    <value>圆柱拟合</value>
+  </data>
+  <data name="Cylinder" xml:space="preserve">
+    <value>圆柱</value>
+  </data>
+  <data name="CopyCreate" xml:space="preserve">
+    <value>复制创建</value>
+  </data>
+  <data name="GenCircleByData" xml:space="preserve">
+    <value>数据圆</value>
+  </data>
+  <data name="GenCircleByFit" xml:space="preserve">
+    <value>拟合圆</value>
+  </data>
+  <data name="GenLineByCross" xml:space="preserve">
+    <value>求相交线</value>
+  </data>
+  <data name="GenLineByData" xml:space="preserve">
+    <value>数据线</value>
+  </data>
+  <data name="GenLineByMove" xml:space="preserve">
+    <value>线平移</value>
+  </data>
+  <data name="GenLineByProj" xml:space="preserve">
+    <value>求投影线</value>
+  </data>
+  <data name="GenPlaneByFit" xml:space="preserve">
+    <value>拟合面</value>
+  </data>
+  <data name="GenPlaneByMove" xml:space="preserve">
+    <value>面平移</value>
+  </data>
+  <data name="ArcLine2Line" xml:space="preserve">
+    <value>线线角度</value>
+  </data>
+  <data name="ArcLine2Plane" xml:space="preserve">
+    <value>线面角度</value>
+  </data>
+  <data name="ArcPlane2Plane" xml:space="preserve">
+    <value>面面角度</value>
+  </data>
+  <data name="DisLine2Line" xml:space="preserve">
+    <value>线线距离</value>
+  </data>
+  <data name="DisLine2Plane" xml:space="preserve">
+    <value>线面距离</value>
+  </data>
+  <data name="DisPoint2Line" xml:space="preserve">
+    <value>点线距离</value>
+  </data>
+  <data name="DisPoint2Plane" xml:space="preserve">
+    <value>点面距离</value>
+  </data>
+  <data name="DisPoint2Point" xml:space="preserve">
+    <value>两点距离</value>
+  </data>
+  <data name="GenPlaneByObj" xml:space="preserve">
+    <value>创建面</value>
+  </data>
+  <data name="GetLineByObj" xml:space="preserve">
+    <value>获取线</value>
+  </data>
+  <data name="AngleMeasure" xml:space="preserve">
+    <value>角度测量</value>
+  </data>
+  <data name="GetPlaneByObj" xml:space="preserve">
+    <value>获取面</value>
+  </data>
+  <data name="SaveProjectTask" xml:space="preserve">
+    <value>是否保存工程?</value>
+  </data>
+  <data name="AsyncGroup" xml:space="preserve">
+    <value>并行任务</value>
+  </data>
+  <data name="Paste" xml:space="preserve">
+    <value>粘贴</value>
+  </data>
+  <data name="ExtractAsyncGroup" xml:space="preserve">
+    <value>提取异步组</value>
+  </data>
+  <data name="ExtractSwitchGroup" xml:space="preserve">
+    <value>提取条件组</value>
+  </data>
+  <data name="Rename" xml:space="preserve">
+    <value>重命名</value>
+  </data>
+  <data name="InsertPoint" xml:space="preserve">
+    <value>插入点</value>
+  </data>
+  <data name="GetDirectionByObj" xml:space="preserve">
+    <value>获取方向</value>
+  </data>
+  <data name="Export" xml:space="preserve">
+    <value>导出</value>
+  </data>
+  <data name="Choose" xml:space="preserve">
+    <value>选择</value>
+  </data>
+  <data name="SaveSuccess" xml:space="preserve">
+    <value>保存成功</value>
+  </data>
+  <data name="SwitchGroup" xml:space="preserve">
+    <value>条件任务</value>
+  </data>
+  <data name="GenCloudByPoints" xml:space="preserve">
+    <value>多点构建点云</value>
+  </data>
+  <data name="BranchGroup" xml:space="preserve">
+    <value>判断分支</value>
+  </data>
+  <data name="GenLineByTransform" xml:space="preserve">
+    <value>线变换</value>
+  </data>
+  <data name="InOutParameterConfigure" xml:space="preserve">
+    <value>输入输出参数配置</value>
+  </data>
+  <data name="CancelCoordTemplate" xml:space="preserve">
+    <value>取消模板</value>
+  </data>
+  <data name="SetCoordTemplate" xml:space="preserve">
+    <value>设置模板</value>
+  </data>
+  <data name="BatchImportPoints" xml:space="preserve">
+    <value>批量导入点</value>
+  </data>
+  <data name="FileAddress" xml:space="preserve">
+    <value>文件地址</value>
+  </data>
+  <data name="GenerationMode" xml:space="preserve">
+    <value>生成方式</value>
+  </data>
+  <data name="Separator" xml:space="preserve">
+    <value>分隔符</value>
+  </data>
+  <data name="StartRow" xml:space="preserve">
+    <value>起始行</value>
+  </data>
+  <data name="StartColumn" xml:space="preserve">
+    <value>起始列</value>
+  </data>
+  <data name="CheckForUpdates" xml:space="preserve">
+    <value>检查更新</value>
+  </data>
+  <data name="EditFeature" xml:space="preserve">
+    <value>编辑特征</value>
+  </data>
+  <data name="ExtractStepGroup" xml:space="preserve">
+    <value>提取串行组</value>
+  </data>
+  <data name="ReleaseNotes" xml:space="preserve">
+    <value>发布说明</value>
+  </data>
+  <data name="TaskSimulator" xml:space="preserve">
+    <value>任务模拟器</value>
+  </data>
+  <data name="Tool" xml:space="preserve">
+    <value>工具</value>
+  </data>
+  <data name="UsingTutorials" xml:space="preserve">
+    <value>使用教程</value>
+  </data>
+  <data name="Display" xml:space="preserve">
+    <value>显示</value>
+  </data>
+  <data name="DisplayDirection" xml:space="preserve">
+    <value>显示方向</value>
+  </data>
+  <data name="LightingSettings" xml:space="preserve">
+    <value>光源设置</value>
+  </data>
+  <data name="ModelDisplayMode" xml:space="preserve">
+    <value>模型显示模式</value>
+  </data>
+  <data name="PointCloudDisplayMode" xml:space="preserve">
+    <value>点云显示模式</value>
+  </data>
+  <data name="Select" xml:space="preserve">
+    <value>选择</value>
+  </data>
+  <data name="View" xml:space="preserve">
+    <value>视图</value>
+  </data>
+  <data name="Zoom" xml:space="preserve">
+    <value>缩放</value>
+  </data>
+  <data name="ImportParameterName" xml:space="preserve">
+    <value>输入参数别名</value>
+  </data>
+  <data name="ModuleName" xml:space="preserve">
+    <value>模块名称</value>
+  </data>
+  <data name="OutportParameterName" xml:space="preserve">
+    <value>输出参数别名</value>
+  </data>
+  <data name="GenConeByFit" xml:space="preserve">
+    <value>圆锥拟合</value>
+  </data>
+  <data name="GenSphereByFit" xml:space="preserve">
+    <value>球体拟合</value>
+  </data>
+  <data name="GenCuboidByData" xml:space="preserve">
+    <value>数据长方体</value>
+  </data>
+  <data name="GenCylinderByData" xml:space="preserve">
+    <value>数据圆柱</value>
+  </data>
+  <data name="GenPointByMove" xml:space="preserve">
+    <value>点偏移</value>
+  </data>
+  <data name="CloudDenoising" xml:space="preserve">
+    <value>点云去噪</value>
+  </data>
+  <data name="CloudDownSampling" xml:space="preserve">
+    <value>点云采样</value>
+  </data>
+  <data name="CloudSegment" xml:space="preserve">
+    <value>点云裁剪</value>
+  </data>
+  <data name="CloudSmooth" xml:space="preserve">
+    <value>点云平滑</value>
+  </data>
+  <data name="CloudTransform" xml:space="preserve">
+    <value>点云变换</value>
+  </data>
+  <data name="Transform" xml:space="preserve">
+    <value>变换</value>
+  </data>
+  <data name="GenPointByCaliper" xml:space="preserve">
+    <value>卡尺取点</value>
+  </data>
+  <data name="GenPointByCMM" xml:space="preserve">
+    <value>CMM取点</value>
+  </data>
+  <data name="GenSphereByData" xml:space="preserve">
+    <value>数据球</value>
+  </data>
+  <data name="Flatness" xml:space="preserve">
+    <value>平面度</value>
+  </data>
+  <data name="Straightness" xml:space="preserve">
+    <value>直线度</value>
+  </data>
+  <data name="Error" xml:space="preserve">
+    <value>错误</value>
+  </data>
+  <data name="Info" xml:space="preserve">
+    <value>信息</value>
+  </data>
+  <data name="Warning" xml:space="preserve">
+    <value>警告</value>
+  </data>
+  <data name="SetMeasure" xml:space="preserve">
+    <value>尺寸设置</value>
+  </data>
+  <data name="Active" xml:space="preserve">
+    <value>激活</value>
+  </data>
+  <data name="DataProcess" xml:space="preserve">
+    <value>数据处理</value>
+  </data>
+  <data name="MergePoints" xml:space="preserve">
+    <value>点合并</value>
+  </data>
+  <data name="ProjectAlreadyExists" xml:space="preserve">
+    <value>项目已存在！</value>
+  </data>
+  <data name="ProjectCannotBeEmpty" xml:space="preserve">
+    <value>项目名或地址不可为空！</value>
+  </data>
+  <data name="Profileanysurface" xml:space="preserve">
+    <value>面轮廓度</value>
+  </data>
+  <data name="ReadMatrix" xml:space="preserve">
+    <value>加载矩阵</value>
+  </data>
+  <data name="InputParameter" xml:space="preserve">
+    <value>输入参数</value>
+  </data>
+  <data name="OutputParameter" xml:space="preserve">
+    <value>输出参数</value>
+  </data>
+  <data name="CancelSkip" xml:space="preserve">
+    <value>取消忽略</value>
+  </data>
+  <data name="HideLabel" xml:space="preserve">
+    <value>隐藏标签</value>
+  </data>
+  <data name="VisibleLabel" xml:space="preserve">
+    <value>显示标签</value>
+  </data>
+  <data name="ROIConfig" xml:space="preserve">
+    <value>ROI配置</value>
+  </data>
+  <data name="TolParameter" xml:space="preserve">
+    <value>公差参数</value>
+  </data>
+  <data name="OutlierFit" xml:space="preserve">
+    <value>局外点拟合</value>
+  </data>
+  <data name="Cone" xml:space="preserve">
+    <value>圆锥</value>
+  </data>
+  <data name="Cuboid" xml:space="preserve">
+    <value>长方体</value>
+  </data>
+  <data name="Sphere" xml:space="preserve">
+    <value>球体</value>
+  </data>
+  <data name="DisplayElementParaSetting" xml:space="preserve">
+    <value>显示元素参数设置</value>
+  </data>
+  <data name="DisplayTypeSetting" xml:space="preserve">
+    <value>显示类型设置</value>
+  </data>
+  <data name="DrawCuboidROI" xml:space="preserve">
+    <value>绘制长方体ROI</value>
+  </data>
+  <data name="DrawCylinderROI" xml:space="preserve">
+    <value>绘制圆柱ROI</value>
+  </data>
+  <data name="DrawSphereROI" xml:space="preserve">
+    <value>绘制球体ROI</value>
+  </data>
+  <data name="RotateViewClockwise" xml:space="preserve">
+    <value>顺时针旋转视图</value>
+  </data>
+  <data name="RotateViewCounterclockwise" xml:space="preserve">
+    <value>逆时针旋转视图</value>
+  </data>
+  <data name="ViewCentered" xml:space="preserve">
+    <value>视图居中</value>
+  </data>
+  <data name="ViewDirectionSetting" xml:space="preserve">
+    <value>视图方向设置</value>
+  </data>
+  <data name="ViewFlip" xml:space="preserve">
+    <value>视图翻转</value>
+  </data>
+  <data name="Comma" xml:space="preserve">
+    <value>逗号</value>
+  </data>
+  <data name="Custom" xml:space="preserve">
+    <value>自定义</value>
+  </data>
+  <data name="GeometricFeatures" xml:space="preserve">
+    <value>几何特征</value>
+  </data>
+  <data name="LineScale" xml:space="preserve">
+    <value>线延长比</value>
+  </data>
+  <data name="LineWidth" xml:space="preserve">
+    <value>线宽</value>
+  </data>
+  <data name="Opacity" xml:space="preserve">
+    <value>透明度</value>
+  </data>
+  <data name="PleaseCheckTheDataFormatorType" xml:space="preserve">
+    <value>请检查数据格式或类型！</value>
+  </data>
+  <data name="PleaseEnterAnIntegerGreaterThan0" xml:space="preserve">
+    <value>请输入大于零的整数！</value>
+  </data>
+  <data name="PleaseEnterASingleByteDelimiter" xml:space="preserve">
+    <value>请输入单字节分割符！</value>
+  </data>
+  <data name="PointCloudSize" xml:space="preserve">
+    <value>点云尺寸</value>
+  </data>
+  <data name="PointSize" xml:space="preserve">
+    <value>点尺寸</value>
+  </data>
+  <data name="Semicolon" xml:space="preserve">
+    <value>分号</value>
+  </data>
+  <data name="Space" xml:space="preserve">
+    <value>空格</value>
+  </data>
+  <data name="ModelGroup" xml:space="preserve">
+    <value>模型点集</value>
+  </data>
+  <data name="PointCloudGroup" xml:space="preserve">
+    <value>点云点集</value>
+  </data>
+  <data name="ArrangeDocument" xml:space="preserve">
+    <value>文件整理</value>
+  </data>
+  <data name="AverageTime" xml:space="preserve">
+    <value>平均耗时</value>
+  </data>
+  <data name="DataDirectory" xml:space="preserve">
+    <value>数据目录</value>
+  </data>
+  <data name="ForMemoryLeakDetection" xml:space="preserve">
+    <value>用于内存泄露检测</value>
+  </data>
+  <data name="KeywordMatching" xml:space="preserve">
+    <value>关键字匹配</value>
+  </data>
+  <data name="LowerLimit" xml:space="preserve">
+    <value>公差下限</value>
+  </data>
+  <data name="NumberOfCycles" xml:space="preserve">
+    <value>循环次数</value>
+  </data>
+  <data name="SearchFileKeywords" xml:space="preserve">
+    <value>搜索文件关键字</value>
+  </data>
+  <data name="Senior" xml:space="preserve">
+    <value>高级</value>
+  </data>
+  <data name="SerialNumber" xml:space="preserve">
+    <value>序号</value>
+  </data>
+  <data name="StandardValue" xml:space="preserve">
+    <value>标准值</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>状态</value>
+  </data>
+  <data name="Time" xml:space="preserve">
+    <value>耗时</value>
+  </data>
+  <data name="TotalTime" xml:space="preserve">
+    <value>总计耗时</value>
+  </data>
+  <data name="UpperLimit" xml:space="preserve">
+    <value>公差上限</value>
+  </data>
+  <data name="PickLine" xml:space="preserve">
+    <value>拾取线</value>
+  </data>
+  <data name="PickPlane" xml:space="preserve">
+    <value>拾取面</value>
+  </data>
+  <data name="PickPoint" xml:space="preserve">
+    <value>拾取点</value>
+  </data>
+  <data name="ReadDatas" xml:space="preserve">
+    <value>读入数据</value>
+  </data>
+  <data name="BoundBox" xml:space="preserve">
+    <value>包围盒</value>
+  </data>
+  <data name="PointerCoord" xml:space="preserve">
+    <value>指针坐标</value>
+  </data>
+  <data name="SetDisPlayOption" xml:space="preserve">
+    <value>显示选项设置</value>
+  </data>
+  <data name="VersionInfoDialog" xml:space="preserve">
+    <value>版本信息窗</value>
+  </data>
+  <data name="SoftWareUpdateInfo" xml:space="preserve">
+    <value>版本更新信息</value>
+  </data>
+  <data name="SoftWareVersion" xml:space="preserve">
+    <value>软件版本</value>
+  </data>
+  <data name="QuitSoftWare" xml:space="preserve">
+    <value>是否退出软件?</value>
+  </data>
+  <data name="Calib" xml:space="preserve">
+    <value>标定</value>
+  </data>
+  <data name="BestFit" xml:space="preserve">
+    <value>最佳拟合</value>
+  </data>
+  <data name="GenPointByCloud" xml:space="preserve">
+    <value>点云极值点</value>
+  </data>
+  <data name="ReportNavigation" xml:space="preserve">
+    <value>报告导航窗</value>
+  </data>
+  <data name="CoordRef" xml:space="preserve">
+    <value>参考坐标系</value>
+  </data>
+  <data name="Cylindricity" xml:space="preserve">
+    <value>圆柱度</value>
+  </data>
+  <data name="Inclination" xml:space="preserve">
+    <value>倾斜度</value>
+  </data>
+  <data name="Verticality" xml:space="preserve">
+    <value>垂直度</value>
+  </data>
+  <data name="LineProfile" xml:space="preserve">
+    <value>线轮廓度</value>
+  </data>
+  <data name="SurfaceProfile" xml:space="preserve">
+    <value>面轮廓度</value>
+  </data>
+  <data name="AddInParam" xml:space="preserve">
+    <value>新增参数</value>
+  </data>
+  <data name="CuboidTransform" xml:space="preserve">
+    <value>长方体变换</value>
+  </data>
+  <data name="Ok" xml:space="preserve">
+    <value>确定</value>
+  </data>
+  <data name="CloudExtractEdge" xml:space="preserve">
+    <value>点云边缘提取</value>
+  </data>
+  <data name="CloudProjPlane" xml:space="preserve">
+    <value>点云投影面</value>
+  </data>
+  <data name="GenPointByPlaneZ" xml:space="preserve">
+    <value>面Z获取</value>
+  </data>
+  <data name="BatchGeometry" xml:space="preserve">
+    <value>批量生成几何体</value>
+  </data>
+  <data name="ReadPoint" xml:space="preserve">
+    <value>读取数字点</value>
+  </data>
+  <data name="ReadDirection" xml:space="preserve">
+    <value>读取方向向量</value>
+  </data>
+  <data name="BatchCreateMeasurements" xml:space="preserve">
+    <value>批量创建测量项</value>
+  </data>
+  <data name="BatchLoadingPointClouds" xml:space="preserve">
+    <value>批量加载点云，在设置输入参数时有效！</value>
+  </data>
+  <data name="HeightCorSpect" xml:space="preserve">
+    <value>高度色谱</value>
+  </data>
+  <data name="Patch" xml:space="preserve">
+    <value>面片</value>
+  </data>
+  <data name="ScreenShot" xml:space="preserve">
+    <value>屏幕快照</value>
+  </data>
+  <data name="Vertex" xml:space="preserve">
+    <value>顶点</value>
+  </data>
+  <data name="Wireframe" xml:space="preserve">
+    <value>线框</value>
+  </data>
+  <data name="Operate" xml:space="preserve">
+    <value>操作</value>
+  </data>
+  <data name="Property" xml:space="preserve">
+    <value>属性</value>
+  </data>
+  <data name="ReportName" xml:space="preserve">
+    <value>报告名称</value>
+  </data>
+  <data name="StorageAddress" xml:space="preserve">
+    <value>存储地址</value>
+  </data>
+  <data name="PreviewReport" xml:space="preserve">
+    <value>报告预览</value>
+  </data>
+  <data name="SetSinglePage" xml:space="preserve">
+    <value>单页设置</value>
+  </data>
+  <data name="Type" xml:space="preserve">
+    <value>类别</value>
+  </data>
+  <data name="MeasureBenchmarkⅠ" xml:space="preserve">
+    <value>测量基准Ⅰ</value>
+  </data>
+  <data name="MeasureBenchmarkⅡ" xml:space="preserve">
+    <value>测量基准Ⅱ</value>
+  </data>
+  <data name="MeasureType" xml:space="preserve">
+    <value>测量类型</value>
+  </data>
+  <data name="AxisDirection" xml:space="preserve">
+    <value>轴线方向</value>
+  </data>
+  <data name="DigitalPoint" xml:space="preserve">
+    <value>数字点</value>
+  </data>
+  <data name="HDirection" xml:space="preserve">
+    <value>高方向</value>
+  </data>
+  <data name="Height" xml:space="preserve">
+    <value>高</value>
+  </data>
+  <data name="LDirection" xml:space="preserve">
+    <value>长方向</value>
+  </data>
+  <data name="Radius" xml:space="preserve">
+    <value>半径</value>
+  </data>
+  <data name="Size" xml:space="preserve">
+    <value>尺寸</value>
+  </data>
+  <data name="WDirection" xml:space="preserve">
+    <value>宽方向</value>
+  </data>
+  <data name="InCloud" xml:space="preserve">
+    <value>内部点云</value>
+  </data>
+  <data name="RefTemplate" xml:space="preserve">
+    <value>参考模板</value>
+  </data>
+  <data name="RepTemplate" xml:space="preserve">
+    <value>更换模板</value>
+  </data>
+  <data name="SurfaceDistance" xml:space="preserve">
+    <value>表面距离</value>
+  </data>
+  <data name="GeometricFeaturesInclude" xml:space="preserve">
+    <value>几何特征新建包含：点、线、面、长方体、圆柱、圆锥、球等</value>
+  </data>
+  <data name="SoftwareFunctions" xml:space="preserve">
+    <value>凌云光3D测量软件初始版本集成：几何特征新建、坐标系生成、标定、点云处理、对齐、比较、距离测量、角度测量与公差测量等</value>
+  </data>
+  <data name="ToleranceMeasurementsInclude" xml:space="preserve">
+    <value>公差测量主要包含：平行度、直线度、面轮廓度、线轮廓度、平面度、圆度等</value>
+  </data>
+  <data name="AdjustModelAndPointCloud" xml:space="preserve">
+    <value>2.将模型和点云调整到相同视角</value>
+  </data>
+  <data name="CalibrationOperationInstructions" xml:space="preserve">
+    <value>标定操作说明</value>
+  </data>
+  <data name="CancelCalibration" xml:space="preserve">
+    <value>5.“取消”按钮，取消标定</value>
+  </data>
+  <data name="ClickModelAndPointCloud" xml:space="preserve">
+    <value>3.“点选”按钮，依次在模型和点云上点击</value>
+  </data>
+  <data name="CloseCalibration" xml:space="preserve">
+    <value>7.“关闭”按钮，退出当前页面</value>
+  </data>
+  <data name="ConfirmCalibration" xml:space="preserve">
+    <value>6.“确认”按钮，完成当前点云标定</value>
+  </data>
+  <data name="ForegroundAndBackground" xml:space="preserve">
+    <value>4.亮色为前景色，黑色为背景色</value>
+  </data>
+  <data name="PointToPoint" xml:space="preserve">
+    <value>点对</value>
+  </data>
+  <data name="SelectCalibratePointCloud" xml:space="preserve">
+    <value>1.在任务树选择要标定的点云</value>
+  </data>
+  <data name="ThreeGroups" xml:space="preserve">
+    <value>最少三组</value>
+  </data>
+  <data name="CheckBenchmarkEmpty" xml:space="preserve">
+    <value>存在基准集合为空，请检查</value>
+  </data>
+  <data name="ClearBenchmarkParameters" xml:space="preserve">
+    <value>是否确定清空基准参数</value>
+  </data>
+  <data name="GenerationMethodPoint" xml:space="preserve">
+    <value>生成方式需设置为：点</value>
+  </data>
+  <data name="IsGenerateMeasurement" xml:space="preserve">
+    <value>基准Ⅰ集合与基准Ⅱ集合个数不同，确认生成测量项</value>
+  </data>
+  <data name="NoDigitalPointsUpdated" xml:space="preserve">
+    <value>任务中无数字点待更新</value>
+  </data>
+  <data name="NoMeasurementUnderNode" xml:space="preserve">
+    <value>节点下存在非测量项基准，拖拽时将自动移除</value>
+  </data>
+  <data name="NumberOfDataPoints" xml:space="preserve">
+    <value>每个文件数据点个数范围是[4,1000]</value>
+  </data>
+  <data name="SelectCorrectMeasurementBenchmark" xml:space="preserve">
+    <value>请选择可以做测量基准的点、线、面等类型</value>
+  </data>
+  <data name="AliasCannotDuplicate" xml:space="preserve">
+    <value>别名不可重复</value>
+  </data>
+  <data name="AliasCannotEmpty" xml:space="preserve">
+    <value>别名不可为空</value>
+  </data>
+  <data name="ClearInOutParameters" xml:space="preserve">
+    <value>确定清空输入输出参数</value>
+  </data>
+  <data name="SaveReportAsCompleted" xml:space="preserve">
+    <value>报告另存完成</value>
+  </data>
+  <data name="ConfigureInputParametersFirst" xml:space="preserve">
+    <value>请先配置输入参数(点云)</value>
+  </data>
+  <data name="ConfirmActivePointCloud" xml:space="preserve">
+    <value>确认任务中存在从文件加载的激活点云</value>
+  </data>
+  <data name="CreateProjectReplaceCurrent" xml:space="preserve">
+    <value>当前项目源文件已删除，请先新建项目代替当前项目</value>
+  </data>
+  <data name="TutorialDontExist" xml:space="preserve">
+    <value>教程文档不存在</value>
+  </data>
+  <data name="CenterPoint" xml:space="preserve">
+    <value>中心点</value>
+  </data>
+  <data name="StringMerge" xml:space="preserve">
+    <value>字符拼接</value>
+  </data>
+  <data name="StringExDialog" xml:space="preserve">
+    <value>字符串拼接窗口</value>
+  </data>
+  <data name="StringParse" xml:space="preserve">
+    <value>字符解析</value>
+  </data>
+  <data name="HideBoundBox" xml:space="preserve">
+    <value>隐藏包围盒</value>
+  </data>
+  <data name="ShowBoundBox" xml:space="preserve">
+    <value>显示包围盒</value>
+  </data>
+  <data name="BatchGenPoints" xml:space="preserve">
+    <value>批量生成点</value>
+  </data>
+  <data name="CloudSectionSegment" xml:space="preserve">
+    <value>点云多截面分割</value>
+  </data>
+  <data name="Calculator" xml:space="preserve">
+    <value>计算器</value>
+  </data>
+  <data name="ExpressDialog" xml:space="preserve">
+    <value>表达式对话框</value>
+  </data>
+  <data name="StringMatchDialog" xml:space="preserve">
+    <value>字符匹配对话框</value>
+  </data>
+  <data name="BatchChangeGeometry" xml:space="preserve">
+    <value>批量修改几何体属性</value>
+  </data>
+  <data name="BatchGenMeaPoints" xml:space="preserve">
+    <value>批量生成测量点</value>
+  </data>
+  <data name="CollisionDirection" xml:space="preserve">
+    <value>碰撞方向</value>
+  </data>
+  <data name="DetectionDepth" xml:space="preserve">
+    <value>探测深度</value>
+  </data>
+  <data name="FallbackDistance" xml:space="preserve">
+    <value>回退距离</value>
+  </data>
+  <data name="GenGeomFromPoint" xml:space="preserve">
+    <value>由点生成几何体</value>
+  </data>
+  <data name="PointDirection" xml:space="preserve">
+    <value>取点方向</value>
+  </data>
+  <data name="ROIType" xml:space="preserve">
+    <value>ROI点类型</value>
+  </data>
+  <data name="RotateAroundX" xml:space="preserve">
+    <value>绕X轴旋转</value>
+  </data>
+  <data name="RotateAroundY" xml:space="preserve">
+    <value>绕Y轴旋转</value>
+  </data>
+  <data name="RotateAroundZ" xml:space="preserve">
+    <value>绕Z轴旋转</value>
+  </data>
+  <data name="SwitchDialog" xml:space="preserve">
+    <value>条件弹窗</value>
+  </data>
+  <data name="CloudAlignMatch" xml:space="preserve">
+    <value>点云对其匹配</value>
+  </data>
+  <data name="CloudNormal" xml:space="preserve">
+    <value>点云法向信息</value>
+  </data>
+  <data name="DisCircleAttribute" xml:space="preserve">
+    <value>圆尺寸测量</value>
+  </data>
+  <data name="RobotMove" xml:space="preserve">
+    <value>机器人运动</value>
+  </data>
+  <data name="IsHomeDefault" xml:space="preserve">
+    <value>回零恢复默认值</value>
+  </data>
+  <data name="IsMemoric" xml:space="preserve">
+    <value>参数记忆</value>
+  </data>
+  <data name="SplitIntToBit" xml:space="preserve">
+    <value>按位读取</value>
+  </data>
+  <data name="SmokeAlarmDevice" xml:space="preserve">
+    <value>烟雾报警器</value>
+  </data>
+  <data name="TxtReader" xml:space="preserve">
+    <value>读取Txt</value>
+  </data>
+  <data name="TxtWriter" xml:space="preserve">
+    <value>文本写入</value>
+  </data>
+  <data name="ModbusRTU" xml:space="preserve">
+    <value>ModbusRTU</value>
+  </data>
+</root>

@@ -1,0 +1,264 @@
+﻿<UserControl x:Class="Luster.SimDevice.SubSystem.Views.VModuleContent"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Luster.SimDevice.SubSystem.Views"
+             xmlns:hc="https://handyorg.github.io/handycontrol"
+             xmlns:langs="clr-namespace:Luster.Common.Assets.Langs;assembly=Luster.Common.Assets"
+             xmlns:prism="http://prismlibrary.com/"
+             prism:ViewModelLocator.AutoWireViewModel="True"
+             mc:Ignorable="d" 
+             d:DesignHeight="800" d:DesignWidth="1000">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="125"></ColumnDefinition>
+            <ColumnDefinition Width="*"></ColumnDefinition>
+            <ColumnDefinition Width="175"></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+
+        <StackPanel Grid.Column="0">
+          <Label Content="模组" Grid.Row="0" hc:TitleElement.TitlePlacement="Left"/>
+          <ListBox  Grid.Row="1"
+          MinHeight="200"
+          MaxHeight="500"    
+          ItemsSource="{Binding ModuleNames}"
+          SelectedItem="{Binding SelectedModuleName}" 
+          SelectionMode="Single">
+                <ListBox.ItemContainerStyle>
+                    <Style BasedOn="{StaticResource ListBoxItemBaseStyle}" TargetType="ListBoxItem">
+                        <Setter Property="Margin" Value="0,0,5,0" />
+                        <Setter Property="Background" Value="#DEE0E7" />
+                        <Setter Property="hc:BorderElement.CornerRadius" Value="5" />
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter Property="Background" Value="{DynamicResource SecondaryRegionBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="true">
+                                <Setter Property="Background" Value="{DynamicResource PrimaryBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextIconBrush}" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <hc:Interaction.Triggers>
+                    <hc:EventTrigger EventName="SelectionChanged">
+                        <hc:EventToCommand Command="{Binding SelectedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListBox}, Path=SelectedItem}" />
+                    </hc:EventTrigger>
+                </hc:Interaction.Triggers>
+            </ListBox>
+            <Label Content="设备" Grid.Row="2" Margin="0,15,0,0"/>
+            <ListBox Grid.Row="3"
+          ItemsSource="{Binding DeviceNames}"
+          SelectedItem="{Binding SelectedDevice}" 
+          SelectionMode="Single"
+          MinHeight="300"
+          MaxHeight="500">
+                <ListBox.ItemContainerStyle>
+                    <Style BasedOn="{StaticResource ListBoxItemBaseStyle}" TargetType="ListBoxItem">
+                        <Setter Property="Margin" Value="0,0,5,0" />
+                        <Setter Property="Background" Value="#DEE0E7" />
+                        <Setter Property="hc:BorderElement.CornerRadius" Value="5" />
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter Property="Background" Value="{DynamicResource SecondaryRegionBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="true">
+                                <Setter Property="Background" Value="{DynamicResource PrimaryBrush}" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextIconBrush}" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <hc:Interaction.Triggers>
+                    <hc:EventTrigger EventName="SelectionChanged">
+                        <hc:EventToCommand Command="{Binding SelectedCommandDevice}" CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=ListBox}, Path=SelectedItem}" />
+                    </hc:EventTrigger>
+                </hc:Interaction.Triggers>
+            </ListBox>
+        </StackPanel>
+
+        <StackPanel Grid.Column="1">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"></RowDefinition>
+                    <RowDefinition Height="*"></RowDefinition>
+                </Grid.RowDefinitions>
+                <StackPanel Grid.Row="0" Height="400">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"></ColumnDefinition>
+                            <ColumnDefinition Width="*"></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0">
+                        <hc:ImageViewer  Name="设备总览" 
+                             Height="400"
+                             ImageSource="{Binding MachineLayOutImage}"/>
+                        </Border>
+
+                        <Border Grid.Column="1">
+                        <hc:ImageViewer  Name="设备划分" 
+                          Height="400"
+                          ImageSource="{Binding MachineDivideImage}"/>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Height="400">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"></ColumnDefinition>
+                            <ColumnDefinition Width="*"></ColumnDefinition>
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0">
+                        <hc:ImageViewer  Name="模组总览" 
+                             Height="400"
+                             ImageSource="{Binding ModuleLayOutImage}"/>
+                        </Border>
+
+                        <Border Grid.Column="1">
+                            <hc:ImageViewer  Name="模组划分" 
+                            Height="400"
+                            ImageSource="{Binding ModuleDivideImage}"/>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+        
+        <StackPanel Grid.Column="2" Background="White" Margin="0,0,0,0">
+            <Label Content="模组点位" Background="AliceBlue"></Label>
+            <hc:NumericUpDown
+                    Margin="10,10,10,0"
+                    hc:InfoElement.Necessary="True"
+                    hc:InfoElement.Placeholder="起点X"
+                    hc:InfoElement.Title="起点X"
+                    Style="{StaticResource NumericUpDownValidationStyle}"
+                    Value="{Binding StartXPos}"/>
+
+            <hc:NumericUpDown
+                    Margin="10,10,10,0"
+                    hc:InfoElement.Necessary="True"
+                    hc:InfoElement.Placeholder="起点Y"
+                    hc:InfoElement.Title="起点Y"
+                    Style="{StaticResource NumericUpDownValidationStyle}"
+                    Value="{Binding StartYPos}"/>
+
+            <hc:NumericUpDown
+                    Margin="10,10,10,0"
+                    hc:InfoElement.Necessary="True"
+                    hc:InfoElement.Placeholder="宽度"
+                    hc:InfoElement.Title="宽度"
+                    Style="{StaticResource NumericUpDownValidationStyle}"
+                    Value="{Binding Width}"/>
+
+            <hc:NumericUpDown
+                    Margin="10,10,10,0"
+                    hc:InfoElement.Necessary="True"
+                    hc:InfoElement.Placeholder="高度"
+                    hc:InfoElement.Title="高度"
+                    Style="{StaticResource NumericUpDownValidationStyle}"
+                    Value="{Binding Height}"/>
+
+            <hc:NumericUpDown
+                    Margin="10,10,10,0"
+                    hc:InfoElement.Necessary="True"
+                    hc:InfoElement.Placeholder="线宽"
+                    hc:InfoElement.Title="线宽"
+                    Style="{StaticResource NumericUpDownValidationStyle}"
+                    Value="{Binding Thickness}"/>
+
+            <Button x:Name="导入设备Layout"
+                    Margin="10,15,10,0"
+                    Content="导入设备图" 
+                    MinWidth="120" 
+                    Width="auto" 
+                    Command="{Binding LoadMachineLayOutCommand}"
+                    HorizontalAlignment="Center"/>
+
+            <Button x:Name="开始绘制Layout" 
+                    Margin="10,15,10,5"
+                    Content="开始绘制模组分区" 
+                    MinWidth="120" 
+                    Width="auto"
+                    HorizontalAlignment="Center"
+                    Command="{Binding StartDrawCommand}" />
+
+            <Button x:Name="保存模组LayOut" 
+                    Margin="10,15,10,0"
+                    Content="保存设备分区点位" 
+                    MinWidth="120" 
+                    Width="auto"
+                    HorizontalAlignment="Center"
+                    Command="{Binding SaveModulePointCommand}"/>
+
+            <Label Content="元件点位" Margin="10,20,0,0" Background="AliceBlue"></Label>
+            <hc:NumericUpDown
+                    Margin="10,10,10,0"
+                    hc:InfoElement.Necessary="True"
+                    hc:InfoElement.Placeholder="起点X"
+                    hc:InfoElement.Title="起点X"
+                    Style="{StaticResource NumericUpDownValidationStyle}"
+                    Value="{Binding DStartXPos}"/>
+
+            <hc:NumericUpDown
+                    Margin="10,10,10,0"
+                    hc:InfoElement.Necessary="True"
+                    hc:InfoElement.Placeholder="起点Y"
+                    hc:InfoElement.Title="起点Y"
+                    Style="{StaticResource NumericUpDownValidationStyle}"
+                    Value="{Binding DStartYPos}"/>
+
+            <hc:NumericUpDown
+                    Margin="10,10,10,0"
+                    hc:InfoElement.Necessary="True"
+                    hc:InfoElement.Placeholder="宽度"
+                    hc:InfoElement.Title="宽度"
+                    Style="{StaticResource NumericUpDownValidationStyle}"
+                    Value="{Binding DWidth}"/>
+
+            <hc:NumericUpDown
+                    Margin="10,10,10,0"
+                    hc:InfoElement.Necessary="True"
+                    hc:InfoElement.Placeholder="高度"
+                    hc:InfoElement.Title="高度"
+                    Style="{StaticResource NumericUpDownValidationStyle}"
+                    Value="{Binding DHeight}"/>
+
+            <hc:NumericUpDown
+                    Margin="10,10,10,0"
+                    hc:InfoElement.Necessary="True"
+                    hc:InfoElement.Placeholder="线宽"
+                    hc:InfoElement.Title="线宽"
+                    Style="{StaticResource NumericUpDownValidationStyle}"
+                    Value="{Binding DThickness}"/>
+
+            <Button x:Name="导入局部LayOut"
+                    Margin="10,15,10,5"
+                    Content="导入局部图"
+                    MinWidth="120"
+                    Width="auto" 
+                    Command="{Binding LoadModuleLayOutCommand}"
+                    HorizontalAlignment="Center"/>
+
+            <Button x:Name="开始绘制元件Layout" 
+                    Margin="10,15,10,5"
+                    Content="开始绘制元件分区" 
+                    MinWidth="120" 
+                    Width="auto"
+                    HorizontalAlignment="Center"
+                    Command="{Binding StartDrawDeviceCommand}" />
+
+            <Button x:Name="保存元件LayOut" 
+                    Margin="10,15,10,5"
+                    Content="保存元件分区点位" 
+                    MinWidth="120" 
+                    Width="auto"
+                    HorizontalAlignment="Center"
+                    Command="{Binding SaveDevicePointCommand}" 
+                    />
+        </StackPanel>
+    </Grid>
+</UserControl>
+

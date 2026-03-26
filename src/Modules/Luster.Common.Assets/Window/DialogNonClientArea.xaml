@@ -1,0 +1,28 @@
+﻿<Grid
+    x:Class="Luster.Common.Assets.Window.DialogNonClientArea"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    MinWidth="300"
+    MinHeight="36">
+    <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="auto" />
+        <ColumnDefinition />
+    </Grid.ColumnDefinitions>
+    <StackPanel VerticalAlignment="Center">
+        <Image
+            MaxWidth="60"
+            Margin="0,2,0,0"
+            Source="/Luster.Common.Assets;component/Image/logo.ico" />
+    </StackPanel>
+    <StackPanel
+        Grid.Column="1"
+        HorizontalAlignment="Left"
+        VerticalAlignment="Center"
+        Orientation="Horizontal">
+        <TextBlock
+            Margin="10,0"
+            FontSize="16"
+            Foreground="{DynamicResource PrimaryTextBrush}"
+            Text="{Binding Title}" />
+    </StackPanel>
+</Grid>

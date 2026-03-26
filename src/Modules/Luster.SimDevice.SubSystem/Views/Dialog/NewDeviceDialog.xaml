@@ -1,0 +1,142 @@
+﻿<UserControl
+    x:Class="Luster.SimDevice.SubSystem.Views.Dialog.NewDeviceDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:local="clr-namespace:Luster.SimDevice.SubSystem.Views.Dialog"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    Width="350"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{DynamicResource RegionBrush}"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <Style BasedOn="{StaticResource TextBoxExtendBaseStyle}" TargetType="TextBox">
+            <Setter Property="hc:InfoElement.TitleWidth" Value="70" />
+            <Setter Property="hc:InfoElement.TitlePlacement" Value="Left" />
+            <Style.Triggers>
+                <Trigger Property="Validation.HasError" Value="true">
+                    <Setter Property="ToolTip" Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)[0].ErrorContent}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style BasedOn="{StaticResource NumericUpDownPlus}" TargetType="hc:NumericUpDown">
+            <Setter Property="hc:InfoElement.TitleWidth" Value="70" />
+            <Setter Property="hc:InfoElement.TitlePlacement" Value="Left" />
+        </Style>
+        <Style BasedOn="{StaticResource ComboBoxExtend}" TargetType="hc:ComboBox">
+            <Setter Property="hc:InfoElement.TitleWidth" Value="70" />
+            <Setter Property="hc:InfoElement.TitlePlacement" Value="Left" />
+        </Style>
+    </UserControl.Resources>
+    <StackPanel Margin="10">
+        <hc:UniformSpacingPanel Orientation="Vertical" Spacing="15">
+            <hc:ComboBox
+                hc:InfoElement.Necessary="True"
+                hc:InfoElement.Placeholder="激光厂商"
+                hc:InfoElement.Title="厂商"
+                DisplayMemberPath="Desc"
+                ItemsSource="{Binding BrandList}"
+                SelectedValue="{Binding DeviceType}"
+                SelectedValuePath="Value" />
+            <TextBox
+                hc:InfoElement.Necessary="True"
+                hc:InfoElement.Placeholder="相机别名"
+                hc:InfoElement.Title="名称"
+                Text="{Binding Name, ValidatesOnExceptions=True, NotifyOnValidationError=True}" />
+            <hc:ComboBox
+                hc:InfoElement.Necessary="True"
+                hc:InfoElement.Placeholder="请选择设备通讯方式"
+                hc:InfoElement.Title="通讯方式"
+                DisplayMemberPath="Desc"
+                ItemsSource="{Binding ConnectionTypes}"
+                SelectedValue="{Binding CurrentConnectionType}"
+                SelectedValuePath="Value" />
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition />
+                    <RowDefinition />
+                </Grid.RowDefinitions>
+                <hc:UniformSpacingPanel
+                    Orientation="Vertical"
+                    Spacing="15"
+                    Visibility="{Binding IsTcp, Converter={StaticResource Boolean2VisibilityConverter}}">
+                    <TextBox
+                        hc:InfoElement.Necessary="True"
+                        hc:InfoElement.Placeholder="Ip地址"
+                        hc:InfoElement.Title="Ip地址"
+                        Text="{Binding IpAddress, ValidatesOnExceptions=True, NotifyOnValidationError=True}" />
+                    <TextBox
+                        hc:InfoElement.Placeholder="子网掩码"
+                        hc:InfoElement.Title="子网掩码"
+                        Text="{Binding Submask}" />
+                    <TextBox
+                        hc:InfoElement.Placeholder="网关"
+                        hc:InfoElement.Title="网关"
+                        Text="{Binding Network}" />
+                </hc:UniformSpacingPanel>
+                <hc:UniformSpacingPanel
+                    Grid.Row="1"
+                    Orientation="Vertical"
+                    Spacing="15"
+                    Visibility="{Binding IsPCIe, Converter={StaticResource Boolean2VisibilityConverter}}">
+                    <hc:ComboBox
+                        hc:InfoElement.Necessary="True"
+                        hc:InfoElement.Placeholder="PCIe插槽"
+                        hc:InfoElement.Title="PC插槽"
+                        DisplayMemberPath="Desc"
+                        ItemsSource="{Binding SlotList}"
+                        SelectedValue="{Binding PCIe}"
+                        SelectedValuePath="Value" />
+                </hc:UniformSpacingPanel>
+                <hc:UniformSpacingPanel
+                    Grid.Row="1"
+                    Orientation="Vertical"
+                    Spacing="15"
+                    Visibility="{Binding IsCom, Converter={StaticResource Boolean2VisibilityConverter}}">
+                    <hc:ComboBox
+                        hc:InfoElement.Necessary="True"
+                        hc:InfoElement.Placeholder="Com口"
+                        hc:InfoElement.Title="Com口"
+                        DisplayMemberPath="Desc"
+                        ItemsSource="{Binding Coms}"
+                        SelectedValue="{Binding Com}"
+                        SelectedValuePath="Value" />
+                </hc:UniformSpacingPanel>
+                <hc:UniformSpacingPanel
+                    Grid.Row="1"
+                    Orientation="Vertical"
+                    Spacing="15"
+                    Visibility="{Binding IsUsb, Converter={StaticResource Boolean2VisibilityConverter}}">
+                    <hc:ComboBox
+                        hc:InfoElement.Necessary="True"
+                        hc:InfoElement.Placeholder="Usb口"
+                        hc:InfoElement.Title="Usb口"
+                        DisplayMemberPath="Desc"
+                        ItemsSource="{Binding Usbs}"
+                        SelectedValue="{Binding Usb}"
+                        SelectedValuePath="Value" />
+                </hc:UniformSpacingPanel>
+            </Grid>
+        </hc:UniformSpacingPanel>
+        <StackPanel
+            Margin="0,10,5,0"
+            HorizontalAlignment="Right"
+            Orientation="Horizontal">
+            <Button
+                Width="80"
+                Command="{Binding CloseCommand}"
+                CommandParameter="cancel"
+                Content="取消" />
+            <Button
+                Width="80"
+                Margin="10,0,0,0"
+                Command="{Binding CloseCommand}"
+                CommandParameter="ok"
+                Content="确定" />
+        </StackPanel>
+    </StackPanel>
+
+</UserControl>

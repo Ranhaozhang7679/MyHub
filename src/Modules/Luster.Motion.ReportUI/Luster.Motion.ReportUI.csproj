@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <UseWPF>true</UseWPF>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="HandyControl" />
+        <PackageReference Include="LiveCharts.Wpf" />
+        <PackageReference Include="Luster.Prism" />
+        <PackageReference Include="Luster.WindowsAPICodePack" />
+        <PackageReference Include="MinVer" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\TaiKeCommon\TaiKeCommon.csproj" />
+        <ProjectReference Include="..\Luster.Common.DataAccess\Luster.Common.DataAccess.csproj" />
+        <ProjectReference Include="..\Luster.Motion.TaskFlow.Engine\Luster.Motion.TaskFlow.Engine.csproj" />
+        <ProjectReference Include="..\Luster.Motion.CommonUI\Luster.Motion.CommonUI.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Reference Include="System.Windows.Forms" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Page Update="Views\ToeInContent.xaml">
+            <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+        </Page>
+    </ItemGroup>
+
+</Project>

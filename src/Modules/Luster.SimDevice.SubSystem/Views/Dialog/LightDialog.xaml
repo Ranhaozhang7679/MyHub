@@ -1,0 +1,17 @@
+﻿<UserControl
+    x:Class="Luster.SimDevice.SubSystem.Views.Dialog.LightDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctrl="clr-namespace:Luster.SimDevice.SubSystem.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:local="clr-namespace:Luster.SimDevice.SubSystem.Views.Dialog"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:pg="clr-namespace:Luster.Common.Assets.ParamGrid;assembly=Luster.Common.Assets"
+    xmlns:prism="http://prismlibrary.com/"
+    Width="350"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{DynamicResource RegionBrush}"
+    mc:Ignorable="d">
+    <local:DeviceDialogContent />
+</UserControl>

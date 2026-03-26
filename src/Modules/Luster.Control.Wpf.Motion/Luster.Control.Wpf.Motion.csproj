@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+        <UseWPF>true</UseWPF>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Remove="Resources\**" />
+	  <EmbeddedResource Remove="Resources\**" />
+	  <None Remove="Resources\**" />
+	  <Page Remove="Resources\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <!--<ProjectReference Include="..\Luster.Motion.DataStruct\Luster.Motion.DataStruct.csproj" />-->
+	  <ProjectReference Include="..\Luster.TaskFlow.Motion\Luster.TaskFlow.Motion.csproj" />
+	  <ProjectReference Include="..\Luster.Motion.Assests\Luster.Motion.Assests.csproj" />
+	</ItemGroup>
+
+</Project>

@@ -1,0 +1,18 @@
+﻿using Prism.Events;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Luster.Motion.CommonUI.Events
+{
+    public class ShowHolo3D : PubSubEvent
+    {
+    }
+
+    public class HideHolo3D : PubSubEvent
+    {
+
+    }
+}

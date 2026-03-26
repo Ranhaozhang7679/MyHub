@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<GJNStruct>
+  <VisionVersion>NN.NN</VisionVersion>
+  <RobotVersion>NN.NN</RobotVersion>
+  <PlcVersion>NN.NN</PlcVersion>
+  <ReciepeVersion>3.07.31</ReciepeVersion>
+  <LaserVersion>NN.NN</LaserVersion>
+  <SoftVersion>Luster-03.15-NN.NN-NN.NN-NN.NN-251212</SoftVersion>
+  <UpdateTimeStr>251212</UpdateTimeStr>
+</GJNStruct>

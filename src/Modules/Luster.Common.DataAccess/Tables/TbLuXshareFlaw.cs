@@ -1,0 +1,79 @@
+﻿#region 作者和版权
+/*************************************************************************************
+* CLR 版本:       4.0.30319.42000
+* 类 名 称:       TbThrow
+* 机器名称:       Z05592
+* 命名空间:       Luster.Motion.CommonUI.Tables
+* 文 件 名:       TbThrow.cs
+* 创建时间:       2022/10/14 10:18:36
+* 作    者:       Z05592
+* 所属部门：      系统集成部
+* 版    权:    	  <copyright company="凌云光工业">
+* 签    名:       Luster Technology Co.,Ltd.
+* 网    站:       https://www.lusterinc.com/
+* 邮    箱:       pangpangzhang@lusterinc.com 
+* 唯一标识：      fe3a846c-44ab-4813-be34-9b045dcf9904
+* 登录用户:       张庞庞
+* 所 属 域:       LUSTERINC
+* 创建年份:       2022
+* 修改时间:		  2022/10/14 10:18:36
+* 修 改 人:		  Z05592
+************************************************************************************/
+#endregion
+using FreeSql.DataAnnotations;
+using Luster.Common.DataAccess.Tables;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Luster.Common.DataAccess.Tables
+{
+    /// <summary>
+    /// 立讯瑕疵统计表
+    /// </summary>
+    [Table(Name = "LuXshareFlawTable")]
+    public class TbLuXshareFlaw : BaseTable
+    {
+        /// <summary>
+        /// 编码
+        /// </summary>
+        public string SNCode { get; set; }
+
+        /// <summary>
+        /// 结果
+        /// </summary>
+        public string Result { get; set; }
+
+        /// <summary>
+        /// 拍照方向
+        /// </summary>
+        public string PicDirection { get; set; }
+
+        /// <summary>
+        /// 划伤
+        /// </summary>
+        public int Scratch { get; set; }
+
+        /// <summary>
+        /// 碰伤
+        /// </summary>
+        public int Bruise { get; set; }
+
+        /// <summary>
+        /// 黑点
+        /// </summary>
+        public int BlackSpot { get; set; }
+
+        /// <summary>
+        /// 亮标记
+        /// </summary>
+        public int Highlight { get; set; }
+
+        /// <summary>
+        /// 缺陷区域
+        /// </summary>
+        public string FlawPostion { get; set; }
+    }
+}

@@ -1,0 +1,213 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ex="clr-namespace:Luster.Common.Assets.Extension"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:local="clr-namespace:Luster.Common.Assets.ParamGrid">
+
+    <Style TargetType="local:FileSelector">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="Background" Value="{DynamicResource RegionBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="StrokeDashArray" Value="2,2" />
+        <Setter Property="hc:IconSwitchElement.Geometry" Value="{StaticResource AddGeometry}" />
+        <Setter Property="hc:IconSwitchElement.GeometrySelected" Value="{StaticResource RemoveGeometry}" />
+        <Setter Property="hc:BorderElement.CornerRadius" Value="{StaticResource DefaultCornerRadius}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="local:FileSelector">
+                    <Button
+                        HorizontalContentAlignment="Stretch"
+                        VerticalContentAlignment="Stretch"
+                        Command="hc:ControlCommands.Switch"
+                        Style="{StaticResource ButtonCustom}">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="{Binding Path=(hc:BorderElement.CornerRadius), RelativeSource={RelativeSource TemplatedParent}}">
+                            <hc:DashedBorder
+                                Background="{TemplateBinding PreviewBrush}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderDashArray="{TemplateBinding StrokeDashArray}"
+                                BorderDashThickness="{TemplateBinding StrokeThickness}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="{Binding Path=(hc:BorderElement.CornerRadius), RelativeSource={RelativeSource TemplatedParent}}">
+                                <Border
+                                    Width="30"
+                                    Height="30"
+                                    HorizontalAlignment="Right"
+                                    Background="{TemplateBinding Background}"
+                                    Style="{StaticResource BorderCircular}">
+                                    <hc:ToggleBlock IsChecked="{TemplateBinding HasValue}">
+                                        <hc:ToggleBlock.CheckedContent>
+                                            <Path
+                                                Width="12"
+                                                Height="12"
+                                                Data="{TemplateBinding hc:IconSwitchElement.GeometrySelected}"
+                                                Fill="{DynamicResource PrimaryBrush}" />
+                                        </hc:ToggleBlock.CheckedContent>
+                                        <hc:ToggleBlock.UnCheckedContent>
+                                            <Path
+                                                Width="16"
+                                                Height="16"
+                                                Data="{TemplateBinding hc:IconSwitchElement.Geometry}"
+                                                Fill="{DynamicResource PrimaryBrush}" />
+                                        </hc:ToggleBlock.UnCheckedContent>
+                                    </hc:ToggleBlock>
+                                </Border>
+                            </hc:DashedBorder>
+                        </Border>
+                    </Button>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{DynamicResource SecondaryRegionBrush}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBrush}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!--  ParamItemTool  -->
+    <Style
+        x:Key="ParamItemToolTipBaseStyle"
+        BasedOn="{StaticResource {x:Type ToolTip}}"
+        TargetType="ToolTip">
+        <Setter Property="Padding" Value="10" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToolTip">
+                    <Border
+                        Margin="8"
+                        Padding="{TemplateBinding Padding}"
+                        Background="{DynamicResource RegionBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{Binding Path=(hc:BorderElement.CornerRadius), RelativeSource={RelativeSource TemplatedParent}}"
+                        Effect="{StaticResource EffectShadow2}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <ContentPresenter x:Name="Presenter" Margin="5" />
+                            <StackPanel Grid.Row="1" Orientation="Horizontal">
+                                <TextBlock FontWeight="Bold" Text="{Binding PropertyTypeName, RelativeSource={RelativeSource AncestorType=local:ParamItem}}" />
+                                <TextBlock Margin="6,0,0,0" Text="{Binding PropertyName, RelativeSource={RelativeSource AncestorType=local:ParamItem}}" />
+
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Content" Value="{x:Null}">
+                            <Setter TargetName="Presenter" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                        <Trigger Property="Content" Value="">
+                            <Setter TargetName="Presenter" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+
+    <Style x:Key="ParamItemBaseStyle" TargetType="local:ParamItem">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Margin" Value="0,5" />
+        <Setter Property="MinHeight" Value="25" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type local:ParamItem}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="80" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock
+                                Padding="0,0,5,0"
+                                Text="{TemplateBinding DisplayName}"
+                                TextTrimming="CharacterEllipsis">
+                                <TextBlock.ToolTip>
+                                    <ToolTip Content="{TemplateBinding Description}" Style="{StaticResource ParamItemToolTipBaseStyle}" />
+                                </TextBlock.ToolTip>
+                            </TextBlock>
+                        </StackPanel>
+                        <ContentPresenter Grid.Column="1" ContentSource="EditorElement" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="UIVisible" Value="False">
+                <Setter Property="Visibility" Value="Collapsed" />
+            </Trigger>
+        </Style.Triggers>
+
+    </Style>
+
+    <Style x:Key="ParamItemsControlBaseStyle" TargetType="local:ParamItemsControl">
+        <Setter Property="ItemContainerStyle" Value="{StaticResource ParamItemBaseStyle}" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="local:ParamItemsControl">
+                    <hc:ScrollViewer Focusable="false" HorizontalScrollBarVisibility="Disabled">
+                        <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                    </hc:ScrollViewer>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsGrouping" Value="False">
+                <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="PropertyGroupItemBaseStyle" TargetType="GroupItem">
+        <Setter Property="Margin" Value="0,0,0,6" />
+        <Setter Property="Padding" Value="10,6,6,0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="GroupItem">
+                    <Expander Header="{Binding Name}" IsExpanded="True">
+                        <Border
+                            Background="{DynamicResource RegionBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1,0,1,1"
+                            CornerRadius="0,0,4,4">
+                            <ItemsPresenter Margin="{TemplateBinding Padding}" />
+                        </Border>
+                    </Expander>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="local:PropertyGrid">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Padding" Value="10" />
+        <Setter Property="Background" Value="{DynamicResource RegionBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="local:PropertyGrid">
+                    <Border
+                        MaxHeight="800"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}">
+                        <local:ParamItemsControl x:Name="PART_ItemsControl" Style="{StaticResource ParamItemsControlBaseStyle}">
+                            <local:ParamItemsControl.GroupStyle>
+                                <GroupStyle ContainerStyle="{StaticResource PropertyGroupItemBaseStyle}" />
+                            </local:ParamItemsControl.GroupStyle>
+                        </local:ParamItemsControl>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>

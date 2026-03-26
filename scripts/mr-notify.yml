@@ -1,0 +1,82 @@
+merge_request_notification:
+  stage: notify
+  tags:
+    - windows-shell
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  script:
+    - |
+      [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+      # 1. 变量初始化与分支对齐
+      $s_branch = "$($env:CI_MERGE_REQUEST_SOURCE_BRANCH_NAME)"
+      $t_branch = "$($env:CI_MERGE_REQUEST_TARGET_BRANCH_NAME)"
+      
+      # 确保本地有最新的目标分支信息以供 diff 比较
+      git fetch origin $t_branch --quiet
+
+      # 2. 提交历史提取：基于分支物理名
+      $logs = git log origin/$t_branch..origin/$s_branch --pretty=format:"%h|%s"
+      $commit_list = ""
+
+      if ($null -ne $logs -and $logs.Count -gt 0) {
+          $start_node = $logs[-1].Replace('|', ' (') + ')'
+          $end_node = $logs[0].Replace('|', ' (') + ')'
+          $commit_list = "> ● **始 (分支起点)**: $start_node `n`n"
+          if ($logs.Count -gt 2) {
+              $mid = $logs[1..($logs.Count-2)] | Select-Object -First 3
+              foreach ($line in $mid) { 
+                  $commit_list += "> ○ $($line.Replace('|', ' ('))))`n`n" 
+              }
+          }
+          if ($logs.Count -gt 1) { $commit_list += "> ● **终 (分支末端)**: $end_node" }
+      } else {
+          $commit_list = "> ● **当前提交**: $($env:CI_COMMIT_SHORT_SHA)"
+      }
+
+      # 3. 精确文件变更检测：同样基于分支物理名对齐
+      # 这样可以确保 file_display 里的文件正是 commit_list 里改动的文件
+      $files = git diff --name-only origin/$t_branch..origin/$s_branch
+      $is_core = ($files -match "\.sln$|\.slnx$|\.csproj$|\.config$") ? "⚠️ <font color='#FF0000'>涉及核心结构</font>" : "否"
+      
+      if ($files.Count -gt 0) {
+          # 为每一个文件（包括首行）添加引用符 "> * "
+          $file_display = ($files | Select-Object -First 5 | ForEach-Object { "> * $_" }) -join "`n`n"
+          if ($files.Count -gt 5) {
+              $file_display += "`n`n> * ... 以及其他 $($files.Count - 5) 个文件"
+          }
+      } else {
+          $file_display = "> 无文件变更"
+      }
+
+      # 4. 构造美化内容
+      $text = "## ⚖️ Luster 合并请求提醒 (MR)`n" +
+              "---`n" +
+              "**【项目名称】**`n" +
+              "> $($env:CI_PROJECT_NAME) `n`n" +
+              "**【发起人员】**`n" +
+              "> $($env:GITLAB_USER_NAME) `n`n" +
+              "**【合并路径】**`n" +
+              "> $s_branch ➜ $t_branch `n" +
+              "---`n" +
+              "**【变更提交记录】**`n" +
+              "$commit_list `n" +
+              "---`n" +
+              "**【核心审计检测】**`n" +
+              "> $is_core `n`n" +
+              "**【修改文件清单】** ($($files.Count))`n`n" +
+              "$file_display `n`n" +
+              "---`n" +
+              "[[立即处理合并请求]]($($env:CI_PROJECT_URL)/-/merge_requests/$($env:CI_MERGE_REQUEST_IID))"
+
+      # 5. 发送逻辑
+      $payload = @{ msgtype="markdown"; markdown=@{ title="Luster MR提醒"; text=$text } } | ConvertTo-Json -Compress
+      $token = ($env:DINGTALK_TOKEN -replace '[^a-zA-Z0-9]', '').Trim()
+      $uri = "https://oapi.dingtalk.com/robot/send?access_token=$token"
+      
+      try {
+          $post_body = [System.Text.Encoding]::UTF8.GetBytes($payload)
+          Invoke-RestMethod -Uri $uri -Method Post -Body $post_body -ContentType "application/json"
+      } catch {
+          Write-Host "发送失败: $($_.Exception.Message)"
+          exit 1
+      }

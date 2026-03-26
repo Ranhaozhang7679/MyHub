@@ -1,0 +1,225 @@
+﻿<UserControl
+    x:Class="Luster.Motion.SubSystem.Views.Login.LoginContent"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converter="clr-namespace:Luster.Motion.CommonUI.Converter;assembly=Luster.Motion.CommonUI"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:lang="clr-namespace:Luster.Motion.Assests.Langs;assembly=Luster.Motion.Assests"
+    xmlns:local="clr-namespace:Luster.Motion.SubSystem.Views.Login"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    d:DesignHeight="800"
+    d:DesignWidth="1200"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{DynamicResource SecondaryRegionBrush}"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <converter:EnumLangConverter x:Key="MultiLangConverter" />
+    </UserControl.Resources>
+    <Border
+        Margin="30"
+        Background="{DynamicResource RegionBrush}"
+        CornerRadius="10">
+        <Grid>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="4*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="380" />
+                <ColumnDefinition Width="100" />
+            </Grid.ColumnDefinitions>
+            <Image
+                Margin="10,10,0,10"
+                Source="/Luster.Motion.Assests;component/Images/login-Big.png"
+                Stretch="UniformToFill" />
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="380" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Border
+                    Grid.Row="1"
+                    BorderBrush="DarkSlateGray"
+                    BorderThickness="1"
+                    CornerRadius="5">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="1*" />
+                            <RowDefinition Height="3.5*" />
+                            <RowDefinition Height="0.7*" />
+                        </Grid.RowDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <Label
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Content="LUSTER"
+                                FontSize="25"
+                                FontWeight="Bold"
+                                Foreground="{DynamicResource lusterColor}" />
+                            <Label
+                                Margin="0,-15"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Content="{lang:Lang Key={x:Static lang:LangKeys.LusterSmartCockpit}}"
+                                FontSize="30"
+                                FontWeight="Bold"
+                                Foreground="{DynamicResource SecondaryTextBrush}" />
+                        </StackPanel>
+                        <StackPanel
+                            Grid.Row="1"
+                            Margin="0,10,0,0"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Orientation="Vertical">
+
+                            <hc:ElementGroup Layout="Stack" Orientation="Horizontal">
+                                <TextBlock
+                                    Width="70"
+                                    VerticalAlignment="Center"
+                                    Text="{lang:Lang Key={x:Static lang:LangKeys.LoginName}}" />
+                                <Border
+                                    Padding="6,0"
+                                    Background="{DynamicResource RegionBrush}"
+                                    Style="{StaticResource BorderRegion}">
+                                    <Path
+                                        Width="16"
+                                        Height="16"
+                                        Data="{StaticResource UserGeometry}"
+                                        Fill="{DynamicResource BorderBrush}"
+                                        Stretch="Uniform" />
+                                </Border>
+                                <hc:ComboBox
+                                    x:Name="combUser"
+                                    MinWidth="220"
+                                    hc:InfoElement.Placeholder="请输入您的登录名"
+                                    Background="{DynamicResource RegionBrush}"
+                                    DisplayMemberPath="UserName"
+                                    IsEditable="True"
+                                    ItemsSource="{Binding ListUser}"
+                                    SelectedItem="{Binding SelectUser}"
+                                    SelectionChanged="ComboBox_SelectionChanged" />
+                            </hc:ElementGroup>
+
+                            <hc:ElementGroup
+                                Margin="0,15,0,0"
+                                Layout="Stack"
+                                Orientation="Horizontal">
+                                <TextBlock
+                                    Width="70"
+                                    VerticalAlignment="Center"
+                                    Text="{lang:Lang Key={x:Static lang:LangKeys.PassWord}}" />
+                                <Border
+                                    Padding="6,0"
+                                    Background="{DynamicResource RegionBrush}"
+                                    Style="{StaticResource BorderRegion}">
+                                    <Path
+                                        Width="16"
+                                        Height="16"
+                                        Data="{StaticResource PassWordGeometry}"
+                                        Fill="{DynamicResource BorderBrush}"
+                                        Stretch="Uniform" />
+                                </Border>
+                                <hc:PasswordBox
+                                    x:Name="password"
+                                    Width="220"
+                                    hc:InfoElement.Necessary="True"
+                                    hc:InfoElement.Placeholder="请输入您的密码"
+                                    Background="{DynamicResource RegionBrush}"
+                                    PasswordChar="*"
+                                    ShowEyeButton="True" />
+                            </hc:ElementGroup>
+                            <hc:ElementGroup
+                                Margin="0,15,0,0"
+                                Layout="Stack"
+                                Orientation="Horizontal">
+                                <TextBlock
+                                    Width="70"
+                                    VerticalAlignment="Center"
+                                    Text="{lang:Lang Key={x:Static lang:LangKeys.Project}}" />
+                                <Border
+                                    Padding="6,0"
+                                    Background="{DynamicResource RegionBrush}"
+                                    Style="{StaticResource BorderRegion}">
+                                    <Path
+                                        Width="16"
+                                        Height="16"
+                                        Data="{StaticResource ProjectGeometry}"
+                                        Fill="{DynamicResource BorderBrush}"
+                                        Stretch="Uniform" />
+                                </Border>
+                                <hc:ComboBox
+                                    Width="220"
+                                    hc:InfoElement.Placeholder="请选择工程"
+                                    Background="{DynamicResource RegionBrush}"
+                                    IsEnabled="{Binding ProjectEnable}"
+                                    DisplayMemberPath="ProjName"
+                                    IsEditable="False"
+                                    ItemsSource="{Binding ListProject}"
+                                    SelectedItem="{Binding SelectProject}"
+                                    SelectedValuePath="ProjName"
+                                    ShowClearButton="True">
+                                    <hc:Interaction.Triggers>
+                                        <hc:EventTrigger EventName="SelectionChanged">
+                                            <hc:EventToCommand Command="{Binding RelativeSource={RelativeSource AncestorType=ComboBox}, Path=DataContext.ChangeProjCommand}" PassEventArgsToCommand="True" />
+                                        </hc:EventTrigger>
+                                    </hc:Interaction.Triggers>
+                                </hc:ComboBox>
+                            </hc:ElementGroup>
+                            <hc:ElementGroup
+                                Margin="0,15,0,0"
+                                Layout="Stack"
+                                Orientation="Horizontal">
+                                <TextBlock
+                                    Width="70"
+                                    VerticalAlignment="Center"
+                                    Text="{lang:Lang Key={x:Static lang:LangKeys.Model}}" />
+                                <Border
+                                    Padding="6,0"
+                                    Background="{DynamicResource RegionBrush}"
+                                    Style="{StaticResource BorderRegion}">
+                                    <Path
+                                        Width="16"
+                                        Height="16"
+                                        Data="{StaticResource DeviceModeGeometry}"
+                                        Fill="{DynamicResource BorderBrush}"
+                                        Stretch="Uniform" />
+                                </Border>
+                                <hc:ComboBox
+                                    MinWidth="220"
+                                    hc:InfoElement.Placeholder="请选择模式"
+                                    IsEnabled="{Binding ProjectEnable}"
+                                    Background="{DynamicResource RegionBrush}"
+                                    DisplayMemberPath="{Binding Desc}"
+                                    IsEditable="False"
+                                    ItemsSource="{Binding ModeList, Converter={StaticResource MultiLangConverter}}"
+                                    SelectedValue="{Binding SelectMode}"
+                                    SelectedValuePath="Value">
+                                    <hc:Interaction.Triggers>
+                                        <hc:EventTrigger EventName="SelectionChanged">
+                                            <hc:EventToCommand Command="{Binding RelativeSource={RelativeSource AncestorType=ComboBox}, Path=DataContext.ChangeModeCommand}" PassEventArgsToCommand="True" />
+                                        </hc:EventTrigger>
+                                    </hc:Interaction.Triggers>
+                                </hc:ComboBox>
+                            </hc:ElementGroup>
+
+                        </StackPanel>
+                        <StackPanel Grid.Row="3" Orientation="Vertical">
+                            <Button
+                                Width="150"
+                                Margin="0,0,0,10"
+                                hc:BorderElement.CornerRadius="15"
+                                Click="Button_Click"
+                                Command="{Binding LoginCommand}"
+                                Content="{lang:Lang Key={x:Static lang:LangKeys.Login}}"
+                                IsDefault="True"
+                                Style="{StaticResource ButtonPrimary}" />
+
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

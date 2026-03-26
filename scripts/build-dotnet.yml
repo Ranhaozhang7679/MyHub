@@ -1,0 +1,9 @@
+# scripts/build-dotnet.yml
+build_placeholder:
+  stage: build  # 确保主文件 stages 里有 build
+  tags:
+    - windows-shell
+  script:
+    - echo "MSBuild logic will be here soon for LusterMotion"
+  rules:
+    - when: manual # 设置为手动触发，防止它自动运行报错

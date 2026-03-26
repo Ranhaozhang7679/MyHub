@@ -1,0 +1,183 @@
+﻿<Border
+    x:Class="Luster.Motion.SubSystem.Views.ProOrderContent"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converter1="clr-namespace:Luster.Motion.CommonUI.Converter;assembly=Luster.Motion.CommonUI"
+    xmlns:ctrl="clr-namespace:Luster.Control.Wpf.Motion.Controls;assembly=Luster.Control.Wpf.Motion"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:g="clr-namespace:Luster.Motion.CommonUI;assembly=Luster.Motion.CommonUI"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:lang="clr-namespace:Luster.Motion.Assests.Langs;assembly=Luster.Motion.Assests"
+    xmlns:local="clr-namespace:Luster.Motion.SubSystem.Views"
+    xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    xmlns:views="clr-namespace:Luster.Motion.CommonUI.Views;assembly=Luster.Motion.CommonUI"
+    d:DesignHeight="300"
+    d:DesignWidth="600"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    mc:Ignorable="d">
+    <Border.Resources>
+        <Style
+            x:Key="ScanTextStyle"
+            BasedOn="{StaticResource TextBoxExtend}"
+            TargetType="TextBox">
+            <Setter Property="Height" Value="42" />
+            <Setter Property="Margin" Value="5" />
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="SurplusStyle" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,0,0,0" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="Foreground" Value="Blue" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="OrderStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="20" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </Border.Resources>
+    <Grid FocusManager.FocusedElement="{Binding ElementName=scanText}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="20" />
+        </Grid.RowDefinitions>
+        <hc:ElementGroup>
+            <hc:ElementGroup.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                    </Grid>
+                </ItemsPanelTemplate>
+            </hc:ElementGroup.ItemsPanel>
+            <TextBox
+                x:Name="scanText"
+                hc:InfoElement.Placeholder="扫码"
+                Style="{StaticResource ScanTextStyle}"
+                Text="{Binding BarText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                <hc:Interaction.Triggers>
+                    <hc:EventTrigger EventName="PreviewKeyDown">
+                        <hc:EventToCommand Command="{Binding ScanCommand}" PassEventArgsToCommand="True" />
+                    </hc:EventTrigger>
+                </hc:Interaction.Triggers>
+            </TextBox>
+            <Button
+                Grid.Column="1"
+                VerticalAlignment="Center"
+                Background="Yellow"
+                Command="{Binding EditBarcodeCommand}"
+                Content="扫码配置"
+                Style="{StaticResource ButtonDashedSuccess}" />
+        </hc:ElementGroup>
+        <ListBox
+            Grid.Row="1"
+            Padding="5,5"
+            Background="Transparent"
+            BorderThickness="0"
+            ItemsSource="{Binding OrderModels}"
+            Style="{StaticResource ListBoxCustom}">
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <hc:UniformSpacingPanel Orientation="Vertical" Spacing="5" />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Border Padding="5,5" Style="{StaticResource BorderRegion}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="80" />
+                                <ColumnDefinition Width="60" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock
+                                Margin="5,0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Foreground="{StaticResource PrimaryBrush}"
+                                Style="{StaticResource OrderStyle}"
+                                Text="{Binding Sort}" />
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <TextBlock
+                                    Name="txtNo"
+                                    Margin="10,0"
+                                    HorizontalAlignment="Left"
+                                    Style="{StaticResource OrderStyle}"
+                                    Text="{Binding OrderNo}">
+                                    <hc:Interaction.Triggers>
+                                        <hc:EventTrigger EventName="PreviewMouseDown">
+                                            <hc:EventToCommand Command="{Binding Path=DataContext.RefreshCommand, RelativeSource={RelativeSource AncestorType=ListBox}}" CommandParameter="{Binding .}" />
+                                        </hc:EventTrigger>
+                                    </hc:Interaction.Triggers>
+                                </TextBlock>
+                            </StackPanel>
+                            <TextBlock
+                                Name="txtSurplus"
+                                Grid.Column="2"
+                                Margin="5,0"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Style="{StaticResource SurplusStyle}"
+                                Text="{Binding OrderData}" />
+                            <TextBlock
+                                Grid.Column="3"
+                                Margin="0,0,5,0"
+                                VerticalAlignment="Center"
+                                Block.TextAlignment="Center"
+                                FontSize="10"
+                                Foreground="DarkGray"
+                                Text="{Binding CreateDate}" />
+                            <hc:ButtonGroup Grid.Column="4" VerticalAlignment="Center">
+                                <Button
+                                    Padding="5,2"
+                                    Command="{Binding Path=DataContext.ActiveCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                    CommandParameter="{Binding .}"
+                                    Style="{StaticResource ButtonSuccess}"
+                                    Visibility="{Binding IsFirst, Converter={StaticResource Boolean2VisibilityReConverter}}">
+                                    <Button.Content>
+                                        <TextBlock
+                                            FontSize="18"
+                                            Foreground="{StaticResource SuccessBrush}"
+                                            Style="{StaticResource MotionIconMid}"
+                                            Text="&#xe618;" />
+                                    </Button.Content>
+                                </Button>
+                                <Button
+                                    Padding="5,2"
+                                    Command="{Binding Path=DataContext.RemoveCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                    CommandParameter="{Binding .}"
+                                    Style="{StaticResource ButtonDanger}">
+                                    <Button.Content>
+                                        <TextBlock
+                                            FontSize="18"
+                                            Foreground="{StaticResource DangerBrush}"
+                                            Style="{StaticResource MotionIconMid}"
+                                            Text="&#xe620;" />
+                                    </Button.Content>
+                                </Button>
+                            </hc:ButtonGroup>
+                        </Grid>
+                    </Border>
+                    <DataTemplate.Triggers>
+                        <DataTrigger Binding="{Binding IsFirst}" Value="True">
+                            <Setter TargetName="txtNo" Property="Foreground" Value="Green" />
+                            <Setter TargetName="txtNo" Property="FontWeight" Value="Bold" />
+                            <Setter TargetName="txtSurplus" Property="Foreground" Value="Red" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsFirst}" Value="False">
+                            <Setter TargetName="txtNo" Property="Foreground" Value="Gray" />
+                            <Setter TargetName="txtSurplus" Property="Foreground" Value="Gray" />
+                        </DataTrigger>
+                    </DataTemplate.Triggers>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+</Border>

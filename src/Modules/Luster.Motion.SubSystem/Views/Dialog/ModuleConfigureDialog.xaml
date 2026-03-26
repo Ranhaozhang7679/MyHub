@@ -1,0 +1,90 @@
+﻿<UserControl
+    x:Class="Luster.Motion.SubSystem.Views.Dialogs.ModuleConfigureDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:lang="clr-namespace:Luster.Motion.Assests.Langs;assembly=Luster.Motion.Assests"
+    xmlns:local="clr-namespace:Luster.Motion.SubSystem.Views.Dialogs"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    Width="500"
+    Height="400"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{DynamicResource SecondaryRegionBrush}"
+    mc:Ignorable="d">
+    <Grid>
+        <Border
+            Margin="10"
+            Background="{StaticResource RegionBrush}"
+            CornerRadius="10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="35" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="35" />
+                </Grid.RowDefinitions>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="30" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="40" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        Grid.Column="2"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Text="{lang:Lang Key={x:Static lang:LangKeys.Module}}" />
+                </Grid>
+                <DataGrid
+                    Grid.Row="1"
+                    AutoGenerateColumns="False"
+                    BorderThickness="1"
+                    CanUserSortColumns="False"
+                    HeadersVisibility="Column"
+                    IsReadOnly="False"
+                    ItemsSource="{Binding ModuleConfigures}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn
+                            Width="Auto"
+                            MinWidth="300"
+                            Binding="{Binding Name}"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.ModuleName}}" />
+                        <DataGridTemplateColumn
+                            Width="*"
+                            MinWidth="100"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.IsVisible}}"
+                            HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox
+                                        HorizontalAlignment="Center"
+                                        Command="{Binding DataContext.CheckCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+                <StackPanel
+                    Grid.Row="2"
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal">
+                    <Button
+                        Margin="5"
+                        Command="{Binding CloseCommand}"
+                        CommandParameter="cancel"
+                        Content="{lang:Lang Key={x:Static lang:LangKeys.Cancel}}" />
+                    <Button
+                        Margin="5"
+                        Command="{Binding CloseCommand}"
+                        CommandParameter="OK"
+                        Content="{lang:Lang Key={x:Static lang:LangKeys.Confirm}}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

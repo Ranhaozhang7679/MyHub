@@ -1,0 +1,108 @@
+<Project>
+    <ItemGroup>
+        <!-- UI and Control Libraries -->
+        <PackageVersion Include="AvalonEdit" Version="6.3.1.120" />
+        <PackageVersion Include="CefSharp.Wpf" Version="105.3.330" />
+        <PackageVersion Include="DirksterAvalonDock" Version="4.70.3" />
+        <PackageVersion Include="HandyControl" Version="3.3.0.10" />
+        <PackageVersion Include="LiveCharts.Wpf" Version="0.9.7" />
+        <PackageVersion Include="LiveChartsCore" Version="2.0.0-rc1.2" />
+        <PackageVersion Include="LiveChartsCore.SkiaSharpView" Version="2.0.0-rc1.2" />
+        <PackageVersion Include="LiveChartsCore.SkiaSharpView.WPF" Version="2.0.0-rc1.2" />
+        <PackageVersion Include="Luster.WindowsAPICodePack" Version="1.0.0" />
+        <PackageVersion Include="Dirkster.AvalonDock" Version="4.70.3" />
+
+        <!-- Luster Internal Packages -->
+        <PackageVersion Include="Luster.Common.Assets" Version="1.0.0.99" />
+        <PackageVersion Include="Luster.Common.DataStruct" Version="1.0.0.40" />
+        <PackageVersion Include="Luster.Common.Tools" Version="1.0.0.112" />
+        <PackageVersion Include="Luster.Controls.Wpf" Version="1.0.0" />
+        <PackageVersion Include="Luster.Motion.DataStruct" Version="1.0.0.122" />
+        <PackageVersion Include="Luster.Prism" Version="1.0.0.6" />
+
+        <!-- Database and Data Access -->
+        <PackageVersion Include="DapperExtensions" Version="1.7.0" />
+        <PackageVersion Include="FreeSql" Version="3.2.680" />
+        <PackageVersion Include="FreeSql.Provider.Sqlite" Version="3.2.680" />
+        <PackageVersion Include="FreeSql.Repository" Version="3.2.680" />
+        <PackageVersion Include="Microsoft.Data.Sqlite" Version="6.0.6" />
+
+        <!-- Code Analysis and Compilation -->
+        <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="4.14.0" />
+        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
+        <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="4.14.0" />
+        <PackageVersion Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="4.14.0" />
+
+        <!-- Utilities and Tools -->
+        <PackageVersion Include="Costura.Fody" Version="5.7.0" />
+        <PackageVersion Include="Magick.NET-Q16-AnyCPU" Version="14.10.2" />
+        <PackageVersion Include="Microsoft.CSharp" Version="4.7.0" />
+        <PackageVersion Include="Microsoft.SourceLink.GitLab" Version="1.0.0" />
+        <PackageVersion Include="Microsoft.VisualBasic" Version="10.3.0" />
+        <PackageVersion Include="Newtonsoft.Json" Version="13.0.2" />
+        <PackageVersion Include="NLog" Version="6.0.1" />
+        <PackageVersion Include="QRCoder" Version="1.4.3" />
+        <PackageVersion Include="SharpZipLib" Version="1.4.2" />
+        <PackageVersion Include="SkiaSharp" Version="2.88.9" />
+        <PackageVersion Include="SSH.NET" Version="2024.2.0" />
+        <PackageVersion Include="System.Diagnostics.EventLog" Version="9.0.1" />
+        <PackageVersion Include="Microsoft.Windows.Compatibility" Version="9.0.0" />
+        <PackageVersion Include="System.ServiceModel.Primitives" Version="8.0.0" />
+        <PackageVersion Include="ZXing.Net" Version="0.16.11" />
+        
+        
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Serilog核心包 -->
+        <PackageVersion Include="Serilog" Version="4.3.0" />
+        <PackageVersion Include="Serilog.Settings.Configuration"  Version="10.0.0" />
+        <PackageVersion Include="Serilog.Extensions.Logging"  Version="10.0.0" />
+        <PackageVersion Include="Microsoft.Extensions.Logging"  Version="10.0.0" />
+        <PackageVersion Include="Microsoft.Extensions.Logging.Console"  Version="10.0.0" />
+        <!--用于泛型ILogger<T> -->
+        <PackageVersion Include="Serilog.Sinks.Console" Version="6.1.1" />
+        <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
+        <PackageVersion Include="Serilog.Sinks.Debug" Version="3.0.0" />
+        <PackageVersion Include="Serilog.Sinks.Async" Version="2.1.0" />
+        <PackageVersion Include="Serilog.Enrichers.Thread" Version="4.0.0" />
+        <PackageVersion Include="Serilog.Enrichers.Process" Version="3.0.0" />
+        <PackageVersion Include="Serilog.Enrichers.Environment" Version="3.0.1" />
+        <!-- 项目配置相关 -->
+        <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.0" />
+        <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.0" />
+        <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.0" />
+        <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.0" />
+        <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.0" />
+        <!-- 数据库Sink（轻量级SQLite） -->
+        <PackageVersion Include="Serilog.Sinks.SQLite" Version="6.0.0" />
+        <!-- WPF相关 -->
+        <PackageVersion Include="Prism.DryIoc" Version="9.0.537" />
+        <PackageVersion Include="Prism.Wpf" Version="9.0.537" />
+
+
+        <!-- 测试平台 -->
+        <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+        <!-- NUnit 测试框架 -->
+        <PackageVersion Include="NUnit" Version="4.2.2" />
+        <PackageVersion Include="NUnit3TestAdapter" Version="4.6.0" />
+        <!-- FsCheck 属性测试 -->
+        <PackageVersion Include="FsCheck" Version="3.0.0" />
+        <PackageVersion Include="FsCheck.Xunit" Version="3.0.0" />
+        <!-- 排除旧版本xunit依赖 -->
+        <PackageVersion Include="xunit" Version="2.4.1" />
+        <PackageVersion Include="xunit.core" Version="2.4.1" />
+        <!-- xUnit V3 核心包（框架+断言） -->
+        <PackageVersion Include="xunit.v3" Version="3.2.1" />
+        <!-- V3 专用运行器 -->
+        <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+        <!-- 覆盖率 -->
+        <PackageVersion Include="coverlet.collector" Version="6.0.4" />
+        <!-- 测试辅助 -->
+        <PackageVersion Include="FluentAssertions" Version="8.8.0" />
+        <PackageVersion Include="Moq" Version="4.20.72" />
+        <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
+        <!-- 版本控制 -->
+        <PackageVersion Include="MinVer" Version="6.0.0" />
+    </ItemGroup>
+</Project>

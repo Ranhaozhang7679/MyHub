@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <UseWPF>true</UseWPF>
+    </PropertyGroup>
+
+
+    <ItemGroup>
+        <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" />
+        <PackageReference Include="MinVer" />
+    </ItemGroup>
+
+</Project>

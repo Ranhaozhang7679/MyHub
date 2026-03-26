@@ -1,0 +1,917 @@
+﻿<UserControl
+    x:Class="Luster.Motion.SubSystem.Views.ProductInfoContent"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:lang="clr-namespace:Luster.Motion.Assests.Langs;assembly=Luster.Motion.Assests"
+    xmlns:local="clr-namespace:Luster.Motion.SubSystem.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    d:DesignHeight="600"
+    d:DesignWidth="800"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{DynamicResource SecondaryRegionBrush}"
+    mc:Ignorable="d">
+
+    <Grid IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Engineer}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <hc:SimplePanel
+            Grid.Row="0"
+            Height="32"
+            Background="#F4F6FA">
+            <hc:Watermark
+                FontSize="20"
+                FontWeight="Bold"
+                MarkBrush="#0F000000"
+                MarkMargin="3,0" />
+            <TextBlock
+                HorizontalAlignment="Center"
+                Foreground="{DynamicResource PrimaryBrush}"
+                Style="{StaticResource TextBlockDefaultBold}"
+                Text="{lang:Lang Key={x:Static lang:LangKeys.Cockpit}}" />
+
+        </hc:SimplePanel>
+        <Border
+            Grid.Row="1"
+            Margin="20,15,20,10"
+            Background="White"
+            CornerRadius="5">
+            <StackPanel Margin="15,25,15,0">
+                <TextBlock
+                    VerticalAlignment="Center"
+                    DockPanel.Dock="Left"
+                    Text="{lang:Lang Key={x:Static lang:LangKeys.Server}}" />
+                <hc:Divider Margin="0,3,0,10" />
+                <Grid Margin="0,5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <hc:TextBox
+                        Grid.Column="0"
+                        Margin="10,0,10,0"
+                        hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.CockpitIP}}"
+                        hc:InfoElement.TitlePlacement="Left"
+                        hc:InfoElement.TitleWidth="80"
+                        Foreground="{DynamicResource EditorForeground}"
+                        Text="{Binding ServerIP, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True, NotifyOnValidationError=True}"
+                        TextChanged="TextBox_TextChanged" />
+                    <hc:TextBox
+                        Grid.Column="1"
+                        Margin="10,0,10,0"
+                        hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.CockpitPort}}"
+                        hc:InfoElement.TitlePlacement="Left"
+                        hc:InfoElement.TitleWidth="80"
+                        Foreground="{DynamicResource EditorForeground}"
+                        Text="{Binding ServerPort, UpdateSourceTrigger=PropertyChanged}"
+                        TextChanged="TextBox_TextChanged" />
+                    <StackPanel Grid.Column="2" Orientation="Horizontal">
+                        <ToggleButton
+                            Width="100"
+                            HorizontalAlignment="Left"
+                            Command="{Binding ChangeCommand}"
+                            CommandParameter="{Binding Path=., RelativeSource={RelativeSource Mode=Self}}"
+                            Content="{lang:Lang Key={x:Static lang:LangKeys.Enable}}"
+                            IsChecked="{Binding HyperTrainEnabled}"
+                            IsEnabled="False"
+                            Style="{StaticResource ToggleButtonSwitch}" />
+
+                        <Grid HorizontalAlignment="Right" VerticalAlignment="Center">
+                            <Rectangle
+                                Width="50"
+                                Height="24"
+                                Fill="{Binding ConnectStatus, Converter={StaticResource Boolean2PassColorCoverter}}" />
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="White"
+                                Text="{lang:Lang Key={x:Static lang:LangKeys.CommunicationStatus}}" />
+                        </Grid>
+                        <Button
+                            Margin="5,0"
+                            HorizontalAlignment="Right"
+                            Command="{Binding MachineRegisterCommand}"
+                            CommandParameter="HyperTrain"
+                            Content="{lang:Lang Key={x:Static lang:LangKeys.Register}}"
+                            Foreground="Black" />
+                        <ToggleButton
+                            Width="100"
+                            HorizontalAlignment="Left"
+                            Command="{Binding ChangeDoorCommand}"
+                            CommandParameter="{Binding Path=., RelativeSource={RelativeSource Mode=Self}}"
+                            Content="{lang:Lang Key={x:Static lang:LangKeys.isShieldDoor}}"
+                            IsChecked="{Binding isShieldDoor}"
+                            IsEnabled="True"
+                            Style="{StaticResource ToggleButtonSwitch}" />
+                    </StackPanel>
+                </Grid>
+                <Grid Margin="0,5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <hc:TextBox
+                        Grid.Column="0"
+                        Margin="10,0,10,0"
+                        hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.VisionIP}}"
+                        hc:InfoElement.TitlePlacement="Left"
+                        hc:InfoElement.TitleWidth="80"
+                        Foreground="{DynamicResource EditorForeground}"
+                        Text="{Binding VisionIP, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True, NotifyOnValidationError=True}"
+                        TextChanged="TextBox_TextChanged" />
+                    <hc:TextBox
+                        Grid.Column="1"
+                        Margin="10,0,10,0"
+                        hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.VisionPort}}"
+                        hc:InfoElement.TitlePlacement="Left"
+                        hc:InfoElement.TitleWidth="80"
+                        Foreground="{DynamicResource EditorForeground}"
+                        Text="{Binding VisionPort, UpdateSourceTrigger=PropertyChanged}"
+                        TextChanged="TextBox_TextChanged" />
+                    <StackPanel Grid.Column="3" Orientation="Horizontal">
+                        <ToggleButton
+                            Width="100"
+                            HorizontalAlignment="Left"
+                            Command="{Binding ChangeVisionCommand}"
+                            CommandParameter="{Binding Path=., RelativeSource={RelativeSource Mode=Self}}"
+                            Content="{lang:Lang Key={x:Static lang:LangKeys.Enable}}"
+                            IsChecked="{Binding VisionEnabled}"
+                            Style="{StaticResource ToggleButtonSwitch}" />
+                        <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Rectangle
+                                Width="50"
+                                Height="24"
+                                Fill="{Binding IsVisionConnect, Converter={StaticResource Boolean2PassColorCoverter}}" />
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="White"
+                                Text="{lang:Lang Key={x:Static lang:LangKeys.CommunicationStatus}}" />
+                        </Grid>
+                        <Button
+                            Margin="5,0"
+                            HorizontalAlignment="Right"
+                            Command="{Binding MachineRegisterCommand}"
+                            CommandParameter="Vision"
+                            Content="{lang:Lang Key={x:Static lang:LangKeys.Register}}"
+                            Foreground="Black" />
+                        <ToggleButton
+                            Width="100"
+                            HorizontalAlignment="Left"
+                            CommandParameter="{Binding Path=., RelativeSource={RelativeSource Mode=Self}}"
+                            Content="{lang:Lang Key={x:Static lang:LangKeys.Log}}"
+                            IsChecked="{Binding VisionLog}"
+                            Style="{StaticResource ToggleButtonSwitch}" />
+
+                    </StackPanel>
+                </Grid>
+                <Grid Margin="0,5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="307*" />
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition Width="60*" />
+                        <ColumnDefinition Width="247*"/>
+                    </Grid.ColumnDefinitions>
+                    <hc:TextBox
+                        Grid.Column="0"
+                        Margin="10,0,10,0"
+                        hc:InfoElement.Title="HiveIP"
+                        hc:InfoElement.TitlePlacement="Left"
+                        hc:InfoElement.TitleWidth="80"
+                        Foreground="{DynamicResource EditorForeground}"
+                        Text="{Binding HiveIP, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True, NotifyOnValidationError=True}"
+                        TextChanged="TextBox_TextChanged" />
+                    <hc:TextBox
+                        Grid.Column="1"
+                        Margin="10,0,10,0"
+                        hc:InfoElement.Title="Hive Port"
+                        hc:InfoElement.TitlePlacement="Left"
+                        hc:InfoElement.TitleWidth="80"
+                        Foreground="{DynamicResource EditorForeground}"
+                        Text="{Binding HivePort, UpdateSourceTrigger=PropertyChanged}"
+                        TextChanged="TextBox_TextChanged" />
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Grid.ColumnSpan="2">
+                        <ToggleButton
+                            Width="100"
+                            HorizontalAlignment="Left"
+                            Command="{Binding ChangeHiveCommand}"
+                            CommandParameter="{Binding Path=., RelativeSource={RelativeSource Mode=Self}}"
+                            Content="{lang:Lang Key={x:Static lang:LangKeys.Enable}}"
+                            IsChecked="{Binding HiveEnabled}"
+                            Visibility="{Binding HiveIsVisibility}"
+                            IsEnabled="True"
+                            Style="{StaticResource ToggleButtonSwitch}" />
+                        <!--<ToggleButton
+                            Width="100"
+                            HorizontalAlignment="Left"
+                            Command="{Binding ChangeHiveCommand}"
+                            CommandParameter="{Binding Path=., RelativeSource={RelativeSource Mode=Self}}"
+                            Content="{lang:Lang Key={x:Static lang:LangKeys.Enable}}"
+                            IsEnabled="False"
+                            Visibility="Hidden"
+                            Style="{StaticResource ToggleButtonSwitch}"
+                            ToolTip="请在右侧输入密码"
+                            ToolTipService.ShowOnDisabled="True" />-->
+                        <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Rectangle
+                                Width="50"
+                                Height="24"
+                                Fill="{Binding IsHiveConnect, Converter={StaticResource Boolean2PassColorCoverter}}" />
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="White"
+                                Text="{lang:Lang Key={x:Static lang:LangKeys.CommunicationStatus}}" />
+                        </Grid>
+
+                        <Button
+                            Margin="5,0"
+                            HorizontalAlignment="Right"
+                            Command="{Binding MachineRegisterCommand}"
+                            CommandParameter="Hive"
+                            Content="{lang:Lang Key={x:Static lang:LangKeys.Register}}"
+                            Foreground="Black" />
+                        <PasswordBox
+                            x:Name="passwordBox"
+                            Width="40"
+                            PasswordChanged="passwordBox_PasswordChanged"
+                            PasswordChar="*">
+                            <PasswordBox.InputBindings>
+                                <KeyBinding Key="Enter" Command="{Binding PwdConfirmCommand}" />
+                            </PasswordBox.InputBindings>
+                        </PasswordBox>
+                        <!--<CheckBox Content="{lang:Lang Key={x:Static lang:LangKeys.HiveValve}}" IsChecked="{Binding IsHiveValveEnabled}" />-->
+                        <CheckBox Content="{lang:Lang Key={x:Static lang:LangKeys.Ingore}}" IsChecked="{Binding IsHiveIgnoreFeedBack}" />
+                    </StackPanel>
+                </Grid>
+                <Grid Margin="0,5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <hc:TextBox
+                        Grid.Column="0"
+                        Margin="10,0,10,0"
+                        hc:InfoElement.Title="LineIP"
+                        hc:InfoElement.TitlePlacement="Left"
+                        hc:InfoElement.TitleWidth="80"
+                        Foreground="{DynamicResource EditorForeground}"
+                        Text="{Binding WholeIP, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True, NotifyOnValidationError=True}"
+                        TextChanged="TextBox_TextChanged" />
+                    <hc:TextBox
+                        Grid.Column="1"
+                        Margin="10,0,10,0"
+                        hc:InfoElement.Title="LinePort"
+                        hc:InfoElement.TitlePlacement="Left"
+                        hc:InfoElement.TitleWidth="80"
+                        Foreground="{DynamicResource EditorForeground}"
+                        Text="{Binding WholePort, UpdateSourceTrigger=PropertyChanged}"
+                        TextChanged="TextBox_TextChanged" />
+                    <StackPanel Grid.Column="3" Orientation="Horizontal">
+                        <ToggleButton
+                            Width="100"
+                            HorizontalAlignment="Left"
+                            Command="{Binding ChangeWholeCommand}"
+                            CommandParameter="{Binding Path=., RelativeSource={RelativeSource Mode=Self}}"
+                            Content="{lang:Lang Key={x:Static lang:LangKeys.Enable}}"
+                            IsChecked="{Binding WholeEnabled}"
+                            Style="{StaticResource ToggleButtonSwitch}" />
+                        <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Rectangle
+                                Width="50"
+                                Height="24"
+                                Fill="{Binding IsWholeConnect, Converter={StaticResource Boolean2PassColorCoverter}}" />
+                            <TextBlock
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="White"
+                                Text="{lang:Lang Key={x:Static lang:LangKeys.CommunicationStatus}}" />
+                        </Grid>
+                    </StackPanel>
+                </Grid>
+                <Grid Margin="0,5,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition />
+                        <RowDefinition />
+                    </Grid.RowDefinitions>
+                    <hc:TextBox
+                        Grid.Column="0"
+                        Margin="10,0,10,0"
+                        hc:InfoElement.Title="Ftp用户名"
+                        hc:InfoElement.TitlePlacement="Left"
+                        hc:InfoElement.TitleWidth="80"
+                        Foreground="{DynamicResource EditorForeground}"
+                        Text="{Binding FtpUser, UpdateSourceTrigger=PropertyChanged, ValidatesOnExceptions=True, NotifyOnValidationError=True}"
+                        TextChanged="TextBox_TextChanged" />
+                    <hc:TextBox
+                        Grid.Column="1"
+                        Margin="10,0,10,0"
+                        hc:InfoElement.Title="Ftp密码"
+                        hc:InfoElement.TitlePlacement="Left"
+                        hc:InfoElement.TitleWidth="80"
+                        Foreground="{DynamicResource EditorForeground}"
+                        Text="{Binding FtpPwd, UpdateSourceTrigger=PropertyChanged}"
+                        TextChanged="TextBox_TextChanged" />
+                    <hc:TextBox
+                        Grid.Column="2"
+                        Margin="10,0,10,0"
+                        hc:InfoElement.Title="SFC 地址"
+                        hc:InfoElement.TitlePlacement="Left"
+                        hc:InfoElement.TitleWidth="80"
+                        Text="{Binding SFCUrl, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <hc:TextBox
+                        Grid.Row="1"
+                        Grid.Column="2"
+                        Margin="10,0,10,0"
+                        hc:InfoElement.Title="subcmd"
+                        hc:InfoElement.TitlePlacement="Left"
+                        hc:InfoElement.TitleWidth="80"
+                        Text="{Binding subcmd, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </Grid>
+
+                <!--  根据ALink的CSV文件内容更新驾驶舱配置功能  -->
+                <Grid Margin="0,5,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*" />
+                        <ColumnDefinition Width="5*" />
+                        <ColumnDefinition Width="2*" />
+                        <ColumnDefinition Width="10*" />
+                    </Grid.ColumnDefinitions>
+                    <Button
+                        Grid.Column="0"
+                        Margin="5,0"
+                        HorizontalAlignment="Left"
+                        Command="{Binding SelectFileCommand}"
+                        Content="{lang:Lang Key={x:Static lang:LangKeys.SelectFile}}"
+                        Foreground="Black" />
+
+                    <hc:TextBox
+                        Grid.Column="1"
+                        Margin="10,0,10,0"
+                        hc:InfoElement.Title="文件目录路径"
+                        hc:InfoElement.TitlePlacement="Left"
+                        hc:InfoElement.TitleWidth="80"
+                        Text="{Binding FileDirectory, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                    <Button
+                        Grid.Column="2"
+                        Margin="5,0"
+                        HorizontalAlignment="Right"
+                        Command="{Binding UpdateContentCommand}"
+                        Content="{lang:Lang Key={x:Static lang:LangKeys.UpdateContent}}"
+                        Foreground="Black" />
+                </Grid>
+
+            </StackPanel>
+        </Border>
+        <Border
+            Grid.Row="2"
+            Margin="20,10,20,15"
+            Background="White"
+            CornerRadius="5">
+            <ScrollViewer IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Engineer}">
+                <StackPanel Margin="15,25,15,0">
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        DockPanel.Dock="Left"
+                        Text="{lang:Lang Key={x:Static lang:LangKeys.DeviceInfo}}" />
+                    <hc:Divider Margin="0,3,0,20" />
+                    <StackPanel>
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            DockPanel.Dock="Left"
+                            FontWeight="Bold"
+                            Text="{lang:Lang Key={x:Static lang:LangKeys.SFC}}" />
+                        <hc:Divider Margin="0,3,0,20" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+                            <hc:TextBox
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                Margin="10,10,10,0"
+                                hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.StationID}}"
+                                hc:InfoElement.TitlePlacement="Left"
+                                hc:InfoElement.TitleWidth="80"
+                                Foreground="{DynamicResource EditorForeground}"
+                                Text="{Binding StationId, UpdateSourceTrigger=PropertyChanged}"
+                                TextChanged="TextBox_TextChanged" />
+                            <hc:TextBox
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Margin="10,10,10,0"
+                                hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.StationName}}"
+                                hc:InfoElement.TitlePlacement="Left"
+                                hc:InfoElement.TitleWidth="80"
+                                Foreground="{DynamicResource EditorForeground}"
+                                Text="{Binding StationName, UpdateSourceTrigger=PropertyChanged}"
+                                TextChanged="TextBox_TextChanged" />
+                            <hc:TextBox
+                                Grid.Row="0"
+                                Grid.Column="2"
+                                Margin="10,10,10,0"
+                                hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.PartName}}"
+                                hc:InfoElement.TitlePlacement="Left"
+                                hc:InfoElement.TitleWidth="80"
+                                Foreground="{DynamicResource EditorForeground}"
+                                Text="{Binding PartName, UpdateSourceTrigger=PropertyChanged}"
+                                TextChanged="TextBox_TextChanged" />
+                            <hc:TextBox
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Margin="10,10,10,0"
+                                hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.Machine}}"
+                                hc:InfoElement.TitlePlacement="Left"
+                                hc:InfoElement.TitleWidth="80"
+                                Foreground="{DynamicResource EditorForeground}"
+                                Text="{Binding Product, UpdateSourceTrigger=PropertyChanged}"
+                                TextChanged="TextBox_TextChanged" />
+                            <hc:TextBox
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                Margin="10,10,10,0"
+                                hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.PlantArea}}"
+                                hc:InfoElement.TitlePlacement="Left"
+                                hc:InfoElement.TitleWidth="80"
+                                Foreground="{DynamicResource EditorForeground}"
+                                Text="{Binding SiteCode, UpdateSourceTrigger=PropertyChanged}"
+                                TextChanged="TextBox_TextChanged" />
+                            <Button
+                                Grid.Row="1"
+                                Grid.Column="2"
+                                Margin="10,10,10,0"
+                                Command="{Binding UpdateSFCInfoCommand}"
+                                Content="更新工站信息"
+                                Foreground="{DynamicResource EditorForeground}" />
+                            <hc:TextBox
+                                Grid.Row="2"
+                                Grid.Column="0"
+                                Margin="10,10,10,0"
+                                hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.category_key}}"
+                                hc:InfoElement.TitlePlacement="Left"
+                                hc:InfoElement.TitleWidth="80"
+                                Foreground="{DynamicResource EditorForeground}"
+                                Text="{Binding category_key, UpdateSourceTrigger=PropertyChanged}"
+                                TextChanged="TextBox_TextChanged" />
+                        </Grid>
+                    </StackPanel>
+                    <hc:Divider Margin="0,3,0,20" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                        </Grid.RowDefinitions>
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="3"
+                            Margin="0,10,10,10"
+                            VerticalAlignment="Center"
+                            DockPanel.Dock="Left"
+                            FontWeight="Bold"
+                            Text="{lang:Lang Key={x:Static lang:LangKeys.Vision}}" />
+
+                        <hc:TextBox
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            Margin="10,0,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.DeviceSN}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding MachineSn, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+                        <hc:TextBox
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Margin="10,0,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.DeviceName}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding MachineName, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+                        <hc:TextBox
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Margin="10,0,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.DeviceType}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding MachineType, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+
+                        <hc:TextBox
+                            Grid.Row="2"
+                            Grid.Column="0"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.DeviceFirm}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding VendorName, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+                        <hc:TextBox
+                            Grid.Row="2"
+                            Grid.Column="1"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.IPAddress}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding DeviceIP, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+                        <hc:TextBox
+                            Grid.Row="2"
+                            Grid.Column="2"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.MacAddress}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding DeviceMac, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+                        <hc:TextBox
+                            Grid.Row="3"
+                            Grid.Column="0"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.StationType}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding StationType, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+                        <hc:TextBox
+                            Grid.Row="3"
+                            Grid.Column="1"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.Region}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding Area, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+                        <hc:TextBox
+                            Grid.Row="3"
+                            Grid.Column="2"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.StationName}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding StationName_Vision, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+
+                        <hc:TextBox
+                            Grid.Row="4"
+                            Grid.Column="0"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.Floor}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding Floor, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+                        <hc:TextBox
+                            Grid.Row="4"
+                            Grid.Column="1"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.Liner}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding LineCode, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+                        <hc:TextBox
+                            Grid.Row="4"
+                            Grid.Column="2"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.Unit}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding UniteCode, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+                        <hc:TextBox
+                            Grid.Row="5"
+                            Grid.Column="0"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.InsightType}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding InsightType, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+                        <hc:TextBox
+                            Grid.Row="5"
+                            Grid.Column="1"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.VisionVersion}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding VisionVersion, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+                        <hc:TextBox
+                            Grid.Row="5"
+                            Grid.Column="2"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.RobotVersion}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding RobotVersion, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+                        <hc:TextBox
+                            Grid.Row="6"
+                            Grid.Column="0"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.LaserVersion}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding LaserVersion, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+                        <hc:TextBox
+                            Grid.Row="6"
+                            Grid.Column="1"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.LimitsVersion}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding LimitsVersion, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+                        <hc:TextBox
+                            Grid.Row="6"
+                            Grid.Column="2"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.BaliVersion}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding BaliVersion, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+                        <hc:TextBox
+                            Grid.Row="7"
+                            Grid.Column="0"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.SoftVersion}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            IsEnabled="False"
+                            Text="{Binding SoftVersion, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+                        <hc:TextBox
+                            Grid.Row="7"
+                            Grid.Column="1"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.Product_Vision}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding Product_Vision, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+                        <hc:TextBox
+                            Grid.Row="7"
+                            Grid.Column="2"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.HiveAppId}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding HiveAppId, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+                        <hc:TextBox
+                            Grid.Row="8"
+                            Grid.Column="0"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.PictureStoragePath}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding ImagePath, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+                        <hc:TextBox
+                            Grid.Row="8"
+                            Grid.Column="1"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.VisionExtra}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding VisionExtra, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+                        <hc:TextBox
+                            Grid.Row="8"
+                            Grid.Column="2"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.ApiVersion}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding ApiVersion, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+                        <hc:TextBox
+                            Grid.Row="9"
+                            Grid.Column="0"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.ManageDept_Vision}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding ManageDept_Vision, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+                        <hc:TextBox
+                            Grid.Row="9"
+                            Grid.Column="1"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.FunctionId}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding FunctionId, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+                        <hc:TextBox
+                            Grid.Row="9"
+                            Grid.Column="2"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.RegisterType}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding RegisterType, UpdateSourceTrigger=PropertyChanged}" />
+                        <hc:TextBox
+                            Grid.Row="10"
+                            Grid.Column="0"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.VisionStationId}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding VisionStationId, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />
+                        <hc:TextBox
+                            Grid.Row="10"
+                            Grid.Column="1"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.Recipe}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding ReciepeVersion, UpdateSourceTrigger=PropertyChanged}"/>
+                        <hc:TextBox
+                            Grid.Row="10"
+                            Grid.Column="2"
+                            Margin="10,10,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.PLC}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding PlcVersion, UpdateSourceTrigger=PropertyChanged}"
+                            TextChanged="TextBox_TextChanged" />    
+                    </Grid>
+                    <hc:Divider Margin="0,3,0,20" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                        </Grid.RowDefinitions>
+                        <TextBlock
+                            Grid.Row="0"
+                            Grid.Column="0"
+                            Grid.ColumnSpan="3"
+                            Margin="0,10,10,10"
+                            VerticalAlignment="Center"
+                            DockPanel.Dock="Left"
+                            FontWeight="Bold"
+                            Text="{lang:Lang Key={x:Static lang:LangKeys.FFU}}" />
+                        <!--  FFU  -->
+
+                        <hc:ComboBox
+                            Grid.Row="1"
+                            Grid.Column="0"
+                            Margin="10,0,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.FFUSpeedLevel}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="80"
+                            Foreground="{DynamicResource EditorForeground}"
+                            ItemsSource="{Binding FFUSpeedModes}"
+                            Text="{Binding FFUSpeedLevel, UpdateSourceTrigger=PropertyChanged}" />
+                        <!--  Level  -->
+
+                        <hc:TextBox
+                            Grid.Row="1"
+                            Grid.Column="1"
+                            Margin="10,0,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.LowCurrentLowLimit}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="120"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding LowCurrentLowLimit, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <hc:TextBox
+                            Grid.Row="1"
+                            Grid.Column="2"
+                            Margin="10,0,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.LowCurrentUpperLimit}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="120"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding LowCurrentUpperLimit, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <hc:TextBox
+                            Grid.Row="1"
+                            Grid.Column="3"
+                            Margin="10,0,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.MiddleCurrentLowLimit}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="120"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding MiddleCurrentLowLimit, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <hc:TextBox
+                            Grid.Row="1"
+                            Grid.Column="4"
+                            Margin="10,0,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.MiddleCurrentUpperLimit}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="120"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding MiddleCurrentUpperLimit, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <hc:TextBox
+                            Grid.Row="1"
+                            Grid.Column="5"
+                            Margin="10,0,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.HighCurrentLowLimit}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="120"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding HighCurrentLowLimit, UpdateSourceTrigger=PropertyChanged}" />
+
+                        <hc:TextBox
+                            Grid.Row="1"
+                            Grid.Column="6"
+                            Margin="10,0,10,0"
+                            hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.HighCurrentUpperLimit}}"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="120"
+                            Foreground="{DynamicResource EditorForeground}"
+                            Text="{Binding HighCurrentUpperLimit, UpdateSourceTrigger=PropertyChanged}" />
+
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</UserControl>

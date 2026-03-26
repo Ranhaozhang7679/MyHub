@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "LusterMotion": {
+      "commandName": "Project",
+      "commandLineArgs": "Offline\r\nAdmin"
+    }
+  }
+}

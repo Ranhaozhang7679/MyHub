@@ -1,0 +1,140 @@
+﻿<UserControl
+    x:Class="Luster.Motion.CommonUI.Views.Dialogs.VersionDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:lang="clr-namespace:Luster.Motion.Assests.Langs;assembly=Luster.Motion.Assests"
+    xmlns:local="clr-namespace:Luster.Motion.CommonUI.Views.Dialogs"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    Width="600"
+    MaxHeight="600"
+    d:DesignHeight="550"
+    d:DesignWidth="550"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{DynamicResource RegionBrush}"
+    mc:Ignorable="d">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Label Grid.Row="0" Grid.Column="0" Content="平台版本" FontSize="20" FontWeight="Bold"/>
+        <Label Grid.Row="0" Grid.Column="1" Content="配方版本" FontSize="20" FontWeight="Bold"/>
+        <Border
+            Padding="5"
+            Grid.Row="1"     
+            Grid.Column="0"
+            BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="5">
+            <ListBox            
+                BorderThickness="0"
+                ItemsSource="{Binding Versions}"
+                Style="{StaticResource ListBoxCustom}">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <hc:UniformSpacingPanel
+                            Margin="5,0"
+                            Orientation="Vertical"
+                            Spacing="5" />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+                            <TextBlock
+                                Margin="0,5,0,0"
+                                FontSize="14"
+                                Foreground="{StaticResource PrimaryBrush}"
+                                Text="{Binding Version, StringFormat={}Version {0}}" />
+                            <ItemsControl
+                                Grid.Row="1"
+                                Margin="0,5"
+                                ItemsSource="{Binding Contents}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock
+                                            Margin="0,2"
+                                            Text="{Binding .}"
+                                            TextWrapping="Wrap" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+        <Border
+            Padding="5"
+            Grid.Row="1"               
+            Grid.Column="1"
+            BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="5">
+            <ListBox
+                BorderThickness="0"
+                ItemsSource="{Binding RecipeVersions}"
+                Style="{StaticResource ListBoxCustom}">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <hc:UniformSpacingPanel
+                            Margin="5,0"
+                            Orientation="Vertical"
+                            Spacing="5" />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+                            <TextBlock
+                                Margin="0,5,0,0"
+                                FontSize="14"
+                                Foreground="{StaticResource PrimaryBrush}"
+                                Text="{Binding Version, StringFormat={}Version {0}}" />
+                            <ItemsControl
+                                Grid.Row="1"
+                                Margin="0,5"
+                                ItemsSource="{Binding Contents}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock
+                                            Margin="0,2"
+                                            Text="{Binding .}"
+                                            TextWrapping="Wrap" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+        <DockPanel Grid.Row="2" Grid.ColumnSpan="2" Margin="0,10,0,0">
+            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                <Button
+                    Width="80"
+                    HorizontalAlignment="Right"
+                    Command="{Binding CloseCommand}"
+                    CommandParameter="cancel"
+                    Content="{lang:Lang Key={x:Static lang:LangKeys.Close}}" />
+            </StackPanel>
+        </DockPanel>
+    </Grid>
+</UserControl>

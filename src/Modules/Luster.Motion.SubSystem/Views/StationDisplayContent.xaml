@@ -1,0 +1,121 @@
+﻿<UserControl
+    x:Class="Luster.Motion.SubSystem.Views.StationDisplayContent"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:coverflow="clr-namespace:Luster.Control.Wpf.Motion.CoverFlow;assembly=Luster.Control.Wpf.Motion"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:local="clr-namespace:Luster.Motion.SubSystem.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{DynamicResource RegionBrush}"
+    mc:Ignorable="d">
+    <Grid Background="#D8E2EF">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="150" />
+        </Grid.RowDefinitions>
+        <coverflow:CoverFlowCtrl
+            x:Name="CoverFlowMain"
+            Width="700"
+            Height="500">
+            <coverflow:CoverFlowCtrl.Template>
+                <ControlTemplate>
+                    <Border
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}">
+                        <Viewport3D x:Name="PART_Viewport3D">
+                            <Viewport3D.Camera>
+                                <PerspectiveCamera
+                                    x:Name="PART_Camera"
+                                    FieldOfView="90"
+                                    LookDirection="0,0,-1"
+                                    Position="0,0,3"
+                                    UpDirection="0,1,0" />
+                            </Viewport3D.Camera>
+                            <Viewport3D.Children>
+                                <ModelVisual3D>
+                                    <ModelVisual3D.Content>
+                                        <DirectionalLight Direction="1,0,-4" Color="White" />
+                                    </ModelVisual3D.Content>
+                                </ModelVisual3D>
+                                <ModelVisual3D>
+                                    <ModelVisual3D.Content>
+                                        <DirectionalLight Direction="-1,0,-4" Color="White" />
+                                    </ModelVisual3D.Content>
+                                </ModelVisual3D>
+                                <ModelVisual3D x:Name="PART_VisualParent" />
+                            </Viewport3D.Children>
+                        </Viewport3D>
+                    </Border>
+                </ControlTemplate>
+
+            </coverflow:CoverFlowCtrl.Template>
+            <hc:Interaction.Triggers>
+                <hc:EventTrigger EventName="Loaded">
+                    <hc:EventToCommand Command="{Binding FlowLoadedCommand}" PassEventArgsToCommand="True" />
+                </hc:EventTrigger>
+            </hc:Interaction.Triggers>
+        </coverflow:CoverFlowCtrl>
+        <Button Template="{DynamicResource ButtonTemplate1}" />
+        <ListBox
+            x:Name="liststation"
+            Grid.Row="1"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Background="#D8E2EF"
+            BorderBrush="Transparent"
+            ItemsSource="{Binding Stations}"
+            ScrollViewer.CanContentScroll="True"
+            ScrollViewer.HorizontalScrollBarVisibility="Visible"
+            ScrollViewer.PanningMode="HorizontalOnly"
+            Style="{StaticResource ListBoxCustom}">
+            <ListBox.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <WrapPanel IsItemsHost="True" />
+                </ItemsPanelTemplate>
+            </ListBox.ItemsPanel>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton
+                            Margin="20,5,20,5"
+                            IsChecked="{Binding IsSelected}"
+                            IsEnabled="{Binding IsEnabled}"
+                            Style="{StaticResource StationRadionStyle}">
+                            <!--  Visibility="{Binding TaskFunction.Visible, Converter={StaticResource Boolean2VisibilityConverter}}"  -->
+                            <RadioButton.InputBindings>
+                                <MouseBinding Command="{Binding DataContext.SetStationCommand, RelativeSource={RelativeSource AncestorType=ListBox}}" MouseAction="LeftDoubleClick" />
+                            </RadioButton.InputBindings>
+                            <StackPanel>
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    FontSize="48"
+                                    Foreground="{Binding BackColor}"
+                                    Style="{StaticResource MotionIconLarge}"
+                                    Text="{Binding Icon}"
+                                    ToolTip="{Binding Name}" />
+                                <TextBlock
+                                    Margin="0,5,0,0"
+                                    HorizontalAlignment="Center"
+                                    VerticalAlignment="Center"
+                                    Foreground="{Binding BackColor}"
+                                    Text="{Binding Name}" />
+                            </StackPanel>
+                        </RadioButton>
+                        <Image
+                            VerticalAlignment="Center"
+                            Source="/Luster.Motion.Assests;component/Images/右箭头.png"
+                            Stretch="None"
+                            Visibility="{Binding IsLastStation, Converter={StaticResource Boolean2VisibilityConverter}}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+</UserControl>

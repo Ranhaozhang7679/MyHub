@@ -1,0 +1,65 @@
+﻿#region 作者和版权
+/*************************************************************************************
+* CLR 版本:       4.0.30319.42000
+* 类 名 称:       PostRunEventArgs
+* 机器名称:       L05123-NB
+* 命名空间:       Luster.ThreeD.TaskFlow.Engine.Events
+* 文 件 名:       PostRunEventArgs
+* 创建时间:       2021/10/31 17:26:43
+* 作    者:       luster
+* 所属部门：      系统集成部
+* 版    权:    	  <copyright company="凌云光工业">
+* 签    名:       Luster Technology Co.,Ltd.
+* 网    站:       https://www.lusterinc.com/
+* 邮    箱:       darkliu@lusterinc.com 
+* 唯一标识：      1400d887-c4ac-44a6-9c1b-22e9031fec29
+* 登录用户:       darkliu
+* 所 属 域:       L05123-NB
+* 创建年份:       2021
+* 修改时间:		  2021/10/31 17:26:43
+* 修 改 人:		  luster
+************************************************************************************/
+#endregion
+
+using Luster.TaskFlow.Engine.Enums;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Luster.TaskFlow.Engine.Events
+{
+    public class PostRunEventArgs
+    {
+        /// <summary>
+        /// 执行动作
+        /// </summary>
+        public RunType RunType { get; set; }
+
+        /// <summary>
+        /// 是否运行成功
+        /// </summary>
+        public bool IsSucess { get; set; }
+
+        /// <summary>
+        /// 执行错误信息
+        /// </summary>
+        public string ErrorMessage { get; set; }
+
+        /// <summary>
+        /// 耗时,单位ms
+        /// </summary>
+        public float Time { get; set; }
+
+        /// <summary>
+        /// 输出
+        /// </summary>
+        public List<ParameterInfo> Outputs { get; set; }
+
+        /// <summary>
+        /// 外部信息
+        /// </summary>
+        public Dictionary<string, object> ExternalInfo { get; set; }
+    }
+}

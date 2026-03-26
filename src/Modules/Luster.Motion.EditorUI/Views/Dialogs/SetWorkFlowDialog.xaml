@@ -1,0 +1,133 @@
+﻿<UserControl
+    x:Class="Luster.Motion.EditorUI.Views.Dialogs.SetWorkFlowDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:lang="clr-namespace:Luster.Motion.Assests.Langs;assembly=Luster.Motion.Assests"
+    xmlns:local="clr-namespace:Luster.Motion.EditorUI.Views.Dialogs"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:model="clr-namespace:Luster.Motion.EditorUI.Models"
+    xmlns:prism="http://prismlibrary.com/"
+    xmlns:tx="clr-namespace:Luster.Control.Wpf.Motion.TreeEx;assembly=Luster.Control.Wpf.Motion"
+    MinHeight="300"
+    d:DesignWidth="500"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{DynamicResource RegionBrush}"
+    mc:Ignorable="d">
+    <Grid Margin="10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid Grid.Column="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="80" />
+            </Grid.RowDefinitions>
+            <hc:UniformSpacingPanel
+                Margin="0,10,0,0"
+                Orientation="Vertical"
+                Spacing="10">
+                <TextBox
+                    hc:InfoElement.Necessary="True"
+                    hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.Name}}"
+                    hc:TitleElement.TitlePlacement="Left"
+                    hc:TitleElement.TitleWidth="70"
+                    Style="{StaticResource TextBoxValidationStyle}"
+                    Text="{Binding FlowName}" />
+                <hc:SearchBar
+                    Width="300"
+                    HorizontalAlignment="Left"
+                    hc:TitleElement.Foreground="Black"
+                    hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.StartModule}}"
+                    hc:TitleElement.TitlePlacement="Left"
+                    hc:TitleElement.TitleWidth="70"
+                    Background="White"
+                    BorderBrush="#d6d6d6"
+                    Command="{Binding SearchCommand}"
+                    CommandParameter="Start"
+                    Foreground="#5c5c5c"
+                    ShowClearButton="True"
+                    Style="{StaticResource SearchBarPlus}"
+                    Text="{Binding StartModuleText, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                <hc:SearchBar
+                    Width="300"
+                    HorizontalAlignment="Left"
+                    hc:TitleElement.Foreground="Black"
+                    hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.EndModule}}"
+                    hc:TitleElement.TitlePlacement="Left"
+                    hc:TitleElement.TitleWidth="70"
+                    Background="White"
+                    BorderBrush="#d6d6d6"
+                    Command="{Binding SearchCommand}"
+                    CommandParameter="End"
+                    Foreground="#5c5c5c"
+                    ShowClearButton="True"
+                    Style="{StaticResource SearchBarPlus}"
+                    Text="{Binding StopModuleText, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+
+
+            </hc:UniformSpacingPanel>
+            <DockPanel Grid.Row="2" Margin="0,20,0,0">
+                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                    <Button
+                        Width="80"
+                        HorizontalAlignment="Right"
+                        Command="{Binding CloseCommand}"
+                        CommandParameter="cancel"
+                        Content="{lang:Lang Key={x:Static lang:LangKeys.Cancel}}" />
+                    <Button
+                        Width="80"
+                        Margin="10,0,0,0"
+                        HorizontalAlignment="Right"
+                        Command="{Binding CloseCommand}"
+                        CommandParameter="ok"
+                        Content="{lang:Lang Key={x:Static lang:LangKeys.Confirm}}" />
+                </StackPanel>
+            </DockPanel>
+        </Grid>
+        <Grid
+            Grid.Column="1"
+            MaxHeight="380"
+            Visibility="{Binding IsVisible, Converter={StaticResource Boolean2VisibilityConverter}}">
+            <tx:TreeListBox
+                Width="300"
+                Margin="10,0"
+                HierarchySource="{Binding StationList}">
+                <tx:TreeListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel
+                                Name="xIcon"
+                                Grid.Column="0"
+                                VerticalAlignment="Center">
+                                <TextBlock
+                                    Margin="0,0,3,1"
+                                    FontSize="20"
+                                    Foreground="{Binding StatusColor, Converter={StaticResource String2BrushConverter}}"
+                                    Style="{StaticResource MotionIconSmall}"
+                                    Text="{Binding Icon}" />
+                            </StackPanel>
+                            <StackPanel
+                                Grid.Column="1"
+                                Margin="2,3"
+                                VerticalAlignment="center">
+                                <TextBlock x:Name="xName" Text="{Binding Text}" />
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </tx:TreeListBox.ItemTemplate>
+                <hc:Interaction.Triggers>
+                    <hc:EventTrigger EventName="PreviewMouseDoubleClick">
+                        <hc:EventToCommand Command="{Binding Path=DataContext.DoubleClickCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" PassEventArgsToCommand="True" />
+                    </hc:EventTrigger>
+                </hc:Interaction.Triggers>
+            </tx:TreeListBox>
+        </Grid>
+    </Grid>
+</UserControl>

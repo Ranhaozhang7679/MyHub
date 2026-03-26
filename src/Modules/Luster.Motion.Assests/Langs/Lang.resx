@@ -1,0 +1,3156 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Confirm" xml:space="preserve">
+    <value>确定</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="PngImg" xml:space="preserve">
+    <value>PNG图片</value>
+  </data>
+  <data name="ErrorImgPath" xml:space="preserve">
+    <value>错误的图片路径</value>
+  </data>
+  <data name="ErrorImgSize" xml:space="preserve">
+    <value>非法的图片尺寸</value>
+  </data>
+  <data name="UnknownSize" xml:space="preserve">
+    <value>未知大小</value>
+  </data>
+  <data name="TooLarge" xml:space="preserve">
+    <value>过大</value>
+  </data>
+  <data name="Unknown" xml:space="preserve">
+    <value>未知</value>
+  </data>
+  <data name="Interval30s" xml:space="preserve">
+    <value>间隔30秒</value>
+  </data>
+  <data name="Interval1m" xml:space="preserve">
+    <value>间隔1分钟</value>
+  </data>
+  <data name="Interval5m" xml:space="preserve">
+    <value>间隔5分钟</value>
+  </data>
+  <data name="Interval10m" xml:space="preserve">
+    <value>间隔10分钟</value>
+  </data>
+  <data name="Interval30m" xml:space="preserve">
+    <value>间隔30分钟</value>
+  </data>
+  <data name="Interval1h" xml:space="preserve">
+    <value>间隔1小时</value>
+  </data>
+  <data name="Interval2h" xml:space="preserve">
+    <value>间隔2小时</value>
+  </data>
+  <data name="Clear" xml:space="preserve">
+    <value>清空</value>
+  </data>
+  <data name="Close" xml:space="preserve">
+    <value>关闭</value>
+  </data>
+  <data name="CloseAll" xml:space="preserve">
+    <value>关闭所有</value>
+  </data>
+  <data name="CloseOther" xml:space="preserve">
+    <value>关闭其他</value>
+  </data>
+  <data name="Am" xml:space="preserve">
+    <value>上午</value>
+  </data>
+  <data name="Pm" xml:space="preserve">
+    <value>下午</value>
+  </data>
+  <data name="Tip" xml:space="preserve">
+    <value>提示</value>
+  </data>
+  <data name="IsNecessary" xml:space="preserve">
+    <value>不能为空</value>
+  </data>
+  <data name="OutOfRange" xml:space="preserve">
+    <value>不在范围内</value>
+  </data>
+  <data name="FormatError" xml:space="preserve">
+    <value>格式错误</value>
+  </data>
+  <data name="Yes" xml:space="preserve">
+    <value>是</value>
+  </data>
+  <data name="No" xml:space="preserve">
+    <value>否</value>
+  </data>
+  <data name="ZoomIn" xml:space="preserve">
+    <value>放大</value>
+  </data>
+  <data name="ZoomOut" xml:space="preserve">
+    <value>缩小</value>
+  </data>
+  <data name="NextPage" xml:space="preserve">
+    <value>下一页</value>
+  </data>
+  <data name="PreviousPage" xml:space="preserve">
+    <value>上一页</value>
+  </data>
+  <data name="PageMode" xml:space="preserve">
+    <value>页面模式</value>
+  </data>
+  <data name="TwoPageMode" xml:space="preserve">
+    <value>双页模式</value>
+  </data>
+  <data name="ScrollMode" xml:space="preserve">
+    <value>滚动模式</value>
+  </data>
+  <data name="Find" xml:space="preserve">
+    <value>查找</value>
+  </data>
+  <data name="LangComment" xml:space="preserve">
+    <value>查找类似 {0} 的本地化字符串。</value>
+  </data>
+  <data name="Jump" xml:space="preserve">
+    <value>跳转</value>
+  </data>
+  <data name="Miscellaneous" xml:space="preserve">
+    <value>杂项</value>
+  </data>
+  <data name="All" xml:space="preserve">
+    <value>全部</value>
+  </data>
+  <data name="NoData" xml:space="preserve">
+    <value>暂无数据</value>
+  </data>
+  <data name="Project" xml:space="preserve">
+    <value>工程</value>
+  </data>
+  <data name="Title" xml:space="preserve">
+    <value>标题</value>
+  </data>
+  <data name="ParameterConfig" xml:space="preserve">
+    <value>参数配置</value>
+  </data>
+  <data name="Solution" xml:space="preserve">
+    <value>方案</value>
+  </data>
+  <data name="TaskFlow" xml:space="preserve">
+    <value>任务流</value>
+  </data>
+  <data name="Module" xml:space="preserve">
+    <value>模块</value>
+  </data>
+  <data name="Add" xml:space="preserve">
+    <value>新增</value>
+  </data>
+  <data name="Branch" xml:space="preserve">
+    <value>分支</value>
+  </data>
+  <data name="Copy" xml:space="preserve">
+    <value>拷贝</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>编辑</value>
+  </data>
+  <data name="ExtractBranchGroup" xml:space="preserve">
+    <value>提取分支组</value>
+  </data>
+  <data name="Loop" xml:space="preserve">
+    <value>循环</value>
+  </data>
+  <data name="Pause" xml:space="preserve">
+    <value>暂停</value>
+  </data>
+  <data name="Remove" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="Run" xml:space="preserve">
+    <value>运行</value>
+  </data>
+  <data name="RunOne" xml:space="preserve">
+    <value>单步运行</value>
+  </data>
+  <data name="Skip" xml:space="preserve">
+    <value>忽略</value>
+  </data>
+  <data name="Step" xml:space="preserve">
+    <value>步骤</value>
+  </data>
+  <data name="Switch" xml:space="preserve">
+    <value>多分支</value>
+  </data>
+  <data name="Update" xml:space="preserve">
+    <value>更新</value>
+  </data>
+  <data name="Name" xml:space="preserve">
+    <value>名称</value>
+  </data>
+  <data name="Apply" xml:space="preserve">
+    <value>应用</value>
+  </data>
+  <data name="Home" xml:space="preserve">
+    <value>主页</value>
+  </data>
+  <data name="Open" xml:space="preserve">
+    <value>打开</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>保存</value>
+  </data>
+  <data name="AlignByCoord" xml:space="preserve">
+    <value>坐标系对齐</value>
+  </data>
+  <data name="AlignByInit" xml:space="preserve">
+    <value>初始对齐</value>
+  </data>
+  <data name="AlignByRPS" xml:space="preserve">
+    <value>RPS对齐</value>
+  </data>
+  <data name="Alignment" xml:space="preserve">
+    <value>对齐</value>
+  </data>
+  <data name="Circle" xml:space="preserve">
+    <value>圆</value>
+  </data>
+  <data name="FileIO" xml:space="preserve">
+    <value>文件输入</value>
+  </data>
+  <data name="Line" xml:space="preserve">
+    <value>线</value>
+  </data>
+  <data name="Loading" xml:space="preserve">
+    <value>运行中</value>
+  </data>
+  <data name="Logic" xml:space="preserve">
+    <value>逻辑</value>
+  </data>
+  <data name="Point" xml:space="preserve">
+    <value>点</value>
+  </data>
+  <data name="ReadCAD" xml:space="preserve">
+    <value>加载CAD</value>
+  </data>
+  <data name="ReadCloud" xml:space="preserve">
+    <value>加载点云</value>
+  </data>
+  <data name="ReadSTL" xml:space="preserve">
+    <value>加载STL</value>
+  </data>
+  <data name="Report" xml:space="preserve">
+    <value>报告</value>
+  </data>
+  <data name="Train" xml:space="preserve">
+    <value>训练</value>
+  </data>
+  <data name="StepGroup" xml:space="preserve">
+    <value>串行任务</value>
+  </data>
+  <data name="Value" xml:space="preserve">
+    <value>值</value>
+  </data>
+  <data name="OutParam" xml:space="preserve">
+    <value>输出参数</value>
+  </data>
+  <data name="PointCloud" xml:space="preserve">
+    <value>点云</value>
+  </data>
+  <data name="Mesh" xml:space="preserve">
+    <value>网格数据</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>删除</value>
+  </data>
+  <data name="Color" xml:space="preserve">
+    <value>颜色</value>
+  </data>
+  <data name="AlignByBestFit" xml:space="preserve">
+    <value>最佳拟合对齐</value>
+  </data>
+  <data name="CloudMesh" xml:space="preserve">
+    <value>网格比较</value>
+  </data>
+  <data name="Compare" xml:space="preserve">
+    <value>比较</value>
+  </data>
+  <data name="GenPoint" xml:space="preserve">
+    <value>生成点</value>
+  </data>
+  <data name="Geometry" xml:space="preserve">
+    <value>几何</value>
+  </data>
+  <data name="RunNext" xml:space="preserve">
+    <value>下一步</value>
+  </data>
+  <data name="CloudCalib" xml:space="preserve">
+    <value>点云拼接</value>
+  </data>
+  <data name="Registration" xml:space="preserve">
+    <value>配准</value>
+  </data>
+  <data name="Denoising" xml:space="preserve">
+    <value>去噪</value>
+  </data>
+  <data name="DownSampling" xml:space="preserve">
+    <value>下采样</value>
+  </data>
+  <data name="Smooth" xml:space="preserve">
+    <value>平滑</value>
+  </data>
+  <data name="Filtering" xml:space="preserve">
+    <value>滤波</value>
+  </data>
+  <data name="CloudRegistration" xml:space="preserve">
+    <value>点云配准</value>
+  </data>
+  <data name="CloudReRepeat" xml:space="preserve">
+    <value>点云去重</value>
+  </data>
+  <data name="GenPointByCross" xml:space="preserve">
+    <value>求交点</value>
+  </data>
+  <data name="GetPointByObj" xml:space="preserve">
+    <value>获取点</value>
+  </data>
+  <data name="GenPointByProj" xml:space="preserve">
+    <value>求投影点</value>
+  </data>
+  <data name="GenReport" xml:space="preserve">
+    <value>生成报告</value>
+  </data>
+  <data name="Coord" xml:space="preserve">
+    <value>坐标系</value>
+  </data>
+  <data name="GenCoordByData" xml:space="preserve">
+    <value>坐标系生成</value>
+  </data>
+  <data name="GenCoordByPlane3" xml:space="preserve">
+    <value>三面构建</value>
+  </data>
+  <data name="TransformCoord" xml:space="preserve">
+    <value>坐标系变换</value>
+  </data>
+  <data name="Revoke" xml:space="preserve">
+    <value>撤销</value>
+  </data>
+  <data name="Redo" xml:space="preserve">
+    <value>重做</value>
+  </data>
+  <data name="GenLineByFit" xml:space="preserve">
+    <value>拟合直线</value>
+  </data>
+  <data name="GenPointByData" xml:space="preserve">
+    <value>数字点</value>
+  </data>
+  <data name="Load" xml:space="preserve">
+    <value>加载</value>
+  </data>
+  <data name="GenLineBy2Point" xml:space="preserve">
+    <value>两点构线</value>
+  </data>
+  <data name="GenPlaneBy3Point" xml:space="preserve">
+    <value>三点构面</value>
+  </data>
+  <data name="DisMeasure" xml:space="preserve">
+    <value>距离测量</value>
+  </data>
+  <data name="Parallelism" xml:space="preserve">
+    <value>平行度</value>
+  </data>
+  <data name="Point2Point" xml:space="preserve">
+    <value>两点距离</value>
+  </data>
+  <data name="Tolerance" xml:space="preserve">
+    <value>公差</value>
+  </data>
+  <data name="Plane" xml:space="preserve">
+    <value>面</value>
+  </data>
+  <data name="Create" xml:space="preserve">
+    <value>新建</value>
+  </data>
+  <data name="CreateProject" xml:space="preserve">
+    <value>创建项目</value>
+  </data>
+  <data name="CurrentProject" xml:space="preserve">
+    <value>最 近 项 目</value>
+  </data>
+  <data name="Finish" xml:space="preserve">
+    <value>完 成</value>
+  </data>
+  <data name="Insert" xml:space="preserve">
+    <value>插入</value>
+  </data>
+  <data name="OpenProject" xml:space="preserve">
+    <value>打开项目</value>
+  </data>
+  <data name="ProjectAddress" xml:space="preserve">
+    <value>项 目 地 址</value>
+  </data>
+  <data name="ProjectName" xml:space="preserve">
+    <value>项 目 名 称</value>
+  </data>
+  <data name="Composing" xml:space="preserve">
+    <value>排版</value>
+  </data>
+  <data name="File" xml:space="preserve">
+    <value>文件</value>
+  </data>
+  <data name="Help" xml:space="preserve">
+    <value>帮助</value>
+  </data>
+  <data name="Print" xml:space="preserve">
+    <value>打印</value>
+  </data>
+  <data name="SaveAs" xml:space="preserve">
+    <value>另存为</value>
+  </data>
+  <data name="CloudProcess" xml:space="preserve">
+    <value>点云处理</value>
+  </data>
+  <data name="Roundness" xml:space="preserve">
+    <value>圆度</value>
+  </data>
+  <data name="Segment" xml:space="preserve">
+    <value>分割</value>
+  </data>
+  <data name="DoublePage" xml:space="preserve">
+    <value>双页</value>
+  </data>
+  <data name="Generate" xml:space="preserve">
+    <value>生成</value>
+  </data>
+  <data name="Lead" xml:space="preserve">
+    <value>导入</value>
+  </data>
+  <data name="Preview" xml:space="preserve">
+    <value>预览</value>
+  </data>
+  <data name="ReportContents" xml:space="preserve">
+    <value>报告目录</value>
+  </data>
+  <data name="ReportSource" xml:space="preserve">
+    <value>报告源</value>
+  </data>
+  <data name="SinglePage" xml:space="preserve">
+    <value>单页</value>
+  </data>
+  <data name="SaveAsProject" xml:space="preserve">
+    <value>另存项目</value>
+  </data>
+  <data name="SaveProject" xml:space="preserve">
+    <value>保存项目</value>
+  </data>
+  <data name="CADModel" xml:space="preserve">
+    <value>CAD模型</value>
+  </data>
+  <data name="Input" xml:space="preserve">
+    <value>输入</value>
+  </data>
+  <data name="Output" xml:space="preserve">
+    <value>输出</value>
+  </data>
+  <data name="PrintPreview" xml:space="preserve">
+    <value>打印预览</value>
+  </data>
+  <data name="PrintSet" xml:space="preserve">
+    <value>打印设置</value>
+  </data>
+  <data name="ProjectProperty" xml:space="preserve">
+    <value>项目属性</value>
+  </data>
+  <data name="Quit" xml:space="preserve">
+    <value>退出</value>
+  </data>
+  <data name="RecentFile" xml:space="preserve">
+    <value>最近文件</value>
+  </data>
+  <data name="RecentProject" xml:space="preserve">
+    <value>最近项目</value>
+  </data>
+  <data name="STL" xml:space="preserve">
+    <value>STL格式</value>
+  </data>
+  <data name="GenCylinderByFit" xml:space="preserve">
+    <value>圆柱拟合</value>
+  </data>
+  <data name="Cylinder" xml:space="preserve">
+    <value>气缸</value>
+  </data>
+  <data name="CopyCreate" xml:space="preserve">
+    <value>复制创建</value>
+  </data>
+  <data name="GenCircleByData" xml:space="preserve">
+    <value>数据圆</value>
+  </data>
+  <data name="GenCircleByFit" xml:space="preserve">
+    <value>拟合圆</value>
+  </data>
+  <data name="GenLineByCross" xml:space="preserve">
+    <value>求相交线</value>
+  </data>
+  <data name="GenLineByData" xml:space="preserve">
+    <value>数据线</value>
+  </data>
+  <data name="GenLineByMove" xml:space="preserve">
+    <value>线平移</value>
+  </data>
+  <data name="GenLineByProj" xml:space="preserve">
+    <value>求投影线</value>
+  </data>
+  <data name="GenPlaneByFit" xml:space="preserve">
+    <value>拟合面</value>
+  </data>
+  <data name="GenPlaneByMove" xml:space="preserve">
+    <value>面平移</value>
+  </data>
+  <data name="ArcLine2Line" xml:space="preserve">
+    <value>线线角度</value>
+  </data>
+  <data name="ArcLine2Plane" xml:space="preserve">
+    <value>线面角度</value>
+  </data>
+  <data name="ArcPlane2Plane" xml:space="preserve">
+    <value>面面角度</value>
+  </data>
+  <data name="DisLine2Line" xml:space="preserve">
+    <value>线线距离</value>
+  </data>
+  <data name="DisLine2Plane" xml:space="preserve">
+    <value>线面距离</value>
+  </data>
+  <data name="DisPoint2Line" xml:space="preserve">
+    <value>点线距离</value>
+  </data>
+  <data name="DisPoint2Plane" xml:space="preserve">
+    <value>点面距离</value>
+  </data>
+  <data name="DisPoint2Point" xml:space="preserve">
+    <value>两点距离</value>
+  </data>
+  <data name="GenPlaneByObj" xml:space="preserve">
+    <value>创建面</value>
+  </data>
+  <data name="GetLineByObj" xml:space="preserve">
+    <value>获取线</value>
+  </data>
+  <data name="AngleMeasure" xml:space="preserve">
+    <value>角度测量</value>
+  </data>
+  <data name="GetPlaneByObj" xml:space="preserve">
+    <value>获取面</value>
+  </data>
+  <data name="SaveProjectTask" xml:space="preserve">
+    <value>是否保存工程?</value>
+  </data>
+  <data name="AsyncGroup" xml:space="preserve">
+    <value>异步组</value>
+  </data>
+  <data name="Paste" xml:space="preserve">
+    <value>粘贴</value>
+  </data>
+  <data name="ExtractAsyncGroup" xml:space="preserve">
+    <value>提取异步组</value>
+  </data>
+  <data name="ExtractSwitchGroup" xml:space="preserve">
+    <value>提取分支组</value>
+  </data>
+  <data name="Rename" xml:space="preserve">
+    <value>重命名</value>
+  </data>
+  <data name="InsertPoint" xml:space="preserve">
+    <value>插入点</value>
+  </data>
+  <data name="GetDirectionByObj" xml:space="preserve">
+    <value>获取方向</value>
+  </data>
+  <data name="Export" xml:space="preserve">
+    <value>导出</value>
+  </data>
+  <data name="Choose" xml:space="preserve">
+    <value>选择</value>
+  </data>
+  <data name="SaveSuccess" xml:space="preserve">
+    <value>保存成功</value>
+  </data>
+  <data name="SwitchGroup" xml:space="preserve">
+    <value>条件任务</value>
+  </data>
+  <data name="GenCloudByPoints" xml:space="preserve">
+    <value>多点构建点云</value>
+  </data>
+  <data name="BranchGroup" xml:space="preserve">
+    <value>判断分支</value>
+  </data>
+  <data name="GenLineByTransform" xml:space="preserve">
+    <value>线变换</value>
+  </data>
+  <data name="InOutParameterConfigure" xml:space="preserve">
+    <value>输入输出参数配置</value>
+  </data>
+  <data name="CancelCoordTemplate" xml:space="preserve">
+    <value>取消模板</value>
+  </data>
+  <data name="SetCoordTemplate" xml:space="preserve">
+    <value>设置模板</value>
+  </data>
+  <data name="BatchImportPoints" xml:space="preserve">
+    <value>批量导入点</value>
+  </data>
+  <data name="FileAddress" xml:space="preserve">
+    <value>文件地址</value>
+  </data>
+  <data name="GenerationMode" xml:space="preserve">
+    <value>生成方式</value>
+  </data>
+  <data name="Separator" xml:space="preserve">
+    <value>分隔符</value>
+  </data>
+  <data name="StartRow" xml:space="preserve">
+    <value>起始行</value>
+  </data>
+  <data name="StartColumn" xml:space="preserve">
+    <value>起始列</value>
+  </data>
+  <data name="CheckForUpdates" xml:space="preserve">
+    <value>检查更新</value>
+  </data>
+  <data name="EditFeature" xml:space="preserve">
+    <value>编辑特征</value>
+  </data>
+  <data name="ExtractStepGroup" xml:space="preserve">
+    <value>提取分组</value>
+  </data>
+  <data name="ReleaseNotes" xml:space="preserve">
+    <value>发布说明</value>
+  </data>
+  <data name="TaskSimulator" xml:space="preserve">
+    <value>任务模拟器</value>
+  </data>
+  <data name="Tool" xml:space="preserve">
+    <value>工具</value>
+  </data>
+  <data name="UsingTutorials" xml:space="preserve">
+    <value>使用教程</value>
+  </data>
+  <data name="Display" xml:space="preserve">
+    <value>显示</value>
+  </data>
+  <data name="DisplayDirection" xml:space="preserve">
+    <value>显示方向</value>
+  </data>
+  <data name="LightingSettings" xml:space="preserve">
+    <value>光源设置</value>
+  </data>
+  <data name="ModelDisplayMode" xml:space="preserve">
+    <value>模型显示模式</value>
+  </data>
+  <data name="PointCloudDisplayMode" xml:space="preserve">
+    <value>点云显示模式</value>
+  </data>
+  <data name="Select" xml:space="preserve">
+    <value>选择</value>
+  </data>
+  <data name="View" xml:space="preserve">
+    <value>视图</value>
+  </data>
+  <data name="Zoom" xml:space="preserve">
+    <value>缩放</value>
+  </data>
+  <data name="ImportParameterName" xml:space="preserve">
+    <value>输入参数别名</value>
+  </data>
+  <data name="ModuleName" xml:space="preserve">
+    <value>模块名称</value>
+  </data>
+  <data name="OutportParameterName" xml:space="preserve">
+    <value>输出参数别名</value>
+  </data>
+  <data name="GenConeByFit" xml:space="preserve">
+    <value>圆锥拟合</value>
+  </data>
+  <data name="GenSphereByFit" xml:space="preserve">
+    <value>球体拟合</value>
+  </data>
+  <data name="GenCuboidByData" xml:space="preserve">
+    <value>数据长方体</value>
+  </data>
+  <data name="GenCylinderByData" xml:space="preserve">
+    <value>数据圆柱</value>
+  </data>
+  <data name="GenPointByMove" xml:space="preserve">
+    <value>点偏移</value>
+  </data>
+  <data name="CloudDenoising" xml:space="preserve">
+    <value>点云去噪</value>
+  </data>
+  <data name="CloudDownSampling" xml:space="preserve">
+    <value>点云采样</value>
+  </data>
+  <data name="CloudSegment" xml:space="preserve">
+    <value>点云裁剪</value>
+  </data>
+  <data name="CloudSmooth" xml:space="preserve">
+    <value>点云平滑</value>
+  </data>
+  <data name="CloudTransform" xml:space="preserve">
+    <value>点云变换</value>
+  </data>
+  <data name="Transform" xml:space="preserve">
+    <value>变换</value>
+  </data>
+  <data name="GenPointByCaliper" xml:space="preserve">
+    <value>卡尺取点</value>
+  </data>
+  <data name="GenPointByCMM" xml:space="preserve">
+    <value>CMM取点</value>
+  </data>
+  <data name="GenSphereByData" xml:space="preserve">
+    <value>数据球</value>
+  </data>
+  <data name="Flatness" xml:space="preserve">
+    <value>平面度</value>
+  </data>
+  <data name="Straightness" xml:space="preserve">
+    <value>直线度</value>
+  </data>
+  <data name="Error" xml:space="preserve">
+    <value>错误</value>
+  </data>
+  <data name="Info" xml:space="preserve">
+    <value>信息</value>
+  </data>
+  <data name="Warning" xml:space="preserve">
+    <value>警告</value>
+  </data>
+  <data name="SetMeasure" xml:space="preserve">
+    <value>尺寸设置</value>
+  </data>
+  <data name="Active" xml:space="preserve">
+    <value>激活</value>
+  </data>
+  <data name="DataProcess" xml:space="preserve">
+    <value>数据处理</value>
+  </data>
+  <data name="MergePoints" xml:space="preserve">
+    <value>点合并</value>
+  </data>
+  <data name="ProjectAlreadyExists" xml:space="preserve">
+    <value>项目已存在！</value>
+  </data>
+  <data name="ProjectCannotBeEmpty" xml:space="preserve">
+    <value>项目名或地址不可为空！</value>
+  </data>
+  <data name="Profileanysurface" xml:space="preserve">
+    <value>面轮廓度</value>
+  </data>
+  <data name="ReadMatrix" xml:space="preserve">
+    <value>加载矩阵</value>
+  </data>
+  <data name="InputParameter" xml:space="preserve">
+    <value>输入参数</value>
+  </data>
+  <data name="OutputParameter" xml:space="preserve">
+    <value>输出参数</value>
+  </data>
+  <data name="CancelSkip" xml:space="preserve">
+    <value>取消忽略</value>
+  </data>
+  <data name="HideLabel" xml:space="preserve">
+    <value>隐藏标签</value>
+  </data>
+  <data name="VisibleLabel" xml:space="preserve">
+    <value>显示标签</value>
+  </data>
+  <data name="ROIConfig" xml:space="preserve">
+    <value>ROI配置</value>
+  </data>
+  <data name="TolParameter" xml:space="preserve">
+    <value>公差参数</value>
+  </data>
+  <data name="OutlierFit" xml:space="preserve">
+    <value>局外点拟合</value>
+  </data>
+  <data name="Cone" xml:space="preserve">
+    <value>圆锥</value>
+  </data>
+  <data name="Cuboid" xml:space="preserve">
+    <value>长方体</value>
+  </data>
+  <data name="Sphere" xml:space="preserve">
+    <value>球体</value>
+  </data>
+  <data name="DisplayElementParaSetting" xml:space="preserve">
+    <value>显示元素参数设置</value>
+  </data>
+  <data name="DisplayTypeSetting" xml:space="preserve">
+    <value>显示类型设置</value>
+  </data>
+  <data name="DrawCuboidROI" xml:space="preserve">
+    <value>绘制长方体ROI</value>
+  </data>
+  <data name="DrawCylinderROI" xml:space="preserve">
+    <value>绘制圆柱ROI</value>
+  </data>
+  <data name="DrawSphereROI" xml:space="preserve">
+    <value>绘制球体ROI</value>
+  </data>
+  <data name="RotateViewClockwise" xml:space="preserve">
+    <value>顺时针旋转视图</value>
+  </data>
+  <data name="RotateViewCounterclockwise" xml:space="preserve">
+    <value>逆时针旋转视图</value>
+  </data>
+  <data name="ViewCentered" xml:space="preserve">
+    <value>视图居中</value>
+  </data>
+  <data name="ViewDirectionSetting" xml:space="preserve">
+    <value>视图方向设置</value>
+  </data>
+  <data name="ViewFlip" xml:space="preserve">
+    <value>视图翻转</value>
+  </data>
+  <data name="Comma" xml:space="preserve">
+    <value>逗号</value>
+  </data>
+  <data name="Custom" xml:space="preserve">
+    <value>自定义</value>
+  </data>
+  <data name="GeometricFeatures" xml:space="preserve">
+    <value>几何特征</value>
+  </data>
+  <data name="LineScale" xml:space="preserve">
+    <value>线延长比</value>
+  </data>
+  <data name="LineWidth" xml:space="preserve">
+    <value>线宽</value>
+  </data>
+  <data name="Opacity" xml:space="preserve">
+    <value>透明度</value>
+  </data>
+  <data name="PleaseCheckTheDataFormatorType" xml:space="preserve">
+    <value>请检查数据格式或类型！</value>
+  </data>
+  <data name="PleaseEnterAnIntegerGreaterThan0" xml:space="preserve">
+    <value>请输入大于零的整数！</value>
+  </data>
+  <data name="PleaseEnterASingleByteDelimiter" xml:space="preserve">
+    <value>请输入单字节分割符！</value>
+  </data>
+  <data name="PointCloudSize" xml:space="preserve">
+    <value>点云尺寸</value>
+  </data>
+  <data name="PointSize" xml:space="preserve">
+    <value>点尺寸</value>
+  </data>
+  <data name="Semicolon" xml:space="preserve">
+    <value>分号</value>
+  </data>
+  <data name="Space" xml:space="preserve">
+    <value>空格</value>
+  </data>
+  <data name="ModelGroup" xml:space="preserve">
+    <value>模型点集</value>
+  </data>
+  <data name="PointCloudGroup" xml:space="preserve">
+    <value>点云点集</value>
+  </data>
+  <data name="ArrangeDocument" xml:space="preserve">
+    <value>文件整理</value>
+  </data>
+  <data name="AverageTime" xml:space="preserve">
+    <value>平均耗时</value>
+  </data>
+  <data name="DataDirectory" xml:space="preserve">
+    <value>数据目录</value>
+  </data>
+  <data name="ForMemoryLeakDetection" xml:space="preserve">
+    <value>用于内存泄露检测</value>
+  </data>
+  <data name="KeywordMatching" xml:space="preserve">
+    <value>关键字匹配</value>
+  </data>
+  <data name="LowerLimit" xml:space="preserve">
+    <value>公差下限</value>
+  </data>
+  <data name="NumberOfCycles" xml:space="preserve">
+    <value>循环次数</value>
+  </data>
+  <data name="SearchFileKeywords" xml:space="preserve">
+    <value>搜索文件关键字</value>
+  </data>
+  <data name="Senior" xml:space="preserve">
+    <value>高级</value>
+  </data>
+  <data name="SerialNumber" xml:space="preserve">
+    <value>序号</value>
+  </data>
+  <data name="StandardValue" xml:space="preserve">
+    <value>标准值</value>
+  </data>
+  <data name="Status" xml:space="preserve">
+    <value>状态</value>
+  </data>
+  <data name="Time" xml:space="preserve">
+    <value>耗时</value>
+  </data>
+  <data name="TotalTime" xml:space="preserve">
+    <value>总计耗时</value>
+  </data>
+  <data name="UpperLimit" xml:space="preserve">
+    <value>公差上限</value>
+  </data>
+  <data name="PickLine" xml:space="preserve">
+    <value>拾取线</value>
+  </data>
+  <data name="PickPlane" xml:space="preserve">
+    <value>拾取面</value>
+  </data>
+  <data name="PickPoint" xml:space="preserve">
+    <value>拾取点</value>
+  </data>
+  <data name="ReadDatas" xml:space="preserve">
+    <value>读入数据</value>
+  </data>
+  <data name="BoundBox" xml:space="preserve">
+    <value>包围盒</value>
+  </data>
+  <data name="PointerCoord" xml:space="preserve">
+    <value>指针坐标</value>
+  </data>
+  <data name="SetDisPlayOption" xml:space="preserve">
+    <value>显示选项设置</value>
+  </data>
+  <data name="VersionInfoDialog" xml:space="preserve">
+    <value>版本信息窗</value>
+  </data>
+  <data name="SoftWareUpdateInfo" xml:space="preserve">
+    <value>版本更新信息</value>
+  </data>
+  <data name="SoftWareVersion" xml:space="preserve">
+    <value>软件版本</value>
+  </data>
+  <data name="QuitSoftWare" xml:space="preserve">
+    <value>是否退出软件?</value>
+  </data>
+  <data name="Calib" xml:space="preserve">
+    <value>标定</value>
+  </data>
+  <data name="BestFit" xml:space="preserve">
+    <value>最佳拟合</value>
+  </data>
+  <data name="GenPointByCloud" xml:space="preserve">
+    <value>点云极值点</value>
+  </data>
+  <data name="ReportNavigation" xml:space="preserve">
+    <value>报告导航窗</value>
+  </data>
+  <data name="CoordRef" xml:space="preserve">
+    <value>参考坐标系</value>
+  </data>
+  <data name="Algorithm" xml:space="preserve">
+    <value>算法</value>
+  </data>
+  <data name="Business" xml:space="preserve">
+    <value>业务</value>
+  </data>
+  <data name="Camera" xml:space="preserve">
+    <value>相机</value>
+  </data>
+  <data name="Protocol" xml:space="preserve">
+    <value>协议</value>
+  </data>
+  <data name="AreaCamera" xml:space="preserve">
+    <value>面阵</value>
+  </data>
+  <data name="Device" xml:space="preserve">
+    <value>设备</value>
+  </data>
+  <data name="GetIO" xml:space="preserve">
+    <value>获取信号</value>
+  </data>
+  <data name="LaserScan" xml:space="preserve">
+    <value>线激光</value>
+  </data>
+  <data name="LineScan" xml:space="preserve">
+    <value>线扫</value>
+  </data>
+  <data name="SetIO" xml:space="preserve">
+    <value>设置信号</value>
+  </data>
+  <data name="ThreeDimision" xml:space="preserve">
+    <value>3D</value>
+  </data>
+  <data name="TwoDimision" xml:space="preserve">
+    <value>2D</value>
+  </data>
+  <data name="WaitIO" xml:space="preserve">
+    <value>等待信号</value>
+  </data>
+  <data name="Group" xml:space="preserve">
+    <value>分组</value>
+  </data>
+  <data name="Vacuum" xml:space="preserve">
+    <value>真空</value>
+  </data>
+  <data name="VCylinder" xml:space="preserve">
+    <value>仿真气缸</value>
+  </data>
+  <data name="Axis" xml:space="preserve">
+    <value>轴</value>
+  </data>
+  <data name="MultiAxis" xml:space="preserve">
+    <value>多轴</value>
+  </data>
+  <data name="SingleAxis" xml:space="preserve">
+    <value>单轴</value>
+  </data>
+  <data name="LightController" xml:space="preserve">
+    <value>光源控制器</value>
+  </data>
+  <data name="LineLaser" xml:space="preserve">
+    <value>线激光</value>
+  </data>
+  <data name="MotionCard" xml:space="preserve">
+    <value>控制卡</value>
+  </data>
+  <data name="Null" xml:space="preserve">
+    <value>空字符</value>
+  </data>
+  <data name="Printer" xml:space="preserve">
+    <value>打印机</value>
+  </data>
+  <data name="VAxis" xml:space="preserve">
+    <value>仿真轴</value>
+  </data>
+  <data name="VAxis3" xml:space="preserve">
+    <value>仿真轴3</value>
+  </data>
+  <data name="VAxisM" xml:space="preserve">
+    <value>仿真多轴</value>
+  </data>
+  <data name="VBelt" xml:space="preserve">
+    <value>仿真皮带</value>
+  </data>
+  <data name="VButton" xml:space="preserve">
+    <value>仿真按钮</value>
+  </data>
+  <data name="VCamera" xml:space="preserve">
+    <value>仿真相机</value>
+  </data>
+  <data name="VDevice" xml:space="preserve">
+    <value>虚拟设备</value>
+  </data>
+  <data name="VESD" xml:space="preserve">
+    <value>仿真电批</value>
+  </data>
+  <data name="VFeeder" xml:space="preserve">
+    <value>仿真飞达</value>
+  </data>
+  <data name="VInputIO" xml:space="preserve">
+    <value>仿真输入</value>
+  </data>
+  <data name="VIO" xml:space="preserve">
+    <value>仿真IO</value>
+  </data>
+  <data name="VLineLaser" xml:space="preserve">
+    <value>仿真线激光</value>
+  </data>
+  <data name="VOutputIO" xml:space="preserve">
+    <value>仿真输出</value>
+  </data>
+  <data name="VPrinter" xml:space="preserve">
+    <value>仿真打印机</value>
+  </data>
+  <data name="VTricolorlamp" xml:space="preserve">
+    <value>仿真三色灯</value>
+  </data>
+  <data name="VVacuum" xml:space="preserve">
+    <value>仿真真空</value>
+  </data>
+  <data name="Stations" xml:space="preserve">
+    <value>工站</value>
+  </data>
+  <data name="FirstStation" xml:space="preserve">
+    <value>首站</value>
+  </data>
+  <data name="LastStation" xml:space="preserve">
+    <value>尾站</value>
+  </data>
+  <data name="Station" xml:space="preserve">
+    <value>工站</value>
+  </data>
+  <data name="CheckVariable" xml:space="preserve">
+    <value>等待变量</value>
+  </data>
+  <data name="Global" xml:space="preserve">
+    <value>全局</value>
+  </data>
+  <data name="GlobalVariable" xml:space="preserve">
+    <value>全局变量</value>
+  </data>
+  <data name="BeltCarry" xml:space="preserve">
+    <value>皮带搬运</value>
+  </data>
+  <data name="WipPrint" xml:space="preserve">
+    <value>条码打印</value>
+  </data>
+  <data name="ScanBarcode" xml:space="preserve">
+    <value>扫二维码</value>
+  </data>
+  <data name="SetVariable" xml:space="preserve">
+    <value>设置变量</value>
+  </data>
+  <data name="FeedStation" xml:space="preserve">
+    <value>供料站</value>
+  </data>
+  <data name="AxisArm" xml:space="preserve">
+    <value>多轴龙门</value>
+  </data>
+  <data name="Pressurize" xml:space="preserve">
+    <value>保压</value>
+  </data>
+  <data name="Heightfinder" xml:space="preserve">
+    <value>测高</value>
+  </data>
+  <data name="Feeder" xml:space="preserve">
+    <value>飞达</value>
+  </data>
+  <data name="LoadingSilo" xml:space="preserve">
+    <value>上料仓</value>
+  </data>
+  <data name="UnLoadingSilo" xml:space="preserve">
+    <value>下料仓</value>
+  </data>
+  <data name="IOSimulation" xml:space="preserve">
+    <value>IO仿真</value>
+  </data>
+  <data name="Delay" xml:space="preserve">
+    <value>延时</value>
+  </data>
+  <data name="PositionOutput" xml:space="preserve">
+    <value>位置输出</value>
+  </data>
+  <data name="ReCheck" xml:space="preserve">
+    <value>复检</value>
+  </data>
+  <data name="FreeStation" xml:space="preserve">
+    <value>自由工站</value>
+  </data>
+  <data name="GetModbus" xml:space="preserve">
+    <value>获取MBus</value>
+  </data>
+  <data name="SetModbus" xml:space="preserve">
+    <value>设置MBus</value>
+  </data>
+  <data name="WaitModbus" xml:space="preserve">
+    <value>等待MBus</value>
+  </data>
+  <data name="CheckIO" xml:space="preserve">
+    <value>检查信号</value>
+  </data>
+  <data name="Tearing" xml:space="preserve">
+    <value>撕膜</value>
+  </data>
+  <data name="ProLoaded" xml:space="preserve">
+    <value>入料通知</value>
+  </data>
+  <data name="Judge" xml:space="preserve">
+    <value>判断</value>
+  </data>
+  <data name="ProEvent" xml:space="preserve">
+    <value>产品事件</value>
+  </data>
+  <data name="VA" xml:space="preserve">
+    <value>VA</value>
+  </data>
+  <data name="UpdateVar" xml:space="preserve">
+    <value>更新变量</value>
+  </data>
+  <data name="PlcStation" xml:space="preserve">
+    <value>Plc工站</value>
+  </data>
+  <data name="Alarm" xml:space="preserve">
+    <value>报警</value>
+  </data>
+  <data name="EleCylinder" xml:space="preserve">
+    <value>电缸</value>
+  </data>
+  <data name="HomeStation" xml:space="preserve">
+    <value>回零站</value>
+  </data>
+  <data name="NGGroup" xml:space="preserve">
+    <value>NG模组</value>
+  </data>
+  <data name="ExtractNGGroup" xml:space="preserve">
+    <value>提取NG组</value>
+  </data>
+  <data name="Refresh" xml:space="preserve">
+    <value>刷新</value>
+  </data>
+  <data name="StringMerge" xml:space="preserve">
+    <value>字符拼接</value>
+  </data>
+  <data name="Communication" xml:space="preserve">
+    <value>通信</value>
+  </data>
+  <data name="NewPressurize" xml:space="preserve">
+    <value>新保压</value>
+  </data>
+  <data name="CommonAlarm" xml:space="preserve">
+    <value>通用报警</value>
+  </data>
+  <data name="VCommuncation" xml:space="preserve">
+    <value>仿真通信</value>
+  </data>
+  <data name="VIOSimulation" xml:space="preserve">
+    <value>IO仿真设备</value>
+  </data>
+  <data name="VPCylinder" xml:space="preserve">
+    <value>力矩电缸</value>
+  </data>
+  <data name="WebHttp" xml:space="preserve">
+    <value>Web请求</value>
+  </data>
+  <data name="UploadData" xml:space="preserve">
+    <value>数据上传</value>
+  </data>
+  <data name="DataProc" xml:space="preserve">
+    <value>数据处理</value>
+  </data>
+  <data name="GenString" xml:space="preserve">
+    <value>字符创建</value>
+  </data>
+  <data name="ParseString" xml:space="preserve">
+    <value>字符解析</value>
+  </data>
+  <data name="Configure" xml:space="preserve">
+    <value>配置</value>
+  </data>
+  <data name="Flow" xml:space="preserve">
+    <value>流程</value>
+  </data>
+  <data name="HardWare" xml:space="preserve">
+    <value>硬件</value>
+  </data>
+  <data name="Statistics" xml:space="preserve">
+    <value>统计</value>
+  </data>
+  <data name="GenRandomNumber" xml:space="preserve">
+    <value>随机数</value>
+  </data>
+  <data name="JudgeString" xml:space="preserve">
+    <value>字符判断</value>
+  </data>
+  <data name="SFCFlow" xml:space="preserve">
+    <value>SFC流程</value>
+  </data>
+  <data name="SFCFlowTiaoJi" xml:space="preserve">
+    <value>调机料SFC流程</value>
+  </data>
+  <data name="Calculator" xml:space="preserve">
+    <value>计算器</value>
+  </data>
+  <data name="Holo3D" xml:space="preserve">
+    <value>Holo3D</value>
+  </data>
+  <data name="CustomModule" xml:space="preserve">
+    <value>自定义模块</value>
+  </data>
+  <data name="StringParse" xml:space="preserve">
+    <value>字符解析</value>
+  </data>
+  <data name="RefGroup" xml:space="preserve">
+    <value>引用模块</value>
+  </data>
+  <data name="ExtractModule" xml:space="preserve">
+    <value>提取模块</value>
+  </data>
+  <data name="WaitStatus" xml:space="preserve">
+    <value>等待模块</value>
+  </data>
+  <data name="SingelAxisFlyShot" xml:space="preserve">
+    <value>单轴喷码</value>
+  </data>
+  <data name="DataTransfer" xml:space="preserve">
+    <value>数据转移</value>
+  </data>
+  <data name="CameraIO" xml:space="preserve">
+    <value>相机IO</value>
+  </data>
+  <data name="Robot" xml:space="preserve">
+    <value>机器人</value>
+  </data>
+  <data name="VisionCalibration" xml:space="preserve">
+    <value>视觉标定</value>
+  </data>
+  <data name="ForceAxis" xml:space="preserve">
+    <value>力传感轴</value>
+  </data>
+  <data name="VPlc" xml:space="preserve">
+    <value>PLC</value>
+  </data>
+  <data name="ReadPlc" xml:space="preserve">
+    <value>读取PLC</value>
+  </data>
+  <data name="WaitPlc" xml:space="preserve">
+    <value>等待PLC</value>
+  </data>
+  <data name="WritePlc" xml:space="preserve">
+    <value>写入PLC</value>
+  </data>
+  <data name="CompareLook" xml:space="preserve">
+    <value>对比查看</value>
+  </data>
+  <data name="LaserSensor" xml:space="preserve">
+    <value>激光测距</value>
+  </data>
+  <data name="Turntable" xml:space="preserve">
+    <value>转盘</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>登录</value>
+  </data>
+  <data name="AlarmCode" xml:space="preserve">
+    <value>报警代码</value>
+  </data>
+  <data name="AlarmInfo" xml:space="preserve">
+    <value>报警信息</value>
+  </data>
+  <data name="AlarmTime" xml:space="preserve">
+    <value>报警时长</value>
+  </data>
+  <data name="AlarmType" xml:space="preserve">
+    <value>报警类型</value>
+  </data>
+  <data name="AlarmContent" xml:space="preserve">
+    <value>报警内容</value>
+  </data>
+  <data name="AlarmEnglish" xml:space="preserve">
+    <value>报警英文</value>
+  </data>
+  <data name="Broswer" xml:space="preserve">
+    <value>浏览</value>
+  </data>
+  <data name="CropRate" xml:space="preserve">
+    <value>稼动率</value>
+  </data>
+  <data name="Day" xml:space="preserve">
+    <value>天</value>
+  </data>
+  <data name="DepositRate" xml:space="preserve">
+    <value>抛料率</value>
+  </data>
+  <data name="EmptyRun" xml:space="preserve">
+    <value>空跑</value>
+  </data>
+  <data name="EndTime" xml:space="preserve">
+    <value>结束时间</value>
+  </data>
+  <data name="Fixture" xml:space="preserve">
+    <value>治具号</value>
+  </data>
+  <data name="Free" xml:space="preserve">
+    <value>空闲</value>
+  </data>
+  <data name="GlobalVar" xml:space="preserve">
+    <value>全局变量</value>
+  </data>
+  <data name="HomeZero" xml:space="preserve">
+    <value>回零</value>
+  </data>
+  <data name="HomeDone" xml:space="preserve">
+    <value>回零完成</value>
+  </data>
+  <data name="InboundTime" xml:space="preserve">
+    <value>入站时间</value>
+  </data>
+  <data name="Index" xml:space="preserve">
+    <value>序号</value>
+  </data>
+  <data name="Log" xml:space="preserve">
+    <value>日志</value>
+  </data>
+  <data name="LoginName" xml:space="preserve">
+    <value>登录名</value>
+  </data>
+  <data name="Material" xml:space="preserve">
+    <value>物料</value>
+  </data>
+  <data name="Model" xml:space="preserve">
+    <value>模式</value>
+  </data>
+  <data name="Month" xml:space="preserve">
+    <value>月</value>
+  </data>
+  <data name="NGAmount" xml:space="preserve">
+    <value>NG数</value>
+  </data>
+  <data name="NGRate" xml:space="preserve">
+    <value>NG率</value>
+  </data>
+  <data name="OKAmount" xml:space="preserve">
+    <value>OK数</value>
+  </data>
+  <data name="OKRate" xml:space="preserve">
+    <value>OK率</value>
+  </data>
+  <data name="Operate" xml:space="preserve">
+    <value>操作</value>
+  </data>
+  <data name="OutBoundTime" xml:space="preserve">
+    <value>出站时间</value>
+  </data>
+  <data name="PassWord" xml:space="preserve">
+    <value>密码</value>
+  </data>
+  <data name="ProductInfo" xml:space="preserve">
+    <value>产品信息</value>
+  </data>
+  <data name="ProductAmount" xml:space="preserve">
+    <value>产品数</value>
+  </data>
+  <data name="Query" xml:space="preserve">
+    <value>查询</value>
+  </data>
+  <data name="Reason" xml:space="preserve">
+    <value>原因</value>
+  </data>
+  <data name="Recovery" xml:space="preserve">
+    <value>恢复</value>
+  </data>
+  <data name="Reset" xml:space="preserve">
+    <value>复位</value>
+  </data>
+  <data name="ResetCapacity" xml:space="preserve">
+    <value>产能清零</value>
+  </data>
+  <data name="Result" xml:space="preserve">
+    <value>结果</value>
+  </data>
+  <data name="RunningTime" xml:space="preserve">
+    <value>运行时间</value>
+  </data>
+  <data name="Scram" xml:space="preserve">
+    <value>急停</value>
+  </data>
+  <data name="Set" xml:space="preserve">
+    <value>设置</value>
+  </data>
+  <data name="SNCode" xml:space="preserve">
+    <value>SN编码</value>
+  </data>
+  <data name="Start" xml:space="preserve">
+    <value>启动</value>
+  </data>
+  <data name="StartTime" xml:space="preserve">
+    <value>开始时间</value>
+  </data>
+  <data name="Stop" xml:space="preserve">
+    <value>停止</value>
+  </data>
+  <data name="SysOperateInfo" xml:space="preserve">
+    <value>系统操作信息</value>
+  </data>
+  <data name="TechnologicalProcess" xml:space="preserve">
+    <value>工艺流程</value>
+  </data>
+  <data name="Type" xml:space="preserve">
+    <value>类型</value>
+  </data>
+  <data name="Use" xml:space="preserve">
+    <value>使用</value>
+  </data>
+  <data name="Week" xml:space="preserve">
+    <value>周</value>
+  </data>
+  <data name="Yield" xml:space="preserve">
+    <value>良率</value>
+  </data>
+  <data name="MaxPerPage" xml:space="preserve">
+    <value>每页数量</value>
+  </data>
+  <data name="Alarming" xml:space="preserve">
+    <value>报警中</value>
+  </data>
+  <data name="Running" xml:space="preserve">
+    <value>运行中</value>
+  </data>
+  <data name="DeleteProject" xml:space="preserve">
+    <value>移除工程</value>
+  </data>
+  <data name="ExportProject" xml:space="preserve">
+    <value>导出工程</value>
+  </data>
+  <data name="ExportRecipe" xml:space="preserve">
+    <value>导出配方</value>
+  </data>
+  <data name="ImportRecipe" xml:space="preserve">
+    <value>导入配方</value>
+  </data>
+  <data name="NewProject" xml:space="preserve">
+    <value>新增工程</value>
+  </data>
+  <data name="NewRecipe" xml:space="preserve">
+    <value>新增配方</value>
+  </data>
+  <data name="End" xml:space="preserve">
+    <value>结束</value>
+  </data>
+  <data name="ExportData" xml:space="preserve">
+    <value>导出数据</value>
+  </data>
+  <data name="AlarmDetailInfo" xml:space="preserve">
+    <value>报警详细信息</value>
+  </data>
+  <data name="FinalResult" xml:space="preserve">
+    <value>最终结果</value>
+  </data>
+  <data name="HandledUser" xml:space="preserve">
+    <value>处理人</value>
+  </data>
+  <data name="HandlingMethod" xml:space="preserve">
+    <value>处理方式</value>
+  </data>
+  <data name="OperateTime" xml:space="preserve">
+    <value>操作时间</value>
+  </data>
+  <data name="PictureStoragePath" xml:space="preserve">
+    <value>图片存储路径</value>
+  </data>
+  <data name="System Operation Information" xml:space="preserve">
+    <value>系统操作信息</value>
+  </data>
+  <data name="UserName" xml:space="preserve">
+    <value>用户名</value>
+  </data>
+  <data name="PleaseEnterConditions" xml:space="preserve">
+    <value>请输入条件</value>
+  </data>
+  <data name="FTPUpload" xml:space="preserve">
+    <value>FTP上传</value>
+  </data>
+  <data name="CapacityStatistics" xml:space="preserve">
+    <value>产能明细统计</value>
+  </data>
+  <data name="PleaseEnterSNCode" xml:space="preserve">
+    <value>请输入SN编码</value>
+  </data>
+  <data name="Action" xml:space="preserve">
+    <value>动作</value>
+  </data>
+  <data name="Actual_CT" xml:space="preserve">
+    <value>Actual_CT</value>
+  </data>
+  <data name="Gap" xml:space="preserve">
+    <value>Gap</value>
+  </data>
+  <data name="ProductStatistics" xml:space="preserve">
+    <value>产品统计</value>
+  </data>
+  <data name="ReportType" xml:space="preserve">
+    <value>报表类型</value>
+  </data>
+  <data name="R_AccelerationTime_Actual" xml:space="preserve">
+    <value>R_加速时间_Actual</value>
+  </data>
+  <data name="R_Acceleration_Target" xml:space="preserve">
+    <value>R_加速时间_Target</value>
+  </data>
+  <data name="R_Speed_Actual" xml:space="preserve">
+    <value>R_速度_Actual</value>
+  </data>
+  <data name="R_Speed_Target" xml:space="preserve">
+    <value>R_速度_Target</value>
+  </data>
+  <data name="ScanCodeStatistics" xml:space="preserve">
+    <value>扫码统计</value>
+  </data>
+  <data name="Target_CT" xml:space="preserve">
+    <value>Target_CT</value>
+  </data>
+  <data name="U_AccelerationTime_Actual" xml:space="preserve">
+    <value>U_加速时间_Actual</value>
+  </data>
+  <data name="U_Acceleration_Target" xml:space="preserve">
+    <value>U_加速时间_Target</value>
+  </data>
+  <data name="U_Speed_Actual" xml:space="preserve">
+    <value>U_速度_Actual</value>
+  </data>
+  <data name="U_Speed_Target" xml:space="preserve">
+    <value>U_速度_Target</value>
+  </data>
+  <data name="X_AccelerationTime_Actual" xml:space="preserve">
+    <value>X_加速时间_Actual</value>
+  </data>
+  <data name="X_Acceleration_Target" xml:space="preserve">
+    <value>X_加速时间_Target</value>
+  </data>
+  <data name="X_Speed_Actual" xml:space="preserve">
+    <value>X_速度_Actual</value>
+  </data>
+  <data name="X_Speed_Target" xml:space="preserve">
+    <value>X_速度_Target</value>
+  </data>
+  <data name="Y_AccelerationTime_Actual" xml:space="preserve">
+    <value>Y_加速时间_Actual</value>
+  </data>
+  <data name="Y_Acceleration_Target" xml:space="preserve">
+    <value>Y_加速时间_Target</value>
+  </data>
+  <data name="Y_Speed_Actual" xml:space="preserve">
+    <value>Y_速度_Actual</value>
+  </data>
+  <data name="Y_Speed_Target" xml:space="preserve">
+    <value>Y_速度_Target</value>
+  </data>
+  <data name="Z_AccelerationTime_Actual" xml:space="preserve">
+    <value>Z_加速时间_Actual</value>
+  </data>
+  <data name="Z_Acceleration_Target" xml:space="preserve">
+    <value>Z_加速时间_Target</value>
+  </data>
+  <data name="Z_Speed_Actual" xml:space="preserve">
+    <value>Z_速度_Actual</value>
+  </data>
+  <data name="Z_Speed_Target" xml:space="preserve">
+    <value>Z_速度_Target</value>
+  </data>
+  <data name="CTStatistics" xml:space="preserve">
+    <value>CT统计</value>
+  </data>
+  <data name="AlarmConfigure" xml:space="preserve">
+    <value>报警配置</value>
+  </data>
+  <data name="AlarmMonitoring" xml:space="preserve">
+    <value>报警监控</value>
+  </data>
+  <data name="AutoRun" xml:space="preserve">
+    <value>自动运行</value>
+  </data>
+  <data name="Button" xml:space="preserve">
+    <value>按钮</value>
+  </data>
+  <data name="ButtonControl" xml:space="preserve">
+    <value>按钮控制</value>
+  </data>
+  <data name="Buzzer" xml:space="preserve">
+    <value>蜂鸣器</value>
+  </data>
+  <data name="Class" xml:space="preserve">
+    <value>班别</value>
+  </data>
+  <data name="Cockpit" xml:space="preserve">
+    <value>驾驶舱</value>
+  </data>
+  <data name="VisionInformation" xml:space="preserve">
+    <value>Vision控制参数</value>
+  </data>
+  <data name="CockpitIP" xml:space="preserve">
+    <value>驾驶舱IP</value>
+  </data>
+  <data name="CockpitPort" xml:space="preserve">
+    <value>驾驶舱端口</value>
+  </data>
+  <data name="CommunicationStatus" xml:space="preserve">
+    <value>通信状态</value>
+  </data>
+  <data name="CropRateSet" xml:space="preserve">
+    <value>稼动率设置</value>
+  </data>
+  <data name="CT" xml:space="preserve">
+    <value>单片耗时</value>
+  </data>
+  <data name="DataBase" xml:space="preserve">
+    <value>数据库</value>
+  </data>
+  <data name="DefaultPath" xml:space="preserve">
+    <value>默认路径</value>
+  </data>
+  <data name="DeviceFirm" xml:space="preserve">
+    <value>设备厂商</value>
+  </data>
+  <data name="DeviceInfo" xml:space="preserve">
+    <value>设备信息</value>
+  </data>
+  <data name="DeviceName" xml:space="preserve">
+    <value>设备名称</value>
+  </data>
+  <data name="DeviceSN" xml:space="preserve">
+    <value>设备SN</value>
+  </data>
+  <data name="DeviceType" xml:space="preserve">
+    <value>设备类型</value>
+  </data>
+  <data name="DumpPath" xml:space="preserve">
+    <value>转储路径</value>
+  </data>
+  <data name="EmergencyStop" xml:space="preserve">
+    <value>急停</value>
+  </data>
+  <data name="EmptyRunMode" xml:space="preserve">
+    <value>空跑模式</value>
+  </data>
+  <data name="Enable" xml:space="preserve">
+    <value>是否启用</value>
+  </data>
+  <data name="EnableBuzzer" xml:space="preserve">
+    <value>启动蜂鸣器</value>
+  </data>
+  <data name="EnableListening" xml:space="preserve">
+    <value>启动监听</value>
+  </data>
+  <data name="FileType" xml:space="preserve">
+    <value>文件类型</value>
+  </data>
+  <data name="FirstClass" xml:space="preserve">
+    <value>首班</value>
+  </data>
+  <data name="Floor" xml:space="preserve">
+    <value>楼层</value>
+  </data>
+  <data name="FunctionManagement" xml:space="preserve">
+    <value>功能管理</value>
+  </data>
+  <data name="GreenLamp" xml:space="preserve">
+    <value>绿灯</value>
+  </data>
+  <data name="Image" xml:space="preserve">
+    <value>图像</value>
+  </data>
+  <data name="Import" xml:space="preserve">
+    <value>导入</value>
+  </data>
+  <data name="Ingore" xml:space="preserve">
+    <value>忽略</value>
+  </data>
+  <data name="IPAddress" xml:space="preserve">
+    <value>IP地址</value>
+  </data>
+  <data name="LightCurtain" xml:space="preserve">
+    <value>光幕</value>
+  </data>
+  <data name="Liner" xml:space="preserve">
+    <value>线体</value>
+  </data>
+  <data name="MacAddress" xml:space="preserve">
+    <value>Mac地址</value>
+  </data>
+  <data name="Machine" xml:space="preserve">
+    <value>机种</value>
+  </data>
+  <data name="OffLineMode" xml:space="preserve">
+    <value>离线模式</value>
+  </data>
+  <data name="OnLineMode" xml:space="preserve">
+    <value>在线模式</value>
+  </data>
+  <data name="OPenPrompt" xml:space="preserve">
+    <value>开启提示</value>
+  </data>
+  <data name="OperationType" xml:space="preserve">
+    <value>操作类型</value>
+  </data>
+  <data name="PageControl" xml:space="preserve">
+    <value>页面控制</value>
+  </data>
+  <data name="PauseLamp" xml:space="preserve">
+    <value>暂停灯</value>
+  </data>
+  <data name="PlantArea" xml:space="preserve">
+    <value>厂区</value>
+  </data>
+  <data name="PLCAddress" xml:space="preserve">
+    <value>PLC地址</value>
+  </data>
+  <data name="PLCConfigure" xml:space="preserve">
+    <value>PLC配置</value>
+  </data>
+  <data name="PLCServer" xml:space="preserve">
+    <value>PLC服务器</value>
+  </data>
+  <data name="PLCStatus" xml:space="preserve">
+    <value>PLC状态</value>
+  </data>
+  <data name="Please Enter AlarmCode" xml:space="preserve">
+    <value>请输入报警代码</value>
+  </data>
+  <data name="PromptContent" xml:space="preserve">
+    <value>提示内容</value>
+  </data>
+  <data name="Recoverey" xml:space="preserve">
+    <value>恢复</value>
+  </data>
+  <data name="RecoveryLamp" xml:space="preserve">
+    <value>恢复灯</value>
+  </data>
+  <data name="RedLamp" xml:space="preserve">
+    <value>红灯</value>
+  </data>
+  <data name="RefreshFrequency" xml:space="preserve">
+    <value>刷新频率</value>
+  </data>
+  <data name="Region" xml:space="preserve">
+    <value>区域</value>
+  </data>
+  <data name="Retry" xml:space="preserve">
+    <value>重试</value>
+  </data>
+  <data name="RobotAction" xml:space="preserve">
+    <value>机器人动作</value>
+  </data>
+  <data name="RobotInfo" xml:space="preserve">
+    <value>机器人信息</value>
+  </data>
+  <data name="RobotStatus" xml:space="preserve">
+    <value>机器人状态</value>
+  </data>
+  <data name="RoutineMonitoring" xml:space="preserve">
+    <value>常规监控</value>
+  </data>
+  <data name="RunMode" xml:space="preserve">
+    <value>运行模式</value>
+  </data>
+  <data name="SaveDays" xml:space="preserve">
+    <value>保存天数</value>
+  </data>
+  <data name="Second" xml:space="preserve">
+    <value>秒</value>
+  </data>
+  <data name="Server" xml:space="preserve">
+    <value>服务器</value>
+  </data>
+  <data name="SignalLamp" xml:space="preserve">
+    <value>信号灯</value>
+  </data>
+  <data name="SingleCT" xml:space="preserve">
+    <value>CT</value>
+  </data>
+  <data name="SoftConfigure" xml:space="preserve">
+    <value>软件配置</value>
+  </data>
+  <data name="SoftInformation" xml:space="preserve">
+    <value>软件信息</value>
+  </data>
+  <data name="StartLamp" xml:space="preserve">
+    <value>启动灯</value>
+  </data>
+  <data name="StationID" xml:space="preserve">
+    <value>工站ID</value>
+  </data>
+  <data name="StationName" xml:space="preserve">
+    <value>工站名称</value>
+  </data>
+  <data name="StationType" xml:space="preserve">
+    <value>工站类型</value>
+  </data>
+  <data name="StopLamp" xml:space="preserve">
+    <value>停止灯</value>
+  </data>
+  <data name="SystemOperationTips" xml:space="preserve">
+    <value>系统操作提示</value>
+  </data>
+  <data name="ThrowingSetting" xml:space="preserve">
+    <value>抛料设置</value>
+  </data>
+  <data name="ThrowingTime" xml:space="preserve">
+    <value>抛料耗时</value>
+  </data>
+  <data name="Unit" xml:space="preserve">
+    <value>单元</value>
+  </data>
+  <data name="UseID" xml:space="preserve">
+    <value>用户ID</value>
+  </data>
+  <data name="UserConfigure" xml:space="preserve">
+    <value>用户配置</value>
+  </data>
+  <data name="UserList" xml:space="preserve">
+    <value>用户列表</value>
+  </data>
+  <data name="VisionIP" xml:space="preserve">
+    <value>Vision IP</value>
+  </data>
+  <data name="VisionPort" xml:space="preserve">
+    <value>Vision端口</value>
+  </data>
+  <data name="YellowLamp" xml:space="preserve">
+    <value>黄灯</value>
+  </data>
+  <data name="SystemOperationPromptInformation" xml:space="preserve">
+    <value>系统操作提示信息</value>
+  </data>
+  <data name="AxisDebug" xml:space="preserve">
+    <value>轴调试</value>
+  </data>
+  <data name="CacheData" xml:space="preserve">
+    <value>缓存数据</value>
+  </data>
+  <data name="FunctionalModule" xml:space="preserve">
+    <value>功能模块</value>
+  </data>
+  <data name="LusterSmartCockpit" xml:space="preserve">
+    <value>智能驾驶舱</value>
+  </data>
+  <data name="ParameterConfigure" xml:space="preserve">
+    <value>参数配置</value>
+  </data>
+  <data name="StationOverview" xml:space="preserve">
+    <value>工站总览</value>
+  </data>
+  <data name="AbsoluteMotion" xml:space="preserve">
+    <value>绝对运动</value>
+  </data>
+  <data name="AccessoriesAmount" xml:space="preserve">
+    <value>辅料数量</value>
+  </data>
+  <data name="AccessoriesBatch" xml:space="preserve">
+    <value>辅料批号</value>
+  </data>
+  <data name="AccessoriesName" xml:space="preserve">
+    <value>辅料名称</value>
+  </data>
+  <data name="AnnotationGeneration" xml:space="preserve">
+    <value>注释生成</value>
+  </data>
+  <data name="ChartList" xml:space="preserve">
+    <value>曲线列表</value>
+  </data>
+  <data name="ClearMistake" xml:space="preserve">
+    <value>清错</value>
+  </data>
+  <data name="CreateTime" xml:space="preserve">
+    <value>创建时间</value>
+  </data>
+  <data name="CurrentValue" xml:space="preserve">
+    <value>当前值</value>
+  </data>
+  <data name="DataMark" xml:space="preserve">
+    <value>数据标识</value>
+  </data>
+  <data name="DataType" xml:space="preserve">
+    <value>数据类型</value>
+  </data>
+  <data name="DefaultValue" xml:space="preserve">
+    <value>默认值</value>
+  </data>
+  <data name="DeskName" xml:space="preserve">
+    <value>工位</value>
+  </data>
+  <data name="EndModule" xml:space="preserve">
+    <value>结束模块</value>
+  </data>
+  <data name="Height" xml:space="preserve">
+    <value>高度</value>
+  </data>
+  <data name="Ignore" xml:space="preserve">
+    <value>忽略</value>
+  </data>
+  <data name="IsVisible" xml:space="preserve">
+    <value>是否显示</value>
+  </data>
+  <data name="JOG" xml:space="preserve">
+    <value>JOG</value>
+  </data>
+  <data name="MotionSpeed" xml:space="preserve">
+    <value>运动速度</value>
+  </data>
+  <data name="MoveDirection" xml:space="preserve">
+    <value>运动方向</value>
+  </data>
+  <data name="PartName" xml:space="preserve">
+    <value>卷料批次名称</value>
+  </data>
+  <data name="category_key" xml:space="preserve">
+    <value>机种</value>
+  </data>
+  <data name="MovePosition" xml:space="preserve">
+    <value>移动位置</value>
+  </data>
+  <data name="OperateType" xml:space="preserve">
+    <value>操纵类型</value>
+  </data>
+  <data name="OperatingTips" xml:space="preserve">
+    <value>操作提示</value>
+  </data>
+  <data name="OriginalPassword" xml:space="preserve">
+    <value>原始密码</value>
+  </data>
+  <data name="Parameter" xml:space="preserve">
+    <value>参数</value>
+  </data>
+  <data name="PLCClearMistake" xml:space="preserve">
+    <value>PLC清错</value>
+  </data>
+  <data name="ProductNG" xml:space="preserve">
+    <value>产品NG</value>
+  </data>
+  <data name="ProgramStop" xml:space="preserve">
+    <value>程序停止</value>
+  </data>
+  <data name="RealTimeLocation" xml:space="preserve">
+    <value>实时位置</value>
+  </data>
+  <data name="Recipe" xml:space="preserve">
+    <value>配方</value>
+  </data>
+  <data name="RelativeMotion" xml:space="preserve">
+    <value>相对运动</value>
+  </data>
+  <data name="RepeatPassword" xml:space="preserve">
+    <value>重复密码</value>
+  </data>
+  <data name="SinleAxis" xml:space="preserve">
+    <value>单轴</value>
+  </data>
+  <data name="SpeedFactor" xml:space="preserve">
+    <value>速度系数</value>
+  </data>
+  <data name="StartModule" xml:space="preserve">
+    <value>开始模块</value>
+  </data>
+  <data name="Teach" xml:space="preserve">
+    <value>示教</value>
+  </data>
+  <data name="TeachLocation" xml:space="preserve">
+    <value>示教位置</value>
+  </data>
+  <data name="Width" xml:space="preserve">
+    <value>宽度</value>
+  </data>
+  <data name="EnterStationName" xml:space="preserve">
+    <value>请输入站点名称</value>
+  </data>
+  <data name="FlingMaterialStatistics" xml:space="preserve">
+    <value>抛料统计</value>
+  </data>
+  <data name="Absolutely" xml:space="preserve">
+    <value>绝对</value>
+  </data>
+  <data name="ActualSpeed" xml:space="preserve">
+    <value>真实速度=系数*速度</value>
+  </data>
+  <data name="AddClass" xml:space="preserve">
+    <value>添加班别</value>
+  </data>
+  <data name="AddPlcAlarm" xml:space="preserve">
+    <value>添加Plc报警</value>
+  </data>
+  <data name="AddProduct" xml:space="preserve">
+    <value>添加产品</value>
+  </data>
+  <data name="AlarmAddress" xml:space="preserve">
+    <value>报警地址</value>
+  </data>
+  <data name="AxisPriority" xml:space="preserve">
+    <value>轴优先级</value>
+  </data>
+  <data name="ChooseTips" xml:space="preserve">
+    <value>选择提示</value>
+  </data>
+  <data name="EditClass" xml:space="preserve">
+    <value>编辑班别</value>
+  </data>
+  <data name="EditPlcAlarm" xml:space="preserve">
+    <value>编辑Plc报警</value>
+  </data>
+  <data name="Exit" xml:space="preserve">
+    <value>退出</value>
+  </data>
+  <data name="KeyWordWithSymbol" xml:space="preserve">
+    <value>关键字 ：</value>
+  </data>
+  <data name="Module/Name" xml:space="preserve">
+    <value>模块/名称</value>
+  </data>
+  <data name="ModuleSet" xml:space="preserve">
+    <value>模块设置</value>
+  </data>
+  <data name="Motion" xml:space="preserve">
+    <value>运动</value>
+  </data>
+  <data name="MotionPriorityOfEachAxisInMultipleScenes" xml:space="preserve">
+    <value>多场景下，每个轴的运动优先级</value>
+  </data>
+  <data name="MotionSpeed(mm/s)" xml:space="preserve">
+    <value>运动速度(mm/s)</value>
+  </data>
+  <data name="MotionSpeedWithUnit" xml:space="preserve">
+    <value>运动速度，单位mm</value>
+  </data>
+  <data name="MovePostion(mm)" xml:space="preserve">
+    <value>移动位置(mm)</value>
+  </data>
+  <data name="Priority" xml:space="preserve">
+    <value>优先级</value>
+  </data>
+  <data name="Relative" xml:space="preserve">
+    <value>相对</value>
+  </data>
+  <data name="ReplaceMaterials" xml:space="preserve">
+    <value>更换物料</value>
+  </data>
+  <data name="RunAllF5" xml:space="preserve">
+    <value>运行全部 F5</value>
+  </data>
+  <data name="SelectedAxis" xml:space="preserve">
+    <value>已选轴</value>
+  </data>
+  <data name="SetGlobalVar" xml:space="preserve">
+    <value>设置全局变量</value>
+  </data>
+  <data name="SetLightCurtain" xml:space="preserve">
+    <value>设置光幕</value>
+  </data>
+  <data name="SetRobotStatus" xml:space="preserve">
+    <value>设置机器人状态</value>
+  </data>
+  <data name="SetStation" xml:space="preserve">
+    <value>设置工站</value>
+  </data>
+  <data name="SetWorkFlow" xml:space="preserve">
+    <value>设置工作流</value>
+  </data>
+  <data name="StopF8" xml:space="preserve">
+    <value>暂停 F8</value>
+  </data>
+  <data name="TargetUnitOfMotion" xml:space="preserve">
+    <value>运动的目标单位，单位mm</value>
+  </data>
+  <data name="TargetWithUnit" xml:space="preserve">
+    <value>目标：mm</value>
+  </data>
+  <data name="EndProduct" xml:space="preserve">
+    <value>成品</value>
+  </data>
+  <data name="WorkFlow" xml:space="preserve">
+    <value>工艺流程</value>
+  </data>
+  <data name="ReportForm" xml:space="preserve">
+    <value>报表</value>
+  </data>
+  <data name="CapacityReset" xml:space="preserve">
+    <value>产能清零</value>
+  </data>
+  <data name="AxisPosMove" xml:space="preserve">
+    <value>点位运动</value>
+  </data>
+  <data name="Acc" xml:space="preserve">
+    <value>加速度</value>
+  </data>
+  <data name="Dec" xml:space="preserve">
+    <value>减速度</value>
+  </data>
+  <data name="PosLocation" xml:space="preserve">
+    <value>点位</value>
+  </data>
+  <data name="PressureSensor" xml:space="preserve">
+    <value>压力传感器</value>
+  </data>
+  <data name="PDCAFlow" xml:space="preserve">
+    <value>PDCA业务</value>
+  </data>
+  <data name="Default" xml:space="preserve">
+    <value>默认</value>
+  </data>
+  <data name="Done" xml:space="preserve">
+    <value>完成</value>
+  </data>
+  <data name="Wrong" xml:space="preserve">
+    <value>错误</value>
+  </data>
+  <data name="Soft" xml:space="preserve">
+    <value>软件</value>
+  </data>
+  <data name="InitComplete" xml:space="preserve">
+    <value>初始化完成</value>
+  </data>
+  <data name="Manual" xml:space="preserve">
+    <value>手动</value>
+  </data>
+  <data name="Paused" xml:space="preserve">
+    <value>暂停中</value>
+  </data>
+  <data name="To Be Initialized" xml:space="preserve">
+    <value>待初始化</value>
+  </data>
+  <data name="JSONParse" xml:space="preserve">
+    <value>JSON解析</value>
+  </data>
+  <data name="Branch Does Not Exist" xml:space="preserve">
+    <value>分支不存在条件！</value>
+  </data>
+  <data name="SaveFile" xml:space="preserve">
+    <value>保存文件</value>
+  </data>
+  <data name="AlreadyExists" xml:space="preserve">
+    <value>已存在</value>
+  </data>
+  <data name="ActiveRecipeNotFound" xml:space="preserve">
+    <value>未找到激活的配方</value>
+  </data>
+  <data name="AddUser" xml:space="preserve">
+    <value>添加用户</value>
+  </data>
+  <data name="CannotDeleteProjWhithRecipeActive" xml:space="preserve">
+    <value>该工程下配方已激活，无法删除该工程</value>
+  </data>
+  <data name="CannotPermissionToModifyFunction" xml:space="preserve">
+    <value>系统自带用户，无法修改功能权限配置</value>
+  </data>
+  <data name="ConfirmDelete" xml:space="preserve">
+    <value>确认删除</value>
+  </data>
+  <data name="ConfirmDeleteUser" xml:space="preserve">
+    <value>确认删除用户</value>
+  </data>
+  <data name="EditUser" xml:space="preserve">
+    <value>编辑用户</value>
+  </data>
+  <data name="IsDeleteCurrentProject" xml:space="preserve">
+    <value>是否确认移除当前工程</value>
+  </data>
+  <data name="NoMatchDeviceFound" xml:space="preserve">
+    <value>未找到对应匹配的设备</value>
+  </data>
+  <data name="NoRecipeInProject" xml:space="preserve">
+    <value>工程下没有配方</value>
+  </data>
+  <data name="NotFoundActiveRecipePath" xml:space="preserve">
+    <value>未找到激活的配方的路径</value>
+  </data>
+  <data name="OutPutItem" xml:space="preserve">
+    <value>输出项</value>
+  </data>
+  <data name="OutPutItemUnSave" xml:space="preserve">
+    <value>输出项设置未保存，请先点击保存</value>
+  </data>
+  <data name="PassWordError" xml:space="preserve">
+    <value>密码错误</value>
+  </data>
+  <data name="ProjectFileError" xml:space="preserve">
+    <value>工程文件错误，无法添加</value>
+  </data>
+  <data name="RecipeFormatWrong" xml:space="preserve">
+    <value>配方格式不正确，请检查</value>
+  </data>
+  <data name="RestartTakesEffect" xml:space="preserve">
+    <value>一旦删除需要重启软件生效</value>
+  </data>
+  <data name="SoftWareStopByClick" xml:space="preserve">
+    <value>按钮点击触发软件停止</value>
+  </data>
+  <data name="Source" xml:space="preserve">
+    <value>来源</value>
+  </data>
+  <data name="UnknownPLCStatus" xml:space="preserve">
+    <value>未知PLC状态</value>
+  </data>
+  <data name="AssemblyNotFound" xml:space="preserve">
+    <value>未找到程序集</value>
+  </data>
+  <data name="AssemblyNotFound1" xml:space="preserve">
+    <value>未找到程序集</value>
+  </data>
+  <data name="DuplicatePwdCannotBeEmpty" xml:space="preserve">
+    <value>重复密码不能为空</value>
+  </data>
+  <data name="MaterialNotObtained" xml:space="preserve">
+    <value>未获取到辅料名称</value>
+  </data>
+  <data name="OriginalPassWordWrong" xml:space="preserve">
+    <value>原密码输入错误</value>
+  </data>
+  <data name="PwdCannotBeEmpty" xml:space="preserve">
+    <value>密码不能为空</value>
+  </data>
+  <data name="PwdInconsistent" xml:space="preserve">
+    <value>密码输入不一致，请重新输入</value>
+  </data>
+  <data name="ConfirmDeleteModule" xml:space="preserve">
+    <value>确认删除模块</value>
+  </data>
+  <data name="ConfirmDeleteVar" xml:space="preserve">
+    <value>确认删除变量</value>
+  </data>
+  <data name="ConfirmThatTheModule" xml:space="preserve">
+    <value>确认将模块</value>
+  </data>
+  <data name="CopySelectedModule" xml:space="preserve">
+    <value>复制需要选中模块[根节点不支持复制]</value>
+  </data>
+  <data name="DeleteCustomModule" xml:space="preserve">
+    <value>确认删除自定义模块</value>
+  </data>
+  <data name="MoveTo" xml:space="preserve">
+    <value>移动到</value>
+  </data>
+  <data name="Reference(DoubleClick)" xml:space="preserve">
+    <value>引用(双击)</value>
+  </data>
+  <data name="TypeNotSupported" xml:space="preserve">
+    <value>类型不支持</value>
+  </data>
+  <data name="UnKnownStation" xml:space="preserve">
+    <value>未知工站</value>
+  </data>
+  <data name="Wait" xml:space="preserve">
+    <value>等待</value>
+  </data>
+  <data name="DeviceMonitor" xml:space="preserve">
+    <value>设备监控</value>
+  </data>
+  <data name="DeviceState" xml:space="preserve">
+    <value>设备状态</value>
+  </data>
+  <data name="State" xml:space="preserve">
+    <value>状态</value>
+  </data>
+  <data name="ProgramMustStop" xml:space="preserve">
+    <value>The Program Must be Stopped to Close</value>
+  </data>
+  <data name="SaveTask" xml:space="preserve">
+    <value>任务要保存吗</value>
+  </data>
+  <data name="ExportImage" xml:space="preserve">
+    <value>导出图片</value>
+  </data>
+  <data name="Return" xml:space="preserve">
+    <value>终止</value>
+  </data>
+  <data name="FX_OrderQuery" xml:space="preserve">
+    <value>工单查询</value>
+  </data>
+  <data name="ResetVariable" xml:space="preserve">
+    <value>复位变量</value>
+  </data>
+  <data name="PDCAWIP" xml:space="preserve">
+    <value>PDCAWIP</value>
+  </data>
+  <data name="SpaceFactor" xml:space="preserve">
+    <value>间距</value>
+  </data>
+  <data name="FX_BindCarrier" xml:space="preserve">
+    <value>治具绑定</value>
+  </data>
+  <data name="FX_RouteQuery" xml:space="preserve">
+    <value>路由查询</value>
+  </data>
+  <data name="FX_UnBindCarrier" xml:space="preserve">
+    <value>治具解绑</value>
+  </data>
+  <data name="FX_UploadResult" xml:space="preserve">
+    <value>NG结果上传</value>
+  </data>
+  <data name="ModuleError" xml:space="preserve">
+    <value>报警信息</value>
+  </data>
+  <data name="RunModeIsAlreadyExist" xml:space="preserve">
+    <value>运动模式已存在</value>
+  </data>
+  <data name="NG" xml:space="preserve">
+    <value>NG模块</value>
+  </data>
+  <data name="WorkOrder" xml:space="preserve">
+    <value>工单</value>
+  </data>
+  <data name="Order" xml:space="preserve">
+    <value>工单</value>
+  </data>
+  <data name="TestStation" xml:space="preserve">
+    <value>测试工站</value>
+  </data>
+  <data name="CalibByPosMove" xml:space="preserve">
+    <value>轴系相机标定</value>
+  </data>
+  <data name="AnalogConvert" xml:space="preserve">
+    <value>模拟量转换</value>
+  </data>
+  <data name="MachineConfigure" xml:space="preserve">
+    <value>机台配置</value>
+  </data>
+  <data name="LogicCalculator" xml:space="preserve">
+    <value>逻辑判断</value>
+  </data>
+  <data name="TimeLogEvent" xml:space="preserve">
+    <value>时间记录事件</value>
+  </data>
+  <data name="BackUp" xml:space="preserve">
+    <value>备份</value>
+  </data>
+  <data name="SearchModule" xml:space="preserve">
+    <value>搜索模块</value>
+  </data>
+  <data name="LightFlashing" xml:space="preserve">
+    <value>灯报警</value>
+  </data>
+  <data name="StartRepair" xml:space="preserve">
+    <value>开始维修</value>
+  </data>
+  <data name="ManualGetBarcode" xml:space="preserve">
+    <value>手动获取条码</value>
+  </data>
+  <data name="ReadDataFile" xml:space="preserve">
+    <value>数据文件</value>
+  </data>
+  <data name="Parallel" xml:space="preserve">
+    <value>并行</value>
+  </data>
+  <data name="InsightType" xml:space="preserve">
+    <value>Insight名称</value>
+  </data>
+  <data name="RobotVersion" xml:space="preserve">
+    <value>机器人版本</value>
+  </data>
+  <data name="VisionVersion" xml:space="preserve">
+    <value>视觉版本</value>
+  </data>
+  <data name="BaliVersion" xml:space="preserve">
+    <value>Bali版本</value>
+  </data>
+  <data name="LaserVersion" xml:space="preserve">
+    <value>激光版本</value>
+  </data>
+  <data name="LimitsVersion" xml:space="preserve">
+    <value>AELimits版本</value>
+  </data>
+  <data name="SoftVersion" xml:space="preserve">
+    <value>软件版本</value>
+  </data>
+  <data name="KeyMaterialQuery" xml:space="preserve">
+    <value>关键物料查询</value>
+  </data>
+  <data name="FXContent" xml:space="preserve">
+    <value>FX首页</value>
+  </data>
+  <data name="TestBotton" xml:space="preserve">
+    <value>测试按钮</value>
+  </data>
+  <data name="NGStation" xml:space="preserve">
+    <value>NG工站</value>
+  </data>
+  <data name="Content" xml:space="preserve">
+    <value>内容</value>
+  </data>
+  <data name="Property" xml:space="preserve">
+    <value>属性</value>
+  </data>
+  <data name="ChangeType" xml:space="preserve">
+    <value>变更类型</value>
+  </data>
+  <data name="ChangeRecord" xml:space="preserve">
+    <value>变更记录</value>
+  </data>
+  <data name="Product_Vision" xml:space="preserve">
+    <value>Vision机种</value>
+  </data>
+  <data name="HiveAppId" xml:space="preserve">
+    <value>HiveAppId</value>
+  </data>
+  <data name="NextGet" xml:space="preserve">
+    <value>下游要料</value>
+  </data>
+  <data name="PLC" xml:space="preserve">
+    <value>PLC</value>
+  </data>
+  <data name="PrevHave" xml:space="preserve">
+    <value>上游有料</value>
+  </data>
+  <data name="Register" xml:space="preserve">
+    <value>注册</value>
+  </data>
+  <data name="SelectFile" xml:space="preserve">
+    <value>选择文件</value>
+  </data>
+  <data name="UpdateContent" xml:space="preserve">
+    <value>更新内容</value>
+  </data>
+  <data name="ThisGet" xml:space="preserve">
+    <value>本站要料</value>
+  </data>
+  <data name="ThisHave" xml:space="preserve">
+    <value>本站有料</value>
+  </data>
+  <data name="NGReason" xml:space="preserve">
+    <value>NG原因</value>
+  </data>
+  <data name="ZAxisSafeRegion" xml:space="preserve">
+    <value>Z轴安全区</value>
+  </data>
+  <data name="PDCA" xml:space="preserve">
+    <value>PDCA</value>
+  </data>
+  <data name="InputQty" xml:space="preserve">
+    <value>投入数</value>
+  </data>
+  <data name="GetByDataBase" xml:space="preserve">
+    <value>数据库获取</value>
+  </data>
+  <data name="Continue" xml:space="preserve">
+    <value>继续</value>
+  </data>
+  <data name="SpecSet" xml:space="preserve">
+    <value>规格值配置</value>
+  </data>
+  <data name="CalcTime" xml:space="preserve">
+    <value>计时器</value>
+  </data>
+  <data name="PDCAELimt" xml:space="preserve">
+    <value>AELimt上传</value>
+  </data>
+  <data name="PDCAELimit" xml:space="preserve">
+    <value>AE上传</value>
+  </data>
+  <data name="AOI" xml:space="preserve">
+    <value>AOI</value>
+  </data>
+  <data name="StationSet" xml:space="preserve">
+    <value>工站有料</value>
+  </data>
+  <data name="WaitCondition" xml:space="preserve">
+    <value>等待条件</value>
+  </data>
+  <data name="VisionExtra" xml:space="preserve">
+    <value>Vision补充</value>
+  </data>
+  <data name="Block" xml:space="preserve">
+    <value>阻塞</value>
+  </data>
+  <data name="Idle" xml:space="preserve">
+    <value>空闲</value>
+  </data>
+  <data name="ConfirmButton" xml:space="preserve">
+    <value>按钮确认</value>
+  </data>
+  <data name="CarrierCount" xml:space="preserve">
+    <value>载具数量</value>
+  </data>
+  <data name="ApiVersion" xml:space="preserve">
+    <value>Api版本</value>
+  </data>
+  <data name="ResetStation" xml:space="preserve">
+    <value>复位工站</value>
+  </data>
+  <data name="BackCarrierNum" xml:space="preserve">
+    <value>回流线治具数量</value>
+  </data>
+  <data name="MainCarrierNum" xml:space="preserve">
+    <value>主流线治具数量</value>
+  </data>
+  <data name="SubCarrierNum" xml:space="preserve">
+    <value>物流线治具数量</value>
+  </data>
+  <data name="TotalCarrierNum" xml:space="preserve">
+    <value>总治具数量</value>
+  </data>
+  <data name="ManageDept_Vision" xml:space="preserve">
+    <value>Vision管理部门</value>
+  </data>
+  <data name="GoToModule" xml:space="preserve">
+    <value>跳转</value>
+  </data>
+  <data name="SetMachineMode" xml:space="preserve">
+    <value>机台模式</value>
+  </data>
+  <data name="FunctionId" xml:space="preserve">
+    <value>功能部门</value>
+  </data>
+  <data name="FileConfig" xml:space="preserve">
+    <value>文件配置</value>
+  </data>
+  <data name="BackUpSet" xml:space="preserve">
+    <value>备份设置</value>
+  </data>
+  <data name="LogBackUpDays" xml:space="preserve">
+    <value>日志备份天数</value>
+  </data>
+  <data name="RecipeBackUpDays" xml:space="preserve">
+    <value>配方备份天数</value>
+  </data>
+  <data name="FlowWait" xml:space="preserve">
+    <value>流程等待</value>
+  </data>
+  <data name="CarrierBlackList" xml:space="preserve">
+    <value>治具黑名单</value>
+  </data>
+  <data name="ManualSwitch" xml:space="preserve">
+    <value>手动切换</value>
+  </data>
+  <data name="DoorLock" xml:space="preserve">
+    <value>门锁</value>
+  </data>
+  <data name="OpenCloseDoor" xml:space="preserve">
+    <value>开关门</value>
+  </data>
+  <data name="OutIO" xml:space="preserve">
+    <value>输出IO</value>
+  </data>
+  <data name="TableCreate" xml:space="preserve">
+    <value>表格生成</value>
+  </data>
+  <data name="RegisterType" xml:space="preserve">
+    <value>注册类型</value>
+  </data>
+  <data name="ICW" xml:space="preserve">
+    <value>ICW</value>
+  </data>
+  <data name="SFC" xml:space="preserve">
+    <value>SFC相关配置</value>
+  </data>
+  <data name="Vision" xml:space="preserve">
+    <value>Vision相关配置</value>
+  </data>
+  <data name="VisionStationId" xml:space="preserve">
+    <value>Vision工站ID</value>
+  </data>
+  <data name="PCRelevant" xml:space="preserve">
+    <value>PC相关</value>
+  </data>
+  <data name="PCHeartbeat" xml:space="preserve">
+    <value>PC心跳</value>
+  </data>
+  <data name="PCStatus" xml:space="preserve">
+    <value>PC状态</value>
+  </data>
+  <data name="RollSet" xml:space="preserve">
+    <value>卷料</value>
+  </data>
+  <data name="AxisPos" xml:space="preserve">
+    <value>轴位置</value>
+  </data>
+  <data name="GetAverage" xml:space="preserve">
+    <value>平均值</value>
+  </data>
+  <data name="SysOperationIO" xml:space="preserve">
+    <value>稼动IO</value>
+  </data>
+  <data name="RoolMaterialCal" xml:space="preserve">
+    <value>卷料计算</value>
+  </data>
+  <data name="RobotMove" xml:space="preserve">
+    <value>机器人运动</value>
+  </data>
+  <data name="SDOAction" xml:space="preserve">
+    <value>SDO读写</value>
+  </data>
+  <data name="PDOAction" xml:space="preserve">
+    <value>PDO读写</value>
+  </data>
+  <data name="RunExe" xml:space="preserve">
+    <value>执行程序</value>
+  </data>
+  <data name="ReadFins" xml:space="preserve">
+    <value>读取Fins</value>
+  </data>
+  <data name="ReadMC" xml:space="preserve">
+    <value>读取MC</value>
+  </data>
+  <data name="WaitFins" xml:space="preserve">
+    <value>等待Fins</value>
+  </data>
+  <data name="WaitMC" xml:space="preserve">
+    <value>等待MC</value>
+  </data>
+  <data name="WriteFins" xml:space="preserve">
+    <value>写入Fins</value>
+  </data>
+  <data name="WriteMC" xml:space="preserve">
+    <value>写入MC</value>
+  </data>
+  <data name="RealTime" xml:space="preserve">
+    <value>实时</value>
+  </data>
+  <data name="FlyingPhoto" xml:space="preserve">
+    <value>飞拍模块</value>
+  </data>
+  <data name="CgAoi" xml:space="preserve">
+    <value>CgAoi</value>
+  </data>
+  <data name="IsHomeDefault" xml:space="preserve">
+    <value>回零参数重置</value>
+  </data>
+  <data name="IsMemoric" xml:space="preserve">
+    <value>参数记忆</value>
+  </data>
+  <data name="JoinBitToInt" xml:space="preserve">
+    <value>按位拼接</value>
+  </data>
+  <data name="SplitIntToBit" xml:space="preserve">
+    <value>按位读取</value>
+  </data>
+  <data name="StartStation" xml:space="preserve">
+    <value>开始工站</value>
+  </data>
+  <data name="CompeteCondition" xml:space="preserve">
+    <value>竞争条件</value>
+  </data>
+  <data name="GetMachineStatus" xml:space="preserve">
+    <value>获取机台状态</value>
+  </data>
+  <data name="RobotAction2" xml:space="preserve">
+    <value>2#机器人动作</value>
+  </data>
+  <data name="RobotStatus2" xml:space="preserve">
+    <value>2#机器人状态</value>
+  </data>
+  <data name="SmokeAlarmDevice" xml:space="preserve">
+    <value>烟雾报警器</value>
+  </data>
+  <data name="AlarmID" xml:space="preserve">
+    <value>报警ID</value>
+  </data>
+  <data name="AlarmSolution" xml:space="preserve">
+    <value>报警处理方式</value>
+  </data>
+  <data name="BackgroundStation" xml:space="preserve">
+    <value>后台工站</value>
+  </data>
+  <data name="PulseCal" xml:space="preserve">
+    <value>脉冲比计算</value>
+  </data>
+  <data name="GearRatioNumerator" xml:space="preserve">
+    <value>齿轮比分子</value>
+  </data>
+  <data name="FFU" xml:space="preserve">
+    <value>FFU</value>
+  </data>
+  <data name="FFUSpeedLevel" xml:space="preserve">
+    <value>FFU速度等级</value>
+  </data>
+  <data name="SplitString" xml:space="preserve">
+    <value>字符串分割</value>
+  </data>
+  <data name="HighCurrentLowLimit" xml:space="preserve">
+    <value>高风速模式电流下限</value>
+  </data>
+  <data name="HighCurrentUpperLimit" xml:space="preserve">
+    <value>高风速模式电流上限</value>
+  </data>
+  <data name="LowCurrentLowLimit" xml:space="preserve">
+    <value>低风速模式电流下限</value>
+  </data>
+  <data name="LowCurrentUpperLimit" xml:space="preserve">
+    <value>低风速模式电流上限</value>
+  </data>
+  <data name="MiddleCurrentLowLimit" xml:space="preserve">
+    <value>中风速模式电流下限</value>
+  </data>
+  <data name="MiddleCurrentUpperLimit" xml:space="preserve">
+    <value>中风速模式电流上限</value>
+  </data>
+  <data name="LSMesUnLoad" xml:space="preserve">
+    <value>MCH弹片测量数据上传</value>
+  </data>
+  <data name="TimerJudge" xml:space="preserve">
+    <value>定时判断</value>
+  </data>
+  <data name="SFTPUpload" xml:space="preserve">
+    <value>SFTP上传</value>
+  </data>
+  <data name="DialogBox" xml:space="preserve">
+    <value>对话框</value>
+  </data>
+  <data name="CurrentValue2" xml:space="preserve">
+    <value>当前值2</value>
+  </data>
+  <data name="TwoD" xml:space="preserve">
+    <value>2D算子</value>
+  </data>
+  <data name="Binarization" xml:space="preserve">
+    <value>二值化</value>
+  </data>
+  <data name="FindCircle" xml:space="preserve">
+    <value>找圆</value>
+  </data>
+  <data name="Morphological" xml:space="preserve">
+    <value>形态学</value>
+  </data>
+  <data name="CCDImage" xml:space="preserve">
+    <value>2D图像采集</value>
+  </data>
+  <data name="TxtReader" xml:space="preserve">
+    <value>读取Txt</value>
+  </data>
+  <data name="TxtWriter" xml:space="preserve">
+    <value>文本写入</value>
+  </data>
+  <data name="HighLevelTime" xml:space="preserve">
+    <value>高级权限时间</value>
+  </data>
+  <data name="EnableLightCurtain" xml:space="preserve">
+    <value>光栅启用</value>
+  </data>
+  <data name="EnableSafetyDoor" xml:space="preserve">
+    <value>安全门启用</value>
+  </data>
+  <data name="FirstPieceModeCommand" xml:space="preserve">
+    <value>首件指令</value>
+  </data>
+  <data name="FirstPieceModeStatus" xml:space="preserve">
+    <value>首件状态</value>
+  </data>
+  <data name="TriColorStatus" xml:space="preserve">
+    <value>三色灯状态</value>
+  </data>
+  <data name="HiveValve" xml:space="preserve">
+    <value>Hive阀门</value>
+  </data>
+  <data name="isShieldDoor" xml:space="preserve">
+    <value>屏蔽安全门</value>
+  </data>
+  <data name="TorqueForm" xml:space="preserve">
+    <value>Cowling报表</value>
+  </data>
+  <data name="TaiKeScrewDriver" xml:space="preserve">
+    <value>太科电批</value>
+  </data>
+  <data name="SerialPortDrive" xml:space="preserve">
+    <value>RS232</value>
+  </data>
+  <data name="TorqueForm2" xml:space="preserve">
+    <value>锁螺丝报表</value>
+  </data>
+  <data name="XJCPressureSensor" xml:space="preserve">
+    <value>鑫精诚压力传感器</value>
+  </data>
+  <data name="TaikeCurve" xml:space="preserve">
+    <value>泰科曲线</value>
+  </data>
+  <data name="TaikeContent" xml:space="preserve">
+    <value>泰科统计</value>
+  </data>
+  <data name="ModbusRTU" xml:space="preserve">
+    <value>ModbusRTU</value>
+  </data>
+  <data name="PressForm1" xml:space="preserve">
+    <value>压力1</value>
+  </data>
+  <data name="PressDriver" xml:space="preserve">
+    <value>压力曲线</value>
+  </data>
+  <data name="PressForm2" xml:space="preserve">
+    <value>压力2</value>
+  </data>
+  <data name="PressForm3" xml:space="preserve">
+    <value>压力3</value>
+  </data>
+  <data name="PressForm4" xml:space="preserve">
+    <value>压力4</value>
+  </data>
+  <data name="LastMonthMaintenance" xml:space="preserve">
+    <value>上次月保养时间</value>
+  </data>
+  <data name="LastWeekMaintenance" xml:space="preserve">
+    <value>上次周保养时间</value>
+  </data>
+  <data name="Maintenance" xml:space="preserve">
+    <value>保养</value>
+  </data>
+  <data name="HiveConfig" xml:space="preserve">
+    <value>Hive配置</value>
+  </data>
+  <data name="DownTimeReason" xml:space="preserve">
+    <value>宕机原因</value>
+  </data>
+  <data name="SparePartsUsed" xml:space="preserve">
+    <value>消耗物品</value>
+  </data>
+  <data name="HiveIgnoreFeedback" xml:space="preserve">
+    <value>忽略Hive反馈</value>
+  </data>
+  <data name="ErrorForeignMessage" xml:space="preserve">
+    <value>报错英文描述</value>
+  </data>
+  <data name="VisionProcessData" xml:space="preserve">
+    <value>Vision过程参数</value>
+  </data>
+  <data name="PressForm5" xml:space="preserve">
+    <value>压力5</value>
+  </data>
+  <data name="Logout" xml:space="preserve">
+    <value>登出</value>
+  </data>
+  <data name="DigitalAss" xml:space="preserve">
+    <value>数字架线</value>
+  </data>
+  <data name="Extract" xml:space="preserve">
+    <value>Extract</value>
+  </data>
+  <data name="AvgNoOfCodeSewwp" xml:space="preserve">
+    <value>AvgNoOfCodeSewwp</value>
+  </data>
+  <data name="ScanCodeCount" xml:space="preserve">
+    <value>条码长度</value>
+  </data>
+  <data name="ScanCodeDataSource" xml:space="preserve">
+    <value>条码来源</value>
+  </data>
+  <data name="ScanCodeSuccessRate" xml:space="preserve">
+    <value>条码码率</value>
+  </data>
+  <data name="TotalCodeSweep" xml:space="preserve">
+    <value>TotalCodeSweep</value>
+  </data>
+  <data name="s" xml:space="preserve">
+    <value>s</value>
+  </data>
+  <data name="MainParameters" xml:space="preserve">
+    <value>参数导入确认</value>
+  </data>
+  <data name="Communications" xml:space="preserve">
+    <value>通讯端口配置</value>
+  </data>
+  <data name="IOConform" xml:space="preserve">
+    <value>I/O点检</value>
+  </data>
+  <data name="Horizontal" xml:space="preserve">
+    <value>平台水平确认</value>
+  </data>
+  <data name="LoadCell" xml:space="preserve">
+    <value>自动LoadCell</value>
+  </data>
+  <data name="Embossing" xml:space="preserve">
+    <value>自动压印</value>
+  </data>
+  <data name="DigitalVision" xml:space="preserve">
+    <value>视觉调试</value>
+  </data>
+  <data name="OriginLimit" xml:space="preserve">
+    <value>原点限位</value>
+  </data>
+  <data name="Runners" xml:space="preserve">
+    <value>流道</value>
+  </data>
+  <data name="Others" xml:space="preserve">
+    <value>其他</value>
+  </data>
+  <data name="ObtainSwVersion" xml:space="preserve">
+    <value>获取软件版本</value>
+  </data>
+  <data name="AutomaticPosAndLeveling" xml:space="preserve">
+    <value>自动定位与水平</value>
+  </data>
+  <data name="AutomaticEmbossing" xml:space="preserve">
+    <value>自动压印</value>
+  </data>
+  <data name="AutomaticLoadCell" xml:space="preserve">
+    <value>自动LoadCell</value>
+  </data>
+  <data name="CalibrationTable" xml:space="preserve">
+    <value>压力线性</value>
+  </data>
+  <data name="SuctionNozzle" xml:space="preserve">
+    <value>吸嘴压力标定</value>
+  </data>
+  <data name="PressureRepetition" xml:space="preserve">
+    <value>压力重复性</value>
+  </data>
+  <data name="AutoVisualCalibration" xml:space="preserve">
+    <value>手眼标定</value>
+  </data>
+  <data name="AutoFocusing" xml:space="preserve">
+    <value>自动对焦</value>
+  </data>
+  <data name="AutoFieldOfView" xml:space="preserve">
+    <value>自动视野</value>
+  </data>
+  <data name="AutoGrayScale" xml:space="preserve">
+    <value>自动灰度</value>
+  </data>
+  <data name="ConfigComputerNet" xml:space="preserve">
+    <value>配置电脑网络</value>
+  </data>
+  <data name="ConfigSoftwareNet" xml:space="preserve">
+    <value>配置软件网络</value>
+  </data>
+  <data name="ConfigSoftwareCom" xml:space="preserve">
+    <value>配置软件串口</value>
+  </data>
+  <data name="CommunicationTest" xml:space="preserve">
+    <value>通讯连接测试</value>
+  </data>
+  <data name="AutoCommunicationConfig" xml:space="preserve">
+    <value>通讯端口自动配置</value>
+  </data>
+  <data name="Digital_In" xml:space="preserve">
+    <value>数字输入</value>
+  </data>
+  <data name="Digital_Out" xml:space="preserve">
+    <value>数字输出</value>
+  </data>
+  <data name="PDCAFailRetry" xml:space="preserve">
+    <value>PDCA数据失败补传</value>
+  </data>
+  <data name="WebConfigRead" xml:space="preserve">
+    <value>设备参数读取</value>
+  </data>
+  <data name="HiveCT" xml:space="preserve">
+    <value>HiveCT</value>
+  </data>
+  <data name="ReciepeVersion" xml:space="preserve">
+    <value>配方版本</value>
+  </data>
+  <data name="PlcVersion" xml:space="preserve">
+    <value>Plc版本</value>
+  </data>
+  <data name="GenAxisPos" xml:space="preserve">
+    <value>获取轴位置</value>
+  </data>
+  <data name="Script" xml:space="preserve">
+    <value>C#脚本</value>
+  </data>
+  <data name="ForceCollect" xml:space="preserve">
+    <value>压力采集</value>
+  </data>
+  <data name="ConditionTimer" xml:space="preserve">
+    <value>条件定时器</value>
+  </data>
+  <data name="TableInsert" xml:space="preserve">
+    <value>表格写入</value>
+  </data>
+  <data name="EpsonRobot" xml:space="preserve">
+    <value>爱普生机器人</value>
+  </data>
+  <data name="PointTeaching" xml:space="preserve">
+    <value>点位示教</value>
+  </data>
+  <data name="SetAxisPos" xml:space="preserve">
+    <value>设置轴点位</value>
+  </data>
+  <data name="FunctionEnable" xml:space="preserve">
+    <value>功能启用</value>
+  </data>
+  <data name="XJCPressureSensorF600" xml:space="preserve">
+    <value>鑫精诚多通道F600</value>
+  </data>
+  <data name="FXTCP" xml:space="preserve">
+    <value>数字孪生</value>
+  </data>
+  <data name="Digital_In_Single" xml:space="preserve">
+    <value>单个数字输入</value>
+  </data>
+  <data name="Digital_Out_Single" xml:space="preserve">
+    <value>单个数字输出</value>
+  </data>
+  <data name="ExportFlowTree" xml:space="preserve">
+    <value>导出流程图</value>
+  </data>
+  <data name="RunModeTips" xml:space="preserve">
+    <value>(启用编辑后双击修改)</value>
+  </data>
+</root>

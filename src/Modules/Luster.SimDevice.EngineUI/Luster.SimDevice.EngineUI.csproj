@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <!-- 启用统一拷贝功能 -->
+        <CopyToDevicesFolder>true</CopyToDevicesFolder>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Luster.Prism" />
+        <PackageReference Include="MinVer" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!--<ProjectReference Include="..\Luster.Motion.DataStruct\Luster.Motion.DataStruct.csproj" />-->
+        <ProjectReference Include="..\Luster.SimDevice\Luster.SimDevice.csproj" />
+    </ItemGroup>
+
+</Project>

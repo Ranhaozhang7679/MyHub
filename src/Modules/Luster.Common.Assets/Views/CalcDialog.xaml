@@ -1,0 +1,182 @@
+﻿<UserControl
+    x:Class="Luster.Common.Assets.Views.CalcDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:data="clr-namespace:Luster.Common.DataStruct.DataModels;assembly=Luster.Common.DataStruct"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:local="clr-namespace:Luster.Common.Assets.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    xmlns:tx="clr-namespace:Luster.Controls.Wpf.TreeEx;assembly=Luster.Controls.Wpf"
+    xmlns:vm="clr-namespace:Luster.Common.Assets.ViewModel"
+    Width="500"
+    Height="400"
+    MaxWidth="400"
+    d:DesignHeight="400"
+    d:DesignWidth="500"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{DynamicResource RegionBrush}"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <Style
+            x:Key="CalulateKey"
+            BasedOn="{StaticResource {x:Type Button}}"
+            TargetType="Button">
+            <Setter Property="Margin" Value="3" />
+            <Setter Property="Width" Value="40" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="hc:BorderElement.CornerRadius" Value="20" />
+            <EventSetter Event="Click" Handler="Button_Click" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="FontSize" Value="16" />
+        </Style>
+        <Style x:Key="TagCustomStyle" TargetType="Border">
+            <Setter Property="BorderBrush" Value="{Binding Name}" />
+            <Setter Property="Margin" Value="3,0" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="BorderBrush" Value="AliceBlue" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="AntiqueWhite" />
+                    <Setter Property="Cursor" Value="Hand" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="TitleStyle" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Margin" Value="10" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="VariableStyle" TargetType="TextBlock">
+            <Setter Property="Margin" Value="5,0" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Padding" Value="5" />
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="AliceBlue" />
+                    <Setter Property="Cursor" Value="Hand" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ExpressItem" TargetType="{x:Type ListBoxItem}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <hc:DashedBorder
+                            x:Name="PART_Border"
+                            Margin="5,0"
+                            Padding="4,2"
+                            VerticalAlignment="Center"
+                            BorderBrush="{StaticResource BorderBrush}"
+                            BorderDashArray="2,2"
+                            BorderThickness="1">
+                            <ContentPresenter
+                                Margin="10,0,0,0"
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                        </hc:DashedBorder>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Key="NormalTemplate" DataType="{x:Type data:LNode}">
+            <StackPanel Margin="0,2,0,2" Orientation="Horizontal">
+                <TextBlock
+                    Margin="0,0,3,0"
+                    VerticalAlignment="Center"
+                    Style="{DynamicResource IconSmall}"
+                    Text="{Binding Icon}" />
+                <TextBlock
+                    x:Name="xName"
+                    VerticalAlignment="Center"
+                    Text="{Binding Text}" />
+            </StackPanel>
+        </DataTemplate>
+
+        <DataTemplate x:Key="ParamTemplate" DataType="{x:Type data:LNode}">
+            <StackPanel Margin="8,2,0,2" Orientation="Horizontal">
+                <TextBlock
+                    Margin="0,0,3,0"
+                    VerticalAlignment="Center"
+                    Foreground="Blue"
+                    Style="{DynamicResource IconSmall}"
+                    Text="{Binding Icon}" />
+                <TextBlock
+                    x:Name="xName"
+                    VerticalAlignment="Center"
+                    Foreground="Blue"
+                    Text="{Binding Text}" />
+            </StackPanel>
+        </DataTemplate>
+
+        <vm:ParamDataTemplateSelector
+            x:Key="VarTemplate"
+            NormalTemplate="{StaticResource NormalTemplate}"
+            ParamTemplate="{StaticResource ParamTemplate}" />
+    </UserControl.Resources>
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <StackPanel>
+            <TextBlock Style="{StaticResource TitleStyle}" Text="表达式 [变量名为 Value] 支持Math方法" />
+            <hc:DashedBorder
+                BorderBrush="Blue"
+                BorderDashArray="2,2"
+                BorderThickness="1">
+                <avalonEdit:TextEditor
+                    x:Name="richText"
+                    Height="300"
+                    BorderThickness="1"
+                    Document="{Binding DocumentText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                    FontFamily="Consolas"
+                    FontSize="12pt"
+                    IsModified="True"
+                    ShowLineNumbers="True"
+                    WordWrap="True" />
+            </hc:DashedBorder>
+        </StackPanel>
+
+        <Grid Grid.Row="1" VerticalAlignment="Center">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <hc:ElementGroup HorizontalAlignment="Left" Layout="Stack">
+                <TextBox
+                    Width="150"
+                    Height="28"
+                    Text="{Binding PreviewText}" />
+                <Button Command="{Binding PreviewCommand}" Content="预览" />
+            </hc:ElementGroup>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button
+                    Margin="0,0,5,0"
+                    HorizontalAlignment="Right"
+                    hc:IconElement.Geometry="{StaticResource RedoGeometry}"
+                    Command="{Binding CloseCommand}"
+                    CommandParameter="cancel"
+                    Content="取消"
+                    DockPanel.Dock="Right" />
+                <Button
+                    hc:IconElement.Geometry="{StaticResource ConfirmGeometry}"
+                    Command="{Binding CloseCommand}"
+                    CommandParameter="ok"
+                    Content="确定"
+                    DockPanel.Dock="Right" />
+            </StackPanel>
+        </Grid>
+
+        <hc:Interaction.Triggers>
+            <hc:EventTrigger EventName="Loaded">
+                <hc:EventToCommand Command="{Binding LoadedCommand}" CommandParameter="{Binding Path=., ElementName=richText}" />
+            </hc:EventTrigger>
+        </hc:Interaction.Triggers>
+    </Grid>
+</UserControl>

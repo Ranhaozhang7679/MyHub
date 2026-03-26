@@ -1,0 +1,451 @@
+﻿<UserControl
+    x:Class="Luster.Motion.SubSystem.Views.PlcAlarmContent"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:lang="clr-namespace:Luster.Motion.Assests.Langs;assembly=Luster.Motion.Assests"
+    xmlns:local="clr-namespace:Luster.Motion.SubSystem.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{DynamicResource SecondaryRegionBrush}"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <Style
+            x:Key="AddrStyle"
+            BasedOn="{StaticResource ComboBoxExtend}"
+            TargetType="hc:ComboBox">
+            <Setter Property="hc:TitleElement.TitlePlacement" Value="Left" />
+            <Setter Property="hc:TitleElement.TitleWidth" Value="60" />
+            <Setter Property="DisplayMemberPath" Value="Address" />
+            <Setter Property="IsEnabled" Value="{Binding IsEdit}" />
+            <Setter Property="ItemsSource" Value="{Binding PlcAddrList}" />
+            <EventSetter Event="SelectionChanged" Handler="ComboBox_SelectionChanged" />
+            <Setter Property="Margin" Value="5,5" />
+        </Style>
+    </UserControl.Resources>
+    <Grid Background="{DynamicResource GridBackgroundColor}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="10" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Border
+            Margin="5,15,0,20"
+            Background="White"
+            CornerRadius="5">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid Margin="0,10,0,0">
+                    <StackPanel Margin="10,5,10,0">
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            DockPanel.Dock="Left"
+                            Text="{lang:Lang Key={x:Static lang:LangKeys.RoutineMonitoring}}" />
+                        <hc:Divider Margin="0,10,0,10" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+                            <hc:ElementGroup
+                                Grid.ColumnSpan="2"
+                                Margin="5,0,5,5"
+                                Layout="Stack"
+                                Orientation="Horizontal">
+                                <TextBox
+                                    MinWidth="360"
+                                    hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.PLCServer}}"
+                                    hc:TitleElement.TitlePlacement="Left"
+                                    hc:TitleElement.TitleWidth="60"
+                                    Foreground="Black"
+                                    IsEnabled="{Binding IsEdit}"
+                                    Style="{StaticResource TextBoxValidationStyle}"
+                                    Text="{Binding PlcName, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                                <Button
+                                    VerticalAlignment="Bottom"
+                                    Command="{Binding SelectPlcCommand}"
+                                    Content="..."
+                                    IsEnabled="{Binding IsEdit}"
+                                    Foreground="Black" />
+                            </hc:ElementGroup>
+                            <hc:ComboBox
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.PLCStatus}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding StatusAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:ComboBox
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.Start}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding StartAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:ComboBox
+                                Grid.Row="2"
+                                Grid.Column="0"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.Pause}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding PauseAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:ComboBox
+                                Grid.Row="2"
+                                Grid.Column="1"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.HomeZero}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding HomeAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:ComboBox
+                                Grid.Row="3"
+                                Grid.Column="0"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.HomeDone}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding HomeFinishAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:ComboBox
+                                Grid.Row="3"
+                                Grid.Column="1"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.AutoRun}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding AutoRunAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:ComboBox
+                                Grid.Row="4"
+                                Grid.Column="0"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.Reset}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding RecoveryAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:ComboBox
+                                Grid.Row="4"
+                                Grid.Column="1"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.Stop}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding StopAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:ComboBox
+                                Grid.Row="5"
+                                Grid.Column="0"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.EmptyRun}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding EmptyRunAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:ComboBox
+                                Grid.Row="5"
+                                Grid.Column="1"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.HomeZero}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding EmptyRunAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+
+                            <hc:Divider
+                                Grid.Row="7"
+                                Grid.ColumnSpan="2"
+                                Margin="0"
+                                Content="主流线" />
+                            <hc:ComboBox
+                                Grid.Row="8"
+                                Grid.Column="0"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.PrevHave}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding MainPrevHaveAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:ComboBox
+                                Grid.Row="8"
+                                Grid.Column="1"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.ThisGet}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding MainThisGetAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:ComboBox
+                                Grid.Row="9"
+                                Grid.Column="0"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.ThisHave}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding MainThisHaveAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:ComboBox
+                                Grid.Row="9"
+                                Grid.Column="1"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.NextGet}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding MainNextGetAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:Divider
+                                Grid.Row="10"
+                                Grid.ColumnSpan="2"
+                                Margin="0"
+                                Content="回流线" />
+                            <hc:ComboBox
+                                Grid.Row="11"
+                                Grid.Column="0"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.PrevHave}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding PrevHaveAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:ComboBox
+                                Grid.Row="11"
+                                Grid.Column="1"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.ThisGet}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding ThisGetAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:ComboBox
+                                Grid.Row="12"
+                                Grid.Column="0"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.ThisHave}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding ThisHaveAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:ComboBox
+                                Grid.Row="12"
+                                Grid.Column="1"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.NextGet}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding NextGetAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:Divider
+                                Grid.Row="13"
+                                Grid.ColumnSpan="2"
+                                Margin="0"
+                                Content="{lang:Lang Key={x:Static lang:LangKeys.CarrierCount}}" />
+                            <hc:ComboBox
+                                Grid.Row="14"
+                                Grid.Column="0"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.TotalCarrierNum}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding TotalCarrierCountAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:ComboBox
+                                Grid.Row="14"
+                                Grid.Column="1"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.MainCarrierNum}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding MainCarrierCountAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:ComboBox
+                                Grid.Row="15"
+                                Grid.Column="0"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.SubCarrierNum}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding SubCarrierCountAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:ComboBox
+                                Grid.Row="15"
+                                Grid.Column="1"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.BackCarrierNum}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding BackCarrierCountAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:Divider
+                                Grid.Row="16"
+                                Grid.ColumnSpan="2"
+                                Margin="0"
+                                Content="{lang:Lang Key={x:Static lang:LangKeys.PCRelevant}}" />
+                            <hc:ComboBox
+                                Grid.Row="17"
+                                Grid.Column="0"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.PCHeartbeat}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding PCHeartBeattAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:ComboBox
+                                Grid.Row="18"
+                                Grid.Column="0"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.TriColorStatus}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding TricolorStatusAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:ComboBox
+                                Grid.Row="18"
+                                Grid.Column="1"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.PCStatus}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding PCStatusAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:ComboBox
+                                Grid.Row="19"
+                                Grid.Column="0"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.FirstPieceModeCommand}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding FirstPieceModeCommandAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:ComboBox
+                                Grid.Row="19"
+                                Grid.Column="1"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.FirstPieceModeStatus}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding FirstPieceModeStatusAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+                            <hc:ComboBox
+                                Grid.Row="20"
+                                Grid.Column="0"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.Idle}}"
+                                Style="{StaticResource AddrStyle}"
+                                Text="{Binding IdleStatusAddr, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+
+                        </Grid>
+                        <hc:UniformSpacingPanel
+                            Grid.Row="1"
+                            Orientation="Vertical"
+                            Spacing="10" />
+                    </StackPanel>
+                </Grid>
+            <Grid Grid.Row="1">
+                <StackPanel
+                        Margin="0,20,15,15"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Bottom"
+                        Orientation="Horizontal">
+                    <Button
+                            Margin="0,0,10,0"
+                            Background="#4BA4FE"
+                            BorderBrush="#4BA4FE"
+                            Command="{Binding EditEnableCommand}"
+                            Content="{lang:Lang Key={x:Static lang:LangKeys.Edit}}"
+                            Foreground="White"
+                            IsEnabled="{Binding EditEnable}" />
+                    <Button
+                            Background="#4BA4FE"
+                            BorderBrush="#4BA4FE"
+                            Command="{Binding ListenCommand}"
+                            Content="{lang:Lang Key={x:Static lang:LangKeys.EnableListening}}"
+                            Foreground="White"
+                            IsEnabled="{Binding ListenEnable}" />
+                </StackPanel>
+            </Grid>
+               
+            </Grid>
+            </ScrollViewer>
+        </Border>
+        <Border
+            Grid.Column="2"
+            Margin="5,10"
+            BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1"
+            Visibility="{Binding IsCommonAlarm, Converter={StaticResource Boolean2VisibilityReConverter}}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        Margin="10,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        Text="{lang:Lang Key={x:Static lang:LangKeys.AlarmMonitoring}}" />
+                    <StackPanel
+                        Grid.Column="2"
+                        HorizontalAlignment="Right"
+                        VerticalAlignment="Center"
+                        Orientation="Horizontal">
+                        <Button
+                            Grid.Column="2"
+                            Width="50"
+                            Margin="0,5,10,5"
+                            HorizontalAlignment="Right"
+                            Background="Transparent"
+                            BorderBrush="#57a9fd"
+                            Command="{Binding DataContext.AddPlcAlarmCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            Content="{lang:Lang Key={x:Static lang:LangKeys.Add}}"
+                            Foreground="#4BA4FE" />
+                        <Button
+                            Width="60"
+                            Margin="0,5,10,5"
+                            Background="Transparent"
+                            BorderBrush="#57a9fd"
+                            Command="{Binding ExportCommand}"
+                            Content="{lang:Lang Key={x:Static lang:LangKeys.Export}}"
+                            Foreground="#57a9fd" />
+                        <Button
+                            Width="60"
+                            Margin="0,5,10,5"
+                            Background="Transparent"
+                            BorderBrush="#57a9fd"
+                            Command="{Binding ImportCommand}"
+                            Content="{lang:Lang Key={x:Static lang:LangKeys.Import}}"
+                            Foreground="#57a9fd" />
+                    </StackPanel>
+                </Grid>
+                <ScrollViewer
+                    Grid.Row="1"
+                    HorizontalScrollBarVisibility="Disabled"
+                    VerticalScrollBarVisibility="Auto">
+                    <DataGrid
+                        AlternationCount="2"
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="1"
+                        CanUserSortColumns="False"
+                        ColumnHeaderStyle="{StaticResource CustomDataGridColumnHeaderStyle}"
+                        HeadersVisibility="Column"
+                        IsReadOnly="False"
+                        ItemsSource="{Binding PlcAlarmList}"
+                        RowStyle="{StaticResource CustomDataGridRowStyle}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn
+                                Width="*"
+                                MinWidth="100"
+                                Binding="{Binding Address}"
+                                ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                                Header="{lang:Lang Key={x:Static lang:LangKeys.PLCAddress}}" />
+                            <DataGridTextColumn
+                                Width="*"
+                                MinWidth="100"
+                                Binding="{Binding Desc}"
+                                ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                                Header="{lang:Lang Key={x:Static lang:LangKeys.AlarmContent}}" />
+                            <DataGridTextColumn
+                                Width="*"
+                                MinWidth="100"
+                                Binding="{Binding AlarmCode}"
+                                ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                                Header="{lang:Lang Key={x:Static lang:LangKeys.AlarmCode}}" />
+                            <DataGridTemplateColumn
+                                Width="110"
+                                MinWidth="100"
+                                hc:TitleElement.HorizontalAlignment="Center"
+                                CanUserResize="False"
+                                Header="{lang:Lang Key={x:Static lang:LangKeys.Operate}}"
+                                HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <hc:ElementGroup HorizontalContentAlignment="Center" Orientation="Horizontal">
+                                            <Button
+                                                Margin="0"
+                                                Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.DeletePlcAlarmCommand}"
+                                                CommandParameter="{Binding}"
+                                                Content="{lang:Lang Key={x:Static lang:LangKeys.Delete}}"
+                                                Style="{StaticResource ButtonDanger.Small}" />
+                                        </hc:ElementGroup>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                        <hc:Interaction.Triggers>
+                            <hc:EventTrigger EventName="CellEditEnding">
+                                <hc:EventToCommand Command="{Binding PlcAlarmItemCellEditCommand}" PassEventArgsToCommand="True" />
+                            </hc:EventTrigger>
+                            <hc:EventTrigger EventName="BeginningEdit">
+                                <hc:EventToCommand Command="{Binding PlcAlarmItemBeginEditCommand}" PassEventArgsToCommand="True" />
+                            </hc:EventTrigger>
+                        </hc:Interaction.Triggers>
+                    </DataGrid>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
+
+

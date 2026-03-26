@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <!-- 项目特定配置 -->
+        <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- 排除不需要编译的接口文件 -->
+        <Compile Remove="Interfaces\Geometry.cs" />
+        <Compile Remove="Interfaces\ICoord.cs" />
+        <Compile Remove="Interfaces\ICoordTemplate.cs" />
+        <Compile Remove="Interfaces\IMeasureData.cs" />
+        <Compile Remove="Interfaces\IPicker.cs" />
+        <Compile Remove="Interfaces\IROI.cs" />
+        <Compile Remove="Interfaces\IStl.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="MinVer" />
+        <!-- SourceLink 支持 -->
+        <PackageReference Include="Microsoft.SourceLink.GitLab" />
+        <!-- .NET 10 中需要显式引用以支持 System.Diagnostics.Eventing.Reader.PathType -->
+        <PackageReference Include="System.Diagnostics.EventLog" />
+    </ItemGroup>
+
+</Project>

@@ -1,0 +1,846 @@
+﻿<UserControl
+    x:Class="Luster.Motion.SubSystem.Views.SoftConfigureContent"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converter="clr-namespace:Luster.Motion.CommonUI.Converter;assembly=Luster.Motion.CommonUI"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:lang="clr-namespace:Luster.Motion.Assests.Langs;assembly=Luster.Motion.Assests"
+    xmlns:local="clr-namespace:Luster.Motion.SubSystem.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:model="clr-namespace:Luster.Motion.TaskFlow.Engine.Models;assembly=Luster.Motion.TaskFlow.Engine"
+    xmlns:prism="http://prismlibrary.com/"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{DynamicResource SecondaryRegionBrush}"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <converter:EnumLangConverter x:Key="MultiLangConverter" />
+        <converter:ColorToBrush x:Key="ColorConverter" />
+    </UserControl.Resources>
+    <Grid Background="#F0F2F5" IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Engineer}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="320" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <!--  运行模式配置  -->
+        <ScrollViewer
+            Grid.Column="0"
+            HorizontalScrollBarVisibility="Disabled"
+            VerticalScrollBarVisibility="Auto">
+            <Border
+                Margin="10,10,0,10"
+                Background="White"
+                CornerRadius="5">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="1">
+                        <StackPanel Margin="15,5,15,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel  Grid.Column="0" VerticalAlignment="Center" DockPanel.Dock="Left" Orientation="Horizontal">
+                                    <TextBlock Text="{lang:Lang Key={x:Static lang:LangKeys.RunMode}}" />
+                                    <TextBlock Foreground="Red" Text="{lang:Lang Key={x:Static lang:LangKeys.RunModeTips}}"/>
+                                </StackPanel>
+                                <Button
+                                    Grid.Column="1"
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Center"
+                                    hc:IconElement.Geometry="{StaticResource AddGeometry}"
+                                    Command="{Binding DataContext.AddRunModeCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    Foreground="Gray"
+                                    Style="{StaticResource ButtonIcon}" />
+                            </Grid>
+                            <hc:Divider Margin="0,3,0,10" />
+                            <ListBox
+                                Name="listmode"
+                                Margin="0,10"
+                                BorderThickness="0"
+                                ItemsSource="{Binding ListMode}"
+                                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                Style="{DynamicResource ListBoxCustom}">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="4" Rows="{Binding RowCount}" />
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type model:RunModeModel}">
+                                        <StackPanel Height="40" Margin="0,5,0,0">
+                                            <RadioButton
+                                                x:Name="btncolor"
+                                                Background="#d7d8d9"
+                                                IsEnabled="{Binding IsEdit}"
+                                                Style="{StaticResource StatusRadioStyle}">
+                                                <RadioButton.InputBindings>
+                                                    <MouseBinding
+                                                        Command="{Binding DataContext.SetGlobalVarCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                        CommandParameter="{Binding}"
+                                                        MouseAction="LeftDoubleClick" />
+                                                </RadioButton.InputBindings>
+
+                                            </RadioButton>
+                                            <TextBlock
+                                                Margin="0,5,0,0"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Text="{Binding Mode}"
+                                                Visibility="Visible" />
+                                        </StackPanel>
+                                        <DataTemplate.Triggers>
+                                            <DataTrigger Binding="{Binding IsRunMode}" Value="True">
+                                                <Setter TargetName="btncolor" Property="RadioButton.Background" Value="#4FCB03" />
+                                            </DataTrigger>
+                                        </DataTemplate.Triggers>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </Grid>
+                    <Grid Grid.Row="2">
+                        <StackPanel Margin="15,5,15,0">
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                DockPanel.Dock="Left"
+                                Text="{lang:Lang Key={x:Static lang:LangKeys.SignalLamp}}" />
+                            <hc:Divider Margin="0,3,0,10" />
+                            <ListBox
+                                Name="listLamp"
+                                Margin="0,10"
+                                BorderThickness="0"
+                                ItemsSource="{Binding TricolorLamp}"
+                                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                Style="{DynamicResource ListBoxCustom}">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="4" Rows="2" />
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Height="55" Margin="0,5,0,0">
+                                            <RadioButton
+                                                Background="{Binding BtnColor}"
+                                                IsEnabled="{Binding IsEdit}"
+                                                Style="{StaticResource StatusRadioStyle}">
+                                                <RadioButton.InputBindings>
+                                                    <MouseBinding
+                                                        Command="{Binding DataContext.EditOPerateCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                        CommandParameter="{Binding}"
+                                                        MouseAction="LeftDoubleClick" />
+                                                </RadioButton.InputBindings>
+                                            </RadioButton>
+                                            <TextBlock
+                                                Margin="0,5,0,0"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Text="{lang:Lang Key={Binding Name}}"
+                                                Visibility="{Binding IsNameVisible}" />
+                                            <TextBlock
+                                                Margin="0,5,0,0"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Text="{Binding SelectDevice}"
+                                                TextWrapping="Wrap"
+                                                Visibility="{Binding IsDeviceVisible}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </Grid>
+                    <Grid Grid.Row="3">
+                        <StackPanel Margin="15,5,15,0" VerticalAlignment="Top">
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                DockPanel.Dock="Left"
+                                Text="{lang:Lang Key={x:Static lang:LangKeys.Button}}" />
+                            <hc:Divider Margin="0,3,0,10" />
+                            <ListBox
+                                Name="listBtn"
+                                Margin="0,10"
+                                BorderThickness="0"
+                                ItemsSource="{Binding BtnCollections}"
+                                ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                Style="{DynamicResource ListBoxCustom}">
+                                <ListBox.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <UniformGrid Columns="4" Rows="3" />
+                                    </ItemsPanelTemplate>
+                                </ListBox.ItemsPanel>
+                                <ListBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Height="55">
+                                            <RadioButton
+                                                Background="{Binding BtnColor}"
+                                                IsEnabled="{Binding IsEdit}"
+                                                Style="{StaticResource StatusRadioStyle}">
+                                                <RadioButton.InputBindings>
+                                                    <MouseBinding
+                                                        Command="{Binding DataContext.EditOPerateCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                                        CommandParameter="{Binding}"
+                                                        MouseAction="LeftDoubleClick" />
+                                                </RadioButton.InputBindings>
+                                            </RadioButton>
+                                            <TextBlock
+                                                Margin="0,5,0,0"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Text="{lang:Lang Key={Binding Name}}"
+                                                Visibility="{Binding IsNameVisible}" />
+                                            <TextBlock
+                                                Margin="0,5,0,0"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center"
+                                                Text="{Binding SelectDevice}"
+                                                TextWrapping="Wrap"
+                                                Visibility="{Binding IsDeviceVisible}" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ListBox.ItemTemplate>
+                            </ListBox>
+                        </StackPanel>
+                    </Grid>
+                    <Grid Grid.Row="4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid Grid.Column="0" Visibility="{Binding SysRole, Converter={StaticResource RoleVisibilityConverter}, ConverterParameter=Admin}">
+                            <StackPanel Margin="15,5,15,0">
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    DockPanel.Dock="Left"
+                                    Text="{lang:Lang Key={x:Static lang:LangKeys.Buzzer}}" />
+                                <hc:Divider Margin="0,3,0,10" />
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Text="{lang:Lang Key={x:Static lang:LangKeys.EnableBuzzer}}" />
+                                    <ToggleButton
+                                        Margin="20,9"
+                                        HorizontalAlignment="Center"
+                                        IsChecked="{Binding IsEnableBuzzer}"
+                                        IsEnabled="{Binding IsEdit}"
+                                        Style="{StaticResource ToggleButtonSwitch}">
+                                        <hc:Interaction.Triggers>
+                                            <hc:EventTrigger EventName="Checked">
+                                                <hc:InvokeCommandAction Command="{Binding EnableBuzzerCommand}" />
+                                            </hc:EventTrigger>
+                                            <hc:EventTrigger EventName="Unchecked">
+                                                <hc:InvokeCommandAction Command="{Binding DisableBuzzerCommand}" />
+                                            </hc:EventTrigger>
+                                        </hc:Interaction.Triggers>
+                                    </ToggleButton>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Text="{lang:Lang Key={x:Static lang:LangKeys.EnableSafetyDoor}}" />
+                                    <ToggleButton
+                                        Margin="20,9"
+                                        HorizontalAlignment="Center"
+                                        IsChecked="{Binding IsEnableSafetyDoor}"
+                                        IsEnabled="{Binding IsEdit}"
+                                        Style="{StaticResource ToggleButtonSwitch}">
+                                        <hc:Interaction.Triggers>
+                                            <hc:EventTrigger EventName="Checked">
+                                                <hc:InvokeCommandAction Command="{Binding EnableSafetyDoorCommand}" />
+                                            </hc:EventTrigger>
+                                            <hc:EventTrigger EventName="Unchecked">
+                                                <hc:InvokeCommandAction Command="{Binding DisableSafetyDoorCommand}" />
+                                            </hc:EventTrigger>
+                                        </hc:Interaction.Triggers>
+                                    </ToggleButton>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Text="{lang:Lang Key={x:Static lang:LangKeys.EnableLightCurtain}}" />
+                                    <ToggleButton
+                                        Margin="20,9"
+                                        HorizontalAlignment="Center"
+                                        IsChecked="{Binding IsEnableLightCurtain}"
+                                        IsEnabled="{Binding IsEdit}"
+                                        Style="{StaticResource ToggleButtonSwitch}">
+                                        <hc:Interaction.Triggers>
+                                            <hc:EventTrigger EventName="Checked">
+                                                <hc:InvokeCommandAction Command="{Binding EnableLightCurtainCommand}" />
+                                            </hc:EventTrigger>
+                                            <hc:EventTrigger EventName="Unchecked">
+                                                <hc:InvokeCommandAction Command="{Binding DisableLightCurtainCommand}" />
+                                            </hc:EventTrigger>
+                                        </hc:Interaction.Triggers>
+                                    </ToggleButton>
+                                </StackPanel>
+                            </StackPanel>
+                        </Grid>
+                        <Grid Grid.Column="1" Visibility="{Binding SysRole, Converter={StaticResource RoleVisibilityConverter}, ConverterParameter=Admin}">
+                            <StackPanel Margin="15,5,15,0">
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    DockPanel.Dock="Left"
+                                    Text="{lang:Lang Key={x:Static lang:LangKeys.SystemOperationTips}}" />
+                                <hc:Divider Margin="0,3,0,10" />
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Text="{lang:Lang Key={x:Static lang:LangKeys.OPenPrompt}}" />
+                                    <ToggleButton
+                                        Margin="20,9"
+                                        HorizontalAlignment="Center"
+                                        IsChecked="{Binding IsShowOperationTip}"
+                                        IsEnabled="{Binding IsEdit}"
+                                        Style="{StaticResource ToggleButtonSwitch}" />
+                                </StackPanel>
+
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                    <Grid Grid.Row="0">
+                        <StackPanel
+                            Margin="0,5,15,15"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Bottom"
+                            Orientation="Horizontal">
+                            <Button
+                                Margin="0,0,10,0"
+                                Background="#4BA4FE"
+                                BorderBrush="#4BA4FE"
+                                Command="{Binding EditEnableCommand}"
+                                Content="{lang:Lang Key={x:Static lang:LangKeys.Edit}}"
+                                Foreground="White"
+                                IsEnabled="{Binding EditEnable}" />
+                            <Button
+                                Background="#4BA4FE"
+                                BorderBrush="#4BA4FE"
+                                Command="{Binding ListenCommand}"
+                                Content="{lang:Lang Key={x:Static lang:LangKeys.EnableListening}}"
+                                Foreground="White"
+                                IsEnabled="{Binding ListenEnable}" />
+                        </StackPanel>
+                    </Grid>
+                </Grid>
+            </Border>
+        </ScrollViewer>
+        <!--  图像，数据库，班别  -->
+        <ScrollViewer
+            Grid.Column="1"
+            HorizontalScrollBarVisibility="Auto"
+            VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="10" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                <StackPanel>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="10" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <GroupBox
+                            HorizontalContentAlignment="Left"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.CT}}">
+                            <WrapPanel Orientation="Horizontal">
+                                <StackPanel Margin="5" Orientation="Horizontal">
+                                    <hc:TextBox
+                                        Width="90"
+                                        VerticalAlignment="Center"
+                                        hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.SingleCT}}"
+                                        hc:InfoElement.TitlePlacement="Left"
+                                        Foreground="Black"
+                                        Text="{Binding CT, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                        TextChanged="TextBox_TextChanged" />
+                                    <TextBlock
+                                        Margin="5,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Text="{lang:Lang Key={x:Static lang:LangKeys.Second}}" />
+                                </StackPanel>
+                                <StackPanel Margin="10,5" Orientation="Horizontal">
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Text="{lang:Lang Key={x:Static lang:LangKeys.CTStatistics}}" />
+                                    <ToggleButton
+                                        Margin="5,0,0,0"
+                                        HorizontalAlignment="Center"
+                                        IsChecked="{Binding IsEnableCTStatistics}"
+                                        Style="{StaticResource ToggleButtonSwitch}" />
+                                    <TextBlock
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          Text="自动配置步序时间" />
+                                    <ToggleButton
+                                         Margin="5,0,0,0"
+                                         HorizontalAlignment="Center"
+                                         IsChecked="{Binding IsEnableAutoSetCT}"
+                                         Style="{StaticResource ToggleButtonSwitch}" />
+                                    <TextBlock
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Text="{lang:Lang Key={x:Static lang:LangKeys.DoorLock}}" />
+                                    <ToggleButton
+                                        Margin="5,0,0,0"
+                                        HorizontalAlignment="Center"
+                                        IsChecked="{Binding IsDoorLock}"
+                                        Style="{StaticResource ToggleButtonSwitch}" />
+                                </StackPanel>
+                                <StackPanel Margin="0,5" Orientation="Horizontal">
+                                    <TextBlock
+                                        Margin="0,0,5,0"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Text="{lang:Lang Key={x:Static lang:LangKeys.FileType}}" />
+                                    <hc:ComboBox
+                                        MinWidth="100"
+                                        HorizontalAlignment="Center"
+                                        hc:InfoElement.Placeholder="请选择模式"
+                                        Background="{DynamicResource RegionBrush}"
+                                        DisplayMemberPath="{Binding Desc}"
+                                        IsEditable="False"
+                                        ItemsSource="{Binding FileTypeList}"
+                                        SelectedValue="{Binding FileType}"
+                                        SelectedValuePath="Value" />
+                                </StackPanel>
+                            </WrapPanel>
+                        </GroupBox>
+                        <GroupBox
+                            Grid.Column="2"
+                            HorizontalContentAlignment="Left"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.CropRateSet}}">
+                            <WrapPanel Orientation="Horizontal">
+                                <StackPanel Margin="5" Orientation="Horizontal">
+                                    <hc:TextBox
+                                        Width="120"
+                                        VerticalAlignment="Center"
+                                        hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.ThrowingTime}}"
+                                        hc:InfoElement.TitlePlacement="Left"
+                                        Foreground="Black"
+                                        Text="{Binding TossingTime, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                        TextChanged="TextBox_TextChanged" />
+                                    <TextBlock
+                                        Margin="5,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Text="{lang:Lang Key={x:Static lang:LangKeys.Second}}" />
+                                </StackPanel>
+                                <StackPanel Margin="5" Orientation="Horizontal">
+                                    <hc:TextBox
+                                        MinWidth="200"
+                                        VerticalAlignment="Center"
+                                        hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.RefreshFrequency}}"
+                                        hc:InfoElement.TitlePlacement="Left"
+                                        Foreground="Black"
+                                        Text="{Binding PvRefreshInterval, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                        TextChanged="TextBox_TextChanged" />
+                                    <TextBlock
+                                        Margin="5,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Text="秒" />
+
+                                    <hc:TextBox
+                                        MinWidth="200"
+                                        VerticalAlignment="Center"
+                                        hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.HighLevelTime}}"
+                                        hc:InfoElement.TitlePlacement="Left"
+                                        Foreground="Black"
+                                        Text="{Binding HighLevelTime, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                        TextChanged="TextBox_TextChanged" />
+                                    <TextBlock
+                                        Margin="5,0,0,0"
+                                        VerticalAlignment="Center"
+                                        Text="分钟" />
+                                </StackPanel>
+                            </WrapPanel>
+                        </GroupBox>
+                    </Grid>
+                </StackPanel>
+                <GroupBox
+                    Height="33"
+                    Margin="0,10,0,0"
+                    HorizontalContentAlignment="Stretch"
+                    Background="Transparent"
+                    BorderThickness="0">
+                    <GroupBox.HeaderTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock
+                                    Grid.Column="0"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Text="{lang:Lang Key={x:Static lang:LangKeys.Class}}" />
+                                <Button
+                                    Grid.Column="2"
+                                    HorizontalAlignment="Right"
+                                    hc:IconElement.Geometry="{StaticResource AddGeometry}"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Command="{Binding DataContext.AddClassCommand, RelativeSource={RelativeSource AncestorType=GroupBox}}"
+                                    Foreground="#4BA4FE" />
+                            </Grid>
+                        </DataTemplate>
+                    </GroupBox.HeaderTemplate>
+                </GroupBox>
+                <DataGrid
+                    AlternationCount="2"
+                    Background="#F0F2F5"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="0"
+                    CanUserSortColumns="False"
+                    ColumnHeaderStyle="{StaticResource NoBorderDataGridColumnHeaderStyle}"
+                    HeadersVisibility="Column"
+                    IsReadOnly="True"
+                    ItemsSource="{Binding ClassList}"
+                    RowStyle="{StaticResource UnderLineDataGridRowStyle}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn
+                            Width="100"
+                            MinWidth="60"
+                            Binding="{Binding ClassType}"
+                            ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.Class}}" />
+                        <DataGridTextColumn
+                            Width="100"
+                            MinWidth="100"
+                            Binding="{Binding StartTime, StringFormat='HH:mm'}"
+                            ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.StartTime}}" />
+                        <DataGridTextColumn
+                            Width="100"
+                            MinWidth="100"
+                            Binding="{Binding EndTime, StringFormat='HH:mm'}"
+                            ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.EndTime}}" />
+                        <DataGridTemplateColumn MinWidth="100" Header="{lang:Lang Key={x:Static lang:LangKeys.FirstClass}}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox
+                                        HorizontalAlignment="Center"
+                                        Command="{Binding DataContext.CheckCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                        CommandParameter="{Binding}"
+                                        IsChecked="{Binding FirstClass}" />
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn
+                            Width="*"
+                            MinWidth="150"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.Operate}}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Orientation="Horizontal">
+                                        <Button
+                                            hc:IconElement.Geometry="{StaticResource EditorGeometry}"
+                                            Background="Transparent"
+                                            BorderBrush="Transparent"
+                                            Command="{Binding DataContext.EditClassCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"
+                                            Content="{lang:Lang Key={x:Static lang:LangKeys.Edit}}"
+                                            Foreground="#4BA4FE" />
+                                        <Button
+                                            Margin="10,0,0,0"
+                                            hc:IconElement.Geometry="{StaticResource DeleteGeometry}"
+                                            Background="Transparent"
+                                            BorderBrush="Transparent"
+                                            Command="{Binding DataContext.DeleteClassCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"
+                                            Content="{lang:Lang Key={x:Static lang:LangKeys.Delete}}"
+                                            Foreground="#4BA4FE" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+                <GroupBox
+                    Height="33"
+                    Margin="0,10,0,0"
+                    HorizontalContentAlignment="Stretch"
+                    Background="Transparent"
+                    BorderThickness="0">
+                    <GroupBox.HeaderTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock
+                                    Grid.Column="0"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Text="{lang:Lang Key={x:Static lang:LangKeys.LightCurtain}}" />
+                                <Button
+                                    Grid.Column="2"
+                                    HorizontalAlignment="Right"
+                                    hc:IconElement.Geometry="{StaticResource AddGeometry}"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Command="{Binding DataContext.AddLightCurtainCommand, RelativeSource={RelativeSource AncestorType=GroupBox}}"
+                                    Foreground="#4BA4FE" />
+                            </Grid>
+                        </DataTemplate>
+                    </GroupBox.HeaderTemplate>
+                </GroupBox>
+                <DataGrid
+                    AlternationCount="2"
+                    Background="#F0F2F5"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="0"
+                    CanUserSortColumns="False"
+                    ColumnHeaderStyle="{StaticResource NoBorderDataGridColumnHeaderStyle}"
+                    HeadersVisibility="Column"
+                    IsReadOnly="True"
+                    ItemsSource="{Binding ListLightCurtains}"
+                    RowStyle="{StaticResource UnderLineDataGridRowStyle}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn
+                            Width="200"
+                            MinWidth="200"
+                            Binding="{Binding DeviceName}"
+                            ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.Device}}" />
+                        <DataGridTextColumn
+                            Width="*"
+                            MinWidth="150"
+                            Binding="{Binding Globalvar}"
+                            ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.GlobalVar}}" />
+                        <DataGridTemplateColumn
+                            Width="*"
+                            MinWidth="200"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.Operate}}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Orientation="Horizontal">
+                                        <!--<Button
+                                            hc:IconElement.Geometry="{StaticResource EditorGeometry}"
+                                            Background="Transparent"
+                                            BorderBrush="Transparent"
+                                            Command="{Binding DataContext.EditLightCurtainCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"
+                                            Content="编辑"
+                                            Foreground="#4BA4FE" />-->
+                                        <Button
+                                            Margin="10,0,0,0"
+                                            hc:IconElement.Geometry="{StaticResource DeleteGeometry}"
+                                            Background="Transparent"
+                                            BorderBrush="Transparent"
+                                            Command="{Binding DataContext.DeleteLightCurtainCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"
+                                            Content="{lang:Lang Key={x:Static lang:LangKeys.Delete}}"
+                                            Foreground="#4BA4FE" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+                <GroupBox
+                    Height="33"
+                    Margin="0,10,0,0"
+                    HorizontalContentAlignment="Stretch"
+                    Background="Transparent"
+                    BorderThickness="0">
+                    <GroupBox.HeaderTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock
+                                    Grid.Column="0"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Text="{lang:Lang Key={x:Static lang:LangKeys.DoorLock}}" />
+                                <Button
+                                    Grid.Column="2"
+                                    HorizontalAlignment="Right"
+                                    hc:IconElement.Geometry="{StaticResource AddGeometry}"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Command="{Binding DataContext.DoorOnOffCommand, RelativeSource={RelativeSource AncestorType=GroupBox}}"
+                                    Foreground="#4BA4FE" />
+                            </Grid>
+                        </DataTemplate>
+                    </GroupBox.HeaderTemplate>
+                </GroupBox>
+                <DataGrid
+                    AlternationCount="2"
+                    Background="#F0F2F5"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="0"
+                    CanUserSortColumns="False"
+                    ColumnHeaderStyle="{StaticResource NoBorderDataGridColumnHeaderStyle}"
+                    HeadersVisibility="Column"
+                    IsReadOnly="True"
+                    ItemsSource="{Binding ListOpenCloseDoor}"
+                    RowStyle="{StaticResource UnderLineDataGridRowStyle}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn
+                            Width="150"
+                            MinWidth="150"
+                            Binding="{Binding Desc}"
+                            ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.Type}}" />
+                        <DataGridTextColumn
+                            Width="300"
+                            MinWidth="300"
+                            Binding="{Binding LockIODesc}"
+                            ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                            Header="IO">
+                            <DataGridTextColumn.CellStyle>
+                                <Style TargetType="DataGridCell">
+                                    <Setter Property="ToolTip" Value="{Binding LockIODesc}" />
+                                </Style>
+                            </DataGridTextColumn.CellStyle>
+                        </DataGridTextColumn>
+                        <DataGridTemplateColumn
+                            Width="*"
+                            MinWidth="200"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.Operate}}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Orientation="Horizontal">
+                                        <!--<Button
+                                            hc:IconElement.Geometry="{StaticResource EditorGeometry}"
+                                            Background="Transparent"
+                                            BorderBrush="Transparent"
+                                            Command="{Binding DataContext.DoorEditCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"
+                                            Content="编辑"
+                                            Foreground="#4BA4FE" />-->
+                                        <Button
+                                            Margin="10,0,0,0"
+                                            hc:IconElement.Geometry="{StaticResource DeleteGeometry}"
+                                            Background="Transparent"
+                                            BorderBrush="Transparent"
+                                            Command="{Binding DataContext.DoorDeleteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"
+                                            Content="{lang:Lang Key={x:Static lang:LangKeys.Delete}}"
+                                            Foreground="#4BA4FE" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <GroupBox
+                    Height="33"
+                    Margin="0,10,0,0"
+                    HorizontalContentAlignment="Stretch"
+                    Background="Transparent"
+                    BorderThickness="0">
+                    <GroupBox.HeaderTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock
+                                    Grid.Column="0"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Text="{lang:Lang Key={x:Static lang:LangKeys.SysOperationIO}}" />
+                                <Button
+                                    Grid.Column="2"
+                                    HorizontalAlignment="Right"
+                                    hc:IconElement.Geometry="{StaticResource AddGeometry}"
+                                    Background="Transparent"
+                                    BorderThickness="0"
+                                    Command="{Binding DataContext.SysOperateIOCommand, RelativeSource={RelativeSource AncestorType=GroupBox}}"
+                                    Foreground="#4BA4FE" />
+                            </Grid>
+                        </DataTemplate>
+                    </GroupBox.HeaderTemplate>
+                </GroupBox>
+                <DataGrid
+                    AlternationCount="2"
+                    Background="#F0F2F5"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="0"
+                    CanUserSortColumns="False"
+                    ColumnHeaderStyle="{StaticResource NoBorderDataGridColumnHeaderStyle}"
+                    HeadersVisibility="Column"
+                    IsReadOnly="True"
+                    ItemsSource="{Binding ListOperateIOSet}"
+                    RowStyle="{StaticResource UnderLineDataGridRowStyle}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn
+                            Width="150"
+                            MinWidth="150"
+                            Binding="{Binding Desc}"
+                            ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.Type}}" />
+                        <DataGridTextColumn
+                            Width="300"
+                            MinWidth="300"
+                            Binding="{Binding IODesc}"
+                            ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                            Header="IO" />
+                        <DataGridTemplateColumn
+                            Width="*"
+                            MinWidth="200"
+                            Header="{lang:Lang Key={x:Static lang:LangKeys.Operate}}">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Orientation="Horizontal">
+                                        <Button
+                                            Margin="10,0,0,0"
+                                            hc:IconElement.Geometry="{StaticResource DeleteGeometry}"
+                                            Background="Transparent"
+                                            BorderBrush="Transparent"
+                                            Command="{Binding DataContext.SysOperateIODeleteCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                            CommandParameter="{Binding}"
+                                            Content="{lang:Lang Key={x:Static lang:LangKeys.Delete}}"
+                                            Foreground="#4BA4FE" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+            </StackPanel>
+        </ScrollViewer>
+
+
+    </Grid>
+</UserControl>

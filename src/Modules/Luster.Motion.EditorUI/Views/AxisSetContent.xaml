@@ -1,0 +1,385 @@
+﻿<UserControl
+    x:Class="Luster.Motion.EditorUI.Views.AxisSetContent"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ctrl="clr-namespace:Luster.Control.Wpf.Motion.Controls;assembly=Luster.Control.Wpf.Motion"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:lang="clr-namespace:Luster.Motion.Assests.Langs;assembly=Luster.Motion.Assests"
+    xmlns:local="clr-namespace:Luster.Motion.EditorUI.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    d:DesignHeight="450"
+    d:DesignWidth="800"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{DynamicResource SecondaryRegionBrush}"
+    mc:Ignorable="d">
+    <Grid Background="#F4F6FA">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="3" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <GroupBox
+            MinWidth="120"
+            Padding="0"
+            hc:TitleElement.Background="{StaticResource RegionBrush}"
+            Foreground="Red"
+            Header="{Binding AxisGroup}"
+            Style="{StaticResource GroupBoxTab}">
+            <ListBox ItemsSource="{Binding AxisNodes}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Text}" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+                <hc:Interaction.Triggers>
+                    <hc:EventTrigger EventName="SelectionChanged">
+                        <hc:EventToCommand Command="{Binding SelectCommand}" PassEventArgsToCommand="True" />
+                    </hc:EventTrigger>
+                </hc:Interaction.Triggers>
+            </ListBox>
+        </GroupBox>
+        <GridSplitter
+            Grid.Column="1"
+            Width="2"
+            Margin="0,10"
+            HorizontalAlignment="Stretch"
+            Foreground="{DynamicResource RegionBrush}" />
+        <Grid Grid.Column="2" Background="{StaticResource RegionBrush}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <GroupBox
+                    Margin="5,0"
+                    hc:TitleElement.Background="{StaticResource RegionBrush}"
+                    Style="{StaticResource GroupBoxTab}">
+                    <GroupBox.Header>
+                        <Grid Margin="0,5">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <ComboBox
+                                Grid.Column="1"
+                                Width="160"
+                                Margin="10,0,0,0"
+                                hc:TitleElement.Title="{lang:Lang Key={x:Static lang:LangKeys.MoveDirection}}"
+                                hc:TitleElement.TitlePlacement="Left"
+                                hc:TitleElement.TitleWidth="60"
+                                DisplayMemberPath="Desc"
+                                ItemsSource="{Binding Directions}"
+                                SelectedValue="{Binding MoveDirection}"
+                                SelectedValuePath="Value"
+                                Style="{StaticResource ComboBoxExtend}" />
+                            <hc:ButtonGroup Grid.Column="2" Margin="10,0,0,0">
+                                <Button
+                                    Command="{Binding AxisCommand}"
+                                    CommandParameter="Clear"
+                                    Content="{lang:Lang Key={x:Static lang:LangKeys.ClearMistake}}" />
+                                <Button
+                                    Command="{Binding AxisCommand}"
+                                    CommandParameter="Stop"
+                                    Content="{lang:Lang Key={x:Static lang:LangKeys.Stop}}" />
+                                <Button
+                                    Command="{Binding AxisCommand}"
+                                    CommandParameter="Move"
+                                    Content="{lang:Lang Key={x:Static lang:LangKeys.Motion}}"
+                                    Visibility="{Binding IsMAxis, Converter={StaticResource Boolean2VisibilityConverter}}" />
+                                <Button
+                                    Command="{Binding AxisCommand}"
+                                    CommandParameter="{lang:Lang Key={x:Static lang:LangKeys.JOG}}"
+                                    Content="{lang:Lang Key={x:Static lang:LangKeys.JOG}}"
+                                    Visibility="{Binding IsMAxis, Converter={StaticResource Boolean2VisibilityConverter}}" />
+                            </hc:ButtonGroup>
+                        </Grid>
+                    </GroupBox.Header>
+                    <ScrollViewer Grid.Row="1">
+                        <ItemsControl IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Engineer}" ItemsSource="{Binding HasAxisDatas}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <hc:UniformSpacingPanel
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Top"
+                                        ChildWrapping="Wrap"
+                                        ScrollViewer.VerticalScrollBarVisibility="Visible"
+                                        Spacing="10" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border
+                                        Margin="0,5"
+                                        Padding="10,5"
+                                        Background="{DynamicResource RegionBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="5">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <TextBlock
+                                                Grid.Row="0"
+                                                Grid.ColumnSpan="2"
+                                                Margin="0,5,0,0"
+                                                HorizontalAlignment="Left"
+                                                VerticalAlignment="Center"
+                                                FontWeight="Bold"
+                                                Text="{Binding Name}"
+                                                TextWrapping="NoWrap"
+                                                ToolTip="{Binding Name}" />
+                                            <hc:ElementGroup
+                                                Grid.Row="1"
+                                                Margin="0,10,0,0"
+                                                HorizontalAlignment="Center"
+                                                ItemsSource="{Binding StatusList}">
+                                                <hc:ElementGroup.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid Height="32" Margin="3">
+                                                            <Path
+                                                                HorizontalAlignment="Left"
+                                                                VerticalAlignment="Top"
+                                                                Data="M 0,0 A 5,5 45 1 1 0,1 Z"
+                                                                Fill="{Binding Status, Converter={StaticResource Boolean2PassColorCoverter}}" />
+                                                            <TextBlock
+                                                                Margin="-5,10,5,0"
+                                                                HorizontalAlignment="Left"
+                                                                FontSize="10"
+                                                                Text="{Binding Alias}" />
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </hc:ElementGroup.ItemTemplate>
+                                            </hc:ElementGroup>
+                                            <Grid Grid.Row="2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="60" />
+                                                    <ColumnDefinition />
+                                                    <ColumnDefinition Width="60" />
+                                                    <ColumnDefinition />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock
+                                                    Margin="5,0,0,0"
+                                                    FontWeight="Bold"
+                                                    Foreground="Blue"
+                                                    Text="{lang:Lang Key={x:Static lang:LangKeys.RealTimeLocation}}" />
+                                                <TextBlock
+                                                    Grid.Column="1"
+                                                    Margin="10,0,10,0"
+                                                    HorizontalAlignment="Left"
+                                                    FontWeight="Bold"
+                                                    Foreground="Red"
+                                                    Text="{Binding CurrentPos, StringFormat={}{0:N3} mm}" />
+                                                <TextBlock
+                                                    Grid.Column="2"
+                                                    Margin="5,0,0,0"
+                                                    FontWeight="Bold"
+                                                    Foreground="Blue"
+                                                    Text="{lang:Lang Key={x:Static lang:LangKeys.TeachLocation}}" />
+                                                <TextBlock
+                                                    Grid.Column="3"
+                                                    Margin="10,0,10,0"
+                                                    HorizontalAlignment="Left"
+                                                    FontWeight="Bold"
+                                                    Foreground="Red"
+                                                    Text="{Binding Position, StringFormat={}{0:N3} mm}" />
+                                            </Grid>
+                                            <Grid Grid.Row="3" Margin="0,15,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition />
+                                                    <ColumnDefinition />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock
+                                                    Grid.Row="2"
+                                                    Grid.Column="0"
+                                                    HorizontalAlignment="Left"
+                                                    VerticalAlignment="Center"
+                                                    Text="{lang:Lang Key={x:Static lang:LangKeys.AxisPriority}}"
+                                                    TextWrapping="NoWrap" />
+                                                <ComboBox
+                                                    Grid.Column="1"
+                                                    hc:InfoElement.Placeholder="{lang:Lang Key={x:Static lang:LangKeys.Priority}}"
+                                                    DisplayMemberPath="Desc"
+                                                    ItemsSource="{Binding DataContext.Priorities, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                    SelectedValue="{Binding Priority}"
+                                                    SelectedValuePath="Value"
+                                                    ToolTip="{lang:Lang Key={x:Static lang:LangKeys.MotionPriorityOfEachAxisInMultipleScenes}}" />
+                                            </Grid>
+
+                                            <Grid Grid.Row="4">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition />
+                                                    <ColumnDefinition />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock
+                                                    Grid.Row="2"
+                                                    Grid.Column="0"
+                                                    Margin="0,0,20,0"
+                                                    HorizontalAlignment="Left"
+                                                    VerticalAlignment="Center"
+                                                    Text="{lang:Lang Key={x:Static lang:LangKeys.MotionSpeed_mm_s_}}"
+                                                    TextWrapping="NoWrap" />
+                                                <hc:TextBox
+                                                    Grid.Row="4"
+                                                    Grid.Column="1"
+                                                    hc:InfoElement.Placeholder=""
+                                                    hc:InfoElement.TitlePlacement="Left"
+                                                    Text="{Binding Speed, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}"
+                                                    TextType="Double"
+                                                    ToolTip="{lang:Lang Key={x:Static lang:LangKeys.MotionSpeedWithUnit}}" />
+                                            </Grid>
+                                            <Grid Grid.Row="5" Margin="0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition />
+                                                    <ColumnDefinition />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock
+                                                    Grid.Column="0"
+                                                    Margin="0,0,20,0"
+                                                    HorizontalAlignment="Left"
+                                                    VerticalAlignment="Center"
+                                                    Text="{lang:Lang Key={x:Static lang:LangKeys.MovePostion_mm_}}"
+                                                    TextWrapping="NoWrap" />
+                                                <hc:TextBox
+                                                    Grid.Column="1"
+                                                    VerticalAlignment="Center"
+                                                    hc:InfoElement.Placeholder="{lang:Lang Key={x:Static lang:LangKeys.TargetWithUnit}}"
+                                                    hc:InfoElement.TitlePlacement="Left"
+                                                    Text="{Binding DstPosition}"
+                                                    TextType="Double"
+                                                    ToolTip="{lang:Lang Key={x:Static lang:LangKeys.TargetUnitOfMotion}}" />
+
+                                            </Grid>
+
+                                            <hc:ElementGroup
+                                                Grid.Row="6"
+                                                Margin="0,0,0,5"
+                                                HorizontalAlignment="Right">
+                                                <hc:ElementGroup.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+                                                        </Grid>
+                                                    </ItemsPanelTemplate>
+                                                </hc:ElementGroup.ItemsPanel>
+                                                <Button
+                                                    Grid.Column="0"
+                                                    hc:IconElement.Geometry="{StaticResource AddGeometry}"
+                                                    hc:IconElement.Width="12">
+                                                    <hc:Interaction.Triggers>
+                                                        <hc:EventTrigger EventName="PreviewMouseDown">
+                                                            <hc:EventToCommand Command="{Binding JogCommandAdd}" />
+                                                        </hc:EventTrigger>
+                                                        <hc:EventTrigger EventName="PreviewMouseUp">
+                                                            <hc:EventToCommand Command="{Binding StopCommand}" />
+                                                        </hc:EventTrigger>
+                                                    </hc:Interaction.Triggers>
+                                                </Button>
+                                                <Button
+                                                    Grid.Column="1"
+                                                    hc:IconElement.Geometry="{StaticResource SubGeometry}"
+                                                    hc:IconElement.Width="12">
+                                                    <hc:Interaction.Triggers>
+                                                        <hc:EventTrigger EventName="PreviewMouseDown">
+                                                            <hc:EventToCommand Command="{Binding JogCommandSub}" />
+                                                        </hc:EventTrigger>
+                                                        <hc:EventTrigger EventName="PreviewMouseUp">
+                                                            <hc:EventToCommand Command="{Binding StopCommand}" />
+                                                        </hc:EventTrigger>
+                                                    </hc:Interaction.Triggers>
+                                                </Button>
+                                                <Button
+                                                    Grid.Column="2"
+                                                    Command="{Binding MoveAbsCommand}"
+                                                    Content="{lang:Lang Key={x:Static lang:LangKeys.Absolutely}}" />
+                                                <Button
+                                                    Grid.Column="3"
+                                                    Command="{Binding MoveRelCommand}"
+                                                    Content="{lang:Lang Key={x:Static lang:LangKeys.Relative}}" />
+                                                <Button
+                                                    Grid.Column="4"
+                                                    Command="{Binding HomeCommand}"
+                                                    Content="{lang:Lang Key={x:Static lang:LangKeys.HomeZero}}" />
+                                                <Button
+                                                    Grid.Column="5"
+                                                    Command="{Binding ApplyCommand}"
+                                                    CommandParameter="{Binding .}"
+                                                    Content="{lang:Lang Key={x:Static lang:LangKeys.Teach}}" />
+                                            </hc:ElementGroup>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </GroupBox>
+                <hc:ElementGroup
+                    Grid.Row="1"
+                    Width="320"
+                    Margin="10">
+                    <hc:ElementGroup.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                            </Grid>
+                        </ItemsPanelTemplate>
+                    </hc:ElementGroup.ItemsPanel>
+                    <TextBlock
+                        Width="60"
+                        VerticalAlignment="Center"
+                        Foreground="Red"
+                        Text="{lang:Lang Key={x:Static lang:LangKeys.SpeedFactor}}"
+                        ToolTip="{lang:Lang Key={x:Static lang:LangKeys.ActualSpeed}}" />
+                    <Slider
+                        Name="slider"
+                        Grid.Column="1"
+                        Width="180"
+                        Margin="20,0,0,0"
+                        hc:TipElement.Placement="Top"
+                        hc:TipElement.Visibility="Visible"
+                        IsSnapToTickEnabled="True"
+                        Maximum="100"
+                        Minimum="10"
+                        Orientation="Horizontal"
+                        TickFrequency="10"
+                        TickPlacement="BottomRight"
+                        Value="{Binding SpeedPercent}">
+                        <hc:Interaction.Triggers>
+                            <hc:EventTrigger EventName="ValueChanged">
+                                <hc:EventToCommand Command="{Binding ChangeSpeedCommand}" PassEventArgsToCommand="True" />
+                            </hc:EventTrigger>
+                        </hc:Interaction.Triggers>
+                    </Slider>
+                    <hc:NumericUpDown
+                        Grid.Column="2"
+                        Width="60"
+                        IsReadOnly="True"
+                        Value="{Binding ElementName=slider, Path=Value}" />
+                </hc:ElementGroup>
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

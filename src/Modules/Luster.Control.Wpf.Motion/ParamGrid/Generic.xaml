@@ -1,0 +1,268 @@
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converter="clr-namespace:Luster.Control.Wpf.Motion.Converters"
+    xmlns:ex="clr-namespace:Luster.Motion.Assests.Langs;assembly=Luster.Motion.Assests"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:local="clr-namespace:Luster.Control.Wpf.Motion">
+
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/Luster.Motion.Assests;component/Themes/Basic/Fonts.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+    <converter:Boolean2IconString x:Key="Bool2IconString" />
+    <converter:GroupString2Boolean x:Key="GroupVisible" />
+    <Style
+        x:Key="ParamItemToolTipBaseStyle"
+        BasedOn="{StaticResource {x:Type ToolTip}}"
+        TargetType="ToolTip">
+        <Setter Property="Padding" Value="10" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToolTip">
+                    <Border
+                        Margin="8"
+                        Padding="{TemplateBinding Padding}"
+                        Background="{DynamicResource RegionBrush}"
+                        BorderBrush="{DynamicResource BorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{Binding Path=(hc:BorderElement.CornerRadius), RelativeSource={RelativeSource TemplatedParent}}"
+                        Effect="{StaticResource EffectShadow2}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <ContentPresenter x:Name="Presenter" Margin="5" />
+                            <!--<StackPanel Grid.Row="1" Orientation="Horizontal">
+                                <TextBlock FontWeight="Bold" Text="{Binding PropertyTypeName, RelativeSource={RelativeSource AncestorType=local:ParamItem}}" />
+                                <TextBlock Margin="6,0,0,0" Text="{Binding PropertyName, RelativeSource={RelativeSource AncestorType=local:ParamItem}}" />
+                            </StackPanel>-->
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="Content" Value="{x:Null}">
+                            <Setter TargetName="Presenter" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                        <Trigger Property="Content" Value="">
+                            <Setter TargetName="Presenter" Property="Visibility" Value="Collapsed" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <ControlTemplate x:Key="ParamItemLinkCtrl" TargetType="{x:Type local:ParamItem}">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="70" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock
+                    Width="{Binding Path=(hc:TitleElement.TitleWidth).Value, RelativeSource={RelativeSource TemplatedParent}}"
+                    MaxWidth="70"
+                    Padding="0,0,5,0"
+                    Text="{TemplateBinding DisplayName}"
+                    TextTrimming="CharacterEllipsis">
+                    <TextBlock.ToolTip>
+                        <ToolTip Content="{TemplateBinding Description}" Style="{StaticResource ParamItemToolTipBaseStyle}" />
+                    </TextBlock.ToolTip>
+                </TextBlock>
+            </StackPanel>
+            <ContentPresenter Grid.Column="1" ContentSource="EditorElement" />
+            <StackPanel
+                Grid.Column="2"
+                Margin="5,0,0,0"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+                <hc:DashedBorder
+                    Padding="4"
+                    BorderBrush="LightGray"
+                    BorderDashArray="2,2"
+                    BorderThickness="1"
+                    CornerRadius="5">
+                    <TextBlock
+                        FontSize="20"
+                        Foreground="{TemplateBinding ForeColor,Converter={StaticResource String2BrushConverter}}"
+                        Style="{StaticResource MotionIconSmall}"
+                        Tag="{TemplateBinding Value}"
+                        Text="{TemplateBinding IsRef,Converter={StaticResource Bool2IconString}}" />
+                    <hc:DashedBorder.Resources>
+                        <Style TargetType="{x:Type hc:DashedBorder}">
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="LightGray" />
+                                    <Setter Property="Cursor" Value="Hand" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </hc:DashedBorder.Resources>
+                </hc:DashedBorder>
+            </StackPanel>
+        </Grid>
+    </ControlTemplate>
+
+    <ControlTemplate x:Key="ParamItemSaveCtrl" TargetType="{x:Type local:ParamItem}">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="70" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock
+                    Width="{Binding Path=(hc:TitleElement.TitleWidth).Value, RelativeSource={RelativeSource TemplatedParent}}"
+                    MaxWidth="70"
+                    Padding="0,0,5,0"
+                    Text="{TemplateBinding DisplayName}"
+                    TextTrimming="CharacterEllipsis">
+                    <TextBlock.ToolTip>
+                        <ToolTip Content="{TemplateBinding Description}" Style="{StaticResource ParamItemToolTipBaseStyle}" />
+                    </TextBlock.ToolTip>
+                </TextBlock>
+            </StackPanel>
+            <ContentPresenter Grid.Column="1" ContentSource="EditorElement" />
+            <StackPanel
+                Grid.Column="2"
+                Margin="5,0,0,0"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center">
+                <hc:DashedBorder
+                    Padding="3"
+                    BorderBrush="LightGray"
+                    BorderDashArray="2,2"
+                    BorderThickness="1"
+                    CornerRadius="5">
+                    <TextBlock
+                        FontSize="20"
+                        Foreground="Blue"
+                        Style="{StaticResource MotionIconSmall}"
+                        Tag="{TemplateBinding Value}"
+                        Text="&#xe604;" />
+                    <hc:DashedBorder.Resources>
+                        <Style TargetType="{x:Type hc:DashedBorder}">
+                            <Style.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="LightGray" />
+                                    <Setter Property="Cursor" Value="Hand" />
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </hc:DashedBorder.Resources>
+                </hc:DashedBorder>
+            </StackPanel>
+        </Grid>
+    </ControlTemplate>
+
+    <ControlTemplate x:Key="ParamItemNormalCtrl" TargetType="{x:Type local:ParamItem}">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="70" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock
+                    Width="{Binding Path=(hc:TitleElement.TitleWidth).Value, RelativeSource={RelativeSource TemplatedParent}}"
+                    MaxWidth="70"
+                    Padding="0,0,5,0"
+                    Text="{TemplateBinding DisplayName}"
+                    TextTrimming="CharacterEllipsis">
+                    <TextBlock.ToolTip>
+                        <ToolTip Content="{TemplateBinding Description}" Style="{StaticResource ParamItemToolTipBaseStyle}" />
+                    </TextBlock.ToolTip>
+                </TextBlock>
+            </StackPanel>
+            <ContentPresenter Grid.Column="1" ContentSource="EditorElement" />
+        </Grid>
+    </ControlTemplate>
+
+    <Style x:Key="ParamItemBaseStyle" TargetType="local:ParamItem">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Margin" Value="0,5" />
+        <Setter Property="MinHeight" Value="25" />
+        <Setter Property="Template" Value="{StaticResource ParamItemLinkCtrl}" />
+        <Style.Triggers>
+            <Trigger Property="ParamType" Value="Save">
+                <Setter Property="Template" Value="{StaticResource ParamItemSaveCtrl}" />
+            </Trigger>
+            <Trigger Property="ParamType" Value="Normal">
+                <Setter Property="Template" Value="{StaticResource ParamItemNormalCtrl}" />
+            </Trigger>
+            <Trigger Property="UIVisible" Value="False">
+                <Setter Property="Visibility" Value="Collapsed" />
+            </Trigger>
+            <Trigger Property="UIVisible" Value="True">
+                <Setter Property="Visibility" Value="Visible" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="ParamItemsControlBaseStyle" TargetType="local:ParamItemsControl">
+        <Setter Property="ItemContainerStyle" Value="{StaticResource ParamItemBaseStyle}" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="local:ParamItemsControl">
+                    <hc:ScrollViewer Focusable="false" HorizontalScrollBarVisibility="Disabled">
+                        <ItemsPresenter SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" />
+                    </hc:ScrollViewer>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsGrouping" Value="False">
+                <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="PropertyGroupItemBaseStyle" TargetType="GroupItem">
+        <Setter Property="Margin" Value="0,0,0,6" />
+        <Setter Property="Padding" Value="10,6,6,0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="GroupItem">
+                    <Expander Header="{ex:Lang Key={Binding Name}}" IsExpanded="{Binding Name, Converter={StaticResource GroupVisible}, Mode=OneTime}">
+                        <Border
+                            Background="{DynamicResource RegionBrush}"
+                            BorderBrush="{DynamicResource BorderBrush}"
+                            BorderThickness="1,0,1,1"
+                            CornerRadius="0,0,4,4">
+                            <ItemsPresenter Margin="{TemplateBinding Padding}" />
+                        </Border>
+                    </Expander>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="local:ParamGrid">
+        <Setter Property="MaxTitleWidth" Value="200" />
+        <Setter Property="MinTitleWidth" Value="120" />
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Padding" Value="5" />
+        <Setter Property="Background" Value="{DynamicResource RegionBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="local:ParamGrid">
+                    <Border
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}">
+                        <Grid Margin="{TemplateBinding Padding}">
+                            <local:ParamItemsControl x:Name="PART_ItemsControl" Style="{StaticResource ParamItemsControlBaseStyle}">
+                                <local:ParamItemsControl.GroupStyle>
+                                    <GroupStyle ContainerStyle="{StaticResource PropertyGroupItemBaseStyle}" />
+                                </local:ParamItemsControl.GroupStyle>
+                            </local:ParamItemsControl>
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>
