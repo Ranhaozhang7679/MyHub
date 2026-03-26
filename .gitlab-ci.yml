@@ -1,0 +1,20 @@
+stages:
+  - notify
+  - sync   # 新增同步阶段
+# - build
+
+include:
+  - local: '/scripts/push-notify.yml'
+  - local: '/scripts/mr-notify.yml'
+  - local: '/scripts/sync-mr.yml'    # 新增同步 MR 逻辑文件
+# - local: '/scripts/build-dotnet.yml'
+
+variables:
+  DINGTALK_TOKEN: "$DINGTALK_TOKEN"
+  # 注意：需要在 GitLab CI/CD Variables 中额外配置一个具有 API 权限的 GITLAB_API_TOKEN
+  GITLAB_API_TOKEN: "$GITLAB_API_TOKEN"
+
+before_script:
+  - |
+    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    $OutputEncoding = [System.Text.Encoding]::UTF8
