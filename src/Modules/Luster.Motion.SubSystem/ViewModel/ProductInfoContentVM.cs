@@ -1476,7 +1476,7 @@ namespace Luster.Motion.SubSystem.ViewModel
                 Area = webConfig.Area ?? "";
                 Floor = webConfig.Floor ?? "";
                 LineCode = webConfig.LineCode ?? "";
-                UniteCode = webConfig.UniteCode ?? "";
+                UniteCode = webConfig.UniteCode ?? "1";
                 StationName = webConfig.StationName ?? "";
                 StationId = webConfig.StationId ?? "";
                 StationType = webConfig.StationType ?? "";
@@ -1790,7 +1790,7 @@ namespace Luster.Motion.SubSystem.ViewModel
             csvDictionary.TryGetValue("lineCode", out String tempLineCode);
             LineCode = tempLineCode;
             csvDictionary.TryGetValue("uniteCode", out String tempUniteCode);
-            UniteCode = tempUniteCode;
+            UniteCode = string.IsNullOrEmpty(tempUniteCode) ? "1" : tempUniteCode;
             csvDictionary.TryGetValue("stationName", out String tempStationName);
             StationName = StationName_Vision = tempStationName;
             csvDictionary.TryGetValue("stationType", out String tempStationType);
