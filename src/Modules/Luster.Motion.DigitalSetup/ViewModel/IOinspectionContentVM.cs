@@ -2,6 +2,7 @@ using HandyControl.Controls;
 using HandyControl.Data;
 using Luster.Common.Assets;
 using Luster.Common.Assets.FloatingInfo.Services;
+using Luster.Common.Assets.FloatingInfo.Models;
 using Luster.Common.DataAccess.Repositories;
 using Luster.Common.DataStruct;
 using Luster.Common.DataStruct.DataModels;
@@ -2026,8 +2027,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             try
             {
                 // 获取默认图片目录
-                var configDir = Path.GetDirectoryName(_configService.GetConfigPath());
-                var defaultImageDir = Path.Combine(configDir, "Images");
+                var basePath = _configService.GetBasePath();
+                var defaultImageDir = Path.Combine(basePath, "Images");
 
                 // 使用文件夹浏览器对话框选择图片目录
                 using (var dialog = new System.Windows.Forms.FolderBrowserDialog())
@@ -2100,7 +2101,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     BackupConfigFile();
 
                     // 更新配置
-                    await UpdateConfigsAsync(matchResult, configDir);
+                    await UpdateConfigsAsync(matchResult, basePath);
 
                     // 显示成功结果
                     ShowImportResultDialog(matchResult, selectedPath, true);
@@ -2205,8 +2206,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         /// 批量更新IO图片配置
         /// </summary>
         /// <param name="matchResult">匹配结果</param>
-        /// <param name="configDir">配置文件目录</param>
-        private async Task UpdateConfigsAsync(ImageMatchResult matchResult, string configDir)
+        /// <param name="basePath">基准路径（recipe根目录）</param>
+        private async Task UpdateConfigsAsync(ImageMatchResult matchResult, string basePath)
         {
             await Task.Run(() =>
             {
@@ -2216,7 +2217,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     var imagePath = pair.Value;
 
                     // 计算相对路径
-                    var relativePath = GetRelativePath(configDir, imagePath);
+                    var relativePath = PathConverter.ToRelativePath(imagePath, basePath);
 
                     // 获取现有配置
                     var config = _configService.GetConfig(ioName);
@@ -2252,28 +2253,6 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     _configService.SaveConfig(config);
                 }
             });
-        }
-
-        /// <summary>
-        /// 获取相对路径
-        /// </summary>
-        /// <param name="basePath">基础路径</param>
-        /// <param name="fullPath">完整路径</param>
-        /// <returns>相对路径</returns>
-        private string GetRelativePath(string basePath, string fullPath)
-        {
-            try
-            {
-                var baseUri = new Uri(basePath + Path.DirectorySeparatorChar);
-                var fullUri = new Uri(fullPath);
-                var relativeUri = baseUri.MakeRelativeUri(fullUri);
-                return Uri.UnescapeDataString(relativeUri.ToString()).Replace('/', Path.DirectorySeparatorChar);
-            }
-            catch
-            {
-                // 如果计算相对路径失败，返回绝对路径
-                return fullPath;
-            }
         }
 
         /// <summary>

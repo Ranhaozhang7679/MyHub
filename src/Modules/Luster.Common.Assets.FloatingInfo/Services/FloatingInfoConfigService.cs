@@ -337,7 +337,7 @@ namespace Luster.Common.Assets.FloatingInfo.Services
         }
 
         /// <summary>
-        /// 获取基准路径（配置文件所在目录的父目录）
+        /// 获取基准路径（recipe根目录）
         /// </summary>
         /// <returns>基准路径</returns>
         public string GetBasePath()
@@ -353,7 +353,7 @@ namespace Luster.Common.Assets.FloatingInfo.Services
                 }
 
                 // 获取父目录（DigitalSetUpDataValidation 的父目录）
-                var basePath =configDir;
+                var basePath = configDir;
                 return basePath ?? AppDomain.CurrentDomain.BaseDirectory;
             }
             catch
