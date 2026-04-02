@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <CopyToMotionsFolder>true</CopyToMotionsFolder>
@@ -12,6 +12,7 @@
         <PackageReference Include="Luster.Prism" />
         <PackageReference Include="MinVer" />
         <Reference Include="System.ComponentModel.DataAnnotations" />
+        <PackageReference Include="pythonnet"/>
     </ItemGroup>
 
 </Project>

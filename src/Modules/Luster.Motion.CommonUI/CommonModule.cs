@@ -49,9 +49,8 @@ namespace Luster.Motion.CommonUI
 
         public void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            // 注册 Dispatcher
-            containerRegistry.RegisterInstance(Dispatcher.CurrentDispatcher);
-            
+            //containerRegistry.Register<Dispatcher>(() => Application.Current.Dispatcher);
+
             // 注册浮动信息服务
             containerRegistry.RegisterSingleton<IFloatingInfoConfigService, FloatingInfoConfigService>();
             containerRegistry.RegisterSingleton<IFloatingInfoService, FloatingInfoService>();
@@ -113,12 +112,14 @@ namespace Luster.Motion.CommonUI
             containerRegistry.RegisterDialog<ChangeAccessoryDialog, ChangeAccessoryDialogVM>();// 辅料更换
             containerRegistry.RegisterDialog<EditBarcodeDialog, EditBarcodeVM>();
             containerRegistry.RegisterDialog<VersionDialog, VersionDialogVM>();
+            containerRegistry.RegisterDialog<RecipeVersionDialog, RecipeVersionDialogVM>();
             containerRegistry.RegisterDialog<SetOpenCloseDoorDialog, SetOpenCloseDoorDialogVM>();
             containerRegistry.RegisterDialog<SetSysOperateIODialog, SetSysOperateIODialogVM>();
             containerRegistry.RegisterDialog<InteractiveDialog, InteractiveDialogVM>();
 
             containerRegistry.RegisterDialog<ChangeUserDialog, ChangeUserDialogVM>();
             containerRegistry.RegisterForNavigation<CSharpEditor, CSharpEditorVM>();
+            containerRegistry.RegisterForNavigation<PythonEditor, PythonEditorVM>();
 
 
         }

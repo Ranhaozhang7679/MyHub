@@ -45,6 +45,7 @@ using Luster.TaskFlow.Common.Models;
 using System.Drawing.Imaging;
 using System.Runtime.Remoting.Messaging;
 using TaiKeCommon;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Luster.Module.Motion.Device.Functions
 {
@@ -177,68 +178,118 @@ namespace Luster.Module.Motion.Device.Functions
 
                 #region  写入表格
                 #region X方向
-                string date = DateTime.Now.ToString("yyyyMMdd");
-                string directoryName_x = Path.GetDirectoryName($"D:\\TaiKeScrewDatas\\CowlingForceData\\XForce\\{date}\\");
-                if (!Directory.Exists(directoryName_x))
+                try
                 {
-                    Directory.CreateDirectory(directoryName_x);
+                    string date = DateTime.Now.ToString("yyyyMMdd");
+                    string directoryName_x = Path.GetDirectoryName($"D:\\TaiKeScrewDatas\\CowlingForceData\\XForce\\{date}\\");
+                    if (!Directory.Exists(directoryName_x))
+                    {
+                        Directory.CreateDirectory(directoryName_x);
+                    }
+
+                    string filepath = $"D:\\TaiKeScrewDatas\\CowlingForceData\\XForce\\{date}\\{SNCode}.csv";
+
+                    using (FileStream fs = new FileStream(filepath, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+                    using (StreamReader sr = new StreamReader(fs))
+                    {
+                        var RowDatas = string.Empty;
+                        string text = sr.ReadToEnd();
+                        string NewHeader = "Time,Force\r\n";
+                        ///表头为空
+                        if (!text.Contains(NewHeader))
+                        {
+                            fs.Write(Encoding.UTF8.GetBytes(NewHeader), 0, Encoding.UTF8.GetBytes(NewHeader).Length);
+                        }
+                        RowDatas = $"{50 * i},{currentXforce}\r\n";
+                        fs.Write(Encoding.UTF8.GetBytes(RowDatas), 0, Encoding.UTF8.GetBytes(RowDatas).Length);
+                    }
                 }
-
-                string filepath = $"D:\\TaiKeScrewDatas\\CowlingForceData\\XForce\\{date}\\{SNCode}.csv";
-
-                FileStream fs = new FileStream(filepath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-                StreamReader sr = new StreamReader(fs);
-                var RowDatas = string.Empty;
-                string text = sr.ReadToEnd();
-                string NewHeader = "Time,Force\r\n";
-                ///表头为空
-                if (!text.Contains(NewHeader))
+                catch (IOException ex)
                 {
-                    fs.Write(Encoding.UTF8.GetBytes(NewHeader), 0, Encoding.UTF8.GetBytes(NewHeader).Length);
+                    // 文件被占用，跳过本次写入
+                    LogTool.Warn($"文件被占用，跳过本次X方向压力采集写入: {ex.Message}");
                 }
-                RowDatas = $"{50 * i},{currentXforce}\r\n";
-                fs.Write(Encoding.UTF8.GetBytes(RowDatas), 0, Encoding.UTF8.GetBytes(RowDatas).Length);
-                fs.Close();
+                catch (Exception ex)
+                {
+                    // 其他异常也跳过
+                    LogTool.Warn($"其他异常，跳过本次X方向压力采集写入: {ex.Message}");
+                }
                 #endregion X方向
 
                 #region Y方向
-                string directoryName_y = Path.GetDirectoryName($"D:\\TaiKeScrewDatas\\CowlingForceData\\YForce\\{date}\\");
-                if (!Directory.Exists(directoryName_y))
+                try
                 {
-                    Directory.CreateDirectory(directoryName_y);
+                    string date = DateTime.Now.ToString("yyyyMMdd");
+                    string directoryName_y = Path.GetDirectoryName($"D:\\TaiKeScrewDatas\\CowlingForceData\\YForce\\{date}\\");
+                    if (!Directory.Exists(directoryName_y))
+                    {
+                        Directory.CreateDirectory(directoryName_y);
+                    }
+                    string filepath_y = $"D:\\TaiKeScrewDatas\\CowlingForceData\\YForce\\{date}\\{SNCode}.csv";
+                    using (FileStream fs_y = new FileStream(filepath_y, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+                    using (StreamReader sr_y = new StreamReader(fs_y))
+                    {
+                        string text = sr_y.ReadToEnd();
+                        var RowDatas = string.Empty;
+                        string NewHeader = "Time,Force\r\n";
+                        ///表头为空
+                        if (!text.Contains(NewHeader))
+                        {
+                            fs_y.Write(Encoding.UTF8.GetBytes(NewHeader), 0, Encoding.UTF8.GetBytes(NewHeader).Length);
+                        }
+                        RowDatas = $"{50 * i},{currentYforce}\r\n";
+                        fs_y.Write(Encoding.UTF8.GetBytes(RowDatas), 0, Encoding.UTF8.GetBytes(RowDatas).Length);
+                    }
                 }
-                string filepath_y = $"D:\\TaiKeScrewDatas\\CowlingForceData\\YForce\\{date}\\{SNCode}.csv";
-                FileStream fs_y = new FileStream(filepath_y, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-                StreamReader sr_y = new StreamReader(fs_y);
-                text = sr_y.ReadToEnd();
-                ///表头为空
-                if (!text.Contains(NewHeader))
+                catch (IOException ex)
                 {
-                    fs_y.Write(Encoding.UTF8.GetBytes(NewHeader), 0, Encoding.UTF8.GetBytes(NewHeader).Length);
+                    // 文件被占用，跳过本次写入
+                    LogTool.Warn($"文件被占用，跳过本次Y方向压力采集写入: {ex.Message}");
                 }
-                RowDatas = $"{50 * i},{currentYforce}\r\n";
-                fs_y.Write(Encoding.UTF8.GetBytes(RowDatas), 0, Encoding.UTF8.GetBytes(RowDatas).Length);
-                fs_y.Close();
+                catch (Exception ex)
+                {
+                    // 其他异常也跳过
+                    LogTool.Warn($"其他异常，跳过本次Y方向压力采集写入: {ex.Message}");
+                }
+
                 #endregion
 
                 #region Z方向
-                string directoryName_z = Path.GetDirectoryName($"D:\\TaiKeScrewDatas\\CowlingForceData\\ZForce\\{date}\\");
-                if (!Directory.Exists(directoryName_z))
+                try
                 {
-                    Directory.CreateDirectory(directoryName_z);
+                    string date = DateTime.Now.ToString("yyyyMMdd");
+                    string directoryName_z = Path.GetDirectoryName($"D:\\TaiKeScrewDatas\\CowlingForceData\\ZForce\\{date}\\");
+                    if (!Directory.Exists(directoryName_z))
+                    {
+                        Directory.CreateDirectory(directoryName_z);
+                    }
+                    string filepath_z = $"D:\\TaiKeScrewDatas\\CowlingForceData\\ZForce\\{date}\\{SNCode}.csv";
+                    using (FileStream fs_z = new FileStream(filepath_z, FileMode.OpenOrCreate, FileAccess.ReadWrite))
+                    using (StreamReader sr_z = new StreamReader(fs_z))
+                    {
+                        string text = sr_z.ReadToEnd();
+                        var RowDatas = string.Empty;
+                        string NewHeader = "Time,Force\r\n";
+                        ///表头为空
+                        if (!text.Contains(NewHeader))
+                        {
+                            fs_z.Write(Encoding.UTF8.GetBytes(NewHeader), 0, Encoding.UTF8.GetBytes(NewHeader).Length);
+                        }
+                        RowDatas = $"{50 * i},{currentZforce}\r\n";
+                        fs_z.Write(Encoding.UTF8.GetBytes(RowDatas), 0, Encoding.UTF8.GetBytes(RowDatas).Length);
+                    }
                 }
-                string filepath_z = $"D:\\TaiKeScrewDatas\\CowlingForceData\\ZForce\\{date}\\{SNCode}.csv";
-                FileStream fs_z = new FileStream(filepath_z, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-                StreamReader sr_z = new StreamReader(fs_z);
-                text = sr_z.ReadToEnd();
-                ///表头为空
-                if (!text.Contains(NewHeader))
+                catch (IOException ex)
                 {
-                    fs_z.Write(Encoding.UTF8.GetBytes(NewHeader), 0, Encoding.UTF8.GetBytes(NewHeader).Length);
+                    // 文件被占用，跳过本次写入
+                    LogTool.Warn($"文件被占用，跳过本次Z方向压力采集写入: {ex.Message}");
                 }
-                RowDatas = $"{50 * i},{currentZforce}\r\n";
-                fs_z.Write(Encoding.UTF8.GetBytes(RowDatas), 0, Encoding.UTF8.GetBytes(RowDatas).Length);
-                fs_z.Close();
+                catch (Exception ex)
+                {
+                    // 其他异常也跳过
+                    LogTool.Warn($"其他异常，跳过本次Z方向压力采集写入: {ex.Message}");
+                }
+
                 #endregion
                 #endregion
 

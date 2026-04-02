@@ -154,8 +154,8 @@ namespace Luster.Module.Motion.Device.Functions
 
                             }
                         }
+                      }
                     }
-                }
             }
             else if (PActionType == PressureActionType.ReadValue)
             {
@@ -170,7 +170,7 @@ namespace Luster.Module.Motion.Device.Functions
                         {
                             var coilVs = communcation.Read<int>($"{StationNum} 03 80 1");
 
-
+                            
                             if (Times < 3)
                             {
                                 if (coilVs.Count > 0)
@@ -186,7 +186,7 @@ namespace Luster.Module.Motion.Device.Functions
                             {
                                 lstPressVal.Add(coilVs[0]);
                             }
-
+                            
                         }
                         Thread.Sleep(Interval);
                     }

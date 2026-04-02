@@ -70,6 +70,11 @@ namespace Luster.Motion.DigitalSetup.Views
                 //    Setters = { new Setter(Control.ForegroundProperty, Brushes.Gray) }
                 //};
             }
+            // 其他列不做处理，保持默认
+            if (string.Equals(e.Column.Header.ToString(), "项序", StringComparison.OrdinalIgnoreCase))
+            {
+                e.Column.IsReadOnly = true;
+            }
         }
     }
 }

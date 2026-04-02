@@ -14,6 +14,7 @@ using Luster.Motion.DataStruct.VDevice;
 using Luster.Motion.DigitalSetup.AssTables;
 using Luster.Motion.DigitalSetup.Datas;
 using Luster.Motion.DigitalSetup.Helpers;
+using Luster.Motion.DigitalSetup.Services;
 using Luster.Motion.EditorUI;
 using Luster.Motion.Integration.Web;
 using Luster.Motion.TaskFlow.Engine.HyperTrain;
@@ -69,9 +70,11 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                                      CSVHelper cSVHelper,
                                      IWebService webService,
                                      FlowBus flowBus,
-                                     IDialogService dialogService) 
-            : base(repository, regionManager, commonBus, cSVHelper, flowBus, dialogService)
+                                     IDialogService dialogService,
+                                     CheckStatusService checkStatusService)
+            : base(repository, regionManager, commonBus, cSVHelper, flowBus, dialogService, checkStatusService)
         {
+            _parentRegionName = "ParamConfirmContent";
 
             Pages = new ObservableCollection<CommonPageModel>();
             Pages.Add(new CommonPageModel() { Name = "ObtainSwVersion", IsSelected = false, Region = "", ViewType = typeof(AssTbSwVersion) });
@@ -87,6 +90,12 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             UpdateItemsCommand = new DelegateCommand(OnUpdateItems);
             this._webService = webService;
             LoadCheckConfirmMessages();
+
+            // 延迟加载点检状态，确保 UI 绑定已建立
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                LoadCheckStatusForAllPages();
+            }), System.Windows.Threading.DispatcherPriority.Loaded);
         }
 
         public override void OnEnd()
@@ -94,6 +103,64 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             // 子界面的结束逻辑
             ProgressValue = 0; // 清空进度条
             base.OnEnd();
+        }
+
+        /// <summary>
+        /// 加载所有子页面的历史点检状态
+        /// </summary>
+        private void LoadCheckStatusForAllPages()
+        {
+            if (_checkStatusService == null || Pages == null)
+            {
+                return;
+            }
+
+            try
+            {
+                System.Diagnostics.Debug.WriteLine($"[ParamConfirmContent] 开始加载点检状态，页面数量: {Pages.Count}");
+
+                foreach (var page in Pages)
+                {
+                    if (page != null)
+                    {
+                        page.ParentRegion = "ParamConfirmContent";
+                        var record = _checkStatusService.GetRecord(page.PageKey);
+
+                        System.Diagnostics.Debug.WriteLine($"[ParamConfirmContent] 加载页面 {page.PageKey} 的状态");
+
+                        if (record != null)
+                        {
+                            page.CheckStatus = record.Status;
+                            page.LastCheckTime = record.CheckTime;
+                            page.LastCheckOperator = record.Operator;
+                            page.CheckRemark = record.Remark;
+                            System.Diagnostics.Debug.WriteLine($"[ParamConfirmContent] 页面 {page.Name} 状态: {record.Status}, 时间: {record.CheckTime}");
+                        }
+                        else
+                        {
+                            page.CheckStatus = CheckStatus.NotChecked;
+                            page.LastCheckTime = null;
+                            page.LastCheckOperator = null;
+                            page.CheckRemark = null;
+                            System.Diagnostics.Debug.WriteLine($"[ParamConfirmContent] 页面 {page.Name} 无历史记录");
+                        }
+                    }
+                }
+
+                System.Diagnostics.Debug.WriteLine($"[ParamConfirmContent] 点检状态加载完成");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"加载点检状态失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 刷新点检状态 - 每次页面激活时调用
+        /// </summary>
+        protected override void RefreshCheckStatus()
+        {
+            LoadCheckStatusForAllPages();
         }
 
         /// <summary>
@@ -165,7 +232,16 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
                 // 点检完成后，将结果存储到 PageStatusService
                 string overallStatus = GetOverallStatus();
-                PageStatusService.Instance.UpdateStatus("MainParameters", overallStatus);
+                var checkStatus = overallStatus switch
+                {
+                    "OK" => CheckStatus.CheckedOK,
+                    "NG" => CheckStatus.CheckedFail,
+                    _ => CheckStatus.NotChecked
+                };
+                SaveCheckStatus(checkStatus, overallStatus);
+
+                // 同步一级界面整体状态到 PageStatusService
+                SyncOverallStatusToPageStatusService();
             }
             catch (Exception ex)
             {
@@ -216,7 +292,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                             }
 
                             item.实测 = "";
-                            item.状态 = ""; 
+                            item.状态 = "";
                             ItemModels.Add(item);
                         }
 

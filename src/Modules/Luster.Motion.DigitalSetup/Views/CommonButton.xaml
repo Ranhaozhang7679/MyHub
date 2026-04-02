@@ -26,7 +26,7 @@
         <!-- 按钮放在第二行 -->
         <Button Content="中止点检"
                 Command="{Binding DataContext.EndCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
-                Margin="2"
+                Margin="5"
                 Grid.Row="0"
                 Grid.Column="0"/>
         <StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">

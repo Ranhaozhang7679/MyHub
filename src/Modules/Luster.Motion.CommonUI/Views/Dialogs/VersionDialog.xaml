@@ -8,7 +8,7 @@
     xmlns:local="clr-namespace:Luster.Motion.CommonUI.Views.Dialogs"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
-    Width="600"
+    Width="{Binding DialogWidth}"
     MaxHeight="600"
     d:DesignHeight="550"
     d:DesignWidth="550"
@@ -25,9 +25,12 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
         <Label Grid.Row="0" Grid.Column="0" Content="平台版本" FontSize="20" FontWeight="Bold"/>
         <Label Grid.Row="0" Grid.Column="1" Content="配方版本" FontSize="20" FontWeight="Bold"/>
+        <Label Grid.Row="0" Grid.Column="2" Content="PLC版本" FontSize="20" FontWeight="Bold"
+               Visibility="{Binding HasPlcVersions, Converter={StaticResource Boolean2VisibilityConverter}}" />
         <Border
             Padding="5"
             Grid.Row="1"     
@@ -126,7 +129,58 @@
                 </ListBox.ItemTemplate>
             </ListBox>
         </Border>
-        <DockPanel Grid.Row="2" Grid.ColumnSpan="2" Margin="0,10,0,0">
+        <Border
+            Padding="5"
+            Grid.Row="1"
+            Grid.Column="2"
+            BorderBrush="{StaticResource BorderBrush}"
+            BorderThickness="1"
+            CornerRadius="5"
+            MinWidth="280"
+            Visibility="{Binding HasPlcVersions, Converter={StaticResource Boolean2VisibilityConverter}}">
+            <ListBox
+                BorderThickness="0"
+                ItemsSource="{Binding PlcVersions}"
+                Style="{StaticResource ListBoxCustom}">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <hc:UniformSpacingPanel
+                            Margin="5,0"
+                            Orientation="Vertical"
+                            Spacing="5" />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition />
+                                <RowDefinition />
+                            </Grid.RowDefinitions>
+                            <TextBlock
+                                Margin="0,5,0,0"
+                                FontSize="14"
+                                Foreground="{StaticResource PrimaryBrush}"
+                                Text="{Binding Version, StringFormat={}Version {0}}" />
+                            <ItemsControl
+                                Grid.Row="1"
+                                Margin="0,5"
+                                ItemsSource="{Binding Contents}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock
+                                            Margin="0,2"
+                                            Text="{Binding .}"
+                                            TextWrapping="Wrap" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+        <DockPanel Grid.Row="2" Grid.ColumnSpan="3" Margin="0,10,0,0">
             <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
                 <Button
                     Width="80"

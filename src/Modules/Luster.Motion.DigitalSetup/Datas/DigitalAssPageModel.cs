@@ -94,6 +94,95 @@ namespace Luster.Motion.DigitalSetup.Datas
             set { SetProperty(ref _isEnabled, value); }
         }
 
+        /// <summary>
+        /// 点检状态（聚合所有二级子界面的状态）
+        /// </summary>
+        private CheckStatus _checkStatus = CheckStatus.NotChecked;
+        public CheckStatus CheckStatus
+        {
+            get => _checkStatus;
+            set => SetProperty(ref _checkStatus, value);
+        }
+
+        /// <summary>
+        /// 引用对应的二级子页面列表（用于状态计算）
+        /// </summary>
+        private List<CommonPageModel> _subPages;
+        public List<CommonPageModel> SubPages
+        {
+            get => _subPages;
+            set
+            {
+                if (_subPages != value)
+                {
+                    _subPages = value;
+                    // 当子页面列表变化时，重新计算整体状态
+                    //RefreshCheckStatus();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 刷新点检状态（根据所有二级子页面的状态聚合计算）
+        /// </summary>
+        public void RefreshCheckStatus()
+        {
+            CheckStatus newStatus;
+
+            if (_subPages == null || _subPages.Count == 0)
+            {
+                newStatus = CheckStatus.NotChecked;
+            }
+            else
+            {
+                bool hasNG = false;
+                bool hasOK = false;
+                bool hasNotChecked = false;
+
+                foreach (var page in _subPages)
+                {
+                    if (page == null) continue;
+
+                    switch (page.CheckStatus)
+                    {
+                        case CheckStatus.CheckedFail:
+                            hasNG = true;
+                            break; // 任一 NG，整体就是 NG
+                        case CheckStatus.CheckedOK:
+                            hasOK = true;
+                            break;
+                        case CheckStatus.NotChecked:
+                            hasNotChecked = true;
+                            break;
+                    }
+                }
+
+                // 有 NG 直接返回 NG
+                if (hasNG)
+                {
+                    newStatus = CheckStatus.CheckedFail;
+                }
+                // 有未点检的，返回 NotChecked
+                else if (hasNotChecked)
+                {
+                    newStatus = CheckStatus.NotChecked;
+                }
+                // 全部 OK
+                else if (hasOK)
+                {
+                    newStatus = CheckStatus.CheckedOK;
+                }
+                else
+                {
+                    newStatus = CheckStatus.NotChecked;
+                }
+            }
+
+            // 即使值相同，也强制触发 PropertyChanged 事件以更新 UI
+            _checkStatus = newStatus;
+            RaisePropertyChanged(nameof(CheckStatus));
+        }
+
 
         /// <summary>
         /// 子页面注册表 - 存储每个一级页面对应的二级子页面
@@ -136,6 +225,33 @@ namespace Luster.Motion.DigitalSetup.Datas
             return subPages.FirstOrDefault(p => p.Name == subPageName);
         }
 
+        /// <summary>
+        /// 根据Region名称查找一级页面
+        /// </summary>
+        /// <param name="region">Region名称</param>
+        /// <returns>找到的DigitalAssPageModel，未找到返回null</returns>
+        public static DigitalAssPageModel FindPageByRegion(string region)
+        {
+            if (_pages == null || string.IsNullOrEmpty(region))
+                return null;
+
+            return _pages.FirstOrDefault(p => p.Region == region);
+        }
+
+        /// <summary>
+        /// 根据Region名称查找对应的页面Name（用于PageStatusService）
+        /// </summary>
+        /// <param name="region">Region名称</param>
+        /// <returns>页面Name，未找到返回null</returns>
+        public static string GetNameByRegion(string region)
+        {
+            if (_pages == null || string.IsNullOrEmpty(region))
+                return null;
+
+            var page = _pages.FirstOrDefault(p => p.Region == region);
+            return page?.Name;
+        }
+
         private static ObservableCollection<DigitalAssPageModel> _pages;
         public static ObservableCollection<DigitalAssPageModel> Pages
         {
@@ -167,11 +283,11 @@ namespace Luster.Motion.DigitalSetup.Datas
                         { Name = "DigitalVision",IsSelected=false, Region = "DigitalVisionContent",
                             IsVisible=true,IsEnabled=true ,Iconfont="\xe609" },
                         //AutoVisualCalibration
-                         new DigitalAssPageModel()
-                        { Name = "AutoVisualCalibration",IsSelected=false, Region = "AutoVisualCalibrationContent",
+                        new DigitalAssPageModel()
+                        { Name = "PointTeaching",IsSelected=false, Region = "PointTeachingContent",
                             IsVisible=true,IsEnabled=true ,Iconfont="\xe609" },
                          new DigitalAssPageModel()
-                        { Name = "PointTeaching",IsSelected=false, Region = "PointTeachingContent",
+                        { Name = "AutoVisualCalibration",IsSelected=false, Region = "AutoVisualCalibrationContent",
                             IsVisible=true,IsEnabled=true ,Iconfont="\xe609" },
                            new DigitalAssPageModel()
                         { Name = "DataValidation",IsSelected=false, Region = "DataValidationContent",

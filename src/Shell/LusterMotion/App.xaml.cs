@@ -7,6 +7,7 @@ using Luster.Common.Tools;
 using Luster.Motion.CommonUI;
 using Luster.Motion.DataStruct;
 using Luster.Motion.DataStruct.Interfaces;
+using Luster.Motion.DigitalSetup.Services;
 using Luster.Motion.Integration.Web;
 using Luster.Motion.Integration.WorkCardVerify;
 using Luster.Motion.SubSystem.ViewModel;
@@ -114,6 +115,10 @@ namespace LusterMotion
             // 通用配置
             containerRegistry.RegisterSingleton<IDbManager, DbManager>();
             containerRegistry.RegisterSingleton<ICommonBus, CommonBus>();
+
+            // 点检状态服务
+            containerRegistry.RegisterSingleton<CheckStatusPersistenceService>();
+            containerRegistry.RegisterSingleton<CheckStatusService>();
 
             // 弹窗对话框
             containerRegistry.RegisterDialogWindow<Luster.Common.Assets.Views.DialogWindow>();

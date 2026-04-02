@@ -36,6 +36,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Luster.Motion.DigitalSetup.Services;
+
 namespace Luster.Motion.DigitalSetup.ViewModel
 {
     public class PointTeachingContentVM : BaseAss
@@ -101,11 +103,13 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 //同步赋值给基类属性
                 base.SelectedReportPage = value;
                 if (_seletedReportPage == null) return;
-                ConfigKey = _seletedReportPage.Name;           
+                ConfigKey = _seletedReportPage.Name;
                 // 加载界面属性
                 LoadStationConfigFromJson();
                 //更新界面属性
                 UpdateStationConfigs();
+                // 加载工站点检状态
+                LoadStationCheckStatus();
 
             }
         }
@@ -118,13 +122,15 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                                       IDeviceEngine deviceEngine,
                                       FlowBus _flowBus,
                                       ICommonBus commonBus,
-                                      CSVHelper cSVHelper)
-                                                    : base(repository, regionManager, commonBus, cSVHelper, _flowBus, dialogService)
+                                      CSVHelper cSVHelper,
+                                      CheckStatusService checkStatusService)
+                                                    : base(repository, regionManager, commonBus, cSVHelper, _flowBus, dialogService, checkStatusService)
         {
             flowBus = _flowBus;
             _deviceEngine = deviceEngine;
             _dialogService = dialogService;
             _mController = motionController;
+            _parentRegionName = "PointTeachingContent";
 
             //获取当前的轴列表
             LoadDevices();
@@ -175,6 +181,53 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 sc.PropertyChanged += AxisPositions_PropertyChanged;
             }
             LoadCheckConfirmMessages();
+
+            // 延迟加载点检状态，确保 UI 绑定已建立
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                LoadCheckStatusForAllPages();
+            }), System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+
+        /// <summary>
+        /// 加载所有子页面的历史点检状态
+        /// </summary>
+        private void LoadCheckStatusForAllPages()
+        {
+            if (_checkStatusService == null || Pages == null)
+                return;
+
+            try
+            {
+                foreach (var page in Pages)
+                {
+                    if (page != null)
+                    {
+                        page.ParentRegion = "PointTeachingContent";
+                        var record = _checkStatusService.GetRecord(page.PageKey);
+                        if (record != null)
+                        {
+                            page.CheckStatus = record.Status;
+                        }
+                        else
+                        {
+                            page.CheckStatus = CheckStatus.NotChecked;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"加载点检状态失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 刷新点检状态 - 每次页面激活时调用
+        /// </summary>
+        protected override void RefreshCheckStatus()
+        {
+            LoadCheckStatusForAllPages();
         }
 
         #region  示教点位管理
@@ -218,6 +271,13 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             set { SetProperty(ref _axisPositions, value); }
         }
 
+        private PositionItem _axisPositionsSelectedItem;
+        public PositionItem AxisPositionsSelectedItem
+        {
+            get { return _axisPositionsSelectedItem; }
+            set { SetProperty(ref _axisPositionsSelectedItem, value); }
+        }
+
         private ObservableCollection<PositionItem> _axisPositions_GodLine;
         /// <summary>
         /// GodLine轴示教位列表
@@ -234,7 +294,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             get { return _offsetX; }
             set
             {
-                var ss = Math.Round(value,3);
+                var ss = Math.Round(value, 3);
                 _offsetX = ss;
                 RaisePropertyChanged(nameof(OffsetX));
             }
@@ -380,7 +440,10 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 {
                     if (item.Name != null && item.Name.Contains("示教位"))
                         continue;
-                    item.Position += OffsetX;
+                    if (item.Name != null && AxisPositionsSelectedItem != null && string.Equals(item.Name, AxisPositionsSelectedItem.Name))
+                    {
+                        item.Position += OffsetX;
+                    }
                 }
                 SaveGodLineTeachPoint();
                 _axisUpdatedDict[axisName] = true; // 标记当前轴已更新
@@ -437,6 +500,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         public override async void OnOneKeyCheck(object obj)
         {
             await base.OnOneKeyCheckAsync(obj);
+            bool wasCancelled = false;
+
             try
             {
                 ProgressValue = 0; // 进度
@@ -456,7 +521,6 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                                 await Task.Delay(200); // 200ms轮询
                             }
                         }, _cts.Token);
-                        PageStatusService.Instance.UpdateStatus(PageName, "OK");
                     }
                     else
                     {
@@ -468,6 +532,12 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     throw new FriendlyException("回零完成后方可运行测试流程");
                 }
             }
+            catch (OperationCanceledException)
+            {
+                wasCancelled = true;
+                _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = "点位示教被用户中止" });
+                throw;
+            }
             catch (Exception ex)
             {
                 _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"手眼标定失败,{ex.Message}" });
@@ -475,8 +545,38 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             }
             finally
             {
+                ProgressValue = 100;
 
+                // 保存当前子页面的点检状态
+                var checkStatus = CheckStatus.NotChecked;
+                string remark = "";
+
+                if (wasCancelled && _cts.IsCancellationRequested)
+                {
+                    // 用户中止 - 点位示教不支持继续，需从头开始
+                    checkStatus = CheckStatus.CheckedFail;
+                    remark = "执行中止，需从头开始";
+                }
+                else
+                {
+                    checkStatus = CheckStatus.CheckedOK;
+                    remark = "点位示教完成";
+                }
+
+                SaveCheckStatus(checkStatus, remark);
+
+                // 同步一级界面整体状态到 PageStatusService
+                SyncOverallStatusToPageStatusService();
             }
+        }
+
+        /// <summary>
+        /// 获取页面整体状态
+        /// </summary>
+        private string GetOverallStatus()
+        {
+            // 点位示教默认返回OK
+            return "OK";
         }
 
         private void SaveOffsetsToJson()

@@ -574,7 +574,7 @@ namespace Luster.Motion.SubSystem.ViewModel
                         SystemRole.Operator => new SolidColorBrush(Color.FromArgb(128, 128, 128, 128)), // (128, 214, 214, 214)看不见启动按钮三个图标
                         SystemRole.Maintenance => new SolidColorBrush(Color.FromArgb(240, 255, 218, 90)),
                         SystemRole.Integrator => new SolidColorBrush(Color.FromArgb(64, 81, 143, 255)),
-                        SystemRole.Admin => new SolidColorBrush(Color.FromArgb(64, 66, 51, 166)),
+                        SystemRole.Admin => new SolidColorBrush(Color.FromArgb(255, 66, 51, 166)),
                         _ => System.Windows.Media.Brushes.ForestGreen
                     };
                     UserMsg = string.Concat(userInfo.Name, "-", userInfo.Company, "-", userInfo.Level);
@@ -1620,7 +1620,15 @@ namespace Luster.Motion.SubSystem.ViewModel
             get { return _mStatus; }
             set
             {
+                //string oldStatus = _mStatus;
                 SetProperty(ref _mStatus, value);
+                //// 通知空闲时间状态变化
+                //bool isNowIdle = value == EngineStatus.MaterialPending.GetDescription();
+                //bool wasIdle = oldStatus == EngineStatus.MaterialPending.GetDescription();
+                //if (isNowIdle != wasIdle)
+                //{
+                //    commonBus?.EventBus?.GetEvent<PubSubEvent<bool>>().Publish(isNowIdle);
+                //}
                 // 状态切为运行中，需重置定时器
                 if (MStatus == EngineStatus.Running.GetDescription())
                 {

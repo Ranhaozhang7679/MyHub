@@ -45,12 +45,33 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
-                            <hc:HighlightTextBlock  
-                                 Width="160"  
-                                 Padding="0"  
-                                 HorizontalAlignment="Left"  
-                                 VerticalAlignment="Center"  
-                                 SourceText="{lang:Lang Key={Binding Name}}"  
+                            <!-- 点检状态指示器 -->
+                            <Ellipse Width="12" Height="12" Margin="5,0,5,0" VerticalAlignment="Center">
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Setter Property="Fill" Value="LightGray"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding CheckStatus}" Value="0">
+                                                <Setter Property="Fill" Value="LightGray"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding CheckStatus}" Value="1">
+                                                <Setter Property="Fill" Value="LightGreen"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding CheckStatus}" Value="2">
+                                                <Setter Property="Fill" Value="LightCoral"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+
+                            <!-- 页面名称 -->
+                            <hc:HighlightTextBlock
+                                 Width="160"
+                                 Padding="0"
+                                 HorizontalAlignment="Left"
+                                 VerticalAlignment="Center"
+                                 SourceText="{lang:Lang Key={Binding Name}}"
                                  TextAlignment="Left" />
                         </StackPanel>
                     </DataTemplate>
@@ -137,8 +158,34 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal">
+                                    <!-- 工站点检状态指示器 -->
+                                    <Ellipse Width="12" Height="12" Margin="0,0,5,0" VerticalAlignment="Center">
+                                        <Ellipse.Style>
+                                            <Style TargetType="Ellipse">
+                                                <Setter Property="Fill" Value="LightGray"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding CheckStatus}" Value="0">
+                                                        <Setter Property="Fill" Value="LightGray"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding CheckStatus}" Value="1">
+                                                        <Setter Property="Fill" Value="LightGreen"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding CheckStatus}" Value="2">
+                                                        <Setter Property="Fill" Value="LightCoral"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Ellipse.Style>
+                                    </Ellipse>
+
                                     <TextBlock Text="工站名称：" VerticalAlignment="Center" Margin="0,0,10,0"/>
                                     <TextBox Width="80" Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,10,0"/>
+                                    <Button Content="{Binding Name}"
+                                             Command="{Binding DataContext.SaveStationConfigCommand,RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                             CommandParameter="{Binding Name}"
+                                             Margin="0,0,10,0"
+                                             HorizontalAlignment="Right"
+                                             />
                                     <!--<ComboBox  Width="120"
                                             ItemsSource="{Binding DataContext.GlobalKeys, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                             DisplayMemberPath="Desc"
@@ -153,13 +200,13 @@
                         <TextBlock Text="工站名称：" VerticalAlignment="Center" Margin="0,0,30,0"/>
                         <TextBox Width="80" Text="{Binding stationName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,10,0"/>
                     </StackPanel>-->
-                    <StackPanel Orientation="Horizontal" Margin="0">
+                    <!--<StackPanel Orientation="Horizontal" Margin="0">
                         <TextBlock Text="工站选择：" VerticalAlignment="Center" Margin="0,0,10,0"/>
                         <ComboBox  Width="120" x:Name="cmbStationNames"
                                ItemsSource="{Binding DataContext.stationNames, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                SelectedValue="{Binding SelectedStationName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                Margin="0,0,5,0"/>
-                    </StackPanel>
+                    </StackPanel>-->
                     <StackPanel Orientation="Horizontal" Margin="0">
                         <TextBlock VerticalAlignment="Center" Margin="0,0,10,0">
                             <Run Text="写入全局变量"/>
@@ -192,11 +239,11 @@
                         <TextBox Text="{Binding ResValue}" Width="65" Margin="5" IsReadOnly="True" Background="{Binding ResColor}"/> 
                     </StackPanel>
 
-                    <Button Content="保存工站配置"
+                    <!--<Button Content="保存工站配置"
                 Command="{Binding SaveStationConfigCommand}"
                 Margin="0,10,0,0"
                 HorizontalAlignment="Right"
-                />
+                />-->
                 </StackPanel>
             </Border>
             <Border
@@ -225,7 +272,7 @@
                     </chart:CartesianChart.AxisY>
                 </chart:CartesianChart>
             </Border>
-            <DockPanel Grid.Row="2" Grid.Column="0">
+            <DockPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
                 <Button Content="更新列表"                         
                   Command="{Binding DataContext.UpdateItemsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
                   Margin="5" 
@@ -233,7 +280,7 @@
                   HorizontalAlignment="Left" />
                 <local:CommonButton />
             </DockPanel>
-            <StackPanel  
+            <StackPanel  Visibility="Collapsed"
                 Grid.Row="2"  
                 Grid.Column="1"
                 HorizontalAlignment="Right"  

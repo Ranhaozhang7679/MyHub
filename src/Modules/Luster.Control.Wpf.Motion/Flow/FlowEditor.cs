@@ -24,6 +24,7 @@
 using HandyControl.Tools.Extension;
 using Luster.Control.Wpf.Motion.Flow;
 using Luster.TaskFlow.Common.Enums;
+using Luster.TaskFlow.Motion;
 using Luster.TaskFlow.Motion.Logic;
 using System;
 using System.Collections;
@@ -756,7 +757,7 @@ namespace Luster.Control.Wpf.Motion.Flow
                         {
                             // 选中了场景
                             MouseState = MouseState.DragRect;
-
+                            flowItems.ForEach(u => (u.Tag as IMotionModule).IsSelected = false);
                             // 防止鼠标移除控件外，无法进行MouseUp事件响应
                             ((UIElement)e.Source).CaptureMouse();
                         }
@@ -877,7 +878,9 @@ namespace Luster.Control.Wpf.Motion.Flow
 
                         flowItems.ForEach(u =>
                         {
-                            u.Select(u.IsHitItem(SelectRect));
+                            bool s = u.IsHitItem(SelectRect);
+                            u.Select(s);
+                            (u.Tag as IMotionModule).IsSelected = s;
                         });
 
                         if (IsDataFlow)

@@ -15,6 +15,9 @@
         <conv:ChartHeightConverter x:Key="ChartHeightConverter"/>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
 
+        <!-- 工站状态图标转换器 -->
+        <conv:CheckStatusToIconConverter x:Key="CheckStatusToIconConverter"/>
+
         <!-- 定义图表项的模板 -->
         <DataTemplate x:Key="ChartItemTemplate">
             <Border Margin="2" BorderBrush="LightGray" BorderThickness="1" CornerRadius="5" Padding="5" Height="250">
@@ -44,7 +47,8 @@
                             Margin="2"
                             Background="Transparent"
                             LegendLocation="None"
-                            Series="{Binding ChartSeriesCollection}">
+                            Series="{Binding ChartSeriesCollection}"
+                            DataTooltip="{x:Null}">
                             <chart:CartesianChart.AxisX>
                                 <chart:Axis>
                                     <chart:Axis.Separator>
@@ -97,12 +101,33 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
-                            <hc:HighlightTextBlock  
-                                 Width="160"  
-                                 Padding="0"  
-                                 HorizontalAlignment="Left"  
-                                 VerticalAlignment="Center"  
-                                 SourceText="{lang:Lang Key={Binding Name}}"  
+                            <!-- 点检状态指示器 -->
+                            <Ellipse Width="12" Height="12" Margin="5,0,5,0" VerticalAlignment="Center">
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Setter Property="Fill" Value="LightGray"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding CheckStatus}" Value="0">
+                                                <Setter Property="Fill" Value="LightGray"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding CheckStatus}" Value="1">
+                                                <Setter Property="Fill" Value="LightGreen"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding CheckStatus}" Value="2">
+                                                <Setter Property="Fill" Value="LightCoral"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+
+                            <!-- 页面名称 -->
+                            <hc:HighlightTextBlock
+                                 Width="160"
+                                 Padding="0"
+                                 HorizontalAlignment="Left"
+                                 VerticalAlignment="Center"
+                                 SourceText="{lang:Lang Key={Binding Name}}"
                                  TextAlignment="Left" />
                         </StackPanel>
                     </DataTemplate>
@@ -143,13 +168,62 @@
         <!-- 右侧主内容区域 -->
         <Grid Grid.Column="2" Background="{DynamicResource BackgroundBrush}">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
+            <!-- 工站选择区域 -->
+            <Border Grid.Row="0" Margin="5" Padding="10" Background="#F4F6FA" CornerRadius="5" BorderBrush="LightGray" BorderThickness="1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- 工站选择标题 -->
+                    <TextBlock Grid.Column="0" Text="当前工站:" VerticalAlignment="Center" Margin="0,0,10,0" FontWeight="Bold"/>
+
+                    <!-- 工站选择 ComboBox -->
+                    <ComboBox Grid.Column="1"
+                              ItemsSource="{Binding LADStations}"
+                              SelectedItem="{Binding SelectedLADStation}"
+                              Height="30"
+                              Padding="5,0">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <!-- 状态图标 -->
+                                    <Ellipse Width="10" Height="10" Margin="0,0,8,0" VerticalAlignment="Center">
+                                        <Ellipse.Fill>
+                                            <Binding Path="CheckStatus" Converter="{StaticResource CheckStatusToIconConverter}"/>
+                                        </Ellipse.Fill>
+                                    </Ellipse>
+                                    <!-- 工站名称 -->
+                                    <TextBlock Text="{Binding StationName}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <!-- 工站管理按钮 -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="10,0,0,0">
+                        <Button Content="添加工站" Command="{Binding AddStationCommand}"
+                                Width="80" Height="30" Margin="0,0,5,0"
+                                Background="#2196F3" Foreground="White" FontWeight="Bold"
+                                BorderThickness="0"/>
+                        <Button Content="删除工站" Command="{Binding DeleteStationCommand}"
+                                Width="80" Height="30"
+                                Background="#F44336" Foreground="White" FontWeight="Bold"
+                                BorderThickness="0"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
             <!-- 滚动图表区域 -->
-            <ScrollViewer Grid.Row="0" 
-                          VerticalScrollBarVisibility="Auto" 
+            <ScrollViewer Grid.Row="1"
+                          VerticalScrollBarVisibility="Auto"
                           HorizontalScrollBarVisibility="Disabled"
                           Margin="5">
                 <ItemsControl ItemsSource="{Binding AllChartItems}"
@@ -163,7 +237,7 @@
             </ScrollViewer>
 
             <!-- 底部控制区域 -->
-            <Grid Grid.Row="1" Margin="5">
+            <Grid Grid.Row="2" Margin="5">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />

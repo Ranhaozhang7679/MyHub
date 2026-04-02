@@ -64,6 +64,11 @@ namespace Luster.Module.Motion.DataProc.Functions
         [Parameter("数字架线文件类别", 2, CN = "文件类别", DefaultV = AssFileCategory.CalibrationTable)]
         public AssFileCategory FileCategory { get; set; }
 
+
+        [DependOn("IsTemporaryWrite", false)]
+        [Parameter("清空上一批最新数据", 2, CN = "是否清空上一批最新数据", DefaultV = true, CanRef = ParamRef.Ref)]
+        public bool ClearLatestData { get; set; } = true;
+
         /// <summary>
         /// 根据表头自动创建参数 BuildExternParameters,类型LStringEx,数据项名称根据表头生成
         /// </summary>
@@ -144,83 +149,9 @@ namespace Luster.Module.Motion.DataProc.Functions
                 return false;
             }
 
-            if (IsTemporaryWrite == false)
-            {
-                // 根据文件类别设置默认路径
-                var baseDir = Path.Combine(Path.GetDirectoryName(MyOwner.DeviceEngine.RecipeDataPath),"db", "Ass_Data");
-                string fileName = "AssTb" + FileCategory.ToString() + ".csv";
-                DataFile = Path.Combine(baseDir, fileName);
-            }
-            // 判断文件是否存在，不存在则新建
-            if (!File.Exists(DataFile))
-            {
-                // 文件不存在，新建并写入表头
-                File.WriteAllText(DataFile, string.Join(",", headerFields) + Environment.NewLine, Encoding.UTF8);
-            }
-            //else
-            //{
-            //    // 文件存在，读取所有行
-            //    var allLines = File.ReadAllLines(DataFile, Encoding.UTF8).ToList();
-            //    if (allLines.Count > 0)
-            //    {
-            //        // 保留表头，清空其他内容
-            //        string headerLine = allLines[0];
-            //        File.WriteAllText(DataFile, headerLine + Environment.NewLine, Encoding.UTF8);
-            //    }
-            //    else
-            //    {
-            //        // 文件为空，写入表头
-            //        File.WriteAllText(DataFile, string.Join(",", headerFields) + Environment.NewLine, Encoding.UTF8);
-            //    }
-            //}
-            string ext = Path.GetExtension(DataFile)?.ToLower();
-
+            // 准备数据行
             var lseDatas = GetParametersByType<LStringEx>();
-
-
-            // 校验文件表头是否一致
-            string[] fileHeaderFields = null;
-            if (ext == ".csv" || ext == ".txt")
-            {
-                var allLines = File.ReadAllLines(DataFile, Encoding.UTF8).ToList();
-                if (allLines.Count > 0)
-                {
-                    fileHeaderFields = allLines[0].Replace('，', ',').Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(f => f.Trim()).ToArray();
-                    if (fileHeaderFields.Length != headerFields.Length || !fileHeaderFields.SequenceEqual(headerFields))
-                    {
-                        errMsg = "表头与文件表头不一致";
-                        return false;
-                    }
-                }
-            }
-            else if (ext == ".xls" || ext == ".xlsx")
-            {
-                if (excelTool == null)
-                    excelTool = new Luster.Common.Tools.ExcelTool(DataFile, true);
-
-                var sheetTable = excelTool.GetTableBySheet("Sheet1", 0, 0);
-                if (sheetTable != null && sheetTable.Columns.Count > 0)
-                {
-                    fileHeaderFields = sheetTable.Columns.Cast<DataColumn>().Select(c => c.ColumnName.Trim()).ToArray();
-                    if (fileHeaderFields.Length != headerFields.Length || !fileHeaderFields.SequenceEqual(headerFields))
-                    {
-                        errMsg = "表头与Excel文件表头不一致";
-                        return false;
-                    }
-                }
-            }
-
-            // 写入前判断文件是否可用
-            if ((ext == ".csv" || ext == ".txt") && !IsFileWriteable(DataFile))
-            {
-                errMsg = "文件被占用或不可写入，请稍后重试。";
-                return false;
-            }
-
             Dictionary<string, object> rowDict = new Dictionary<string, object>();
-            string DateTimeNow = DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss");
-
             for (int i = 0; i < headerFields.Length; i++)
             {
                 string key = headerFields[i];
@@ -232,48 +163,97 @@ namespace Luster.Module.Motion.DataProc.Functions
                 {
                     rowDict[key] = i < lseDatas.Count && lseDatas[i] != null ? lseDatas[i].GetString(MyOwner) : "";
                 }
-
             }
 
-            //string primaryKeyValue = rowDict.ContainsKey(Primarykey) ? rowDict[Primarykey]?.ToString() : null;
-            //if (string.IsNullOrEmpty(primaryKeyValue))
-            //{
-            //    errMsg = $"主键列 '{Primarykey}' 的值不能为空";
-            //    return false;
-            //}
-
-            if (ext == ".csv" || ext == ".txt")
+            if (IsTemporaryWrite == false)
             {
-                // 读取所有行
-                var allLines = File.ReadAllLines(DataFile, Encoding.UTF8).ToList();
-                //int pkIndex = Array.IndexOf(headerFields, Primarykey);
+                // 根据文件类别设置路径
+                var baseDir = Path.Combine(Path.GetDirectoryName(MyOwner.DeviceEngine.RecipeDataPath), "db", "Ass_Data");
 
-                // 如果文件为空，写入表头
-                if (allLines.Count == 0)
+                if (!Directory.Exists(baseDir))
                 {
-                    allLines.Add(string.Join(",", headerFields));
+                    Directory.CreateDirectory(baseDir);
+                }
+                // 最新数据文件路径（界面显示用）
+                string latestFile = Path.Combine(baseDir, $"AssTb{FileCategory}_Latest.csv");
+
+                // 历史数据文件路径（永久存储）
+                string historyFile = Path.Combine(baseDir, $"AssTb{FileCategory}_History.csv");
+
+                // 如果 ClearLatestData=true，清空最新数据文件（流程开始时）
+                if (ClearLatestData)
+                {
+                    File.WriteAllText(latestFile, string.Join(",", headerFields) + Environment.NewLine, Encoding.UTF8);
                 }
 
-                // 查找主键列索引
-                bool updated = false;
-                //for (int i = 1; i < allLines.Count; i++)
-                //{
-                //    var cols = allLines[i].Split(',');
-                //    if (cols.Length > pkIndex && cols[pkIndex] == primaryKeyValue)
-                //    {
-                //        // 更新行
-                //        var rowValues = new List<string>();
-                //        foreach (var key in headerFields)
-                //        {
-                //            rowValues.Add(rowDict[key]?.ToString() ?? "");
-                //        }
-                //        allLines[i] = string.Join(",", rowValues);
-                //        updated = true;
-                //        break;
-                //    }
-                //}
-                if (!updated)
+                // 追加到最新数据文件
+                AppendToCsvFile(latestFile, headerFields, rowDict);
+
+                // 追加到历史数据文件
+                AppendToCsvFile(historyFile, headerFields, rowDict);
+            }
+            else
+            {
+                // 临时写入模式：写入自定义文件
+                string ext = Path.GetExtension(DataFile)?.ToLower();
+
+                // 判断文件是否存在，不存在则新建
+                if (!File.Exists(DataFile))
                 {
+                    File.WriteAllText(DataFile, string.Join(",", headerFields) + Environment.NewLine, Encoding.UTF8);
+                }
+
+                // 校验文件表头是否一致
+                string[] fileHeaderFields = null;
+                if (ext == ".csv" || ext == ".txt")
+                {
+                    var allLines = File.ReadAllLines(DataFile, Encoding.UTF8).ToList();
+                    if (allLines.Count > 0)
+                    {
+                        fileHeaderFields = allLines[0].Replace('，', ',').Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                            .Select(f => f.Trim()).ToArray();
+                        if (fileHeaderFields.Length != headerFields.Length || !fileHeaderFields.SequenceEqual(headerFields))
+                        {
+                            errMsg = "表头与文件表头不一致";
+                            return false;
+                        }
+                    }
+                }
+                else if (ext == ".xls" || ext == ".xlsx")
+                {
+                    if (excelTool == null)
+                        excelTool = new Luster.Common.Tools.ExcelTool(DataFile, true);
+
+                    var sheetTable = excelTool.GetTableBySheet("Sheet1", 0, 0);
+                    if (sheetTable != null && sheetTable.Columns.Count > 0)
+                    {
+                        fileHeaderFields = sheetTable.Columns.Cast<DataColumn>().Select(c => c.ColumnName.Trim()).ToArray();
+                        if (fileHeaderFields.Length != headerFields.Length || !fileHeaderFields.SequenceEqual(headerFields))
+                        {
+                            errMsg = "表头与Excel文件表头不一致";
+                            return false;
+                        }
+                    }
+                }
+
+                // 写入前判断文件是否可用
+                if ((ext == ".csv" || ext == ".txt") && !IsFileWriteable(DataFile))
+                {
+                    errMsg = "文件被占用或不可写入，请稍后重试。";
+                    return false;
+                }
+
+                if (ext == ".csv" || ext == ".txt")
+                {
+                    // 读取所有行
+                    var allLines = File.ReadAllLines(DataFile, Encoding.UTF8).ToList();
+
+                    // 如果文件为空，写入表头
+                    if (allLines.Count == 0)
+                    {
+                        allLines.Add(string.Join(",", headerFields));
+                    }
+
                     // 添加新行
                     var rowValues = new List<string>();
                     foreach (var key in headerFields)
@@ -281,66 +261,54 @@ namespace Luster.Module.Motion.DataProc.Functions
                         rowValues.Add(rowDict[key]?.ToString() ?? "");
                     }
                     allLines.Add(string.Join(",", rowValues));
+                    File.WriteAllLines(DataFile, allLines, Encoding.UTF8);
                 }
-                File.WriteAllLines(DataFile, allLines, Encoding.UTF8);
-            }
-            else if (ext == ".xls" || ext == ".xlsx")
-            {
-                // Excel文件写入前判断
-                if (!IsFileWriteable(DataFile))
+                else if (ext == ".xls" || ext == ".xlsx")
                 {
-                    errMsg = "Excel文件被占用或不可写入，请稍后重试。";
-                    return false;
-                }
+                    // Excel文件写入前判断
+                    if (!IsFileWriteable(DataFile))
+                    {
+                        errMsg = "Excel文件被占用或不可写入，请稍后重试。";
+                        return false;
+                    }
 
-                if (excelTool == null)
-                    excelTool = new Luster.Common.Tools.ExcelTool(DataFile, true);
+                    if (excelTool == null)
+                        excelTool = new Luster.Common.Tools.ExcelTool(DataFile, true);
 
-                if (excelTable == null)
-                {
-                    excelTable = new DataTable();
-                    foreach (var key in headerFields)
-                        excelTable.Columns.Add(key);
-                }
+                    if (excelTable == null)
+                    {
+                        excelTable = new DataTable();
+                        foreach (var key in headerFields)
+                            excelTable.Columns.Add(key);
+                    }
 
-                // 读取现有数据
-                var sheetTable = excelTool.GetTableBySheet("Sheet1", 0, 0);
-                bool updated = false;
-                //if (sheetTable != null && sheetTable.Rows.Count > 0)
-                //{
-                //    foreach (DataRow dr in sheetTable.Rows)
-                //    {
-                //        if (dr.Table.Columns.Contains(Primarykey) && dr[Primarykey]?.ToString() == primaryKeyValue)
-                //        {
-                //            // 更新行
-                //            foreach (var key in headerFields)
-                //            {
-                //                if (dr.Table.Columns.Contains(key))
-                //                    dr[key] = rowDict[key];
-                //            }
-                //            updated = true;
-                //            break;
-                //        }
-                //    }
-                //}
-                if (!updated)
-                {
                     // 添加新行
                     excelTool.AddRow(rowDict);
                 }
                 else
                 {
-                    // 保存更新后的表
-                    excelTool.Save<DataRow>(sheetTable.Rows.Cast<DataRow>().ToList(), DataFile);
+                    errMsg = "不支持的文件格式";
+                    return false;
                 }
-            }
-            else
-            {
-                errMsg = "不支持的文件格式";
-                return false;
             }
 
             return base.DoExcute(out errMsg);
+        }
+
+        /// <summary>
+        /// 追加数据到CSV文件
+        /// </summary>
+        private void AppendToCsvFile(string filePath, string[] headerFields, Dictionary<string, object> rowDict)
+        {
+            // 文件不存在则创建并写入表头
+            if (!File.Exists(filePath))
+            {
+                File.WriteAllText(filePath, string.Join(",", headerFields) + Environment.NewLine, Encoding.UTF8);
+            }
+
+            // 追加数据行
+            var rowValues = headerFields.Select(key => rowDict[key]?.ToString() ?? "");
+            File.AppendAllText(filePath, string.Join(",", rowValues) + Environment.NewLine, Encoding.UTF8);
         }
 
         public override void OnNotifyPropertyUIChanged(ParameterAttribute parameter, object newV)
