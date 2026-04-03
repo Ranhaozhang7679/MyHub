@@ -40,6 +40,8 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="HandyControl" />
+        <PackageReference Include="AvalonEdit" />
+        <PackageReference Include="Newtonsoft.Json" />
         <PackageReference Include="Luster.Prism" />
         <PackageReference Include="MinVer" />
     </ItemGroup>
@@ -51,12 +53,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Reference Include="ICSharpCode.AvalonEdit">
-            <HintPath>..\..\..\lib\ICSharpCode.AvalonEdit.dll</HintPath>
-        </Reference>
-        <Reference Include="Newtonsoft.Json">
-          <HintPath>..\..\..\lib\Newtonsoft.Json.dll</HintPath>
-        </Reference>
         <Reference Include="PresentationCore" />
         <Reference Include="PresentationFramework" />
         <Reference Include="System.Xaml" />

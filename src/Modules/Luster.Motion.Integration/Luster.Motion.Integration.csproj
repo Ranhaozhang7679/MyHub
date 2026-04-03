@@ -22,18 +22,13 @@
         <PackageReference Include="Serilog.Sinks.Async" />
         <PackageReference Include="Serilog.Sinks.File" />
         <PackageReference Include="MinVer" />
+        <PackageReference Include="Newtonsoft.Json" />
+        <PackageReference Include="Luster.SimpleTCP" />
     </ItemGroup>
 
     <ItemGroup>
         <Reference Include="Foxconn.IMES.PictureCollection">
             <HintPath>Dll\Foxconn.IMES.PictureCollection.dll</HintPath>
-        </Reference>
-        <Reference Include="Newtonsoft.Json">
-            <HintPath>..\..\..\lib\Newtonsoft.Json.dll</HintPath>
-        </Reference>
-        <Reference Include="SimpleTCP">
-            <HintPath>..\..\..\lib\SimpleTCP.dll</HintPath>
-            <Private>True</Private>
         </Reference>
         <Reference Include="System.Configuration" />
     </ItemGroup>
