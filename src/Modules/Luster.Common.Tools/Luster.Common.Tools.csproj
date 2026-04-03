@@ -25,6 +25,16 @@
         </PackageReference>
         <PackageReference Include="Magick.NET-Q16-AnyCPU" />
         <PackageReference Include="NLog" />
+        <PackageReference Include="Newtonsoft.Json" />
+        <PackageReference Include="Luster.SharpZipLib" />
+        <PackageReference Include="SSH.NET" />
+        <PackageReference Include="SkiaSharp" />
+        <PackageReference Include="Luster.Aspose.Cells" />
+        <PackageReference Include="Luster.Aspose.Words" />
+        <PackageReference Include="Luster.DynamicExpresso" />
+        <PackageReference Include="Luster.Microsoft.Msagl" />
+        <PackageReference Include="Luster.Microsoft.Msagl.Drawing" />
+        <PackageReference Include="Luster.Microsoft.Msagl.GraphViewerGdi" />
     </ItemGroup>
 
     <ItemGroup>
@@ -32,37 +42,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Reference Include="Aspose.Cells">
-            <HintPath>..\..\..\libCommon\Aspose.Cells.dll</HintPath>
-        </Reference>
-        <Reference Include="ICSharpCode.SharpZipLib">
-            <HintPath>..\..\..\libCommon\ICSharpCode.SharpZipLib.dll</HintPath>
-        </Reference>
-        <Reference Include="Luster.DynamicExpresso">
-            <HintPath>..\..\..\libCommon\Luster.DynamicExpresso.dll</HintPath>
-        </Reference>
-        <Reference Include="Microsoft.Msagl">
-            <HintPath>..\..\..\lib\Microsoft.Msagl.dll</HintPath>
-        </Reference>
-        <Reference Include="Microsoft.Msagl.Drawing">
-            <HintPath>..\..\..\lib\Microsoft.Msagl.Drawing.dll</HintPath>
-        </Reference>
-        <Reference Include="Microsoft.Msagl.GraphViewerGdi">
-            <HintPath>..\..\..\lib\Microsoft.Msagl.GraphViewerGdi.dll</HintPath>
-        </Reference>
         <Reference Include="Microsoft.VisualBasic" />
-        <Reference Include="Newtonsoft.Json">
-            <HintPath>..\..\..\libCommon\Newtonsoft.Json.dll</HintPath>
-        </Reference>
-        <Reference Include="NLog">
-            <HintPath>..\..\..\libCommon\NLog.dll</HintPath>
-        </Reference>
-        <Reference Include="Renci.SshNet">
-            <HintPath>..\..\..\libCommon\Renci.SshNet.dll</HintPath>
-        </Reference>
-        <Reference Include="SkiaSharp">
-            <HintPath>..\..\..\lib\SkiaSharp.dll</HintPath>
-        </Reference>
         <Reference Include="sntl_adminapi_net_windows">
             <HintPath>Costura64\sntl_adminapi_net_windows.dll</HintPath>
             <Private>False</Private>
