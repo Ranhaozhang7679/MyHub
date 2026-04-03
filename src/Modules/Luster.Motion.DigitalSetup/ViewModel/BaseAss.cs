@@ -22,6 +22,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Linq;
+using Prism;
 using Prism.Commands;
 using Prism.Mvvm;
 using Prism.Regions;
@@ -45,7 +46,7 @@ using MessageBox = System.Windows.MessageBox;
 
 namespace Luster.Motion.DigitalSetup.ViewModel
 {
-    public class BaseAss : BindableBase, IRegionMemberLifetime
+    public class BaseAss : BindableBase, IRegionMemberLifetime, IActiveAware, INavigationAware
     {
         public string csvPath = @"D:\Motion\AssData.csv";
         public CancellationTokenSource _cts = new CancellationTokenSource();
@@ -59,6 +60,76 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         /// 标记是否已初始化，防止LoadedCommand重复触发
         /// </summary>
         protected bool _isInitialized = false;
+
+        /// <summary>
+        /// IActiveAware 实现 - 标记页面是否处于激活状态
+        /// </summary>
+        private bool _isActive = false;
+        public bool IsActive
+        {
+            get => _isActive;
+            set
+            {
+                if (_isActive != value)
+                {
+                    _isActive = value;
+                    IsActiveChanged?.Invoke(this, EventArgs.Empty);
+
+                    // 当页面激活时，刷新点检状态
+                    if (_isActive)
+                    {
+                        RefreshCheckStatus();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// IActiveAware 实现 - 激活状态变化事件
+        /// </summary>
+        public event EventHandler IsActiveChanged;
+
+        #region INavigationAware 实现
+
+        /// <summary>
+        /// 导航到当前页面时调用 - 刷新点检状态
+        /// </summary>
+        public void OnNavigatedTo(NavigationContext navigationContext)
+        {
+            // 多重延迟刷新点检状态，确保 UI 完全渲染后再刷新
+            // 第一层：使用 BeginInvoke 在 UI 线程队列中延迟执行
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                System.Diagnostics.Debug.WriteLine($"[BaseAss] OnNavigatedTo - 第一次延迟，准备刷新状态");
+                RefreshCheckStatus();
+
+                // 第二层：再延迟一次，确保 ListBox 的数据绑定完全生效
+                System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    System.Diagnostics.Debug.WriteLine($"[BaseAss] OnNavigatedTo - 第二次延迟，再次刷新状态");
+                    RefreshCheckStatus();
+                }), System.Windows.Threading.DispatcherPriority.Background);
+
+            }), System.Windows.Threading.DispatcherPriority.Background);
+        }
+
+        /// <summary>
+        /// 从当前页面导航离开时调用
+        /// </summary>
+        public void OnNavigatedFrom(NavigationContext navigationContext)
+        {
+            // 可以在这里做一些清理工作
+        }
+
+        /// <summary>
+        /// 判断是否为导航目标
+        /// </summary>
+        public bool IsNavigationTarget(NavigationContext navigationContext)
+        {
+            return true;
+        }
+
+        #endregion
 
         /// <summary>
         /// 全局保存命令，用于注册到GlobalCommands.SaveCommand
@@ -83,7 +154,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         protected FlowBus _flowBus;
 
         public readonly CSVHelper _csvHelper;
-        public string ConfigKey { get; set; } // 每个界面ViewModel设置自己的字段名
+        public virtual string ConfigKey { get; set; } // 每个界面ViewModel设置自己的字段名
 
         /// <summary>
         /// 父页面Region名称，用于构建子页面的浮动信息窗口PageId
@@ -110,6 +181,11 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         /// 对话框服务，用于显示对话框（子类可设置）
         /// </summary>
         protected IDialogService _dialogService;
+
+        /// <summary>
+        /// 点检状态服务，用于保存和加载点检状态
+        /// </summary>
+        protected CheckStatusService _checkStatusService;
 
         /// <summary>
         /// 设置点检确认消息命令
@@ -224,16 +300,26 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         }));
 
         /// <summary>
-        /// 模块加载 - 只在第一次加载时初始化，避免重复触发
+        /// 模块加载 - 每次页面显示时都会刷新点检状态
         /// </summary>
         private DelegateCommand<object> _loadedCommand;
         public DelegateCommand<object> LoadedCommand => _loadedCommand ?? (_loadedCommand = new DelegateCommand<object>((obj) =>
         {
+            System.Diagnostics.Debug.WriteLine($"[BaseAss] LoadedCommand 触发，_isInitialized: {_isInitialized}");
+
+            // 第一次加载时初始化
             if (!_isInitialized)
             {
                 _isInitialized = true;
                 InitModels();
             }
+
+            // 页面 Loaded 时刷新点检状态（延迟执行，确保 UI 完全渲染）
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                System.Diagnostics.Debug.WriteLine($"[BaseAss] LoadedCommand - 延迟刷新状态");
+                RefreshCheckStatus();
+            }), System.Windows.Threading.DispatcherPriority.Background);
         }));
 
         #endregion
@@ -319,19 +405,23 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         /// <summary>
         /// 保存工站配置处理方法
         /// </summary>
-        public void SaveStationConfigHandler()
+        public void SaveStationConfigHandler(string name = "")
         {
-            SaveStationConfig(); // 原有全局变量逻辑
-            SaveStationConfigToJson(); // 新增保存到JSON
+            SaveStationConfig(name); // 原有全局变量逻辑
+            SaveStationConfigToJson(name); // 新增保存到JSON
         }
 
         /// <summary>
         /// 保存工站配置到全局变量
         /// </summary>
-        public void SaveStationConfig()
+        public void SaveStationConfig(string name = "")
         {
             try
             {
+                if (!string.IsNullOrEmpty(name))
+                {
+                    SelectedStationName = name;
+                }
                 // 获取全局模块ID
                 var gID = GlobalModule.GlobalID;
                 var gModule = _flowBus.GetModule(gID);
@@ -369,10 +459,14 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         /// <summary>
         /// 保存工站配置到Json
         /// </summary>
-        public void SaveStationConfigToJson()
+        public void SaveStationConfigToJson(string name = "")
         {
             try
             {
+                if (!string.IsNullOrEmpty(name))
+                {
+                    SelectedStationName = name;
+                }
                 var recipeDir = _commonbus.CurrentRecipe.GetRecipePath();
                 var configFile = Path.Combine(recipeDir, "db", "Ass_Data", "StationConfig.json");
                 JObject allConfig;
@@ -851,7 +945,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
         #endregion
 
-        public BaseAss(IRepository repository, IRegionManager regionManager, ICommonBus commonhus, CSVHelper csvHelper, FlowBus flowBus, IDialogService dialogService)
+        public BaseAss(IRepository repository, IRegionManager regionManager, ICommonBus commonhus, CSVHelper csvHelper, FlowBus flowBus, IDialogService dialogService, CheckStatusService checkStatusService = null)
         {
 
             _syncContext = SynchronizationContext.Current ?? new SynchronizationContext();
@@ -868,6 +962,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             _commonbus = commonhus;
             _flowBus = flowBus;
             _dialogService = dialogService;
+            _checkStatusService = checkStatusService;
             ItemModels = new ObservableCollection<object>();
             _csvHelper = csvHelper;
 
@@ -882,7 +977,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             _floatingInfoService = DigitalSetupServiceLocator.FloatingInfoService;
 
             // 将 SaveStationConfigCommand 的初始化方式改为使用委托调用基类的受保护方法
-            SaveStationConfigCommand = new DelegateCommand(SaveStationConfigHandler);
+            SaveStationConfigCommand = new DelegateCommand<string>(SaveStationConfigHandler);
 
 
             // 监听StationConfigs集合变化
@@ -1103,6 +1198,13 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             {
                 SetSelected(obj.Name);
                 _currentPage = obj.Name;
+
+                // 加载点检状态
+                LoadCheckStatus();
+
+                // 同时刷新所有子页面的点检状态，确保ListBox中的颜色正确
+                RefreshCheckStatus();
+
                 //查询数据库，更新表格
                 InitModels();
                 // 更新曲线
@@ -1134,10 +1236,10 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 // 如果_parentRegionName为空，则使用_currentPage作为备用
                 string parentRegion = !string.IsNullOrEmpty(_parentRegionName) ? _parentRegionName : ConfigKey;
                 string pageId = $"{parentRegion}_{subPageName}";
-                
+
                 // 先隐藏所有浮动窗口
                 _floatingInfoService?.HideAllFloatingInfo();
-                
+
                 // 显示当前子页面的浮动窗口
                 _floatingInfoService?.ShowFloatingInfo(pageId);
             }
@@ -1399,6 +1501,468 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             _dialogService.ShowConfirm(message, r => tcs.SetResult(r.Result), false);
             return tcs.Task;
         }
+
+        /// <summary>
+        /// 保存点检状态
+        /// </summary>
+        /// <param name="status">点检状态</param>
+        /// <param name="remark">备注信息</param>
+        protected void SaveCheckStatus(CheckStatus status, string remark = "")
+        {
+            if (_checkStatusService == null || SelectedReportPage == null)
+            {
+                return;
+            }
+
+            try
+            {
+                // 确保 ParentRegion 已设置
+                if (string.IsNullOrEmpty(SelectedReportPage.ParentRegion))
+                {
+                    SelectedReportPage.ParentRegion = _parentRegionName;
+                }
+
+                var operatorName = _commonbus?.CurrentUser?.UserName ?? "Unknown";
+                _checkStatusService.UpdateStatus(
+                    SelectedReportPage.PageKey,
+                    status,
+                    SelectedReportPage.ParentRegion,
+                    SelectedReportPage.Name,
+                    operatorName,
+                    remark
+                );
+
+                // 同步更新内存中的页面模型状态，确保 UI 正确显示
+                SelectedReportPage.CheckStatus = status;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"保存点检状态失败: {ex.Message}");
+                _commonbus?.OnLog(new LogInfo() { LogType = LogType.Error, LogMessage = $"保存点检状态失败: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// 刷新父级页面模型的状态（DigitalAssPageModel.CheckStatus）
+        /// 用于在子页面状态更新后，触发父页面重新聚合计算状态
+        /// </summary>
+        protected void RefreshParentPageModelStatus()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(_parentRegionName))
+                {
+                    _commonbus?.OnLog(new LogInfo() { LogType = LogType.Warning, LogMessage = "[BaseAss] RefreshParentPageModelStatus: ParentRegion 为空，跳过" });
+                    return;
+                }
+
+                // 通过 Region 查找父页面名称
+                string pageName = DigitalAssPageModel.GetNameByRegion(_parentRegionName);
+                if (string.IsNullOrEmpty(pageName))
+                {
+                    _commonbus?.OnLog(new LogInfo() { LogType = LogType.Warning, LogMessage = $"[BaseAss] RefreshParentPageModelStatus: 未找到 Region {_parentRegionName} 对应的页面" });
+                    return;
+                }
+
+                // 从静态集合中查找对应的 DigitalAssPageModel
+                var parentPage = DigitalAssPageModel.Pages?.FirstOrDefault(p => p.Name == pageName);
+                if (parentPage == null)
+                {
+                    _commonbus?.OnLog(new LogInfo() { LogType = LogType.Warning, LogMessage = $"[BaseAss] RefreshParentPageModelStatus: 未找到页面 {pageName}" });
+                    return;
+                }
+
+                // 关键修复：直接使用当前的 Pages 集合，而不是静态注册表
+                // 因为静态注册表可能包含过时的对象引用
+                var subPages = Pages?.ToList();
+                _commonbus?.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"[BaseAss] RefreshParentPageModelStatus: 使用当前 Pages 集合，共 {subPages?.Count ?? 0} 个子页面" });
+
+                if (subPages != null && subPages.Count > 0)
+                {
+                    parentPage.SubPages = subPages;
+                    // 输出每个子页面的状态
+                    foreach (var subPage in subPages)
+                    {
+                        _commonbus?.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"[BaseAss] 子页面 {subPage.Name} 状态: {subPage.CheckStatus}" });
+                    }
+                }
+
+                // 调用 RefreshCheckStatus 触发聚合计算
+                parentPage.RefreshCheckStatus();
+                _commonbus?.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"[BaseAss] RefreshParentPageModelStatus: 已刷新页面 {pageName} 的状态为 {parentPage.CheckStatus}" });
+            }
+            catch (Exception ex)
+            {
+                _commonbus?.OnLog(new LogInfo() { LogType = LogType.Error, LogMessage = $"[BaseAss] RefreshParentPageModelStatus 失败: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// 加载点检状态
+        /// </summary>
+        protected void LoadCheckStatus()
+        {
+            if (_checkStatusService == null || SelectedReportPage == null)
+            {
+                return;
+            }
+
+            try
+            {
+                SelectedReportPage.ParentRegion = _parentRegionName;
+                var record = _checkStatusService.GetRecord(SelectedReportPage.PageKey);
+
+                // 如果用新 key 找不到记录，尝试用旧 key（兼容之前错误保存的数据）
+                if (record == null && !string.IsNullOrEmpty(_parentRegionName))
+                {
+                    string oldKey = $"DigitalInfoDialog_{SelectedReportPage.Name}";
+                    record = _checkStatusService.GetRecord(oldKey);
+                    System.Diagnostics.Debug.WriteLine($"[BaseAss] 用新 key 未找到记录，尝试旧 key: {oldKey}");
+                }
+
+                if (record != null)
+                {
+                    SelectedReportPage.CheckStatus = record.Status;
+                    SelectedReportPage.LastCheckTime = record.CheckTime;
+                    SelectedReportPage.LastCheckOperator = record.Operator;
+                    SelectedReportPage.CheckRemark = record.Remark;
+                    System.Diagnostics.Debug.WriteLine($"[BaseAss] 成功加载 {SelectedReportPage.Name} 状态: {record.Status}");
+                }
+                else
+                {
+                    SelectedReportPage.CheckStatus = CheckStatus.NotChecked;
+                    SelectedReportPage.LastCheckTime = null;
+                    SelectedReportPage.LastCheckOperator = null;
+                    SelectedReportPage.CheckRemark = null;
+                    System.Diagnostics.Debug.WriteLine($"[BaseAss] 未找到 {SelectedReportPage.Name} 的点检记录");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"加载点检状态失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 加载所有子页面的点检状态
+        /// </summary>
+        protected void LoadAllCheckStatus()
+        {
+            if (_checkStatusService == null || Pages == null)
+            {
+                return;
+            }
+
+            try
+            {
+                foreach (CommonPageModel page in Pages)
+                {
+                    if (page != null)
+                    {
+                        page.ParentRegion = _parentRegionName;
+                        var status = _checkStatusService.GetStatus(page.PageKey);
+                        page.CheckStatus = status;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"加载所有点检状态失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 刷新点检状态 - 虚方法，子页面可以重写以自定义刷新逻辑
+        /// 每次页面激活（从其他界面切换回来）时会调用此方法
+        /// </summary>
+        protected virtual void RefreshCheckStatus()
+        {
+            // 默认实现为空，子页面可以重写此方法来刷新点检状态
+            // 例如：调用 LoadCheckStatusForAllPages()
+            System.Diagnostics.Debug.WriteLine($"[BaseAss] RefreshCheckStatus 被调用，Pages数量: {Pages?.Count ?? 0}");
+        }
+
+        /// <summary>
+        /// 获取一级界面的整体点检状态（聚合所有子页面）
+        /// 规则: 任一子页面 NG → 整体 NG；全部 OK → OK；否则 NotChecked
+        /// </summary>
+        protected virtual CheckStatus GetOverallCheckStatus()
+        {
+            if (Pages == null || Pages.Count == 0)
+                return CheckStatus.NotChecked;
+
+            bool hasNG = false;
+            bool hasOK = false;
+            bool hasNotChecked = false;
+
+            foreach (var page in Pages)
+            {
+                if (page == null) continue;
+
+                switch (page.CheckStatus)
+                {
+                    case CheckStatus.CheckedFail:
+                        hasNG = true;
+                        break; // 任一 NG，整体就是 NG
+                    case CheckStatus.CheckedOK:
+                        hasOK = true;
+                        break;
+                    case CheckStatus.NotChecked:
+                        hasNotChecked = true;
+                        break;
+                }
+            }
+
+            // 有 NG 直接返回 NG
+            if (hasNG)
+                return CheckStatus.CheckedFail;
+
+            // 有未点检的，返回 NotChecked
+            if (hasNotChecked)
+                return CheckStatus.NotChecked;
+
+            // 全部 OK
+            if (hasOK)
+                return CheckStatus.CheckedOK;
+
+            return CheckStatus.NotChecked;
+        }
+
+        /// <summary>
+        /// 判断中止后能否继续（检查当前子页面的 ItemModels 是否有已完成的项）
+        /// </summary>
+        protected bool CanContinueFromLastCheck()
+        {
+            if (ItemModels == null || ItemModels.Count == 0)
+                return false;
+
+            // 检查是否有任何一个项已点检过（状态为 OK 或 NG，不是空或未完成）
+            foreach (var item in ItemModels)
+            {
+                string status = GetItemStatus(item);
+                if (status == "OK" || status == "NG")
+                    return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 获取数据项的状态字符串（通过反射）
+        /// </summary>
+        protected string GetItemStatus(object item)
+        {
+            if (item == null) return "";
+
+            var statusProperty = item.GetType().GetProperty("状态");
+            if (statusProperty != null)
+            {
+                var value = statusProperty.GetValue(item)?.ToString();
+                return value ?? "";
+            }
+            return "";
+        }
+
+        /// <summary>
+        /// 将一级界面整体状态同步到 PageStatusService，并刷新 DigitalAssPageModel 的聚合状态
+        /// </summary>
+        protected void SyncOverallStatusToPageStatusService()
+        {
+            // 获取当前子页面的点检结果（基于 ItemModels）
+            var currentPageStatus = GetCurrentPageCheckStatus();
+            string pageStatusText = currentPageStatus switch
+            {
+                CheckStatus.CheckedOK => "OK",
+                CheckStatus.CheckedFail => "NG",
+                _ => "未点检"
+            };
+
+            // 获取用于 PageStatusService 的页面Name（如 "IOConform"、"Embossing" 等）
+            string pageStatusName = DigitalAssPageModel.GetNameByRegion(_parentRegionName);
+
+            if (!string.IsNullOrEmpty(pageStatusName))
+            {
+                // 保存当前工站级别状态
+                if (!string.IsNullOrEmpty(SelectedStationName))
+                {
+                    string stationKey = $"{pageStatusName}_{SelectedStationName}";
+                    PageStatusService.Instance.UpdateStatus(stationKey, pageStatusText);
+
+                    // 更新 StationConfig 中的状态
+                    var stationConfig = StationConfigs?.FirstOrDefault(s => s.Name == SelectedStationName);
+                    if (stationConfig != null)
+                    {
+                        stationConfig.CheckStatus = currentPageStatus;
+                    }
+                }
+
+                // 更新所有子页面的 CheckStatus（聚合该子页面在所有工站下的状态）
+                UpdateAllSubPagesCheckStatus(pageStatusName);
+
+                // 关键修复：保存所有子页面的聚合状态到 CheckStatusService
+                // 这样页面切换时，LoadCheckStatusForAllPages() 会加载到正确的状态
+                foreach (var page in Pages)
+                {
+                    if (page != null)
+                    {
+                        page.ParentRegion = _parentRegionName;
+                        _checkStatusService.UpdateStatus(
+                            page.PageKey,
+                            page.CheckStatus,
+                            page.ParentRegion,
+                            page.Name,
+                            _commonbus?.CurrentUser?.UserName ?? "Unknown",
+                            $"状态已更新（工站状态聚合结果）"
+                        );
+                    }
+                }
+
+                // 更新 DigitalAssPageModel 的聚合状态（基于所有子页面的聚合状态）
+                var overallStatus = GetOverallCheckStatus();
+                string overallStatusText = overallStatus switch
+                {
+                    CheckStatus.CheckedOK => "OK",
+                    CheckStatus.CheckedFail => "NG",
+                    _ => "未点检"
+                };
+                PageStatusService.Instance.UpdateStatus(pageStatusName, overallStatusText);
+
+                // 同时更新 DigitalAssPageModel 的 CheckStatus 属性（用于 lstDevice 中的状态圆圈显示）
+                // 需要在 UI 线程上执行
+                Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    var parentPage = DigitalAssPageModel.FindPageByRegion(_parentRegionName);
+                    if (parentPage != null)
+                    {
+                        // 使用 GetOverallCheckStatus() 计算所有子页面的聚合状态
+                        parentPage.CheckStatus = GetOverallCheckStatus();
+                    }
+                }), System.Windows.Threading.DispatcherPriority.Background);
+            }
+        }
+
+        /// <summary>
+        /// 获取当前子页面的点检结果（基于 ItemModels）
+        /// </summary>
+        /// <returns>当前子页面的点检状态</returns>
+        protected virtual CheckStatus GetCurrentPageCheckStatus()
+        {
+            if (ItemModels == null || ItemModels.Count == 0)
+                return CheckStatus.NotChecked;
+
+            bool hasNG = false;
+            bool hasOK = false;
+
+            foreach (var item in ItemModels)
+            {
+                string status = "";
+                if (item is AssTb assTb)
+                    status = assTb.状态;
+                else if (item is AssTb assTbBase)
+                    status = assTbBase.状态;
+
+                if (status == "NG")
+                {
+                    hasNG = true;
+                    break; // 发现 NG 直接返回
+                }
+                else if (status == "OK")
+                {
+                    hasOK = true;
+                }
+            }
+
+            if (hasNG)
+                return CheckStatus.CheckedFail;
+
+            if (hasOK)
+                return CheckStatus.CheckedOK;
+
+            return CheckStatus.NotChecked;
+        }
+
+        /// <summary>
+        /// 更新所有子页面的 CheckStatus（聚合每个子页面在所有工站下的状态）
+        /// </summary>
+        /// <param name="pageStatusName">页面状态名称</param>
+        private void UpdateAllSubPagesCheckStatus(string pageStatusName)
+        {
+            if (Pages == null || StationConfigs == null || StationConfigs.Count == 0)
+                return;
+
+            foreach (var page in Pages)
+            {
+                if (page != null)
+                {
+                    // 计算该子页面在所有工站下的聚合状态
+                    page.CheckStatus = CalculateSubPageAggregatedStatus(page.Name, pageStatusName);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 计算指定子页面在所有工站下的聚合状态
+        /// 规则：所有工站都OK → OK；任一NG → NG；否则未点检
+        /// </summary>
+        /// <param name="subPageName">子页面名称</param>
+        /// <param name="pageStatusName">页面状态名称</param>
+        /// <returns>聚合状态</returns>
+        private CheckStatus CalculateSubPageAggregatedStatus(string subPageName, string pageStatusName)
+        {
+            bool hasOK = false;
+            bool hasNG = false;
+            bool hasNotChecked = false;
+
+            foreach (var station in StationConfigs)
+            {
+                string stationKey = $"{pageStatusName}_{station.Name}";
+                string status = PageStatusService.Instance.GetStatus(stationKey);
+
+                if (status == "NG")
+                    hasNG = true;
+                else if (status == "OK")
+                    hasOK = true;
+                else
+                    hasNotChecked = true;
+            }
+
+            // 任一 NG 则 NG
+            if (hasNG)
+                return CheckStatus.CheckedFail;
+
+            // 全部 OK 则 OK（包括只有一个工站且OK的情况）
+            if (hasOK && !hasNotChecked)
+                return CheckStatus.CheckedOK;
+
+            return CheckStatus.NotChecked;
+        }
+
+        /// <summary>
+        /// 加载所有工站的点检状态
+        /// </summary>
+        protected void LoadStationCheckStatus()
+        {
+            string pageStatusName = DigitalAssPageModel.GetNameByRegion(_parentRegionName);
+            if (string.IsNullOrEmpty(pageStatusName) || StationConfigs == null)
+                return;
+
+            // 首先加载工站配置区域的状态
+            foreach (var station in StationConfigs)
+            {
+                string stationKey = $"{pageStatusName}_{station.Name}";
+                string status = PageStatusService.Instance.GetStatus(stationKey);
+
+                station.CheckStatus = status switch
+                {
+                    "OK" => CheckStatus.CheckedOK,
+                    "NG" => CheckStatus.CheckedFail,
+                    _ => CheckStatus.NotChecked
+                };
+            }
+
+            // 然后更新所有子页面的 CheckStatus（聚合所有工站的状态）
+            UpdateAllSubPagesCheckStatus(pageStatusName);
+        }
+
         /// <summary>
         /// 终止点检
         /// </summary>
@@ -1533,25 +2097,27 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
         #region  处理表格数据
         /// <summary>
-        /// 读取"D:\\Motion\\AssData.csv"中的数据
+        /// 读取最新数据文件中的数据
         /// </summary>
         /// <summary>
         /// 通用CSV读取方法，兼容AssTbSuctionNozzle、AssTbCalibrationTable、AssTbPressureRepetition等类型
-        /// 自动根据SelectedReportPage.ViewType读取D盘文件并更新到UI
+        /// 自动根据SelectedReportPage.ViewType读取最新数据文件并更新到UI
         /// </summary>
         public virtual void UpdateItemsFromCsv(out bool csvReadSuccess)
         {
             csvReadSuccess = false;
             try
             {
-                if (!System.IO.File.Exists(csvPath))
+                // 获取最新数据文件路径
+                string dataFile = GetLatestDataFilePath();
+                
+                if (string.IsNullOrEmpty(dataFile) || !System.IO.File.Exists(dataFile))
                 {
-                    _commonbus.OnLog(new LogInfo() { LogType = LogType.Error, LogMessage = $"文件未找到: {csvPath}" });
-                    //ItemModels?.Clear();
+                    _commonbus.OnLog(new LogInfo() { LogType = LogType.Error, LogMessage = $"文件未找到: {dataFile ?? "未配置文件路径"}" });
                     return;
                 }
 
-                var lines = System.IO.File.ReadAllLines(csvPath, Encoding.Default);
+                var lines = System.IO.File.ReadAllLines(dataFile, Encoding.Default);
                 if (lines.Length < 2)
                 {
                     // CSV文件为空或只有标题行时，清空界面数据
@@ -1699,6 +2265,42 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         public virtual void UpdateItemsFromCsv()
         {
             UpdateItemsFromCsv(out _);
+        }
+
+        /// <summary>
+        /// 获取最新数据文件路径
+        /// </summary>
+        protected virtual string GetLatestDataFilePath()
+        {
+            if (SelectedReportPage == null) return null;
+
+            string categoryName = GetCategoryFromPageName(SelectedReportPage.Name);
+            if (string.IsNullOrEmpty(categoryName)) return null;
+
+            var recipeDir = _commonbus.CurrentRecipe?.GetRecipePath();
+            if (string.IsNullOrEmpty(recipeDir)) return null;
+
+            return Path.Combine(recipeDir, "db", "Ass_Data", $"AssTb{categoryName}_Latest.csv");
+        }
+
+        /// <summary>
+        /// 根据页面名称获取文件类别
+        /// </summary>
+        protected string GetCategoryFromPageName(string pageName)
+        {
+            var mapping = new Dictionary<string, string>
+            {
+                { "CalibrationTable", "CalibrationTable" },
+                { "PressureRepetition", "PressureRepetition" },
+                { "SuctionNozzle", "SuctionNozzle" },
+                { "AutomaticPosAndLeveling", "AutomaticPosAndLeveling" },
+                { "AutomaticEmbossing", "AutomaticEmbossing" },
+                { "AutoFocusing", "AutoFocusing" },
+                { "AutoFieldOfView", "AutoFieldOfView" },
+                { "AutoGrayScale", "AutoGrayScale" },
+                { "AutoVisualCalibration", "AutoVisualCalibration" },
+            };
+            return mapping.TryGetValue(pageName, out var category) ? category : null;
         }
 
 

@@ -56,6 +56,7 @@ namespace Luster.Motion.DigitalSetup.Views
                 e.Column.IsReadOnly = true;
             }
             // 其他列不做处理，保持默认
+
         }
     }
 }

@@ -10,6 +10,7 @@ using Luster.Motion.DataStruct.VDevice;
 using Luster.Motion.DigitalSetup.AssTables;
 using Luster.Motion.DigitalSetup.Datas;
 using Luster.Motion.DigitalSetup.Helpers;
+using Luster.Motion.DigitalSetup.Services;
 using Luster.Motion.EditorUI;
 using Luster.SimDevice.Adapter;
 using Prism.Commands;
@@ -26,6 +27,7 @@ using System.Security.Policy;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using static FreeSql.Internal.GlobalFilter;
 
@@ -49,9 +51,11 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             set { SetProperty(ref _progressValue, value); }
         }
         public AutoCommunicationConfigContentVM(IRepository repository,
-                                                IRegionManager regionManager, ICommonBus commonBus, CSVHelper cSVHelper, IDeviceEngine deviceEngine, FlowBus flowBus, IDialogService dialogService)
-            : base(repository, regionManager, commonBus, cSVHelper, flowBus, dialogService)
+                                                IRegionManager regionManager, ICommonBus commonBus, CSVHelper cSVHelper, IDeviceEngine deviceEngine, FlowBus flowBus, IDialogService dialogService, CheckStatusService checkStatusService)
+            : base(repository, regionManager, commonBus, cSVHelper, flowBus, dialogService, checkStatusService)
         {
+            _parentRegionName = "AutoCommunicationConfigContent";
+
             Pages = new ObservableCollection<CommonPageModel>();
             //注释电脑网卡配置页面，用不到，0718
             //Pages.Add(new CommonPageModel() { Name = "ConfigComputerNet", IsSelected = true, Region = "", ViewType = typeof(AssTbConfigComputerNet) });
@@ -71,6 +75,11 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             UpdateItemsCommand = new DelegateCommand(OnUpdateItems);
             LoadCheckConfirmMessages();
 
+            // 延迟加载点检状态，确保 UI 绑定已建立
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                LoadCheckStatusForAllPages();
+            }), System.Windows.Threading.DispatcherPriority.Loaded);
         }
 
         /// <summary>
@@ -107,6 +116,47 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             if (hasNG) return "NG";
             if (hasOK) return "OK";
             return "未点检";
+        }
+
+        /// <summary>
+        /// 加载所有子页面的历史点检状态
+        /// </summary>
+        private void LoadCheckStatusForAllPages()
+        {
+            if (_checkStatusService == null || Pages == null)
+                return;
+
+            try
+            {
+                foreach (var page in Pages)
+                {
+                    if (page != null)
+                    {
+                        page.ParentRegion = "AutoCommunicationConfigContent";
+                        var record = _checkStatusService.GetRecord(page.PageKey);
+                        if (record != null)
+                        {
+                            page.CheckStatus = record.Status;
+                        }
+                        else
+                        {
+                            page.CheckStatus = CheckStatus.NotChecked;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"加载点检状态失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 刷新点检状态 - 每次页面激活时调用
+        /// </summary>
+        protected override void RefreshCheckStatus()
+        {
+            LoadCheckStatusForAllPages();
         }
 
         private void OnUpdateItems()
@@ -215,6 +265,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
         protected override async Task ExecuteAsync(CancellationToken token)
         {
+            bool wasCancelled = false;
+
             try
             {
                 ProgressValue = 0;
@@ -240,16 +292,59 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     processedCount++;
                     ProgressValue = processedCount * 100 / count;
                 }
-                PageStatusService.Instance.UpdateStatus(PageName, GetOverallStatus());
+            }
+            catch (OperationCanceledException)
+            {
+                wasCancelled = true;
+                throw; // 重新抛出，让外层处理
             }
             catch (Exception)
             {
-
                 throw;
             }
             finally
             {
+                // 保存当前子页面的点检状态
+                var currentOverallStatus = GetOverallStatus();
+                var checkStatus = CheckStatus.NotChecked;
+                string remark = "";
 
+                if (wasCancelled && token.IsCancellationRequested)
+                {
+                    // 用户中止
+                    bool canContinue = CanContinueFromLastCheck();
+
+                    if (canContinue)
+                    {
+                        checkStatus = CheckStatus.NotChecked;
+                        remark = "执行中止，可从上次继续";
+                    }
+                    else
+                    {
+                        checkStatus = CheckStatus.CheckedFail;
+                        remark = "执行中止，需从头开始";
+                    }
+                }
+                else if (currentOverallStatus == "OK")
+                {
+                    checkStatus = CheckStatus.CheckedOK;
+                    remark = "全部点检项合格";
+                }
+                else if (currentOverallStatus == "NG")
+                {
+                    checkStatus = CheckStatus.CheckedFail;
+                    remark = "发现点检不合格项";
+                }
+                else
+                {
+                    checkStatus = CheckStatus.NotChecked;
+                    remark = "未完成点检";
+                }
+
+                SaveCheckStatus(checkStatus, remark);
+
+                // 同步一级界面整体状态到 PageStatusService
+                SyncOverallStatusToPageStatusService();
             }
         }
 
@@ -670,11 +765,36 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             catch (Exception ex)
             {
                 _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"{SelectedReportPage?.Name}:失败" });
+
+                // 异常时保存失败状态
+                SaveCheckStatus(CheckStatus.CheckedFail, $"点检异常: {ex.Message}");
             }
             finally
             {
                 ProgressValue = 100; // 完成后设置进度条为100%
-                //PageStatusService.Instance.UpdateStatus(PageName, GetOverallStatus());
+
+                // 保存点检状态
+                var overallStatus = GetOverallStatus();
+                var checkStatus = CheckStatus.NotChecked;
+                string remark = "";
+
+                if (overallStatus == "OK")
+                {
+                    checkStatus = CheckStatus.CheckedOK;
+                    remark = "全部点检项合格";
+                }
+                else if (overallStatus == "NG")
+                {
+                    checkStatus = CheckStatus.CheckedFail;
+                    remark = "发现点检不合格项";
+                }
+                else
+                {
+                    checkStatus = CheckStatus.NotChecked;
+                    remark = "未完成点检";
+                }
+
+                SaveCheckStatus(checkStatus, remark);
             }
         }
 

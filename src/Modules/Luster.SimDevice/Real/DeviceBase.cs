@@ -251,6 +251,7 @@ namespace Luster.SimDevice.Real
                 bool res = func();
                 if (!res)
                 {
+                    OnLog(LogType.Error, $"{errMsg}");
                     throw new DeviceException($"{DeviceType.GetDescription()}:{Name},{errMsg}");
                 }
             }
@@ -260,6 +261,7 @@ namespace Luster.SimDevice.Real
             }
             catch (Exception)
             {
+                OnLog(LogType.Error, $"{errMsg}");
                 throw;
             }
         }

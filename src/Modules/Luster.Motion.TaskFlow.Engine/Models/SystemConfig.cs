@@ -513,7 +513,7 @@ namespace Luster.Motion.TaskFlow.Engine.Models
             PlcAction(deviceEngine, plc =>
             {
                 if (string.IsNullOrEmpty(StatusAddr)) return;
-
+                
                 var pStatus = plc.ReadNumber(StatusAddr);
 
                 if (Enum.TryParse<PlcStatus>(pStatus.ToString(), out var p))
@@ -813,12 +813,12 @@ namespace Luster.Motion.TaskFlow.Engine.Models
         /// <summary>
         /// 启用安全门
         /// </summary>
-        public bool EnableSaftyDoor = false;
+        public bool EnableSaftyDoor=false;
 
         /// <summary>
         /// 启用光栅
         /// </summary>
-        public bool EnableLightCurtain = false;
+        public bool EnableLightCurtain=false;
 
         /// <summary>
         /// 班次列表

@@ -8,6 +8,7 @@ using Luster.Common.DataStruct.Enums;
 using Luster.Common.DataStruct.Extensions;
 using Luster.Common.Tools;
 using Luster.Motion.CommonUI.Events;
+using Luster.Motion.EditorUI.Extensions;
 using Luster.Motion.CommonUI.Interfaces;
 using Luster.Motion.CommonUI.Models;
 using Luster.Motion.DataStruct;
@@ -85,8 +86,21 @@ namespace Luster.Motion.CommonUI
             set
             {
                 isNeedSave = value;
+                if (value && !_isLoading)
+                {
+                    _editCount++;
+                    CheckAutoVersionReminder();
+                }
             }
         }
+
+        /// <summary>
+        /// 编辑计数器（用于自动弹出版本管理对话框）
+        /// </summary>
+        private int _editCount = 0;
+        public int EditCount => _editCount;
+        private bool _isVersionReminderShowing = false;
+        private bool _isLoading = false;
 
         /// <summary>
         /// 当前的配方
@@ -464,6 +478,55 @@ namespace Luster.Motion.CommonUI
         {
             EventBus.GetEvent<MapDataEvent>().Publish(GetMapDatas().FirstOrDefault());
             IsNeedSave = true;
+        }
+
+        /// <summary>
+        /// 检查编辑次数是否达到阈值，自动弹出版本管理对话框
+        /// </summary>
+        private void CheckAutoVersionReminder()
+        {
+            if (_isVersionReminderShowing) return;
+            if (string.IsNullOrEmpty(ProjInfo?.FullName)) return;
+
+            // 设备正在运行时不弹出自动提醒，避免阻塞操作
+            var status = GetStatus();
+            if (status == EngineStatus.Running || status == EngineStatus.Pause) return;
+
+            string enabled = ConfigHelper.GetAppKey("AutoRecipeVersionReminder");
+            if (string.IsNullOrEmpty(enabled) || enabled != "True") return;
+
+            string thresholdStr = ConfigHelper.GetAppKey("RecipeVersionReminderThreshold");
+            int threshold = 100;
+            if (!string.IsNullOrEmpty(thresholdStr))
+            {
+                int.TryParse(thresholdStr, out threshold);
+                if (threshold <= 0) threshold = 100;
+            }
+
+            if (_editCount < threshold) return;
+            _isVersionReminderShowing = true;
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                _dialogService.ShowRecipeVersionDialog((result) =>
+                {
+                    if (result.Result == ButtonResult.OK)
+                    {
+                        string versionNo = result.Parameters.GetValue<string>("VersionNo");
+                        string versionType = result.Parameters.GetValue<string>("VersionType");
+                        var changeContents = result.Parameters.GetValue<List<string>>("ChangeContents");
+                        string modifiedBy = result.Parameters.GetValue<string>("ModifiedBy");
+                        string modifiedTime = result.Parameters.GetValue<string>("ModifiedTime");
+
+                        if (changeContents != null && changeContents.Count > 0)
+                        {
+                            string fileName = versionType == "PLC" ? "PLCVersion.json" : "Version.json";
+                            RecipeVersionHelper.UpdateRecipeVersion(versionNo, changeContents, fileName, ProjInfo, modifiedBy, modifiedTime);
+                        }
+                    }
+                    _editCount = 0;
+                    _isVersionReminderShowing = false;
+                });
+            });
         }
 
         /// <summary>
@@ -914,6 +977,7 @@ namespace Luster.Motion.CommonUI
             // 后台线程执行耗时加载；任何会触发UI绑定集合变更的事件/导航必须切回UI线程
             Task.Run(() =>
             {
+                _isLoading = true;
                 try
                 {
                     _deviceEngine.OnLoading(10, 1, $"配方：{recipe.Name}加载中...");
@@ -1090,6 +1154,12 @@ namespace Luster.Motion.CommonUI
                     // 避免后台线程异常被吞掉导致无提示
                     OnLog(LogType.Error, $"激活配方异常:{ex.Message}");
                 }
+                finally
+                {
+                    _isLoading = false;
+                    isNeedSave = false;
+                    _editCount = 0;
+                }
             });
         }
 
@@ -1155,6 +1225,7 @@ namespace Luster.Motion.CommonUI
             if (string.IsNullOrEmpty(saveRecipe))
             {
                 IsNeedSave = false;
+                _editCount = 0;
             }
             if (saveRecipe == "")
             {

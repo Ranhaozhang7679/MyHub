@@ -1,4 +1,5 @@
-﻿using Luster.TaskFlow.Common.Attributes;
+﻿using Luster.Motion.DataStruct.Enums;
+using Luster.TaskFlow.Common.Attributes;
 using Luster.TaskFlow.Motion;
 using System;
 using System.Collections.Generic;
@@ -18,12 +19,16 @@ namespace Luster.Module.Motion.Business.Functions
     public class LSMesUnLoad : MotionFunction
     {
 
-        [Parameter("服务地址", 0, CN = "服务地址", ParamType = TaskFlow.Common.Enums.ParamType.IN, CanRef = ParamRef.Ref,DefaultV = "http://mesnex.catcher-local.com.cn:56373/HttpHandler.ashx")]
+        [Parameter("服务地址", 0, CN = "服务地址", ParamType = TaskFlow.Common.Enums.ParamType.IN, CanRef = ParamRef.Ref, DefaultV = "http://mesnex.catcher-local.com.cn:56373/HttpHandler.ashx")]
         public string ServiceUrl { get; set; }
 
 
         [Parameter("上传数据", 0, CN = "数据", ParamType = TaskFlow.Common.Enums.ParamType.IN, CanRef = ParamRef.Ref)]
         public string Data { get; set; }
+
+        [Parameter("上传命令格式", 0, CN = "命令格式", ParamType = TaskFlow.Common.Enums.ParamType.IN)]
+        public string CommandService { get; set; }
+
 
         [Limit(1, 10)]
         [Parameter("回复NG后，重复上传次数", 1, CN = "重复次数", DefaultV = 2)]
@@ -50,7 +55,7 @@ namespace Luster.Module.Motion.Business.Functions
                 //创建Web访问对象
                 HttpWebRequest myRequest = (HttpWebRequest)WebRequest.Create(serviceUrl);
                 NameValueCollection data1 = System.Web.HttpUtility.ParseQueryString(String.Empty);
-                data1.Add("command", "AssyService");
+                data1.Add("command", CommandService);
                 data1.Add("payload", Data);
                 //把用户传过来的数据转成“UTF-8”的字节流
                 byte[] buf = System.Text.Encoding.GetEncoding("UTF-8").GetBytes(data1.ToString());
@@ -91,8 +96,9 @@ namespace Luster.Module.Motion.Business.Functions
                         myResponse.Close();
                         errMsg = "Mes已经上传但是Mes系统回复失败";
                         MyOwner.OnLog(Common.DataStruct.Enums.LogType.Error, errMsg);
+                        MyOwner.OnAlarm(AlarmType.Timeout, errMsg);
                     }
-                }               
+                }
             }
 
             return base.DoExcute(out errMsg);

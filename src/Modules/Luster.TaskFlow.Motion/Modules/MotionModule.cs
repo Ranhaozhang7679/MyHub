@@ -845,6 +845,7 @@ namespace Luster.TaskFlow.Motion
                 Tag = this,
                 Key = ID.ToString(),
                 Level = this.Level,
+                IsSelected = this.IsSelected
             };
 
             if (Children.Count > 0)

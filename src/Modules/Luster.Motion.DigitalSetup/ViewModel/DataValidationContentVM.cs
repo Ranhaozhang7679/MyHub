@@ -1,3 +1,4 @@
+using DocumentFormat.OpenXml.Office.Word;
 using Luster.Common.DataAccess.Repositories;
 using Luster.Common.DataStruct;
 using Luster.Common.DataStruct.DataModels;
@@ -35,6 +36,12 @@ namespace Luster.Motion.DigitalSetup.ViewModel
     {
         private readonly IDialogService _dialogService;
 
+        // 取消令牌源，用于中止点检
+        private System.Threading.CancellationTokenSource _cancellationTokenSource;
+
+        // 进度条
+        private double _progressValue;
+
         #region 属性
 
         /// <summary>
@@ -67,6 +74,15 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         /// </summary>
         private Dictionary<string, ValidationItemData> _validationConfigCache = new Dictionary<string, ValidationItemData>();
 
+        /// <summary>
+        /// 进度条
+        /// </summary>
+        public double ProgressValue
+        {
+            get { return _progressValue; }
+            set { SetProperty(ref _progressValue, value); }
+        }
+
         #endregion
 
         #region 命令
@@ -91,13 +107,25 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         /// </summary>
         public ICommand SaveConfigCommand { get; private set; }
 
+        /// <summary>
+        /// 一键点检命令
+        /// </summary>
+        public ICommand OneKeyCheckCommand { get; private set; }
+
+        /// <summary>
+        /// 中止点检命令
+        /// </summary>
+        public ICommand EndCommand { get; private set; }
+
         #endregion
 
-        public DataValidationContentVM(IRepository repository, IRegionManager regionManager, ICommonBus commonBus, FlowBus flowBus, CSVHelper csvHelper, IDialogService dialogService)
-            : base(repository, regionManager, commonBus, csvHelper, flowBus, dialogService)
+        public DataValidationContentVM(IRepository repository, IRegionManager regionManager, ICommonBus commonBus, FlowBus flowBus, CSVHelper csvHelper, IDialogService dialogService, CheckStatusService checkStatusService)
+            : base(repository, regionManager, commonBus, csvHelper, flowBus, dialogService, checkStatusService)
         {
+            _parentRegionName = "DataValidationContent";
+
             Pages = new ObservableCollection<CommonPageModel>();
-            Pages.Add(new CommonPageModel() { Name = "DataValidation", IsSelected = false, Region = "", ViewType = typeof(AssTbAutomaticPosAndLeveling) });
+            Pages.Add(new CommonPageModel() { Name = "DataValidation", IsSelected = false, Region = "DataValidationContent", ViewType = typeof(AssTbAutomaticPosAndLeveling) });
             _dialogService = dialogService;
             // 注册子页面到DigitalAssPageModel
             DigitalAssPageModel.RegisterSubPages("DataValidationContent", Pages);
@@ -109,11 +137,16 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             // 初始化集合
             ValidationItems = new ObservableCollection<ValidationItemModel>();
 
+            // 初始化进度条
+            _progressValue = 0;
+
             // 初始化命令
             AddItemCommand = new DelegateCommand(OnAddItem);
             RemoveItemCommand = new DelegateCommand(OnRemoveItem, CanRemoveItem).ObservesProperty(() => SelectedItem);
             SelectItemCommand = new DelegateCommand<ValidationItemModel>(OnSelectItem);
             SaveConfigCommand = new DelegateCommand(OnSaveConfig);
+            OneKeyCheckCommand = new DelegateCommand(() => OnOneKeyCheck(null));
+            EndCommand = new DelegateCommand(OnEnd);
 
             // 监听集合变化，自动保存
             ValidationItems.CollectionChanged += OnValidationItemsCollectionChanged;
@@ -121,6 +154,292 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             // 从本地持久化加载数据
             LoadFromPersistence();
             LoadCheckConfirmMessages();
+
+            // 延迟加载点检状态，确保 UI 绑定已建立
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                LoadCheckStatusForAllPages();
+            }), System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+
+        /// <summary>
+        /// 加载所有子页面的历史点检状态
+        /// </summary>
+        private void LoadCheckStatusForAllPages()
+        {
+            if (_checkStatusService == null || Pages == null)
+                return;
+
+            try
+            {
+                foreach (var page in Pages)
+                {
+                    if (page != null)
+                    {
+                        page.ParentRegion = "DataValidationContent";
+                        var record = _checkStatusService.GetRecord(page.PageKey);
+                        if (record != null)
+                        {
+                            page.CheckStatus = record.Status;
+                        }
+                        else
+                        {
+                            page.CheckStatus = CheckStatus.NotChecked;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"加载点检状态失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 刷新点检状态 - 每次页面激活时调用
+        /// </summary>
+        protected override void RefreshCheckStatus()
+        {
+            LoadCheckStatusForAllPages();
+        }
+
+        /// <summary>
+        /// 一键点检 - 顺序执行所有验证项的验证
+        /// </summary>
+        public override async void OnOneKeyCheck(object obj)
+        {
+            try
+            {
+                // 如果正在运行，先中止
+                if (_cancellationTokenSource != null && !_cancellationTokenSource.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                // 初始化取消令牌
+                _cancellationTokenSource = new System.Threading.CancellationTokenSource();
+                var token = _cancellationTokenSource.Token;
+
+                // 重置进度
+                ProgressValue = 0;
+
+                // 检查是否有验证项
+                if (ValidationItems == null || ValidationItems.Count == 0)
+                {
+                    _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = "没有可执行的验证项" });
+                    SaveCheckStatus(CheckStatus.CheckedFail, "没有可执行的验证项");
+                    SyncOverallStatusToPageStatusService();
+                    return;
+                }
+
+                int totalItems = ValidationItems.Count;
+                int completedItems = 0;
+                int passCount = 0;
+                int failCount = 0;
+
+                _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"开始一键点检，共 {totalItems} 个验证项" });
+
+                // 顺序执行每个验证项
+                foreach (var item in ValidationItems)
+                {
+                    // 检查是否已取消
+                    if (token.IsCancellationRequested)
+                    {
+                        _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = "点检已中止" });
+                        break;
+                    }
+
+                    // 更新当前选中的项，以便触发验证
+                    SelectedItem = item;
+
+                    // 等待一小段时间确保 UI 更新
+                    await System.Threading.Tasks.Task.Delay(100, token);
+
+                    // 获取当前验证项的配置数据
+                    var configData = GetValidationConfig(item.Name);
+                    if (configData == null)
+                    {
+                        _commonbus.OnLog(new LogInfo() { LogType = LogType.Warning, LogMessage = $"验证项 {item.Name} 没有配置数据，跳过" });
+                        item.Status = ValidationStatus.Fail;
+                        failCount++;
+                        completedItems++;
+                        ProgressValue = (completedItems * 100.0 / totalItems);
+                        // 同步状态到 PageStatusService
+                        PageStatusService.Instance.UpdateStatus(item.Name, "NG");
+                        continue;
+                    }
+
+                    // 检查是否配置了脚本路径
+                    if (string.IsNullOrEmpty(configData.ScriptPath) || !System.IO.File.Exists(configData.ScriptPath))
+                    {
+                        _commonbus.OnLog(new LogInfo() { LogType = LogType.Warning, LogMessage = $"验证项 {item.Name} 脚本路径无效，跳过" });
+                        item.Status = ValidationStatus.Fail;
+                        failCount++;
+                        // 同步状态到 PageStatusService
+                        PageStatusService.Instance.UpdateStatus(item.Name, "NG");
+                    }
+                    else
+                    {
+                        // 执行验证
+                        _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"正在执行: {item.Name}" });
+
+                        // 创建验证任务完成信号
+                        var validationTcs = new System.Threading.Tasks.TaskCompletionSource<bool>();
+
+                        // 订阅验证状态变更事件
+                        EventHandler<ValidationStatusChangedEventArgs> statusHandler = null;
+                        statusHandler = (s, e) =>
+                        {
+                            if (e.Status == ValidationStatus.Pass || e.Status == ValidationStatus.Fail)
+                            {
+                                if (e.Status == ValidationStatus.Pass)
+                                    passCount++;
+                                else
+                                    failCount++;
+
+                                validationTcs.TrySetResult(e.Status == ValidationStatus.Pass);
+                            }
+                        };
+
+                        // 获取当前的 CommonValidationVM
+                        if (CurrentValidationVM is CommonValidationVM validationVM)
+                        {
+                            validationVM.ValidationStatusChanged += statusHandler;
+
+                            // 触发验证
+                            validationVM.StartValidationCommand.Execute(null);
+
+                            // 等待验证完成或超时（5分钟超时）
+                            var timeoutTask = System.Threading.Tasks.Task.Delay(TimeSpan.FromMinutes(5), token);
+                            var completedTask = await System.Threading.Tasks.Task.WhenAny(validationTcs.Task, timeoutTask);
+
+                            validationVM.ValidationStatusChanged -= statusHandler;
+
+                            if (completedTask == timeoutTask)
+                            {
+                                _commonbus.OnLog(new LogInfo() { LogType = LogType.Warning, LogMessage = $"验证项 {item.Name} 超时" });
+                                item.Status = ValidationStatus.Fail;
+                                failCount++;
+                            }
+                        }
+                        else
+                        {
+                            // 没有激活的验证VM，跳过
+                            _commonbus.OnLog(new LogInfo() { LogType = LogType.Warning, LogMessage = $"验证项 {item.Name} 未激活，跳过" });
+                            item.Status = ValidationStatus.Fail;
+                            failCount++;
+                        }
+
+                        // 同步该验证项的状态到 PageStatusService
+                        string itemStatusText = item.Status switch
+                        {
+                            ValidationStatus.Pass => "OK",
+                            ValidationStatus.Fail => "NG",
+                            _ => "未点检"
+                        };
+                        PageStatusService.Instance.UpdateStatus(item.Name, itemStatusText);
+                    }
+
+                    completedItems++;
+                    ProgressValue = (completedItems * 100.0 / totalItems);
+
+                    // 保存当前验证状态到持久化
+                    SaveToPersistence();
+                }
+
+                // 判定最终状态
+                ProgressValue = 100;
+                CheckStatus finalStatus;
+                string remark;
+
+                if (token.IsCancellationRequested)
+                {
+                    finalStatus = CheckStatus.NotChecked;
+                    remark = $"点检已中止，已完成 {completedItems}/{totalItems} 项";
+                }
+                else if (failCount == 0 && passCount == totalItems)
+                {
+                    finalStatus = CheckStatus.CheckedOK;
+                    remark = $"所有验证项通过 (Pass: {passCount}, Fail: {failCount})";
+                }
+                else
+                {
+                    finalStatus = CheckStatus.CheckedFail;
+                    remark = $"部分验证项失败 (Pass: {passCount}, Fail: {failCount})";
+                }
+
+                SaveCheckStatus(finalStatus, remark);
+
+                // 同步一级界面整体状态到 PageStatusService
+                SyncOverallStatusToPageStatusService();
+
+                _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"点检完成: {remark}" });
+            }
+            catch (Exception ex)
+            {
+                _commonbus.OnLog(new LogInfo() { LogType = LogType.Error, LogMessage = $"点检异常: {ex.Message}" });
+                SaveCheckStatus(CheckStatus.CheckedFail, $"点检异常: {ex.Message}");
+                SyncOverallStatusToPageStatusService();
+            }
+            finally
+            {
+                // 清理取消令牌
+                _cancellationTokenSource?.Dispose();
+                _cancellationTokenSource = null;
+            }
+        }
+
+        /// <summary>
+        /// 中止点检
+        /// </summary>
+        public override void OnEnd()
+        {
+            base.OnEnd();
+
+            // 请求取消
+            _cancellationTokenSource?.Cancel();
+
+            _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = "正在中止点检..." });
+        }
+
+        /// <summary>
+        /// 获取整体点检状态 - 基于所有 ValidationItems 的状态
+        /// </summary>
+        protected override CheckStatus GetOverallCheckStatus()
+        {
+            // 如果没有验证项，返回未点检
+            if (ValidationItems == null || ValidationItems.Count == 0)
+                return CheckStatus.NotChecked;
+
+            bool hasNG = false;
+            bool hasOK = false;
+            bool hasNotChecked = false;
+
+            foreach (var item in ValidationItems)
+            {
+                switch (item.Status)
+                {
+                    case ValidationStatus.Fail:
+                        hasNG = true;
+                        break; // 任一 NG，整体就是 NG
+                    case ValidationStatus.Pass:
+                        hasOK = true;
+                        break;
+                    default:
+                        hasNotChecked = true;
+                        break;
+                }
+            }
+
+            // 判定逻辑
+            if (hasNG)
+                return CheckStatus.CheckedFail;
+            else if (hasNotChecked)
+                return CheckStatus.NotChecked;
+            else if (hasOK)
+                return CheckStatus.CheckedOK;
+            else
+                return CheckStatus.NotChecked;
         }
 
         /// <summary>
@@ -163,9 +482,24 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         /// </summary>
         private void LoadSampleData()
         {
-            ValidationItems.Add(new ValidationItemModel { Name = "视觉标定验证", Status = Validations.ValidationStatus.Pass });
-            ValidationItems.Add(new ValidationItemModel { Name = "IO检测验证", Status = Validations.ValidationStatus.Fail });
-            ValidationItems.Add(new ValidationItemModel { Name = "运动精度验证", Status = Validations.ValidationStatus.Pending });
+            ValidationItems.Add(new ValidationItemModel { Name = "Step1 Load Cell Calibration", ValidationType = ValidationType.LoadCellCalibration});
+            ValidationItems.Add(new ValidationItemModel { Name = "Step2 CCD Calibration", ValidationType = ValidationType.CCDCalibration });
+            ValidationItems.Add(new ValidationItemModel { Name = "Step3 Vision Static Data", ValidationType = ValidationType.VisionStaticData });
+            ValidationItems.Add(new ValidationItemModel { Name = "Step4 Gantry Dynamic Data", ValidationType = ValidationType.GantryDynamicRepeatibilityData });
+            ValidationItems.Add(new ValidationItemModel { Name = "Step5 Vision Flow Images", ValidationType = ValidationType.VisionFlowImages });
+            ValidationItems.Add(new ValidationItemModel { Name = "Step6 Scanner Check", ValidationType = ValidationType.ScannerCheck });
+            ValidationItems.Add(new ValidationItemModel { Name = "Step7 Cosmetic Check", ValidationType = ValidationType.CosmeticCheck });
+            ValidationItems.Add(new ValidationItemModel { Name = "Step8 Press Paper Test", ValidationType = ValidationType.PressPaperResults });
+            ValidationItems.Add(new ValidationItemModel { Name = "Step9 Fool Proofing Images", ValidationType = ValidationType.FoolProofingImages });
+            ValidationItems.Add(new ValidationItemModel { Name = "Step10 Screwdrive Calibration", ValidationType = ValidationType.ScrewdriveCalibration });
+            ValidationItems.Add(new ValidationItemModel { Name = "Step11 Recheck Image", ValidationType = ValidationType.RecheckImage });
+            ValidationItems.Add(new ValidationItemModel { Name = "Step12 PeelOff PF Validation", ValidationType = ValidationType.PeelOffPFValidation });
+            ValidationItems.Add(new ValidationItemModel { Name = "Step13 Paste PF Validation", ValidationType = ValidationType.PastePFValidation });
+            ValidationItems.Add(new ValidationItemModel { Name = "Step14 AOI Capability Check", ValidationType = ValidationType.AOICapabilityCheck });
+            ValidationItems.Add(new ValidationItemModel { Name = "Step15 GRR", ValidationType = ValidationType.GRR });
+            ValidationItems.Add(new ValidationItemModel { Name = "Step16 Key Parameters", ValidationType = ValidationType.KeyParameters });
+            ValidationItems.Add(new ValidationItemModel { Name = "Step17 Vacuum Calibration", ValidationType = ValidationType.VacuumCalibration });
+            ValidationItems.Add(new ValidationItemModel { Name = "Step18 CPK", ValidationType = ValidationType.CPK });
         }
 
         /// <summary>
@@ -451,12 +785,19 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         CCDCalibration,
         VisionStaticData,
         GantryDynamicRepeatibilityData,
-        PressPaperResults,
         VisionFlowImages,
-        FoolProofingImages,
-        KeyParameters,
-        CPK,
         ScannerCheck,
+        CosmeticCheck,
+        PressPaperResults,
+        FoolProofingImages,
+        ScrewdriveCalibration,
+        RecheckImage,
+        PeelOffPFValidation,
+        PastePFValidation,
+        AOICapabilityCheck,
+        GRR,
+        KeyParameters,
         VacuumCalibration,
+        CPK,
     }
 }

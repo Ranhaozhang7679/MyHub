@@ -160,6 +160,14 @@ namespace Luster.Motion.SubSystem.ViewModel
                 }
             }
 
+            //// 计算空闲时间：只有当前是待料中状态时才实时更新显示
+            //if (_isInIdleState && _idleStartTime != DateTime.MinValue)
+            //{
+            //    double currentSessionSeconds = (DateTime.Now - _idleStartTime).TotalSeconds;
+            //    double totalSeconds = _accumulatedIdleSeconds + currentSessionSeconds;
+            //    IdleTime = Math.Round(totalSeconds / 60, 2);
+            //}
+
             // 每 60s 300s 做一下换班处理、做下数据删除处理
             ClassInterval++;
             if (ClassInterval > 300)
@@ -203,6 +211,21 @@ namespace Luster.Motion.SubSystem.ViewModel
             get { return _runTime; }
             set { SetProperty(ref _runTime, value); }
         }
+
+        ///// <summary>
+        ///// 空闲时间（分钟）
+        ///// </summary>
+        //private double _idleTime;
+        //public double IdleTime
+        //{
+        //    get { return _idleTime; }
+        //    set { SetProperty(ref _idleTime, value); }
+        //}
+
+        //// 空闲时间累计相关
+        //private bool _isInIdleState = false;
+        //private DateTime _idleStartTime = DateTime.MinValue;
+        //private double _accumulatedIdleSeconds = 0;  // 已累计的秒数
 
         /// <summary>
         /// 故障时间
@@ -473,6 +496,27 @@ namespace Luster.Motion.SubSystem.ViewModel
             {
                 BtnEnable = op.Dst != EngineStatus.Running;
             });
+
+            //// 订阅空闲状态变化事件
+            //bus.GetEvent<PubSubEvent<bool>>().Subscribe((isIdle) =>
+            //{
+            //    if (isIdle && !_isInIdleState)
+            //    {
+            //        // 进入待料中状态
+            //        _isInIdleState = true;
+            //        _idleStartTime = DateTime.Now;
+            //    }
+            //    else if (!isIdle && _isInIdleState)
+            //    {
+            //        // 离开待料中状态，保存已累计的时间
+            //        _isInIdleState = false;
+            //        if (_idleStartTime != DateTime.MinValue)
+            //        {
+            //            _accumulatedIdleSeconds += (DateTime.Now - _idleStartTime).TotalSeconds;
+            //            _idleStartTime = DateTime.MinValue;
+            //        }
+            //    }
+            //});
 
             bus.GetEvent<RecipeOpenEvent>().Subscribe(r =>
             {

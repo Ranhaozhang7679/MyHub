@@ -23,17 +23,25 @@
 
 #endregion
 
+using Luster.Common.DataStruct;
+using Luster.Common.DataStruct.DataModels;
+using Luster.Common.DataStruct.Enums;
 using Luster.Common.DataStruct.Extensions;
+using Luster.Common.DataStruct.Interfaces;
+using Luster.Common.Tools;
 using Luster.TaskFlow.Common.Attributes;
 using Luster.TaskFlow.Common.Enums;
 using Luster.Common.DataStruct;
 using Luster.TaskFlow.Common.Functions;
 using Luster.TaskFlow.Common.Interfaces;
-using Luster.Common.DataStruct.Interfaces;
+using Luster.TaskFlow.Common.Logics;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.Remoting;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -1213,8 +1221,13 @@ namespace Luster.TaskFlow.Common.Module
             {
                 Text = this.Alias,
                 Icon = this.TaskFunction?.Icon,
+                FunctionName = this.TaskFunction.Name,
+                FunctionInParameters = GetInParameters(),
+                RunStatus = (int)((IModule)this).Status,
                 Tag = this,
                 Key = ID.ToString(),
+                Level = this.Level,
+                IsSelected = this.IsSelected
             };
 
             if (Children.Count > 0)
@@ -1264,6 +1277,34 @@ namespace Luster.TaskFlow.Common.Module
             return rNode;
         }
 
+        public virtual string GetInParameters()
+        {
+            // 使用 StringBuilder 避免字符串拼接的内存分配
+            var sb = new StringBuilder();
+
+            foreach (var item in Parameters)
+            {
+                // 提前过滤，减少嵌套
+                if (item.Value?.ParamType != ParamType.IN)
+                    continue;
+
+                object v = item.Value.Value;
+                if (v == null)
+                    continue;
+
+                // 使用 StringBuilder.Append，避免临时字符串
+                sb.Append(item.Value.Name)
+                  .Append('#')
+                  .Append(JsonTool.ToJson(v))
+                  .Append(';');
+            }
+
+            // 移除末尾分号（比 Trim 更高效，只处理特定字符）
+            if (sb.Length > 0)
+                sb.Length--; // 直接修改长度，避免创建新字符串
+
+            return sb.ToString();
+        }
         #endregion
 
         #region 模块引用和被引用关系

@@ -13,6 +13,7 @@ using Luster.Motion.DataStruct;
 using Luster.Motion.DigitalSetup.AssTables;
 using Luster.Motion.DigitalSetup.Datas;
 using Luster.Motion.DigitalSetup.Helpers;
+using Luster.Motion.DigitalSetup.Services;
 using Luster.Motion.EditorUI;
 using Luster.Motion.EditorUI.Models;
 using Luster.Motion.TaskFlow.Engine;
@@ -98,6 +99,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 LoadStationConfigFromJson();
                 //更新界面属性
                 UpdateStationConfigs();
+                // 加载工站点检状态
+                LoadStationCheckStatus();
             }
         }
 
@@ -107,9 +110,11 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                                         IMotionController motionController,
                                         IDeviceEngine deviceEngine,
                                         FlowBus _flowBus,
-                                        CSVHelper cSVHelper,IDialogService dialogService)
-                                        : base(repository, regionManager, commonBus, cSVHelper, _flowBus, dialogService)
+                                        CSVHelper cSVHelper,IDialogService dialogService, CheckStatusService checkStatusService)
+                                        : base(repository, regionManager, commonBus, cSVHelper, _flowBus, dialogService, checkStatusService)
         {
+            _parentRegionName = "AutoVericationContent";
+
             flowBus = _flowBus;
             _deviceEngine = deviceEngine;
             _mController = motionController;
@@ -131,11 +136,60 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             LoadStationConfigFromJson();
             //更新界面属性
             UpdateStationConfigs();
+            // 加载工站点检状态
+            LoadStationCheckStatus();
 
             // 订阅状态服务的更新事件，实时获取状态变化
             PageStatusService.Instance.StatusChanged += OnPageStatusChanged;
 
             InitializePageStatus();
+
+            // 延迟加载点检状态，确保 UI 绑定已建立
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                LoadCheckStatusForAllPages();
+            }), System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+
+        /// <summary>
+        /// 加载所有子页面的历史点检状态
+        /// </summary>
+        private void LoadCheckStatusForAllPages()
+        {
+            if (_checkStatusService == null || Pages == null)
+                return;
+
+            try
+            {
+                foreach (var page in Pages)
+                {
+                    if (page != null)
+                    {
+                        page.ParentRegion = "AutoVericationContent";
+                        var record = _checkStatusService.GetRecord(page.PageKey);
+                        if (record != null)
+                        {
+                            page.CheckStatus = record.Status;
+                        }
+                        else
+                        {
+                            page.CheckStatus = CheckStatus.NotChecked;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"加载点检状态失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 刷新点检状态 - 每次页面激活时调用
+        /// </summary>
+        protected override void RefreshCheckStatus()
+        {
+            LoadCheckStatusForAllPages();
         }
 
         /// <summary>
@@ -210,6 +264,16 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             {
                 _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"读取状态失败: {ex.Message}" });
                 ProgressValue = 0;
+            }
+            finally
+            {
+                ProgressValue = 100;
+
+                // 保存点检状态 - AutoVerification直接返回OK
+                SaveCheckStatus(CheckStatus.CheckedOK, "自动验证页面状态读取完成");
+
+                // 同步一级界面整体状态到 PageStatusService
+                SyncOverallStatusToPageStatusService();
             }
         }
 

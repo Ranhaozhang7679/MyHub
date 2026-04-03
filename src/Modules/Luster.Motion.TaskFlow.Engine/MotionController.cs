@@ -368,6 +368,8 @@ namespace Luster.Motion.TaskFlow.Engine
             _deviceEngine.GetModuleListEvent += DeviceEngine_GetModuleListEvent;
             _deviceEngine.GetPDCAModulesEvent -= DeviceEngine_GetPDCAModulesEvent;
             _deviceEngine.GetPDCAModulesEvent += DeviceEngine_GetPDCAModulesEvent;
+            _deviceEngine.GetSFCModulesEvent -= DeviceEngine_GetSFCModulesEvent;
+            _deviceEngine.GetSFCModulesEvent += DeviceEngine_GetSFCModulesEvent;
 
             SysConfig = new SystemConfig();
             FileConfig = new FileConfig();
@@ -1394,6 +1396,10 @@ namespace Luster.Motion.TaskFlow.Engine
             if (MachineStatus == EngineStatus.Running)
             {
                 throw new FriendlyException("流程正在运行,不能进行回零!");
+            }
+            if (_deviceEngine.DeviceMode == DeviceMode.Virtual)
+            {
+                throw new FriendlyException("离线模式无法回零！请切为在线模式");
             }
             //_firstStartFlag = true;
             // 2.回零弹窗提示
@@ -2735,6 +2741,34 @@ namespace Luster.Motion.TaskFlow.Engine
                 return functionName.Contains("PDCA") ||
                        alias.Contains("PDCA") ||
                        functionName.Contains("PDCAELimit");
+            }
+        }
+        /// <summary>
+        /// 获取SFC模块信息
+        /// </summary>
+        private IEnumerable<object> DeviceEngine_GetSFCModulesEvent()
+        {
+
+            // 获取所有SFC模块
+            var allSFCModules = MotionEngine
+                .Where(m => m.Status != RunStatus.Skip && IsSFCModule(m))
+                .Select(x => x as object);
+
+            return allSFCModules;
+
+
+            /// <summary>
+            /// 判断是否为SFC模块
+            /// </summary>
+            bool IsSFCModule(IMotionModule module)
+            {
+                if (module?.TaskFunction == null) return false;
+
+                var functionName = module.TaskFunction.GetType().Name;
+                var alias = module.Alias ?? "";
+
+                return functionName.Contains("SFC") ||
+                       alias.Contains("SFC");
             }
         }
     }

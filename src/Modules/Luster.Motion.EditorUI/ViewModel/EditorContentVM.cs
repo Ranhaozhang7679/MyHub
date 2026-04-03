@@ -527,6 +527,12 @@ namespace Luster.Motion.EditorUI.ViewModel
                 return;
             }
 
+            if (motionModule != null && motionModule.TaskFunction?.Alias == "PythonScript")
+            {
+                _dialogService.ShowPythonEditorDialog(motionModule, motionModule.ID.ToString(), r => {});
+                return;
+            }
+
             if (motionModule != null && motionModule != eventBus.GetCurrent())
             {
                 eventBus.OnLoaded(motionModule);
@@ -1016,10 +1022,32 @@ namespace Luster.Motion.EditorUI.ViewModel
                 Task.Factory.StartNew(() =>
                 {
                     var rootMotion = eventBus.GetCurrent();
+
+                    //根节点处理
                     var rootNode = rootMotion.GetTreeNodeForFlow();
                     string fileName = saveDialog.FileName;
                     rootNode.FunctionName = "Parallel";
                     rootNode.Text = "开始";
+
+                    //选择工站处理
+                    if (rootNode.Children.Count > 0)
+                    {
+                        List<LNode> nodes = new List<LNode>();
+                        foreach (var child in rootNode.Children)
+                        {
+                            if (child.IsSelected)
+                            {
+                                nodes.Add(child);
+                            }
+                        }
+
+                        //替换掉孩子节点
+                        if (nodes.Count > 0)
+                        {
+                            rootNode.Children = nodes;
+                        }
+                    }
+
                     FlowChartData flowChartData = new FlowChartData();
                     flowChartData.InitFlowChartData(rootNode);
 

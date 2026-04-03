@@ -214,7 +214,7 @@ namespace Luster.Motion.Assests.Langs
 			OnPropertyChanged(nameof(CopyCreate));
 			OnPropertyChanged(nameof(CopySelectedModule));
             OnPropertyChanged(nameof(CPKTest));
-            OnPropertyChanged(nameof(Create));
+			OnPropertyChanged(nameof(Create));
 			OnPropertyChanged(nameof(CreateProject));
 			OnPropertyChanged(nameof(CreateTime));
 			OnPropertyChanged(nameof(CropRate));
@@ -229,7 +229,7 @@ namespace Luster.Motion.Assests.Langs
 			OnPropertyChanged(nameof(CustomModule));
 			OnPropertyChanged(nameof(Cylinder));
             OnPropertyChanged(nameof(DataValidation));
-            OnPropertyChanged(nameof(DataBase));
+			OnPropertyChanged(nameof(DataBase));
 			OnPropertyChanged(nameof(DataDirectory));
 			OnPropertyChanged(nameof(DataMark));
 			OnPropertyChanged(nameof(DataProc));
@@ -414,6 +414,7 @@ namespace Luster.Motion.Assests.Langs
 			OnPropertyChanged(nameof(GetModbus));
 			OnPropertyChanged(nameof(GetPlaneByObj));
 			OnPropertyChanged(nameof(GetPointByObj));
+            OnPropertyChanged(nameof(GetSlopeIntercept));
 			OnPropertyChanged(nameof(Global));
 			OnPropertyChanged(nameof(GlobalVar));
 			OnPropertyChanged(nameof(GlobalVariable));
@@ -508,7 +509,7 @@ namespace Luster.Motion.Assests.Langs
 			OnPropertyChanged(nameof(LoadCell));
 			OnPropertyChanged(nameof(Loading));
             OnPropertyChanged(nameof(LADUpload));
-            OnPropertyChanged(nameof(LoadingSilo));
+			OnPropertyChanged(nameof(LoadingSilo));
 			OnPropertyChanged(nameof(Log));
 			OnPropertyChanged(nameof(LogBackUpDays));
 			OnPropertyChanged(nameof(Logic));
@@ -2915,6 +2916,9 @@ namespace Luster.Motion.Assests.Langs
         ///   查找类似 获取点 的本地化字符串。
         /// </summary>
 		public string GetPointByObj => Lang.GetPointByObj;
+
+
+        public string GetSlopeIntercept => Lang.GetSlopeIntercept;
 
         /// <summary>
         ///   查找类似 全局 的本地化字符串。

@@ -48,12 +48,32 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
-                            <hc:HighlightTextBlock  
-                                Width="160"  
-                                Padding="0"  
-                                HorizontalAlignment="Left"  
-                                VerticalAlignment="Center"  
-                                SourceText="{lang:Lang Key={Binding Name}}"  
+                            <!-- 点检状态指示器 -->
+                            <Ellipse Width="12" Height="12" Margin="5,0,5,0" VerticalAlignment="Center">
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Setter Property="Fill" Value="LightGray"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding CheckStatus}" Value="0">
+                                                <Setter Property="Fill" Value="LightGray"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding CheckStatus}" Value="1">
+                                                <Setter Property="Fill" Value="LightGreen"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding CheckStatus}" Value="2">
+                                                <Setter Property="Fill" Value="LightCoral"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+
+                            <!-- 页面名称 -->
+                            <hc:HighlightTextBlock
+                                Padding="0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                SourceText="{lang:Lang Key={Binding Name}}"
                                 TextAlignment="Left" />
                         </StackPanel>
                     </DataTemplate>
@@ -130,7 +150,7 @@
               HorizontalAlignment="Left" />
                 <local:CommonButton />
             </DockPanel>
-            <StackPanel  
+            <StackPanel Visibility="Collapsed" 
                 Grid.Row="1"  
                 Grid.Column="1"
                 HorizontalAlignment="Right"  

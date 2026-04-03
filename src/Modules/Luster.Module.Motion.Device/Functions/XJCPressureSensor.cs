@@ -41,13 +41,13 @@ using System.Windows;
 
 namespace Luster.Module.Motion.Device.Functions
 {
-
+  
     public class XJCPressureSensor : MotionFunction, IPauseFunction
     {
         [NotEmpty]
         [Parameter("通信设备", 0, CN = "通信设备", EditorType = typeof(VCommuncation))]
         public VDevice CommDevice { get; set; }
-
+      
         [Parameter("从站设备", 1, CN = "从站设备", CanRef = ParamRef.NoRef)]
         public SocketAction Slave { get; set; }
 
@@ -168,7 +168,7 @@ namespace Luster.Module.Motion.Device.Functions
                                 if (coilVs.Count > 0)
                                 {
                                     Value += Math.Round(coilVs[0], 3);
-
+                                   
                                 }
                                 else
                                 {
@@ -301,7 +301,7 @@ namespace Luster.Module.Motion.Device.Functions
                     // 没有选设备时清空数据源
                     OnDataSource(nameof(Slave), new object[0]);
                 }
-            }
+            }           
         }
 
         private int getSlaveNum(VCommuncation comm)
@@ -314,7 +314,7 @@ namespace Luster.Module.Motion.Device.Functions
                     int.TryParse(comm.Actions[i].Value, out slaveNum);
                     break;
                 }
-            }
+            }   
             return slaveNum;
         }
     }

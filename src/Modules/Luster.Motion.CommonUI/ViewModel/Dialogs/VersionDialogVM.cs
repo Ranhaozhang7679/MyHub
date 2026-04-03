@@ -74,12 +74,37 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
         }
 
         /// <summary>
+        /// PLC版本
+        /// </summary>
+        private List<VersionModel> _plcVersions;
+        public List<VersionModel> PlcVersions
+        {
+            get { return _plcVersions; }
+            set { SetProperty(ref _plcVersions, value); }
+        }
+
+        private bool _hasPlcVersions;
+        public bool HasPlcVersions
+        {
+            get { return _hasPlcVersions; }
+            set { SetProperty(ref _hasPlcVersions, value); }
+        }
+
+        private int _dialogWidth = 600;
+        public int DialogWidth
+        {
+            get { return _dialogWidth; }
+            set { SetProperty(ref _dialogWidth, value); }
+        }
+
+        /// <summary>
         /// 版本
         /// </summary>
         public VersionDialogVM(ICommonBus cmbus)
         {
             Versions = new List<VersionModel>();
             RecipeVersions = new List<VersionModel>();
+            PlcVersions = new List<VersionModel>();
             commonBus = cmbus;
         }
 
@@ -125,29 +150,46 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
             using (StreamReader reader = new StreamReader(fileStream))
             {
                 string strJson = reader.ReadToEnd();
-                var obj = Luster.Common.Tools.JsonTool.ToObject<Version>(strJson);
+                var obj = Luster.Common.Tools.JsonTool.ToObject<VersionConfig>(strJson);
                 Versions = obj.Versions;
             }
 
-            string recipeVersionPath = commonBus.ProjInfo.FullName;
-            if (string.IsNullOrEmpty(recipeVersionPath)) return;
-            recipeVersionPath = recipeVersionPath.Substring(0, recipeVersionPath.LastIndexOf(@"\"));
-            recipeVersionPath = Path.Combine(recipeVersionPath, "Config", "Version.json");
-            if (File.Exists(recipeVersionPath))
+            string recipeBasePath = commonBus.ProjInfo.FullName;
+            if (string.IsNullOrEmpty(recipeBasePath)) return;
+            recipeBasePath = recipeBasePath.Substring(0, recipeBasePath.LastIndexOf(@"\"));
+            string recipeConfigDir = Path.Combine(recipeBasePath, "Config");
+
+            string recipeVersionFile = Path.Combine(recipeConfigDir, "Version.json");
+            if (File.Exists(recipeVersionFile))
             {
                 // 读取json文件
-                using (FileStream fileStream = new FileStream(recipeVersionPath, FileMode.Open, FileAccess.Read))
+                using (FileStream fileStream = new FileStream(recipeVersionFile, FileMode.Open, FileAccess.Read))
                 using (StreamReader reader = new StreamReader(fileStream))
                 {
                     string strJson = reader.ReadToEnd();
-                    var obj = Luster.Common.Tools.JsonTool.ToObject<Version>(strJson);
+                    var obj = Luster.Common.Tools.JsonTool.ToObject<VersionConfig>(strJson);
                     RecipeVersions = obj.Versions;
+                }
+            }
+
+            // 读取PLC版本（与配方版本同目录）
+            string plcVersionPath = Path.Combine(recipeConfigDir, "PLCVersion.json");
+            if (File.Exists(plcVersionPath))
+            {
+                using (FileStream fileStream = new FileStream(plcVersionPath, FileMode.Open, FileAccess.Read))
+                using (StreamReader reader = new StreamReader(fileStream))
+                {
+                    string strJson = reader.ReadToEnd();
+                    var obj = Luster.Common.Tools.JsonTool.ToObject<VersionConfig>(strJson);
+                    PlcVersions = obj.Versions;
+                    HasPlcVersions = true;
+                    DialogWidth = 900;
                 }
             }
         }
     }
 
-    class Version
+    public class VersionConfig
     {
         public List<VersionModel> Versions { get; set; }
     }

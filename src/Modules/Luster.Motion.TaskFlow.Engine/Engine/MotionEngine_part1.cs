@@ -1,4 +1,4 @@
-﻿#region 作者和版权
+#region 作者和版权
 /*************************************************************************************
 * CLR 版本:       4.0.30319.42000
 * 类 名 称:       MotionEngine
@@ -222,6 +222,65 @@ namespace Luster.Motion.TaskFlow.Engine
             deviceEngine.ControlValueChangedEvent -= DeviceEngine_ControlValueChangedEvent;
             deviceEngine.ControlValueChangedEvent += DeviceEngine_ControlValueChangedEvent;
 
+            //设备名称发生变化
+            deviceEngine.DeviceNameChangedEvent -= DeviceEngine_DeviceNameChangedEvent;
+            deviceEngine.DeviceNameChangedEvent += DeviceEngine_DeviceNameChangedEvent;
+
+        }
+
+        private void DeviceEngine_DeviceNameChangedEvent(Guid guid, string oldName, string newName)
+        {
+            foreach (var item in this)
+            {
+                if (item.TaskFunction != null)
+                {
+                    bool needUiRefresh = false;
+                    foreach (var para in item.Parameters)
+                    {
+                        if (para.Value.Value is VDevice vDevice && vDevice.DeviceID == guid)
+                        {
+                            object newDeviceObj = null;
+
+                            // 必须创建一个独立于原引用地址的新实例。
+                            // 这是因为WPF自定义编辑器（如VIO，底层可能是DependencyProperty）只在对象引用（地址）变化时才会触发完整的视觉刷新重绘。
+                            // 单纯改变原对象的属性（即使加了INotifyPropertyChanged）往往不会被那些没有进行TwoWay内部属性绑定的自定义UI控件侦测到。
+                            if (vDevice.GetType() == typeof(VDevice))
+                            {
+                                newDeviceObj = new VDevice { DeviceID = vDevice.DeviceID, Name = newName, Virtual = vDevice.Virtual };
+                            }
+                            else if (vDevice is VAxisDevice axisDevice)
+                            {
+                                axisDevice.Name = newName;
+                                var clonedAxis = axisDevice.Clone() as VAxisDevice;
+                                if (clonedAxis != null)
+                                {
+                                    clonedAxis.DeviceID = vDevice.DeviceID;
+                                    clonedAxis.Name = newName;
+                                    clonedAxis.Virtual = vDevice.Virtual;
+                                }
+                                newDeviceObj = clonedAxis;
+                            }
+                            else if (vDevice is VAxisMDevice mDevice)
+                            {
+                                mDevice.Name = newName;
+                                newDeviceObj = new VAxisMDevice(mDevice) { Name = newName, DeviceID = guid, Virtual = mDevice.Virtual };
+                            }
+
+                            if (newDeviceObj != null)
+                            {
+                                para.Value.Property?.SetValue(item.TaskFunction, newDeviceObj);
+                                para.Value.Value = newDeviceObj;
+                                needUiRefresh = true;
+                            }
+                        }
+                    }
+
+                    if (needUiRefresh)
+                    {
+                        item.OnUpdate(Luster.TaskFlow.Common.Enums.ModuleUpdate.ParameterNum);
+                    }
+                }
+            }
         }
 
         //控制参数发生变化
@@ -402,9 +461,14 @@ namespace Luster.Motion.TaskFlow.Engine
                         {
                             LogEvent.Invoke(LogType.Error, $"模块:{stationModule.Alias} 运行失败,程序暂停！", ExcutorNo);
                         }
-
+                       
                         // 停止
                         Stop();
+
+                        //此时非正常停止，需要报警红灯蜂鸣
+                        LightManager.StopLight(true);
+
+
                     }
 
                 }, item));

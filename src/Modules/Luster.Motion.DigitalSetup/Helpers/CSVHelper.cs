@@ -26,7 +26,7 @@ namespace Luster.Motion.DigitalSetup.Helpers
                 throw new FriendlyException("CSV目录未配置，请检查！");
 
             var type = typeof(T);
-            var fileName = Path.Combine(path,"Ass_Data", $"{type.Name}.csv");
+            var fileName = Path.Combine(path,"Ass_Data", $"{type.Name}_Latest.csv");
             var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(p => p.CanWrite && p.GetIndexParameters().Length == 0)
                 .ToArray();
@@ -119,7 +119,7 @@ namespace Luster.Motion.DigitalSetup.Helpers
                 throw new FriendlyException("CSV目录未配置，请检查！");
 
             var type = typeof(T);
-            var fileName = Path.Combine(path, "Ass_Data", $"{type.Name}.csv");
+            var fileName = Path.Combine(path, "Ass_Data", $"{type.Name}_Latest.csv");
             var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(p => p.CanWrite && p.GetIndexParameters().Length == 0)
                 .ToArray();
@@ -236,7 +236,7 @@ namespace Luster.Motion.DigitalSetup.Helpers
             }
 
             var type = typeof(T);
-            var fileName = System.IO.Path.Combine(path, "Ass_Data", $"{type.Name}.csv");
+            var fileName = System.IO.Path.Combine(path, "Ass_Data", $"{type.Name}_Latest.csv");
 
             try
             {

@@ -24,6 +24,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using Luster.Motion.DigitalSetup.Services;
 
 namespace Luster.Motion.DigitalSetup.ViewModel
 {
@@ -79,8 +80,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 ConfigKey = _seletedReportPage.ViewType switch
                 {
                     Type type when type == typeof(AssTbAutoFocusing) => "AutoFocusingConfig",
-                    Type type when type == typeof(AssTbAutoFieldOfView) => "AutoFieldOfViewConfig",
-                    Type type when type == typeof(AssTbAutoGrayScale) => "AutoGrayScaleConfig",
+                    //Type type when type == typeof(AssTbAutoFieldOfView) => "AutoFieldOfViewConfig",
+                    //Type type when type == typeof(AssTbAutoGrayScale) => "AutoGrayScaleConfig",
                     _ => ConfigKey
                 };
 
@@ -88,6 +89,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 LoadStationConfigFromJson();
                 //更新界面属性
                 UpdateStationConfigs();
+                // 加载工站点检状态
+                LoadStationCheckStatus();
 
             }
         }
@@ -109,15 +112,16 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         }
         public DigitalVisionContentVM(IRepository repository,
                                       IRegionManager regionManager, IMotionController motionController, IDeviceEngine deviceEngine, FlowBus _flowBus, ICommonBus commonBus,
-                                        CSVHelper cSVHelper, IDialogService dialogService) : base(repository, regionManager, commonBus, cSVHelper, _flowBus, dialogService)
+                                        CSVHelper cSVHelper, IDialogService dialogService, CheckStatusService checkStatusService) : base(repository, regionManager, commonBus, cSVHelper, _flowBus, dialogService, checkStatusService)
         {
             flowBus = _flowBus;
             _deviceEngine = deviceEngine;
             _mController = motionController;
+            _parentRegionName = "DigitalVisionContent";
             Pages = new ObservableCollection<CommonPageModel>();
             Pages.Add(new CommonPageModel() { Name = "AutoFocusing", IsSelected = false, Region = "", ViewType = typeof(AssTbAutoFocusing) });
-            Pages.Add(new CommonPageModel() { Name = "AutoGrayScale", IsSelected = false, Region = "", ViewType = typeof(AssTbAutoGrayScale) });
-            Pages.Add(new CommonPageModel() { Name = "AutoFieldOfView", IsSelected = false, Region = "", ViewType = typeof(AssTbAutoFieldOfView) });
+            //Pages.Add(new CommonPageModel() { Name = "AutoGrayScale", IsSelected = false, Region = "", ViewType = typeof(AssTbAutoGrayScale) });
+            //Pages.Add(new CommonPageModel() { Name = "AutoFieldOfView", IsSelected = false, Region = "", ViewType = typeof(AssTbAutoFieldOfView) });
             //Pages.Add(new CommonPageModel() { Name = "AutoVisualCalibration", IsSelected = true, Region = "", ViewType = typeof(AssTbAutoVisualCalibration) });
 
             // 注册子页面到DigitalAssPageModel
@@ -135,7 +139,56 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             LoadStationConfigFromJson();
             //更新界面属性
             UpdateStationConfigs();
+            // 加载工站点检状态
+            LoadStationCheckStatus();
             LoadCheckConfirmMessages();
+
+            // 延迟加载点检状态，确保 UI 绑定已建立
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                LoadCheckStatusForAllPages();
+            }), System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+
+        /// <summary>
+        /// 加载所有子页面的历史点检状态
+        /// </summary>
+        private void LoadCheckStatusForAllPages()
+        {
+            if (_checkStatusService == null || Pages == null)
+                return;
+
+            try
+            {
+                foreach (var page in Pages)
+                {
+                    if (page != null)
+                    {
+                        page.ParentRegion = "DigitalVisionContent";
+                        var record = _checkStatusService.GetRecord(page.PageKey);
+                        if (record != null)
+                        {
+                            page.CheckStatus = record.Status;
+                        }
+                        else
+                        {
+                            page.CheckStatus = CheckStatus.NotChecked;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"加载点检状态失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 刷新点检状态 - 每次页面激活时调用
+        /// </summary>
+        protected override void RefreshCheckStatus()
+        {
+            LoadCheckStatusForAllPages();
         }
 
         public override void OnEnd()
@@ -149,6 +202,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         {
             await base.OnOneKeyCheckAsync(obj);
             // 子界面的一键点检逻辑
+            bool wasCancelled = false;
+
             try
             {
                 ProgressValue = 0; // 进度
@@ -184,7 +239,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                                             continue;
                                         }
                                         FillTableContent(PressRepe);
-                                    }                                   
+                                    }
                                 }
                                 ProgressValue = (i + 1) * 100 / ItemModels.Count; // 进度
                             }
@@ -229,7 +284,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                                             continue;
                                         }
                                         FillTableContent(PressRepe);
-                                    }                                      
+                                    }
                                 }
                                 ProgressValue = (i + 1) * 100 / ItemModels.Count; // 进度
                             }
@@ -265,7 +320,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                             //更新表格
                             UpdateItemsFromCsv();
                             for (int i = 0; i < ItemModels.Count; i++)
-                            {                                
+                            {
                                 if (ItemModels[i] is AssTbAutoGrayScale PressRepe)
                                 {
                                     if (string.IsNullOrEmpty(PressRepe.状态))
@@ -276,7 +331,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                                             continue;
                                         }
                                         FillTableContent(PressRepe);
-                                    }                                  
+                                    }
                                 }
                                 ProgressValue = (i + 1) * 100 / ItemModels.Count; // 进度
                             }
@@ -291,18 +346,63 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                         throw new FriendlyException("回零完成后方可运行测试流程");
                     }
                 }
-                string overallStatus = GetOverallStatus();
-                PageStatusService.Instance.UpdateStatus(PageName, overallStatus);
-
+            }
+            catch (OperationCanceledException)
+            {
+                wasCancelled = true;
+                _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = "点检被用户中止" });
+                throw;
             }
             catch (Exception ex)
             {
-                _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"" });
+                _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"{ex.Message}" });
                 throw;
             }
             finally
             {
+                ProgressValue = 100;
 
+                // 保存当前子页面的点检状态
+                var currentOverallStatus = GetOverallStatus();
+                var checkStatus = CheckStatus.NotChecked;
+                string remark = "";
+
+                if (wasCancelled && _cts.IsCancellationRequested)
+                {
+                    // 用户中止
+                    bool canContinue = CanContinueFromLastCheck();
+
+                    if (canContinue)
+                    {
+                        checkStatus = CheckStatus.NotChecked;
+                        remark = "执行中止，可从上次继续";
+                    }
+                    else
+                    {
+                        checkStatus = CheckStatus.CheckedFail;
+                        remark = "执行中止，需从头开始";
+                    }
+                }
+                else if (currentOverallStatus == "OK")
+                {
+                    checkStatus = CheckStatus.CheckedOK;
+                    remark = "全部点检项合格";
+                }
+                else if (currentOverallStatus == "NG")
+                {
+                    checkStatus = CheckStatus.CheckedFail;
+                    remark = "发现点检不合格项";
+                }
+                else
+                {
+                    checkStatus = CheckStatus.NotChecked;
+                    remark = "未完成点检";
+                }
+
+                SaveCheckStatus(checkStatus, remark);
+
+                // 同步一级界面整体状态到 PageStatusService
+                SyncOverallStatusToPageStatusService();
             }
         }
 

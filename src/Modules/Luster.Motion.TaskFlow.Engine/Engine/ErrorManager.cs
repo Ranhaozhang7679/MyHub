@@ -1,4 +1,4 @@
-﻿using Luster.Common.DataStruct;
+using Luster.Common.DataStruct;
 using Luster.Common.DataStruct.Extensions;
 using Luster.Common.DataStruct.Interfaces;
 using Luster.Motion.DataStruct;
@@ -186,9 +186,19 @@ namespace Luster.Motion.TaskFlow.Engine.Engine
                 // 基于系统的SystemError 自动构建错误类型
                 foreach (var item in typeof(SystemError).GetEnumValues())
                 {
-                    if (!errorInfos.Any(u => u.ErrorType == item.ToString()))
+                    var existing = errorInfos.FirstOrDefault(u => u.ErrorType == item.ToString());
+                    if (existing == null)
                     {
                         errorInfos.Add(new ErrorInfo(item.ToString(), item.GetDescription()));
+                    }
+                    else
+                    {
+                        // 同步更新枚举描述到已有配置
+                        var desc = item.GetDescription();
+                        if (existing.Errors.Count > 0 && !string.IsNullOrEmpty(desc))
+                        {
+                            existing.Errors[0].Message = desc;
+                        }
                     }
                 };
 
@@ -197,10 +207,20 @@ namespace Luster.Motion.TaskFlow.Engine.Engine
                 {
                     if (item.ToString() == DeviceError.None.ToString()) continue;
 
-                    if (!errorInfos.Any(u => u.ErrorType == item.ToString()))
+                    var existing = errorInfos.FirstOrDefault(u => u.ErrorType == item.ToString());
+                    if (existing == null)
                     {
                         var err = new ErrorInfo(item.ToString(), item.GetDescription());
                         errorInfos.Add(err);
+                    }
+                    else
+                    {
+                        // 同步更新枚举描述到已有配置
+                        var desc = item.GetDescription();
+                        if (existing.Errors.Count > 0 && !string.IsNullOrEmpty(desc))
+                        {
+                            existing.Errors[0].Message = desc;
+                        }
                     }
                 };
 
@@ -208,14 +228,20 @@ namespace Luster.Motion.TaskFlow.Engine.Engine
                 var devices = deviceEngine.GetVDevices<IDeviceError>();
                 foreach (var device in devices)
                 {
+                    if (device.ErrorCodes == null) continue;
+
                     foreach (var item in device.ErrorCodes)
                     {
+                        if (item.ToString() == DeviceError.None.ToString()) continue;
+
                         var err = errorInfos.FirstOrDefault(u => u.ErrorType == item.ToString());
-                        if (err.Errors.Count() > 0)
+                        if (err != null && err.Errors.Count() > 0)
                         {
                             var dErrors = err.Errors[0].Devices;
-                            if (!dErrors.Any(u => u.ID == device.ID.ToString()))
+                            var existingDevice = dErrors.FirstOrDefault(u => u.ID == device.ID.ToString());
+                            if (existingDevice == null)
                             {
+                                // 新设备，直接添加
                                 dErrors.Add(new DeivceError()
                                 {
                                     ID = device.ID.ToString(),
@@ -224,13 +250,24 @@ namespace Luster.Motion.TaskFlow.Engine.Engine
                                     Name = device.Name,
                                 });
                             }
+                            else
+                            {
+                                // 已有设备，同步更新名称和描述
+                                existingDevice.Name = device.Name;
+                                existingDevice.Message = item.GetDescription();
+                            }
                         }
                     }
                 }
+
+                // 将内容直接保存回 XML，使之跟代码同步
+                XElement xExport = this.ExportXml();
+                xExport.Save(errConfig);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 // 配置解析错误
+                System.Diagnostics.Debug.WriteLine($"LoadErrorConfig Exception: {ex.Message}");
             }
         }
 
