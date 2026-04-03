@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <UseWPF>true</UseWPF>
+        <UseWindowsForms>true</UseWindowsForms>
     </PropertyGroup>
 
     <ItemGroup>
@@ -48,7 +49,6 @@
 
     <ItemGroup>
         <Reference Include="Microsoft.VisualBasic" />
-        <Reference Include="System.Windows.Forms" />
     </ItemGroup>
 
     <ItemGroup>

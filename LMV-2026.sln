@@ -9,7 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastructure", "{9048EB7F-3875-A59E-E36B-5BD4C6F2A282}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Luster.Prism", "D:\500--Works\LMV3\LM2026\LM2026\src\Infrastructure\Luster.Prism\Luster.Prism.csproj", "{019A42D9-D136-DD0F-5FE9-699389BF4D57}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Luster.Prism", "src\Infrastructure\Luster.Prism\Luster.Prism.csproj", "{019A42D9-D136-DD0F-5FE9-699389BF4D57}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Modules", "Modules", "{EC447DCF-ABFA-6E24-52A5-D7FD48A5C558}"
 EndProject
