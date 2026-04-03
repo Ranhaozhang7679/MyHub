@@ -17,9 +17,9 @@
         <ProjectReference Include="..\Luster.Common.Tools\Luster.Common.Tools.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <Reference Include="HslCommunication">
-            <HintPath>..\..\..\lib\HslCommunication.dll</HintPath>
-        </Reference>
+        <PackageReference Include="Luster.HslCommunication" />
+    </ItemGroup>
+    <ItemGroup>
         <Reference Include="Microsoft.CSharp" />
     </ItemGroup>
 </Project>

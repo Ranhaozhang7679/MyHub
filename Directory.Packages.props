@@ -20,6 +20,25 @@
         <PackageVersion Include="Luster.Motion.DataStruct" Version="1.0.0.122" />
         <PackageVersion Include="Luster.Prism" Version="1.0.0.6" />
 
+        <!-- Luster Third-Party Packages (from lib/libCommon) -->
+        <PackageVersion Include="Luster.Aspose.Cells" Version="1.0.0" />
+        <PackageVersion Include="Luster.Aspose.Words" Version="1.0.0" />
+        <PackageVersion Include="Luster.DynamicExpresso" Version="1.0.0" />
+        <PackageVersion Include="Luster.FinSensor" Version="1.0.0" />
+        <PackageVersion Include="Luster.GvVision.AxInterop" Version="1.0.0" />
+        <PackageVersion Include="Luster.GvVision.Interop" Version="1.0.0" />
+        <PackageVersion Include="Luster.HslCommunication" Version="1.0.0" />
+        <PackageVersion Include="Luster.ICSharpCode.AvalonEdit" Version="1.0.0" />
+        <PackageVersion Include="Luster.Microsoft.Msagl" Version="1.0.0" />
+        <PackageVersion Include="Luster.Microsoft.Msagl.Drawing" Version="1.0.0" />
+        <PackageVersion Include="Luster.Microsoft.Msagl.GraphViewerGdi" Version="1.0.0" />
+        <PackageVersion Include="Luster.MoonPdfLib" Version="1.0.0" />
+        <PackageVersion Include="Luster.MouseKeyboardActivityMonitor" Version="1.0.0" />
+        <PackageVersion Include="Luster.Sentinel.Runtime" Version="1.0.0" />
+        <PackageVersion Include="Luster.SharpZipLib" Version="1.0.0" />
+        <PackageVersion Include="Luster.SimpleTCP" Version="1.0.0" />
+        <PackageVersion Include="Luster.VisionWPFControl" Version="1.0.0" />
+
         <!-- Database and Data Access -->
         <PackageVersion Include="DapperExtensions" Version="1.7.0" />
         <PackageVersion Include="FreeSql" Version="3.2.680" />
