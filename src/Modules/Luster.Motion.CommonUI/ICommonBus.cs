@@ -37,6 +37,11 @@ namespace Luster.Motion.CommonUI
         bool IsNeedSave { get; set; }
 
         /// <summary>
+        /// 编辑计数（用于判断是否有未保存的修改）
+        /// </summary>
+        int EditCount { get; }
+
+        /// <summary>
         /// 事件总线
         /// </summary>
         IEventAggregator EventBus { get; set; }

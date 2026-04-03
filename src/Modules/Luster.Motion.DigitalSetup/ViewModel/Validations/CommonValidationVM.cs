@@ -353,7 +353,9 @@ namespace Luster.Motion.DigitalSetup.ViewModel.Validations
                 },
                 ValidationType.GantryDynamicRepeatibilityData => new List<ConfigItemModel>
                 {
-
+                    new ConfigItemModel("template", null, "绝对文件路径 | 需要被回填数据的【Excel 模板文件】完整路径。"),
+                    new ConfigItemModel("data_dir", null, "绝对目录路径 | 存放视觉数据的【根目录位置】。**且该目录下必须具备“静态”和“动态”两个子文件夹**。"),
+                    new ConfigItemModel("ccd_target", null, "要回填的【目标 CCD 名称】，如 `CCD1` 或 `CCD3` 等"),
                 },
                 ValidationType.PressPaperResults => new List<ConfigItemModel>
                 {
@@ -735,9 +737,12 @@ namespace Luster.Motion.DigitalSetup.ViewModel.Validations
             }
             else
             {
-                ValidationResult = $"验证已启动...\n配置参数:\n{configJson}\n\n提示: 未配置有效的脚本路径";
+                string message = $"配置参数:\n{configJson}\n\n提示: 未配置有效的脚本路径";
+                ValidationResult = $"验证出错\n\n{message}";
                 IsRunning = false;
-            }
+                // 触发验证失败状态
+                OnValidationStatusChanged(ValidationStatus.Fail, message);
+            }            
         }
 
         /// <summary>
@@ -859,8 +864,11 @@ namespace Luster.Motion.DigitalSetup.ViewModel.Validations
             }
             catch (Exception ex)
             {
+                string message = $"执行脚本异常:\n{ex.Message}";
                 ScriptOutput = $"Exception: {ex.Message}";
-                ValidationResult = $"执行脚本异常:\n{ex.Message}";
+                ValidationResult = message;
+                // 触发验证失败状态
+                OnValidationStatusChanged(ValidationStatus.Fail, message);
             }
             finally
             {

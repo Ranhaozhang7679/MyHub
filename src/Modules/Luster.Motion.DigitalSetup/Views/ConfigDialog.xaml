@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:Luster.Motion.DigitalSetup.Views"
         Title="配置 - CPK测试设置"
-        Height="700"
+        Height="800"
         Width="750"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False">
@@ -11,6 +11,7 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <Grid Margin="10">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -40,11 +41,14 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <TextBox Grid.Column="0" Text="{Binding TempConfigFile1}" IsReadOnly="True" 
-                             Height="30" Padding="5" Background="White" Margin="0,0,5,0"/>
+                 Height="30" Padding="5" Background="White" Margin="0,0,5,0"/>
                     <Button Grid.Column="1" Content="浏览" Command="{Binding BrowseTempFile1Command}" 
-                            Width="70" Height="30" Background="#2196F3" Foreground="White"/>
+                Width="70" Height="30" Background="#2196F3" Foreground="White" Margin="0,0,5,0"/>
+                    <Button Grid.Column="2" Content="清除数据" Command="{Binding ClearDataCommand}" 
+                Width="80" Height="30" Background="#FF9800" Foreground="White"/>
                 </Grid>
             </GroupBox>
 
@@ -55,16 +59,31 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBox Grid.Column="0" Text="{Binding TempPythonScriptPath}" IsReadOnly="True" 
+                    <TextBox Grid.Column="0" Text="{Binding TempPythonScriptPath}" IsReadOnly="True"
                              Height="30" Padding="5" Background="White" Margin="0,0,5,0"
                              ToolTip="Python脚本路径，用于执行CPK数据处理"/>
-                    <Button Grid.Column="1" Content="浏览" Command="{Binding BrowseTempPythonScriptCommand}" 
+                    <Button Grid.Column="1" Content="浏览" Command="{Binding BrowseTempPythonScriptCommand}"
+                            Width="70" Height="30" Background="#2196F3" Foreground="White"/>
+                </Grid>
+            </GroupBox>
+
+            <!-- Python.exe 路径配置 -->
+            <GroupBox Grid.Row="3" Header="Python 可执行文件路径" Margin="0,0,0,10">
+                <Grid Margin="5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox Grid.Column="0" Text="{Binding TempPythonExePath}" IsReadOnly="True"
+                             Height="30" Padding="5" Background="White" Margin="0,0,5,0"
+                             ToolTip="Python.exe 路径，不设置则使用系统自带的 Python"/>
+                    <Button Grid.Column="1" Content="浏览" Command="{Binding BrowseTempPythonExeCommand}"
                             Width="70" Height="30" Background="#2196F3" Foreground="White"/>
                 </Grid>
             </GroupBox>
 
             <!-- 检测位置多选列表 -->
-            <GroupBox Grid.Row="3" Header="检测位置选择" Margin="0,0,0,10">
+            <GroupBox Grid.Row="4" Header="检测位置选择" Margin="0,0,0,10">
                 <Grid Margin="5">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -99,36 +118,70 @@
             </GroupBox>
 
             <!-- 精确阵列配置 -->
-            <GroupBox Grid.Row="4" Header="精确阵列配置 (字段映射)" Margin="0,0,0,10">
+            <GroupBox Grid.Row="5" Header="精确阵列配置 (字段映射)" Margin="0,0,0,10">
                 <Grid Margin="5">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="配置文本键与Excel列的映射关系:" Margin="0,0,0,5"/>
-                    <DataGrid Grid.Row="1" 
-                              ItemsSource="{Binding MappingItems}"
-                              AutoGenerateColumns="False"
-                              CanUserAddRows="True"
-                              CanUserDeleteRows="True"
-                              CanUserReorderColumns="False"
-                              HeadersVisibility="Column"
-                              RowHeight="35"
-                              Margin="0,0,0,5"
-                              MinHeight="150">
+
+                    <!-- 按钮栏 -->
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                        <Button Content="新增行" Command="{Binding AddMappingItemCommand}" 
+                                Width="80" Height="30" Margin="0,0,10,0"
+                                Background="#2196F3" Foreground="White" BorderThickness="0"/>
+                        <Button Content="删除选中" Command="{Binding DeleteMappingItemCommand}" 
+                                Width="80" Height="30" 
+                                Background="#F44336" Foreground="White" BorderThickness="0"/>
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="1" Text="配置文本键与Excel列的映射关系:" Margin="0,0,0,5"/>
+
+                    <DataGrid Grid.Row="2" 
+                            ItemsSource="{Binding MappingItems}"
+                            AutoGenerateColumns="False"
+                            CanUserAddRows="False"
+                            CanUserDeleteRows="False"
+                            CanUserReorderColumns="False"
+                            HeadersVisibility="Column"
+                            RowHeight="35"
+                            Margin="0,0,0,5"
+                            MinHeight="150"
+                            SelectionMode="Single"
+                            SelectionUnit="FullRow"
+                            SelectedItem="{Binding SelectedMappingItem}"
+                            IsReadOnly="False"
+                            CanUserResizeRows="False"
+                            CanUserSortColumns="True">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header="文本键" Binding="{Binding TxtKey, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
-                            <DataGridTextColumn Header="Excel列名" Binding="{Binding ExcelKey, UpdateSourceTrigger=PropertyChanged}" Width="*"/>
-                            <DataGridTextColumn Header="起始行" Binding="{Binding StartRow, UpdateSourceTrigger=PropertyChanged}" Width="80"/>
-                            <DataGridTextColumn Header="最大行" Binding="{Binding MaxRow, UpdateSourceTrigger=PropertyChanged}" Width="80"/>
-                            <DataGridTextColumn Header="最小行" Binding="{Binding MinRow, UpdateSourceTrigger=PropertyChanged}" Width="80"/>
+                            <DataGridTextColumn Header="文本键" 
+                                    Binding="{Binding TxtKey, UpdateSourceTrigger=PropertyChanged}" 
+                                    Width="*"
+                                    IsReadOnly="False"/>
+                            <DataGridTextColumn Header="Excel列名" 
+                                    Binding="{Binding ExcelKey, UpdateSourceTrigger=PropertyChanged}" 
+                                    Width="*"
+                                    IsReadOnly="False"/>
+                            <DataGridTextColumn Header="起始行" 
+                                    Binding="{Binding StartRow, UpdateSourceTrigger=PropertyChanged}" 
+                                    Width="80"
+                                    IsReadOnly="False"/>
+                            <DataGridTextColumn Header="最大行" 
+                                    Binding="{Binding MaxRow, UpdateSourceTrigger=PropertyChanged}" 
+                                    Width="80"
+                                    IsReadOnly="False"/>
+                            <DataGridTextColumn Header="最小行" 
+                                    Binding="{Binding MinRow, UpdateSourceTrigger=PropertyChanged}" 
+                                    Width="80"
+                                    IsReadOnly="False"/>
                         </DataGrid.Columns>
                     </DataGrid>
                 </Grid>
             </GroupBox>
 
             <!-- 按钮区域 -->
-            <StackPanel Grid.Row="6" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,10">
+            <StackPanel Grid.Row="7" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,10">
                 <Button Content="确定" Command="{Binding ConfirmCommand}" 
                         Width="80" Height="32" Margin="0,0,10,0" 
                         Background="#4CAF50" Foreground="White" BorderThickness="0"/>

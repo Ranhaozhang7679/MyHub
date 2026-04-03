@@ -19,30 +19,17 @@
     <!-- Root container -->
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="200" />
+            <ColumnDefinition Width="220*" x:Name="LeftPanelColumn" />
             <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="500*" />
+            <ColumnDefinition Width="500*" x:Name="MiddlePanelColumn" />
             <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="200*" />
+            <ColumnDefinition Width="200*" x:Name="RightPanelColumn" />
         </Grid.ColumnDefinitions>
-
-        <!-- Settings Button - Outside the IsEnabled scope, positioned at top-right of left panel -->
-        <Button
-                Grid.Column="0"
-                Margin="0,10,10,0"
-                Padding="8,5"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Top"
-                Command="{Binding OpenSettingsCommand}"
-                Content="⚙"
-                FontSize="16"
-                Visibility="{Binding ReportSelectVisible, Converter={StaticResource Boolean2VisibilityConverter}}"
-                Panel.ZIndex="100" />
 
         <!-- Main content layer - affected by GlobalProperty.IsEnabled -->
         <Grid Grid.ColumnSpan="5" Background="#F4F6FA" IsEnabled="{Binding Path=(g:GlobalProperty.IsEnabeld), UpdateSourceTrigger=PropertyChanged}">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="200" />
+                <ColumnDefinition Width="180" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="500*" />
                 <ColumnDefinition Width="Auto" />
@@ -56,18 +43,12 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock
-                            Margin="20,10"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Center"
-                            FontSize="20"
-                            Text="{lang:Lang Key={x:Static lang:LangKeys.Configure}}" />
-                </Grid>
+                <TextBlock
+                        Margin="20,10"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Center"
+                        FontSize="20"
+                        Text="{lang:Lang Key={x:Static lang:LangKeys.Configure}}" />
                 <ListBox
                   Name="lstDevice"
                   Grid.Row="1"
@@ -81,14 +62,36 @@
                   VirtualizingStackPanel.IsVirtualizing="True">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <StackPanel Orientation="Horizontal">
+                            <StackPanel Orientation="Horizontal" Margin="5,0">
+                                <!-- 点检状态指示器 -->
+                                <Ellipse Width="12" Height="12" Margin="0,0,8,0" VerticalAlignment="Center">
+                                    <Ellipse.Style>
+                                        <Style TargetType="Ellipse">
+                                            <Setter Property="Fill" Value="LightGray"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding CheckStatus}" Value="0">
+                                                    <Setter Property="Fill" Value="LightGray"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding CheckStatus}" Value="1">
+                                                    <Setter Property="Fill" Value="LightGreen"/>
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding CheckStatus}" Value="2">
+                                                    <Setter Property="Fill" Value="LightCoral"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Ellipse.Style>
+                                </Ellipse>
+
+                                <!-- 页面名称 - 移除固定宽度，自适应容器 -->
                                 <hc:HighlightTextBlock
-                                      Width="160"
                                       Padding="0"
-                                      HorizontalAlignment="Center"
+                                      HorizontalAlignment="Left"
                                       VerticalAlignment="Center"
                                       SourceText="{lang:Lang Key={Binding Name}}"
-                                      TextAlignment="Center" />
+                                      TextAlignment="Left"
+                                      TextTrimming="CharacterEllipsis"
+                                      MaxWidth="180" />
                             </StackPanel>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
@@ -120,19 +123,41 @@
             </Grid>
             <GridSplitter
                   Grid.Column="1"
-                  Width="2"
-                  Margin="2"
+                  Width="5"
                   HorizontalAlignment="Stretch"
-                  Foreground="{DynamicResource RegionBrush}" />
+                  Background="Transparent"
+                  ResizeBehavior="PreviousAndNext">
+                <GridSplitter.Style>
+                    <Style TargetType="GridSplitter">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </GridSplitter.Style>
+            </GridSplitter>
             <Grid  Grid.Column="2" Margin="1" Background="{DynamicResource RegionBrush}">
                 <ContentControl Grid.Row="0" Margin="2" prism:RegionManager.RegionName="DigitalAssEditorRegion" />
             </Grid>
             <GridSplitter
                   Grid.Column="3"
-                  Width="2"
-                  Margin="0,10"
+                  Width="5"
                   HorizontalAlignment="Stretch"
-                  Foreground="{DynamicResource RegionBrush}" />
+                  Background="Transparent"
+                  ResizeBehavior="PreviousAndNext">
+                <GridSplitter.Style>
+                    <Style TargetType="GridSplitter">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </GridSplitter.Style>
+            </GridSplitter>
             <ContentControl
                   Grid.Column="4"
                   Margin="1"
@@ -144,6 +169,18 @@
                     <hc:EventToCommand Command="{Binding LoadedCommand}" PassEventArgsToCommand="True" />
                 </hc:EventTrigger>
             </hc:Interaction.Triggers>
+        </Grid>
+
+        <!-- Settings Button - 放在最后确保在最上层，跟随 GridSplitter 移动 -->
+        <Grid Grid.Column="0" Height="50" VerticalAlignment="Top">
+            <Button
+                    Width="40"
+                    Height="35"
+                    Margin="0,10,50,0"
+                    VerticalAlignment="Top"
+                    Command="{Binding OpenSettingsCommand}"
+                    Content="⚙"
+                    FontSize="16" />
         </Grid>
     </Grid>
 </UserControl>

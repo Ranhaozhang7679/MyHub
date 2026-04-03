@@ -9,6 +9,7 @@ using Luster.Motion.DataStruct;
 using Luster.Motion.DigitalSetup.AssTables;
 using Luster.Motion.DigitalSetup.Datas;
 using Luster.Motion.DigitalSetup.Helpers;
+using Luster.Motion.DigitalSetup.Services;
 using Luster.Motion.EditorUI;
 using Luster.Motion.TaskFlow.Engine;
 using Luster.TaskFlow.Common.Enums;
@@ -28,6 +29,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using Luster.Motion.DigitalSetup.ViewModel;
 
 namespace Luster.Motion.DigitalSetup.ViewModel
 {
@@ -157,6 +159,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         private string _configFile1;
         private string _configFile2;
         private string _pythonScriptPath;
+        private string _pythonExePath;
 
         // 所有CPK数据项集合
         private ObservableCollection<CPKDataModel> _allCPKData;
@@ -165,7 +168,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         private ObservableCollection<CPKDataModel> _currentDisplayData;
 
         // 所有图表数据项集合
-        private ObservableCollection<ChartItemModel> _allChartItems;
+        private ObservableCollection<ChartItemModel> _allChartItems = new ObservableCollection<ChartItemModel>();
 
         // 全局图表集合
         private SeriesCollection _seriesCollection;
@@ -180,18 +183,21 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         private string _tempConfigFile1;
         private string _tempConfigFile2;
         private string _tempPythonScriptPath;
+        private string _tempPythonExePath;
         private ObservableCollection<string> _tempParameterList;
         private ObservableCollection<string> _tempSelectedParameters;
 
         // 映射配置相关
         private ObservableCollection<MappingItem> _mappingItems;
+        private MappingItem _selectedMappingItem;
         private string _logText;
 
         // 配置保存相关
-        private const string CONFIG_DIR_NAME = "DigitalSetUpLADUpdate";
+        private const string CONFIG_DIR_NAME = "DigitalSetUpDataValidation";
         private const string CONFIG_FILE_NAME = "LADUpdateConfig.json";
-        private string _configSavePath;
-
+        private const string STATIONS_LIST_FILE_NAME = "LADStations.json"; // 工站列表配置文件
+        private string _configDirectory; // 配置目录（不包含文件名）
+        public ICommand ClearDataCommand { get; private set; }
         public ICommand EndCommand { get; private set; }
         public ICommand OneKeyCheckCommand { get; private set; }
         public ICommand UpdateItemsCommand { get; private set; }
@@ -208,8 +214,21 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         public ICommand BrowseTempFile1Command { get; private set; }
         public ICommand BrowseTempFile2Command { get; private set; }
         public ICommand BrowseTempPythonScriptCommand { get; private set; }
+        public ICommand BrowseTempPythonExeCommand { get; private set; }
         public ICommand ConfirmCommand { get; private set; }
         public ICommand CancelCommand { get; private set; }
+
+        // 映射配置命令
+        public ICommand AddMappingItemCommand { get; private set; }
+        public ICommand DeleteMappingItemCommand { get; private set; }
+
+        // 工站管理命令
+        public ICommand AddStationCommand { get; private set; }
+        public ICommand DeleteStationCommand { get; private set; }
+
+        // 多工站配置相关
+        private ObservableCollection<LADStationConfig> _ladStations;
+        private LADStationConfig _selectedLADStation;
 
         /// <summary>
         /// 流程Bus
@@ -261,6 +280,12 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             set => SetProperty(ref _pythonScriptPath, value);
         }
 
+        public string PythonExePath
+        {
+            get => _pythonExePath;
+            set => SetProperty(ref _pythonExePath, value);
+        }
+
         public ObservableCollection<CPKDataModel> AllCPKData
         {
             get => _allCPKData;
@@ -309,6 +334,12 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             set => SetProperty(ref _tempPythonScriptPath, value);
         }
 
+        public string TempPythonExePath
+        {
+            get => _tempPythonExePath;
+            set => SetProperty(ref _tempPythonExePath, value);
+        }
+
         public ObservableCollection<string> TempParameterList
         {
             get => _tempParameterList;
@@ -327,10 +358,44 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             set => SetProperty(ref _mappingItems, value);
         }
 
+        public MappingItem SelectedMappingItem
+        {
+            get => _selectedMappingItem;
+            set => SetProperty(ref _selectedMappingItem, value);
+        }
+
         public string LogText
         {
             get => _logText;
             set => SetProperty(ref _logText, value);
+        }
+
+        /// <summary>
+        /// LAD 工站配置集合
+        /// </summary>
+        public ObservableCollection<LADStationConfig> LADStations
+        {
+            get => _ladStations;
+            set => SetProperty(ref _ladStations, value);
+        }
+
+        /// <summary>
+        /// 当前选中的 LAD 工站
+        /// </summary>
+        public LADStationConfig SelectedLADStation
+        {
+            get => _selectedLADStation;
+            set
+            {
+                if (SetProperty(ref _selectedLADStation, value))
+                {
+                    // 工站切换时保存当前配置并加载新工站配置
+                    OnStationChanged(value);
+
+                    // 更新删除命令的可用状态
+                    ((DelegateCommand)DeleteStationCommand)?.RaiseCanExecuteChanged();
+                }
+            }
         }
 
         private CommonPageModel _seletedReportPage;
@@ -370,9 +435,11 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                                   IMotionController motionController,
                                   IDeviceEngine deviceEngine,
                                   FlowBus _flowBus,
-                                  CSVHelper cSVHelper,IDialogService dialogService)
-                                  : base(repository, regionManager, commonBus, cSVHelper, _flowBus, dialogService)
+                                  CSVHelper cSVHelper,IDialogService dialogService, CheckStatusService checkStatusService)
+                                  : base(repository, regionManager, commonBus, cSVHelper, _flowBus, dialogService, checkStatusService)
         {
+            _parentRegionName = "LADUploadContent";
+
             flowBus = _flowBus;
             _deviceEngine = deviceEngine;
             _mController = motionController;
@@ -385,6 +452,9 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 Region = "",
                 ViewType = typeof(AssTbCPKTest)
             });
+
+            // 注册子页面到DigitalAssPageModel，用于状态聚合
+            DigitalAssPageModel.RegisterSubPages("LADUploadContent", Pages);
 
             SelectedReportPage = Pages.FirstOrDefault(x => x.IsSelected);
             InitModels();
@@ -399,14 +469,25 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             RunCommand = new DelegateCommand(OnRun, CanRun);
             StopCommand = new DelegateCommand(OnStop, CanStop);
             ConfigCommand = new DelegateCommand(OnConfig);
+            AddMappingItemCommand = new DelegateCommand(OnAddMappingItem);
+            DeleteMappingItemCommand = new DelegateCommand(OnDeleteMappingItem);
+
+            // 工站管理命令
+            AddStationCommand = new DelegateCommand(OnAddStation);
+            DeleteStationCommand = new DelegateCommand(OnDeleteStation, CanDeleteStation);
 
             BrowseTempFile1Command = new DelegateCommand(OnBrowseTempFile1);
             BrowseTempFile2Command = new DelegateCommand(OnBrowseTempFile2);
             BrowseTempPythonScriptCommand = new DelegateCommand(OnBrowseTempPythonScript);
+            BrowseTempPythonExeCommand = new DelegateCommand(OnBrowseTempPythonExe);
             ConfirmCommand = new DelegateCommand(OnConfirm);
             CancelCommand = new DelegateCommand(OnCancel);
 
             ConfigKey = "CPKTestConfig";
+
+            // 初始化多工站配置
+            LADStations = new ObservableCollection<LADStationConfig>();
+            InitializeLADStations();
 
             LoadStationConfigFromJson();
             UpdateStationConfigs();
@@ -433,7 +514,567 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
             // 初始化配置保存路径并加载配置
             InitializeConfigPath();
+            ClearDataCommand = new DelegateCommand(OnClearData);
             LoadConfig();
+
+            // 延迟加载点检状态，确保 UI 绑定已建立
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                LoadCheckStatusForAllPages();
+            }), System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+
+        /// <summary>
+        /// 加载所有子页面的历史点检状态
+        /// </summary>
+        private void LoadCheckStatusForAllPages()
+        {
+            if (_checkStatusService == null || Pages == null)
+                return;
+
+            try
+            {
+                foreach (var page in Pages)
+                {
+                    if (page != null)
+                    {
+                        page.ParentRegion = "LADUploadContent";
+                        var record = _checkStatusService.GetRecord(page.PageKey);
+                        if (record != null)
+                        {
+                            page.CheckStatus = record.Status;
+                        }
+                        else
+                        {
+                            page.CheckStatus = CheckStatus.NotChecked;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"加载点检状态失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 初始化 LAD 工站列表，优先从保存的配置加载，否则从 StationConfigs 同步
+        /// </summary>
+        private void InitializeLADStations()
+        {
+            try
+            {
+                LADStations.Clear();
+
+                // 检查是否有旧版配置需要迁移
+                MigrateOldConfig();
+
+                // 尝试从配置文件加载保存的工站列表
+                string stationsListPath = Path.Combine(_configDirectory, STATIONS_LIST_FILE_NAME);
+                if (File.Exists(stationsListPath))
+                {
+                    try
+                    {
+                        string json = File.ReadAllText(stationsListPath);
+                        var savedStations = Newtonsoft.Json.JsonConvert.DeserializeObject<List<string>>(json);
+                        if (savedStations != null && savedStations.Count > 0)
+                        {
+                            foreach (var stationName in savedStations)
+                            {
+                                var existingStation = LADStations.FirstOrDefault(s => s.StationName == stationName);
+                                if (existingStation == null)
+                                {
+                                    var newStation = new LADStationConfig
+                                    {
+                                        StationName = stationName,
+                                        CheckStatus = CheckStatus.NotChecked
+                                    };
+                                    LoadStationConfig(newStation);
+                                    LADStations.Add(newStation);
+                                }
+                            }
+                            AddLog($"[调试] 从配置文件加载了 {LADStations.Count} 个工站");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        AddLog($"加载工站列表配置失败: {ex.Message}");
+                    }
+                }
+
+                // 如果配置文件不存在或加载失败，从 StationConfigs 同步
+                if (LADStations.Count == 0 && StationConfigs != null && StationConfigs.Count > 0)
+                {
+                    foreach (var stationConfig in StationConfigs)
+                    {
+                        if (stationConfig != null && !string.IsNullOrEmpty(stationConfig.Name))
+                        {
+                            var existingStation = LADStations.FirstOrDefault(s => s.StationName == stationConfig.Name);
+                            if (existingStation == null)
+                            {
+                                var newStation = new LADStationConfig
+                                {
+                                    StationName = stationConfig.Name,
+                                    CheckStatus = CheckStatus.NotChecked
+                                };
+                                LoadStationConfig(newStation);
+                                LADStations.Add(newStation);
+                            }
+                        }
+                    }
+                }
+
+                // 如果没有工站，创建默认工站
+                if (LADStations.Count == 0)
+                {
+                    var defaultStation = LADStationConfig.CreateDefault("工站1");
+                    LoadStationConfig(defaultStation);
+                    LADStations.Add(defaultStation);
+                }
+
+                // 默认选中第一个工站
+                if (LADStations.Count > 0)
+                {
+                    SelectedLADStation = LADStations[0];
+                    LoadConfigFromObject(SelectedLADStation.LadConfig);
+                }
+            }
+            catch (Exception ex)
+            {
+                _commonbus?.OnLog(new LogInfo()
+                {
+                    LogType = LogType.Error,
+                    LogMessage = $"初始化LAD工站列表失败: {ex.Message}"
+                });
+            }
+        }
+
+        /// <summary>
+        /// 工站切换处理
+        /// </summary>
+        private void OnStationChanged(LADStationConfig newStation)
+        {
+            if (newStation == null) return;
+
+            try
+            {
+                // 保存当前工站配置（如果之前有选中的工站）
+                if (SelectedLADStation != null && SelectedLADStation != newStation)
+                {
+                    SaveStationConfig(SelectedLADStation);
+                }
+
+                // 加载新工站配置到界面
+                if (newStation.LadConfig != null)
+                {
+                    LoadConfigFromObject(newStation.LadConfig);
+                }
+            }
+            catch (Exception ex)
+            {
+                _commonbus?.OnLog(new LogInfo()
+                {
+                    LogType = LogType.Error,
+                    LogMessage = $"切换工站失败: {ex.Message}"
+                });
+            }
+        }
+
+        /// <summary>
+        /// 添加新工站
+        /// </summary>
+        private void OnAddStation()
+        {
+            try
+            {
+                string newStationName = $"工站{LADStations.Count + 1}";
+
+                // 检查名称是否重复
+                while (LADStations.Any(s => s.StationName == newStationName))
+                {
+                    int num = 2;
+                    newStationName = $"工站{LADStations.Count + num}";
+                    num++;
+                }
+
+                var newStation = LADStationConfig.CreateDefault(newStationName);
+                LADStations.Add(newStation);
+                SelectedLADStation = newStation;
+
+                AddLog($"已添加新工站: {newStationName}");
+
+                // 保存当前工站列表到配置文件
+                SaveStationsList();
+            }
+            catch (Exception ex)
+            {
+                _commonbus?.OnLog(new LogInfo()
+                {
+                    LogType = LogType.Error,
+                    LogMessage = $"添加工站失败: {ex.Message}"
+                });
+            }
+        }
+
+        /// <summary>
+        /// 删除工站
+        /// </summary>
+        private void OnDeleteStation()
+        {
+            try
+            {
+                if (SelectedLADStation == null)
+                {
+                    MessageBox.Show("请先选择要删除的工站！", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (LADStations.Count <= 1)
+                {
+                    MessageBox.Show("至少需要保留一个工站！", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var result = MessageBox.Show(
+                    $"确定要删除工站 \"{SelectedLADStation.StationName}\" 吗？\n\n该工站的配置文件和点检状态也将被删除。",
+                    "确认删除",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+
+                if (result != MessageBoxResult.Yes)
+                {
+                    return;
+                }
+
+                string stationName = SelectedLADStation.StationName;
+
+                // 删除配置文件
+                try
+                {
+                    if (File.Exists(SelectedLADStation.ConfigFilePath))
+                    {
+                        File.Delete(SelectedLADStation.ConfigFilePath);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    AddLog($"删除配置文件失败: {ex.Message}");
+                }
+
+                // 删除工站
+                int currentIndex = LADStations.IndexOf(SelectedLADStation);
+                LADStations.Remove(SelectedLADStation);
+
+                // 选中下一个工站
+                if (currentIndex >= LADStations.Count)
+                {
+                    currentIndex = LADStations.Count - 1;
+                }
+                SelectedLADStation = LADStations[currentIndex];
+
+                AddLog($"已删除工站: {stationName}");
+
+                // 保存当前工站列表到配置文件
+                SaveStationsList();
+            }
+            catch (Exception ex)
+            {
+                _commonbus?.OnLog(new LogInfo()
+                {
+                    LogType = LogType.Error,
+                    LogMessage = $"删除工站失败: {ex.Message}"
+                });
+            }
+        }
+
+        /// <summary>
+        /// 是否可以删除工站
+        /// </summary>
+        private bool CanDeleteStation()
+        {
+            return LADStations != null && LADStations.Count > 1 && SelectedLADStation != null;
+        }
+
+        /// <summary>
+        /// 迁移旧版配置到默认工站
+        /// </summary>
+        private void MigrateOldConfig()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(_configDirectory))
+                {
+                    InitializeConfigPath();
+                }
+
+                // 检查是否存在旧版配置文件（在根目录下，没有工站前缀）
+                string oldConfigPath = Path.Combine(_configDirectory, CONFIG_FILE_NAME);
+
+                if (!File.Exists(oldConfigPath))
+                {
+                    return;
+                }
+
+                // 读取旧配置
+                string json = File.ReadAllText(oldConfigPath);
+                var oldConfig = Newtonsoft.Json.JsonConvert.DeserializeObject<LADUpdateConfig>(json);
+
+                if (oldConfig != null)
+                {
+                    // 创建默认工站并导入配置
+                    var defaultStation = LADStationConfig.CreateDefault("工站1");
+                    defaultStation.LadConfig = oldConfig;
+                    defaultStation.ConfigFilePath = GetStationConfigPath("工站1");
+
+                    // 保存到新位置
+                    SaveStationConfig(defaultStation);
+
+                    // 备份旧配置文件
+                    string backupPath = oldConfigPath + ".bak";
+                    File.Move(oldConfigPath, backupPath);
+
+                    AddLog("已迁移旧版配置到工站1");
+                }
+            }
+            catch (Exception ex)
+            {
+                _commonbus?.OnLog(new LogInfo()
+                {
+                    LogType = LogType.Warning,
+                    LogMessage = $"迁移旧版配置失败: {ex.Message}"
+                });
+            }
+        }
+
+        /// <summary>
+        /// 刷新点检状态 - 每次页面激活时调用
+        /// </summary>
+        protected override void RefreshCheckStatus()
+        {
+            LoadCheckStatusForAllPages();
+            LoadStationCheckStatus();
+        }
+
+        /// <summary>
+        /// 加载所有工站的点检状态
+        /// </summary>
+        private void LoadStationCheckStatus()
+        {
+            if (LADStations == null) return;
+
+            try
+            {
+                foreach (var station in LADStations)
+                {
+                    if (station != null)
+                    {
+                        // 从 PageStatusService 加载该工站的状态
+                        var statusKey = $"LADUpload_{station.StationName}";
+                        var statusString = PageStatusService.Instance.GetStatus(statusKey);
+
+                        // 解析状态字符串
+                        if (statusString == "OK")
+                        {
+                            station.CheckStatus = CheckStatus.CheckedOK;
+                        }
+                        else if (statusString == "NG")
+                        {
+                            station.CheckStatus = CheckStatus.CheckedFail;
+                        }
+                        else
+                        {
+                            station.CheckStatus = CheckStatus.NotChecked;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"加载工站点检状态失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 保存当前工站的点检状态
+        /// </summary>
+        private void SaveCurrentStationCheckStatus(CheckStatus status, string remark)
+        {
+            if (SelectedLADStation == null)
+            {
+                AddLog($"[调试] SaveCurrentStationCheckStatus: SelectedLADStation 为 null，无法保存状态");
+                return;
+            }
+
+            try
+            {
+                // 更新当前工站的状态
+                SelectedLADStation.CheckStatus = status;
+                AddLog($"[调试] 已更新 SelectedLADStation.CheckStatus = {status}");
+
+                // 保存到 PageStatusService
+                string statusKey = $"LADUpload_{SelectedLADStation.StationName}";
+                string statusValue = status == CheckStatus.CheckedOK ? "OK" :
+                                    status == CheckStatus.CheckedFail ? "NG" : "NotChecked";
+                PageStatusService.Instance.UpdateStatus(statusKey, statusValue);
+
+                AddLog($"工站 {SelectedLADStation.StationName} 点检状态: {statusValue} - {remark}");
+            }
+            catch (Exception ex)
+            {
+                _commonbus?.OnLog(new LogInfo()
+                {
+                    LogType = LogType.Error,
+                    LogMessage = $"保存工站点检状态失败: {ex.Message}"
+                });
+            }
+        }
+
+        /// <summary>
+        /// 获取所有工站的聚合状态
+        /// </summary>
+        private CheckStatus GetAggregatedStationStatus()
+        {
+            if (LADStations == null || LADStations.Count == 0)
+            {
+                AddLog($"[调试] GetAggregatedStationStatus: LADStations 为空或数量为0");
+                return CheckStatus.NotChecked;
+            }
+
+            // 调试日志：输出每个工站的状态
+            foreach (var station in LADStations)
+            {
+                AddLog($"[调试] 工站 {station.StationName} 状态: {station.CheckStatus}, 是否为SelectedLADStation: {station == SelectedLADStation}");
+            }
+
+            // 聚合规则：任一 NG → NG，全部 OK → OK，有未检 → NotChecked
+            bool hasNG = LADStations.Any(s => s.CheckStatus == CheckStatus.CheckedFail);
+            if (hasNG) return CheckStatus.CheckedFail;
+
+            bool allOK = LADStations.All(s => s.CheckStatus == CheckStatus.CheckedOK);
+            if (allOK) return CheckStatus.CheckedOK;
+
+            AddLog($"[调试] GetAggregatedStationStatus: 返回 NotChecked (hasNG={hasNG}, allOK={allOK})");
+            return CheckStatus.NotChecked;
+        }
+
+        /// <summary>
+        /// 重写基类方法，直接返回当前选中页面的点检状态
+        /// 因为 LAD 点检不依赖 ItemModels，而是使用工站状态聚合
+        /// </summary>
+        protected override CheckStatus GetCurrentPageCheckStatus()
+        {
+            // 优先使用当前选中页面的状态
+            if (SelectedReportPage != null)
+            {
+                AddLog($"[调试] GetCurrentPageCheckStatus: 返回 SelectedReportPage.CheckStatus = {SelectedReportPage.CheckStatus}");
+                return SelectedReportPage.CheckStatus;
+            }
+
+            // 如果没有选中页面，返回工站聚合状态
+            var stationStatus = GetAggregatedStationStatus();
+            AddLog($"[调试] GetCurrentPageCheckStatus: 返回工站聚合状态 = {stationStatus}");
+            return stationStatus;
+        }
+
+        /// <summary>
+        /// 刷新 LAD 页面的状态（包括 CommonPageModel 和 DigitalAssPageModel）
+        /// </summary>
+        private void RefreshLADPageStatus()
+        {
+            try
+            {
+                // 1. 更新 CommonPageModel（二级页面）状态
+                if (SelectedReportPage != null)
+                {
+                    // 使用工站聚合状态更新 CommonPageModel
+                    var aggregatedStatus = GetAggregatedStationStatus();
+                    SelectedReportPage.CheckStatus = aggregatedStatus;
+                    AddLog($"[调试] RefreshLADPageStatus: 更新 CommonPageModel.CheckStatus = {aggregatedStatus}");
+                }
+
+                // 2. 更新 DigitalAssPageModel（一级页面）状态
+                string pageName = DigitalAssPageModel.GetNameByRegion(_parentRegionName);
+                if (!string.IsNullOrEmpty(pageName))
+                {
+                    // 从静态集合中查找对应的 DigitalAssageModel
+                    var parentPage = DigitalAssPageModel.Pages?.FirstOrDefault(p => p.Name == pageName);
+                    if (parentPage != null)
+                    {
+                        // 直接使用当前的 Pages 集合作为 SubPages
+                        var subPages = Pages?.ToList();
+                        if (subPages != null && subPages.Count > 0)
+                        {
+                            parentPage.SubPages = subPages;
+                        }
+
+                        // 调用 RefreshCheckStatus 触发聚合计算
+                        parentPage.RefreshCheckStatus();
+                        AddLog($"[调试] RefreshLADPageStatus: 更新 DigitalAssageModel [{pageName}].CheckStatus = {parentPage.CheckStatus}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                AddLog($"刷新 LAD 页面状态失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 清除CPK文件数据
+        /// </summary>
+        private void OnClearData()
+        {
+            try
+            {
+                // 检查是否有选中的文件
+                if (string.IsNullOrEmpty(TempConfigFile1))
+                {
+                    MessageBox.Show("请先选择要清除数据的CPK文件！", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // 检查文件是否存在
+                if (!File.Exists(TempConfigFile1))
+                {
+                    MessageBox.Show($"文件不存在：\n{TempConfigFile1}", "文件不存在", MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                // 确认对话框
+                var result = MessageBox.Show(
+                    $"确定要清除文件内容吗？\n\n文件路径：{TempConfigFile1}\n\n注意：此操作不可恢复！",
+                    "确认清除",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+
+                if (result != MessageBoxResult.Yes)
+                {
+                    return;
+                }
+
+                // 清空文件内容
+                File.WriteAllText(TempConfigFile1, string.Empty);
+
+                AddLog($"已清除CPK文件内容：{TempConfigFile1}");
+
+                // 提示成功
+                MessageBox.Show("数据清除成功！", "操作完成", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                // 触发属性变化通知
+                RaisePropertyChanged(nameof(TempParameterList));
+                RaisePropertyChanged(nameof(TempSelectedParameters));
+            }
+            catch (Exception ex)
+            {
+                AddLog($"清除数据失败：{ex.Message}");
+                _commonbus?.OnLog(new LogInfo()
+                {
+                    LogType = LogType.Error,
+                    LogMessage = $"清除CPK文件数据失败：{ex.Message}"
+                });
+
+                MessageBox.Show($"清除数据失败：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         /// <summary>
@@ -447,20 +1088,16 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 string recipeDir = _commonbus?.CurrentRecipe?.GetRecipePath() ?? "D:\\Luster\\DigitalSetUp\\";
 
                 // 构建配置目录路径
-                string configDirectory = Path.Combine(recipeDir, CONFIG_DIR_NAME);
+                _configDirectory = Path.Combine(recipeDir, CONFIG_DIR_NAME);
 
                 // 确保目录存在
-                if (!Directory.Exists(configDirectory))
+                if (!Directory.Exists(_configDirectory))
                 {
-                    Directory.CreateDirectory(configDirectory);
+                    Directory.CreateDirectory(_configDirectory);
                 }
-
-                // 保存完整配置文件路径
-                _configSavePath = Path.Combine(configDirectory, CONFIG_FILE_NAME);
 
                 // 设置默认Python脚本路径
                 string defaultPythonPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CPK.py");
-                
                 PythonScriptPath = defaultPythonPath;
             }
             catch (Exception ex)
@@ -474,29 +1111,64 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         }
 
         /// <summary>
+        /// 获取指定工站的配置文件路径
+        /// </summary>
+        private string GetStationConfigPath(string stationName)
+        {
+            if (string.IsNullOrEmpty(_configDirectory))
+            {
+                InitializeConfigPath();
+            }
+            return Path.Combine(_configDirectory, $"{stationName}_{CONFIG_FILE_NAME}");
+        }
+
+        /// <summary>
+        /// 获取当前选中工站的配置文件路径
+        /// </summary>
+        private string GetCurrentStationConfigPath()
+        {
+            if (SelectedLADStation == null)
+            {
+                return Path.Combine(_configDirectory, $"Default_{CONFIG_FILE_NAME}");
+            }
+            return GetStationConfigPath(SelectedLADStation.StationName);
+        }
+
+        /// <summary>
         /// 保存配置到文件
         /// </summary>
         private void SaveConfig()
         {
             try
             {
-                if (string.IsNullOrEmpty(_configSavePath))
+                if (string.IsNullOrEmpty(_configDirectory))
                 {
                     InitializeConfigPath();
-                    if (string.IsNullOrEmpty(_configSavePath)) return;
+                    if (string.IsNullOrEmpty(_configDirectory)) return;
                 }
 
+                string configPath = GetCurrentStationConfigPath();
+
+                // 保存到当前选中工站的配置
                 var config = new LADUpdateConfig
                 {
                     ConfigFile1 = this.ConfigFile1,
                     ConfigFile2 = this.ConfigFile2,
                     PythonScriptPath = this.PythonScriptPath,
+                    PythonExePath = this.PythonExePath,
                     SelectedParameters = this.SelectedParameters?.ToList() ?? new List<string>(),
                     MappingItems = this.MappingItems?.ToList() ?? new List<MappingItem>()
                 };
 
                 string json = Newtonsoft.Json.JsonConvert.SerializeObject(config, Newtonsoft.Json.Formatting.Indented);
-                File.WriteAllText(_configSavePath, json);
+                File.WriteAllText(configPath, json);
+
+                // 同时更新 SelectedLADStation 的配置
+                if (SelectedLADStation != null)
+                {
+                    SelectedLADStation.LadConfig = config;
+                    SelectedLADStation.ConfigFilePath = configPath;
+                }
             }
             catch (Exception ex)
             {
@@ -509,64 +1181,94 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         }
 
         /// <summary>
+        /// 保存指定工站的配置
+        /// </summary>
+        private void SaveStationConfig(LADStationConfig station)
+        {
+            if (station == null || station.LadConfig == null) return;
+
+            try
+            {
+                string configPath = GetStationConfigPath(station.StationName);
+                string json = Newtonsoft.Json.JsonConvert.SerializeObject(station.LadConfig, Newtonsoft.Json.Formatting.Indented);
+                File.WriteAllText(configPath, json);
+                station.ConfigFilePath = configPath;
+            }
+            catch (Exception ex)
+            {
+                _commonbus?.OnLog(new LogInfo()
+                {
+                    LogType = LogType.Error,
+                    LogMessage = $"保存工站 {station.StationName} 配置失败: {ex.Message}"
+                });
+            }
+        }
+
+        /// <summary>
+        /// 保存当前工站列表到配置文件
+        /// </summary>
+        private void SaveStationsList()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(_configDirectory))
+                {
+                    InitializeConfigPath();
+                    if (string.IsNullOrEmpty(_configDirectory)) return;
+                }
+
+                // 提取所有工站名称
+                var stationNames = LADStations.Select(s => s.StationName).ToList();
+
+                // 保存到配置文件
+                string stationsListPath = Path.Combine(_configDirectory, STATIONS_LIST_FILE_NAME);
+                string json = Newtonsoft.Json.JsonConvert.SerializeObject(stationNames, Newtonsoft.Json.Formatting.Indented);
+                File.WriteAllText(stationsListPath, json);
+
+                AddLog($"[调试] 已保存工站列表: {string.Join(", ", stationNames)}");
+            }
+            catch (Exception ex)
+            {
+                _commonbus?.OnLog(new LogInfo()
+                {
+                    LogType = LogType.Error,
+                    LogMessage = $"保存工站列表失败: {ex.Message}"
+                });
+            }
+        }
+
+        /// <summary>
         /// 从文件加载配置
         /// </summary>
         private void LoadConfig()
         {
             try
             {
-                if (string.IsNullOrEmpty(_configSavePath))
+                if (string.IsNullOrEmpty(_configDirectory))
                 {
                     InitializeConfigPath();
-                    if (string.IsNullOrEmpty(_configSavePath)) return;
+                    if (string.IsNullOrEmpty(_configDirectory)) return;
                 }
 
-                if (!File.Exists(_configSavePath))
+                string configPath = GetCurrentStationConfigPath();
+
+                if (!File.Exists(configPath))
                 {
                     return;
                 }
 
-                string json = File.ReadAllText(_configSavePath);
+                string json = File.ReadAllText(configPath);
                 var config = Newtonsoft.Json.JsonConvert.DeserializeObject<LADUpdateConfig>(json);
 
                 if (config != null)
                 {
-                    ConfigFile1 = config.ConfigFile1;
-                    ConfigFile2 = config.ConfigFile2;
+                    LoadConfigFromObject(config);
 
-                    // 加载Python脚本路径
-                    if (!string.IsNullOrEmpty(config.PythonScriptPath))
+                    // 更新 SelectedLADStation 的配置
+                    if (SelectedLADStation != null)
                     {
-                        PythonScriptPath = config.PythonScriptPath;
-                    }
-
-                    // 加载映射配置
-                    if (config.MappingItems != null && config.MappingItems.Count > 0)
-                    {
-                        MappingItems.Clear();
-                        foreach (var item in config.MappingItems)
-                        {
-                            MappingItems.Add(item);
-                        }
-                    }
-
-                    // 如果有选中的参数，解析文件后应用
-                    if (!string.IsNullOrEmpty(ConfigFile1))
-                    {
-                        ParseCPKFile(ConfigFile1);
-
-                        // 应用选中的参数
-                        if (config.SelectedParameters != null && config.SelectedParameters.Count > 0)
-                        {
-                            SelectedParameters = new ObservableCollection<string>(config.SelectedParameters);
-
-                            // 根据选中的参数过滤显示的图表
-                            if (SelectedParameters.Count > 0 && AllChartItems != null)
-                            {
-                                var filteredItems = AllChartItems.Where(x => SelectedParameters.Contains(x.PositionName)).ToList();
-                                AllChartItems = new ObservableCollection<ChartItemModel>(filteredItems);
-                            }
-                        }
+                        SelectedLADStation.LadConfig = config;
+                        SelectedLADStation.ConfigFilePath = configPath;
                     }
                 }
             }
@@ -576,6 +1278,111 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 {
                     LogType = LogType.Error,
                     LogMessage = $"加载LAD更新配置失败: {ex.Message}"
+                });
+            }
+        }
+
+        /// <summary>
+        /// 从配置对象加载配置到界面
+        /// </summary>
+        private void LoadConfigFromObject(LADUpdateConfig config)
+        {
+            if (config == null) return;
+
+            ConfigFile1 = config.ConfigFile1;
+            ConfigFile2 = config.ConfigFile2;
+
+            // 加载Python脚本路径
+            if (!string.IsNullOrEmpty(config.PythonScriptPath))
+            {
+                PythonScriptPath = config.PythonScriptPath;
+            }
+
+            // 加载Python.exe路径
+            if (!string.IsNullOrEmpty(config.PythonExePath))
+            {
+                PythonExePath = config.PythonExePath;
+            }
+
+            // 加载映射配置
+            if (config.MappingItems != null && config.MappingItems.Count > 0)
+            {
+                MappingItems?.Clear();
+                MappingItems = new ObservableCollection<MappingItem>();
+                foreach (var item in config.MappingItems)
+                {
+                    MappingItems.Add(item);
+                }
+            }
+
+            // 如果有选中的参数，解析文件后应用
+            if (!string.IsNullOrEmpty(ConfigFile1))
+            {
+                ParseCPKFile(ConfigFile1);
+
+                // 应用选中的参数
+                if (config.SelectedParameters != null && config.SelectedParameters.Count > 0)
+                {
+                    SelectedParameters = new ObservableCollection<string>(config.SelectedParameters);
+
+                    // 根据选中的参数过滤显示的图表
+                    if (SelectedParameters.Count > 0 && AllChartItems != null)
+                    {
+                        var filteredItems = AllChartItems.Where(x => SelectedParameters.Contains(x.PositionName)).ToList();
+                        AllChartItems = new ObservableCollection<ChartItemModel>(filteredItems);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 加载指定工站的配置
+        /// </summary>
+        private void LoadStationConfig(LADStationConfig station)
+        {
+            if (station == null) return;
+
+            try
+            {
+                string configPath = GetStationConfigPath(station.StationName);
+
+                if (!File.Exists(configPath))
+                {
+                    // 文件不存在，使用默认配置
+                    station.LadConfig = new LADUpdateConfig
+                    {
+                        ConfigFile1 = "",
+                        ConfigFile2 = "",
+                        PythonScriptPath = PythonScriptPath,
+                        PythonExePath = PythonExePath,
+                        SelectedParameters = new List<string>(),
+                        MappingItems = new List<MappingItem>
+                        {
+                            new MappingItem { TxtKey = "Install_Force", ExcelKey = "1# Paste Force", StartRow = "23", MaxRow = "18", MinRow = "20" },
+                            new MappingItem { TxtKey = "Install_Gap_X", ExcelKey = "X1", StartRow = "23", MaxRow = "18", MinRow = "20" },
+                            new MappingItem { TxtKey = "Install_Gap_Y", ExcelKey = "Y1", StartRow = "23", MaxRow = "18", MinRow = "20" },
+                            new MappingItem { TxtKey = "Install_CC", ExcelKey = "1# CC ", StartRow = "23", MaxRow = "18", MinRow = "20" }
+                        }
+                    };
+                    station.ConfigFilePath = configPath;
+                    return;
+                }
+
+                string json = File.ReadAllText(configPath);
+                var config = Newtonsoft.Json.JsonConvert.DeserializeObject<LADUpdateConfig>(json);
+
+                if (config != null)
+                {
+                    station.LadConfig = config;
+                    station.ConfigFilePath = configPath;
+                }
+            }
+            catch (Exception ex)
+            {
+                _commonbus?.OnLog(new LogInfo()
+                {
+                    LogType = LogType.Error,
+                    LogMessage = $"加载工站 {station.StationName} 配置失败: {ex.Message}"
                 });
             }
         }
@@ -601,6 +1408,15 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             try
             {
                 AddLog("==== 开始构建测试流程 ====");
+
+                // 检查 Python.exe 路径是否配置
+                if (string.IsNullOrEmpty(PythonExePath) || !File.Exists(PythonExePath))
+                {
+                    AddLog($"Python.exe 路径未配置或不存在: {PythonExePath ?? "未设置"}");
+                    MessageBox.Show($"请先在配置中设置正确的 Python.exe 路径！\n\n当前路径: {PythonExePath ?? "未设置"}",
+                        "Python 未配置", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
 
                 // 构建映射字典
                 var dict = new Dictionary<string, object>();
@@ -644,12 +1460,12 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
                 // 构建命令行参数
                 string args = $"\"{pyScript}\" --template \"{ConfigFile2}\" --data_file \"{ConfigFile1}\" --mapping_file \"{mapJson}\"";
-                AddLog("> python " + args);
+                AddLog($"> \"{PythonExePath}\" " + args);
 
-                // 执行Python脚本
+                // 执行Python脚本 - 使用配置的 Python.exe 路径
                 var processInfo = new ProcessStartInfo
                 {
-                    FileName = "python",
+                    FileName = PythonExePath,
                     Arguments = args,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -704,6 +1520,17 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                                 if (code == 0)
                                 {
                                     PageStatusService.Instance.UpdateStatus("LADUpload", "OK");
+
+                                    // 保存当前工站的点检状态
+                                    SaveCurrentStationCheckStatus(CheckStatus.CheckedOK, "LAD上传完成");
+
+                                    // 保存页面级别点检状态（使用聚合状态）
+                                    var aggregatedStatus = GetAggregatedStationStatus();
+                                    SaveCheckStatus(aggregatedStatus, "LAD上传完成");
+
+                                    // 刷新 LAD 页面的状态（CommonPageModel 和 DigitalAssPageModel）
+                                    RefreshLADPageStatus();
+
                                     AddLog($">>> {msg} (SUCCESS)");
                                     MessageBox.Show(msg, "SUCCESS!", MessageBoxButton.OK, MessageBoxImage.Information);
                                 }
@@ -908,87 +1735,83 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         /// </summary>
         private SeriesCollection GenerateCPKChartData(List<double> values, double specMin, double specMax, double target)
         {
-            var seriesCollection = new SeriesCollection();
+            var series = new SeriesCollection();
 
-            // 数据有效性校验
-            if (values == null || values.Count == 0)
-            {
-                _commonbus.OnLog(new LogInfo()
-                {
-                    LogType = LogType.Warning,
-                    LogMessage = "数据为空，无法生成图表"
-                });
-                return seriesCollection;
-            }
+            if (values == null || values.Count < 1)
+                return series;
 
-            int totalSamples = values.Count;
-            double dataMean = values.Average();
-            double dataSigma = CalculateStdDev(values);
-            double lsl = specMin;
-            double usl = specMax;
-            double specRange = usl - lsl;
+            // 真实范围
+            double min = specMin;
+            double max = specMax;
+            double range = max - min;
+            if (range < 0.001) range = 0.001;
 
-            double chartMin = lsl;
-            double chartMax = usl;
-            double chartRange = chartMax - chartMin;
-
-            // 异常处理：规格范围为0时的兜底
-            if (Math.Abs(chartRange) < 0.001)
-            {
-                chartMin = dataMean - 0.1;
-                chartMax = dataMean + 0.1;
-                chartRange = 0.2;
-            }
-
+            // 固定 15 组
             int binCount = 15;
-            double binWidth = chartRange / binCount;
-            var frequencyValues = new ChartValues<double>();
-            var binCenters = new List<double>();
+            double binWidth = range / binCount;
 
+            // 统计每个区间数量
+            int[] counts = new int[binCount];
             for (int i = 0; i < binCount; i++)
             {
-                double binStart = chartMin + i * binWidth;
-                double binEnd = binStart + binWidth;
-                binCenters.Add(binStart + binWidth / 2);
-
-                int sampleCountInBin = values.Count(v => v >= binStart && v < binEnd);
-                frequencyValues.Add(sampleCountInBin);
+                double start = min + i * binWidth;
+                double end = start + binWidth;
+                counts[i] = values.Count(v => v >= start && v < end);
             }
 
-            seriesCollection.Add(new ColumnSeries
+
+            // 归一化到 0.0~1.0
+            int maxCount = counts.Max();
+            var freq = new ChartValues<double>();
+            foreach (int c in counts)
+            {
+                freq.Add(maxCount == 0 ? 0 : (double)c / maxCount);
+            }
+
+            // 绿色柱子
+            series.Add(new ColumnSeries
             {
                 Title = "Frequency",
-                Values = frequencyValues,
+                Values = freq,
                 Fill = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(76, 175, 80)),
                 Stroke = System.Windows.Media.Brushes.Black,
                 StrokeThickness = 1,
                 MaxColumnWidth = 15,
-                DataLabels = false,
                 ColumnPadding = 0.1
             });
 
-            var normalCurveValues = new ChartValues<double>();
-            foreach (double center in binCenters)
-            {
-                double probabilityDensity = (1 / (dataSigma * Math.Sqrt(2 * Math.PI)))
-                                          * Math.Exp(-Math.Pow(center - dataMean, 2) / (2 * dataSigma * dataSigma));
+            // 正态曲线（同样归一化到 0~1）
+            double mean = values.Average();
+            double sigma = CalculateStdDev(values);
+            if (sigma < 0.0001) sigma = 0.0001;
 
-                double curveValue = probabilityDensity * totalSamples * binWidth;
-                normalCurveValues.Add(curveValue);
+            var normal = new ChartValues<double>();
+            double maxDensity = 0;
+            for (int i = 0; i < binCount; i++)
+            {
+                double x = min + (i + 0.5) * binWidth;
+                double y = Math.Exp(-0.5 * Math.Pow((x - mean) / sigma, 2)) / (sigma * Math.Sqrt(2 * Math.PI));
+                normal.Add(y);
+                if (y > maxDensity) maxDensity = y;
             }
 
-            seriesCollection.Add(new LineSeries
+            // 归一化
+            for (int i = 0; i < normal.Count; i++)
             {
-                Title = "Normal Distribution",
-                Values = normalCurveValues,
+                normal[i] /= maxDensity;
+            }
+
+            series.Add(new LineSeries
+            {
+                Title = "Normal",
+                Values = normal,
                 PointGeometry = null,
-                LineSmoothness = 0.8,
                 StrokeThickness = 2,
-                Stroke = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(76, 175, 80)),
+                Stroke = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(0, 0, 0)),
                 Fill = System.Windows.Media.Brushes.Transparent
             });
 
-            return seriesCollection;
+            return series;
         }
 
         /// <summary>
@@ -1038,6 +1861,52 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             }
         }
 
+        /// <summary>
+        /// 添加映射项
+        /// </summary>
+        private void OnAddMappingItem()
+        {
+            var newItem = new MappingItem
+            {
+                TxtKey = $"NewKey_{MappingItems.Count + 1}",
+                ExcelKey = "",
+                StartRow = "1",
+                MaxRow = "1",
+                MinRow = "1"
+            };
+            MappingItems.Add(newItem);
+            AddLog($"已添加新的映射项: {newItem.TxtKey}");
+        }
+
+        /// <summary>
+        /// 删除映射项
+        /// </summary>
+        private void OnDeleteMappingItem()
+        {
+            try
+            {
+                if (SelectedMappingItem != null)
+                {
+                    string keyName = SelectedMappingItem.TxtKey;
+                    MappingItems.Remove(SelectedMappingItem);
+                    AddLog($"已删除映射项: {keyName}");
+                }
+                else
+                {
+                    MessageBox.Show("请先选择要删除的行！", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                AddLog($"删除映射项失败: {ex.Message}");
+                _commonbus?.OnLog(new LogInfo()
+                {
+                    LogType = LogType.Error,
+                    LogMessage = $"删除映射项失败: {ex.Message}"
+                });
+            }
+        }
+
         private void OnBrowseFile1()
         {
             var dialog = new OpenFileDialog
@@ -1081,11 +1950,26 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             }
         }
 
+        private void OnBrowseTempPythonExe()
+        {
+            var dialog = new OpenFileDialog
+            {
+                Filter = "可执行文件|*.exe|所有文件|*.*",
+                Title = "选择Python可执行文件"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                TempPythonExePath = dialog.FileName;
+            }
+        }
+
         private void OnConfig()
         {
             TempConfigFile1 = ConfigFile1;
             TempConfigFile2 = ConfigFile2;
             TempPythonScriptPath = PythonScriptPath;
+            TempPythonExePath = PythonExePath;
             TempParameterList = new ObservableCollection<string>(ParameterList);
             TempSelectedParameters = new ObservableCollection<string>(SelectedParameters);
 
@@ -1132,6 +2016,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             ConfigFile1 = TempConfigFile1;
             ConfigFile2 = TempConfigFile2;
             PythonScriptPath = TempPythonScriptPath;
+            PythonExePath = TempPythonExePath;
 
             // 重新解析CPK文件
             if (!string.IsNullOrEmpty(ConfigFile1))
@@ -1285,6 +2170,11 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     throw new FriendlyException("回零完成后方可运行测试流程");
                 }
             }
+            catch (OperationCanceledException)
+            {
+                _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = "CPK测试被用户中止" });
+                throw;
+            }
             catch (Exception ex)
             {
                 _commonbus.OnLog(new LogInfo()
@@ -1293,6 +2183,39 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     LogMessage = $"获取CPK测试数据失败：{ex.Message}"
                 });
                 throw;
+            }
+            finally
+            {
+                ProgressValue = 100;
+
+                // 保存当前子页面的点检状态
+                var checkStatus = CheckStatus.NotChecked;
+                string remark = "";
+
+                // 检查是否被中止
+                bool wasCancelled = _cts.IsCancellationRequested;
+
+                if (wasCancelled)
+                {
+                    // 用户中止 - CPK测试不支持继续，需从头开始
+                    checkStatus = CheckStatus.CheckedFail;
+                    remark = "执行中止，需从头开始";
+                }
+                else
+                {
+                    checkStatus = CheckStatus.CheckedOK;
+                    remark = "CPK测试完成";
+                }
+
+                // 保存当前工站的点检状态
+                SaveCurrentStationCheckStatus(checkStatus, remark);
+
+                // 保存页面级别点检状态（使用聚合状态）
+                var aggregatedStatus = GetAggregatedStationStatus();
+                SaveCheckStatus(aggregatedStatus, remark);
+
+                // 刷新 LAD 页面的状态（CommonPageModel 和 DigitalAssPageModel）
+                RefreshLADPageStatus();
             }
         }
 
@@ -1410,6 +2333,11 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         /// Python脚本路径
         /// </summary>
         public string PythonScriptPath { get; set; }
+
+        /// <summary>
+        /// Python.exe 路径
+        /// </summary>
+        public string PythonExePath { get; set; }
 
         /// <summary>
         /// 选中的参数列表

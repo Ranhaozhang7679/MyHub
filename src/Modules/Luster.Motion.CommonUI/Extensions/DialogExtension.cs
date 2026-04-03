@@ -764,6 +764,13 @@ namespace Luster.Motion.EditorUI.Extensions
             _showWindow = service.Show("VersionDialog", param, callback);
         }
 
+        public static void ShowRecipeVersionDialog(this IDialogService service, Action<IDialogResult> callback = null)
+        {
+            DialogParameters param = new DialogParameters();
+            param.Add("Title", "配方版本维护");
+            service.ShowDialog("RecipeVersionDialog", param, callback);
+        }
+
         public static void ShowHomeDialog(this IDialogService service, Action<IDialogResult> callback = null)
         {
             service.CloseExistShowWindow(_showWindow);
@@ -830,6 +837,16 @@ namespace Luster.Motion.EditorUI.Extensions
             param.Add("ID", ID);
             param.Add("Module", module);
             service.ShowDialog("CSharpEditor", param, callback);
+        }
+
+        public static void ShowPythonEditorDialog(this IDialogService service, IMotionModule module, string ID, Action<IDialogResult> callback = null)
+        {
+            service.CloseExistShowWindow(_showWindow);
+            DialogParameters param = new DialogParameters();
+            param.Add("Title", "Python脚本编辑");
+            param.Add("ID", ID);
+            param.Add("Module", module);
+            service.ShowDialog("PythonEditor", param, callback);
         }
     }
 }

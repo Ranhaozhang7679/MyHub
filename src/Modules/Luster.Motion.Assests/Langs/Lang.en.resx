@@ -3154,7 +3154,7 @@
     <value>CPKTest</value>
   </data>
   <data name="AutoVerication" xml:space="preserve">
-    <value>AutoVerication</value>
+    <value>AutoVerification</value>
   </data>
   <data name="SolutionMode" xml:space="preserve">
     <value>SolutionMode</value>
@@ -3167,5 +3167,8 @@
   </data>
   <data name="DataValidation" xml:space="preserve">
     <value>DataValidation</value>
+  </data>
+  <data name="GetSlopeIntercept" xml:space="preserve">
+    <value>GetSlopeIntercept</value>
   </data>
 </root>

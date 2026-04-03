@@ -40,12 +40,35 @@
                 VirtualizingStackPanel.IsVirtualizing="True">
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <hc:HighlightTextBlock
-                            Padding="0"
-                            HorizontalAlignment="Left"
-                            VerticalAlignment="Center"
-                            SourceText="{lang:Lang Key={Binding Name}}"
-                            TextAlignment="Left" />
+                        <StackPanel Orientation="Horizontal">
+                            <!-- 点检状态指示器 -->
+                            <Ellipse Width="12" Height="12" Margin="5,0,5,0" VerticalAlignment="Center">
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Setter Property="Fill" Value="LightGray"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding CheckStatus}" Value="0">
+                                                <Setter Property="Fill" Value="LightGray"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding CheckStatus}" Value="1">
+                                                <Setter Property="Fill" Value="LightGreen"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding CheckStatus}" Value="2">
+                                                <Setter Property="Fill" Value="LightCoral"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+
+                            <!-- 页面名称 -->
+                            <hc:HighlightTextBlock
+                                Padding="0"
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                SourceText="{lang:Lang Key={Binding Name}}"
+                                TextAlignment="Left" />
+                        </StackPanel>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
                 <ListBox.ItemContainerStyle>
@@ -129,15 +152,19 @@
                     </hc:EventTrigger>
                 </hc:Interaction.Triggers>
             </DataGrid>
-            <DockPanel Grid.Row="1" Grid.Column="0">
-                <Button Content="更新列表"                         
-                    Command="{Binding DataContext.UpdateItemsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" 
-                    Margin="5" 
-                    Grid.Row="0" 
+            <DockPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
+                <Button Content="更新列表"
+                    Command="{Binding DataContext.UpdateItemsCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    Margin="5"
+                    Grid.Row="0"
+                    HorizontalAlignment="Left" />
+                <Button Content="批量导入图片"
+                    Command="{Binding DataContext.BatchImportImagesCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                    Margin="5"
                     HorizontalAlignment="Left" />
                 <local:CommonButton />
             </DockPanel>
-            <StackPanel  
+            <StackPanel Visibility="Collapsed" 
                 Grid.Row="1"  
                 Grid.Column="1"
                 HorizontalAlignment="Right"  

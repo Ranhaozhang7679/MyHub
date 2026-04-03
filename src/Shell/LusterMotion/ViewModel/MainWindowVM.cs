@@ -898,6 +898,31 @@ namespace LusterMotion.ViewModel
 
             if (_deviceEngine.IsNeedSave || commonBus.IsNeedSave)
             {
+                // 有未保存修改时，先弹出配方版本管理窗口
+                if (commonBus.EditCount > 0 && !string.IsNullOrEmpty(commonBus.ProjInfo?.FullName))
+                {
+                    _dialogService.ShowRecipeVersionDialog((versionResult) =>
+                    {
+                        if (versionResult.Result == ButtonResult.OK)
+                        {
+                            string versionNo = versionResult.Parameters.GetValue<string>("VersionNo");
+                            string versionType = versionResult.Parameters.GetValue<string>("VersionType");
+                            var changeContents = versionResult.Parameters.GetValue<List<string>>("ChangeContents");
+                            string modifiedBy = versionResult.Parameters.GetValue<string>("ModifiedBy");
+                            string modifiedTime = versionResult.Parameters.GetValue<string>("ModifiedTime");
+
+                            if (changeContents != null && changeContents.Count > 0)
+                            {
+                                string fileName = versionType == "PLC" ? "PLCVersion.json" : "Version.json";
+                                RecipeVersionHelper.UpdateRecipeVersion(versionNo, changeContents, fileName, commonBus.ProjInfo, modifiedBy, modifiedTime);
+                            }
+
+                            Save();
+                        }
+                        // 无论确认还是取消，都继续关闭流程
+                    });
+                }
+
                 _dialogService.ShowConfirmWithoutNo($"{Luster.Motion.Assests.Langs.LangProvider.GetLang("SaveTask")}？", (result) =>
                 {
                     if (result.Result == ButtonResult.OK)
@@ -973,7 +998,32 @@ namespace LusterMotion.ViewModel
                 {
                     _dispatcher.Invoke(() =>
                     {
-                        Save();
+                        // 未加载配方时直接保存，不弹版本维护对话框
+                        if (string.IsNullOrEmpty(commonBus.ProjInfo?.FullName))
+                        {
+                            Save();
+                            return;
+                        }
+
+                        _dialogService.ShowRecipeVersionDialog((result) =>
+                        {
+                            if (result.Result == ButtonResult.OK)
+                            {
+                                string versionNo = result.Parameters.GetValue<string>("VersionNo");
+                                string versionType = result.Parameters.GetValue<string>("VersionType");
+                                var changeContents = result.Parameters.GetValue<List<string>>("ChangeContents");
+                                string modifiedBy = result.Parameters.GetValue<string>("ModifiedBy");
+                                string modifiedTime = result.Parameters.GetValue<string>("ModifiedTime");
+
+                                if (changeContents != null && changeContents.Count > 0)
+                                {
+                                    string fileName = versionType == "PLC" ? "PLCVersion.json" : "Version.json";
+                                    RecipeVersionHelper.UpdateRecipeVersion(versionNo, changeContents, fileName, commonBus.ProjInfo, modifiedBy, modifiedTime);
+                                }
+
+                                Save();
+                            }
+                        });
                     });
                 }
             });

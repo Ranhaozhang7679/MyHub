@@ -36,7 +36,8 @@ namespace Luster.Module.Motion.DataProc
             AddFunction<VisionProcessData>();
             AddFunction<WebConfigRead>();
             AddFunction<ConditionTimer>();
-            AddFunction<TableInsert>(); 
+            AddFunction<TableInsert>();
+            AddFunction<GetSlopeIntercept>();
         }
     }
 

@@ -20,6 +20,7 @@
 * 修 改 人:		  Z05592
 ************************************************************************************/
 #endregion
+using Luster.Motion.DigitalSetup.Datas;
 using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
@@ -86,6 +87,100 @@ namespace Luster.Motion.DigitalSetup.Datas
         {
             get => _isEnabled;
             set => SetProperty(ref _isEnabled, value);
+        }
+
+        /// <summary>
+        /// 点检状态
+        /// </summary>
+        private CheckStatus _checkStatus = CheckStatus.NotChecked;
+        public CheckStatus CheckStatus
+        {
+            get => _checkStatus;
+            set => SetProperty(ref _checkStatus, value);
+        }
+
+        /// <summary>
+        /// 上次点检时间
+        /// </summary>
+        private DateTime? _lastCheckTime;
+        public DateTime? LastCheckTime
+        {
+            get => _lastCheckTime;
+            set => SetProperty(ref _lastCheckTime, value);
+        }
+
+        /// <summary>
+        /// 上次点检时间显示文本（格式化后的字符串）
+        /// </summary>
+        public string LastCheckTimeDisplay
+        {
+            get
+            {
+                if (!LastCheckTime.HasValue)
+                    return "未点检";
+
+                var time = LastCheckTime.Value;
+                var now = DateTime.Now;
+
+                // 如果是今天
+                if (time.Date == now.Date)
+                {
+                    return $"今天 {time:HH:mm}";
+                }
+                // 如果是昨天
+                else if (time.Date == now.AddDays(-1).Date)
+                {
+                    return $"昨天 {time:HH:mm}";
+                }
+                // 如果是今年
+                else if (time.Year == now.Year)
+                {
+                    return time.ToString("MM-dd HH:mm");
+                }
+                // 其他情况
+                else
+                {
+                    return time.ToString("yyyy-MM-dd HH:mm");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 上次点检人员
+        /// </summary>
+        private string _lastCheckOperator;
+        public string LastCheckOperator
+        {
+            get => _lastCheckOperator;
+            set => SetProperty(ref _lastCheckOperator, value);
+        }
+
+        /// <summary>
+        /// 点检备注信息
+        /// </summary>
+        private string _checkRemark;
+        public string CheckRemark
+        {
+            get => _checkRemark;
+            set => SetProperty(ref _checkRemark, value);
+        }
+
+        /// <summary>
+        /// 父页面Region (用于构建PageKey)
+        /// </summary>
+        public string ParentRegion { get; set; }
+
+        /// <summary>
+        /// 页面唯一标识 (格式: ParentRegion_Name)
+        /// </summary>
+        public string PageKey
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(ParentRegion))
+                    return Name;
+                return $"{ParentRegion}_{Name}";
+            }
         }
     }
 }

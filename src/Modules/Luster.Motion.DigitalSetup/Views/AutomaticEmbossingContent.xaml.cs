@@ -64,7 +64,11 @@ namespace Luster.Motion.DigitalSetup.Views
                 e.Column.IsReadOnly = true;
             }
             // 其他列不做处理，保持默认
-
+            // 其他列不做处理，保持默认
+            if (string.Equals(e.Column.Header.ToString(), "项序", StringComparison.OrdinalIgnoreCase))
+            {
+                e.Column.IsReadOnly = true;
+            }
         }
     }
 }

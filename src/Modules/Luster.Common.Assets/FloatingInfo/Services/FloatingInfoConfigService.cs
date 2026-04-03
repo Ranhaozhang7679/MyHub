@@ -12,7 +12,7 @@
 * 签    名:       Luster Technology Co.,Ltd.
 * 网    站:       https://www.lusterinc.com/
 * 唯一标识：      a1b2c3d4-e5f6-7890-abcd-ef1234567897
-* 创建年份:       2026
+* 创建年份:      2026
 ************************************************************************************/
 
 #endregion
@@ -207,10 +207,15 @@ namespace Luster.Common.Assets.FloatingInfo.Services
                 _configs.Clear();
                 if (configData?.Configs != null)
                 {
+                    // 获取基准路径
+                    var basePath = GetBasePath();
+
                     foreach (var config in configData.Configs)
                     {
                         if (config != null && !string.IsNullOrEmpty(config.PageId))
                         {
+                            // 将相对路径转换为绝对路径
+                            ConvertRelativePathsToAbsolute(config, basePath);
                             _configs[config.PageId] = config;
                         }
                     }
@@ -238,9 +243,21 @@ namespace Luster.Common.Assets.FloatingInfo.Services
                     Directory.CreateDirectory(directory);
                 }
 
+                // 获取基准路径
+                var basePath = GetBasePath();
+
+                // 在保存前将绝对路径转换为相对路径
+                var configsToSave = new List<FloatingInfoConfig>();
+                foreach (var config in _configs.Values)
+                {
+                    var clonedConfig = config.Clone();
+                    ConvertAbsolutePathsToRelative(clonedConfig, basePath);
+                    configsToSave.Add(clonedConfig);
+                }
+
                 var configData = new FloatingInfoConfigData
                 {
-                    Configs = new List<FloatingInfoConfig>(_configs.Values)
+                    Configs = configsToSave
                 };
 
                 var settings = new JsonSerializerSettings
@@ -249,7 +266,7 @@ namespace Luster.Common.Assets.FloatingInfo.Services
                     Formatting = Formatting.Indented,
                     Converters = new List<JsonConverter> { new ContentItemConverter() }
                 };
-                
+
                 var json = JsonConvert.SerializeObject(configData, settings);
                 File.WriteAllText(_configFilePath, json);
             }
@@ -318,18 +335,79 @@ namespace Luster.Common.Assets.FloatingInfo.Services
         {
             return _configFilePath;
         }
+
+        /// <summary>
+        /// 获取基准路径（配置文件所在目录的父目录）
+        /// </summary>
+        /// <returns>基准路径</returns>
+        public string GetBasePath()
+        {
+            try
+            {
+                // 配置文件位于 {RecipeDir}/DigitalSetUpDataValidation/FloatingInfoConfigs.json
+                // 基准路径应为 {RecipeDir}
+                var configDir = Path.GetDirectoryName(_configFilePath);
+                if (string.IsNullOrEmpty(configDir))
+                {
+                    return AppDomain.CurrentDomain.BaseDirectory;
+                }
+
+                // 获取父目录（DigitalSetUpDataValidation 的父目录）
+                var basePath =configDir;
+                return basePath ?? AppDomain.CurrentDomain.BaseDirectory;
+            }
+            catch
+            {
+                return AppDomain.CurrentDomain.BaseDirectory;
+            }
+        }
+
+        /// <summary>
+        /// 将配置中的绝对路径转换为相对路径
+        /// </summary>
+        /// <param name="config">配置对象</param>
+        /// <param name="basePath">基准路径</param>
+        private void ConvertAbsolutePathsToRelative(FloatingInfoConfig config, string basePath)
+        {
+            if (config?.ContentItems == null) return;
+
+            foreach (var item in config.ContentItems)
+            {
+                if (item is ImageContentItem imageItem && !string.IsNullOrEmpty(imageItem.ImagePath))
+                {
+                    imageItem.ImagePath = PathConverter.ToRelativePath(imageItem.ImagePath, basePath);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 将配置中的相对路径转换为绝对路径
+        /// </summary>
+        /// <param name="config">配置对象</param>
+        /// <param name="basePath">基准路径</param>
+        private void ConvertRelativePathsToAbsolute(FloatingInfoConfig config, string basePath)
+        {
+            if (config?.ContentItems == null) return;
+
+            foreach (var item in config.ContentItems)
+            {
+                if (item is ImageContentItem imageItem && !string.IsNullOrEmpty(imageItem.ImagePath))
+                {
+                    imageItem.ImagePath = PathConverter.ToAbsolutePath(imageItem.ImagePath, basePath);
+                }
+            }
+        }
+    }
+
+
+    /// <summary>
+    /// 配置数据类(用于JSON序列化)
+    /// </summary>
+    internal class FloatingInfoConfigData
+    {
+        /// <summary>
+        /// 配置列表
+        /// </summary>
+        public List<FloatingInfoConfig> Configs { get; set; }
     }
 }
-
-
-/// <summary>
-/// 配置数据类(用于JSON序列化)
-/// </summary>
-internal class FloatingInfoConfigData
-{
-    /// <summary>
-    /// 配置列表
-    /// </summary>
-    public List<FloatingInfoConfig> Configs { get; set; }
-}
-

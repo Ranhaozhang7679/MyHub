@@ -2,6 +2,7 @@ using HandyControl.Controls;
 using HandyControl.Data;
 using Luster.Common.Assets;
 using Luster.Common.Assets.FloatingInfo.Services;
+using Luster.Common.Assets.FloatingInfo.Models;
 using Luster.Common.DataAccess.Repositories;
 using Luster.Common.DataStruct;
 using Luster.Common.DataStruct.DataModels;
@@ -15,6 +16,7 @@ using Luster.Motion.DataStruct.Real;
 using Luster.Motion.DigitalSetup.AssTables;
 using Luster.Motion.DigitalSetup.Datas;
 using Luster.Motion.DigitalSetup.Helpers;
+using Luster.Motion.DigitalSetup.Services;
 using Luster.Motion.DigitalSetup.Views;
 using Luster.Motion.EditorUI;
 using Luster.SimDevice.Engine;
@@ -34,6 +36,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
+using System.IO;
 using static FreeSql.Internal.GlobalFilter;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
@@ -49,6 +52,11 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         public ICommand OneKeyCheckCommand { get; private set; }
         public ICommand UpdateItemsCommand { get; private set; }
         public ICommand DeleteRowCommand { get; private set; }
+
+        /// <summary>
+        /// 批量导入IO点检图片命令
+        /// </summary>
+        public ICommand BatchImportImagesCommand { get; private set; }
 
         private Dispatcher _dispatcher;
         private const string PageName = "IOConform";
@@ -90,7 +98,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         /// </summary>
         private static readonly object _dialogLock = new object();
         private static IOAlternatingCheckDialog _currentDialog = null;
-        
+
         /// <summary>
         /// 用于控制同时只能弹出一个IO输出检测对话框
         /// </summary>
@@ -101,14 +109,14 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         public IOinspectionContentVM(ISimDeviceEngineUI engineUI, IDeviceEngine deviceEngine, ICommonBus commonBus,
                IRepository repository, IRegionManager regionManager,
                IDialogService dialogService, ISimDeviceEngineUI simDeviceEngineUI, CSVHelper cSVHelper, Dispatcher dispatcher, FlowBus flowBus,
-               IFloatingInfoConfigService configService, IFloatingInfoService floatingInfoService) :
-               base(repository, regionManager, commonBus, cSVHelper, flowBus, dialogService)
+               IFloatingInfoConfigService configService, IFloatingInfoService floatingInfoService, CheckStatusService checkStatusService) :
+               base(repository, regionManager, commonBus, cSVHelper, flowBus, dialogService, checkStatusService)
         {
             _configService = configService;
             _floatingInfoService = floatingInfoService;
 
-            // 设置父页面Region名称，用于构建子页面浮动信息窗口的PageId
-            //_parentRegionName = "IOinspectionContent";
+            // 设置父页面Region名称，用于构建子页面浮动信息窗口的PageId和点检状态保存
+            _parentRegionName = "IOinspectionContent";
 
             Pages = new ObservableCollection<CommonPageModel>();
             //Pages.Add(new CommonPageModel() { Name = "Vacuum", IsSelected = true, Region = "", ViewType = typeof(AssTbVacuum) });
@@ -116,8 +124,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             //Pages.Add(new CommonPageModel() { Name = "Runners", IsSelected = false, Region = "", ViewType = typeof(AssTbRunners) });
             Pages.Add(new CommonPageModel() { Name = "Digital_In_Single", IsSelected = false, Region = "", ViewType = typeof(AssTbDigitalInSingle) });
             Pages.Add(new CommonPageModel() { Name = "Digital_Out_Single", IsSelected = false, Region = "", ViewType = typeof(AssTbDigitalOutSingle) });
-            Pages.Add(new CommonPageModel() { Name = "Digital_In", IsSelected = false, Region = "", ViewType = typeof(AssTbDigitalIn) });
-            Pages.Add(new CommonPageModel() { Name = "Digital_Out", IsSelected = false, Region = "", ViewType = typeof(AssTbDigitalOut) });
+            //Pages.Add(new CommonPageModel() { Name = "Digital_In", IsSelected = false, Region = "", ViewType = typeof(AssTbDigitalIn) });
+            //Pages.Add(new CommonPageModel() { Name = "Digital_Out", IsSelected = false, Region = "", ViewType = typeof(AssTbDigitalOut) });
             Pages.Add(new CommonPageModel() { Name = "Cylinder", IsSelected = false, Region = "", ViewType = typeof(AssTbCylinder) });
 
             // 注册子页面到DigitalAssPageModel
@@ -133,7 +141,14 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             OneKeyCheckCommand = new DelegateCommand<object>(OnOneKeyCheck);
             UpdateItemsCommand = new DelegateCommand(OnUpdateItems);
             DeleteRowCommand = new DelegateCommand<object>(OnDeleteRow, CanDeleteRow);
+            BatchImportImagesCommand = new DelegateCommand(OnBatchImportImages);
             LoadCheckConfirmMessages();
+
+            // 延迟加载点检状态，确保 UI 绑定已建立
+            System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                LoadCheckStatusForAllPages();
+            }), System.Windows.Threading.DispatcherPriority.Loaded);
         }
 
         private bool CanDeleteRow(object arg)
@@ -184,7 +199,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     continue;
 
                 // NG 优先级最高
-                if (status == "NG")
+                if (status == "NG" || status == "超时")
                 {
                     hasNG = true;
                     break;  // 只要有一个 NG，整体就是 NG，直接退出
@@ -214,6 +229,50 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
             // 默认返回未点检
             return "未点检";
+        }
+
+        /// <summary>
+        /// 加载所有子页面的历史点检状态
+        /// </summary>
+        private void LoadCheckStatusForAllPages()
+        {
+            if (_checkStatusService == null || Pages == null)
+                return;
+
+            try
+            {
+                foreach (var page in Pages)
+                {
+                    if (page != null)
+                    {
+                        // 先设置 ParentRegion，这样 PageKey 才会返回正确的值
+                        page.ParentRegion = "IOinspectionContent";
+
+                        // 现在 page.PageKey 会返回正确的值: "IOinspectionContent_XXX"
+                        var record = _checkStatusService.GetRecord(page.PageKey);
+                        if (record != null)
+                        {
+                            page.CheckStatus = record.Status;
+                        }
+                        else
+                        {
+                            page.CheckStatus = CheckStatus.NotChecked;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"加载点检状态失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 刷新点检状态 - 每次页面激活时调用
+        /// </summary>
+        protected override void RefreshCheckStatus()
+        {
+            LoadCheckStatusForAllPages();
         }
 
         public override async void OnOneKeyCheck(object obj)
@@ -317,6 +376,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         protected override async Task ExecuteAsync(CancellationToken token)
         {
             IsChecking = true;
+            bool wasCancelled = false;
+
             try
             {
                 switch (SelectedReportPage.Name)
@@ -346,16 +407,61 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                         await Check_IO_Single(token);
                         break;
                 }
-                PageStatusService.Instance.UpdateStatus(PageName, GetOverallStatus());
+            }
+            catch (OperationCanceledException)
+            {
+                wasCancelled = true;
+                throw; // 重新抛出，让外层处理
             }
             catch (Exception)
             {
-
                 throw;
             }
             finally
             {
                 IsChecking = false;
+
+                // 保存当前子页面的点检状态
+                var currentOverallStatus = GetOverallStatus();
+                var checkStatus = CheckStatus.NotChecked;
+                string remark = "";
+
+                if (wasCancelled && token.IsCancellationRequested)
+                {
+                    // 用户中止
+                    bool canContinue = CanContinueFromLastCheck();
+
+                    if (canContinue)
+                    {
+                        checkStatus = CheckStatus.NotChecked;
+                        remark = "执行中止，可从上次继续";
+                    }
+                    else
+                    {
+                        checkStatus = CheckStatus.CheckedFail;
+                        remark = "执行中止，需从头开始";
+                    }
+                }
+                else if (currentOverallStatus == "OK")
+                {
+                    checkStatus = CheckStatus.CheckedOK;
+                    remark = "全部点检项合格";
+                }
+                else if (currentOverallStatus == "NG")
+                {
+                    checkStatus = CheckStatus.CheckedFail;
+                    remark = "发现点检不合格项";
+                }
+                else
+                {
+                    checkStatus = CheckStatus.NotChecked;
+                    remark = "未完成点检";
+                }
+
+                SaveCheckStatus(checkStatus, remark);
+
+                // 同步一级界面整体状态到 PageStatusService
+                SyncOverallStatusToPageStatusService();
             }
         }
         private async Task Check_Cylinder(CancellationToken token)
@@ -407,19 +513,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
                             if (result.Count > 1)
                             {
-                                if (result[1].Contains("伸出"))
-                                {
-                                    await CheckCylinderActionAsync(CylinderTb, vCylinder, "伸出", CylinderTb.标准, token);
-                                }
-                                else if (result[1].Contains("缩回"))
-                                {
-                                    await CheckCylinderActionAsync(CylinderTb, vCylinder, "缩回", CylinderTb.标准, token);
-                                }
-                                else
-                                {
-                                    CylinderTb.实测 = "0";
-                                    CylinderTb.状态 = "格式错误";
-                                }
+                                // 直接调用交替检测方法
+                                await CheckCylinderAlternatingAsync(CylinderTb, vCylinder, CylinderTb.标准, token);
                             }
                             else
                             {
@@ -447,75 +542,264 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         // 不再弹窗的气缸动作方法
         private async Task CheckCylinderActionAsync(AssTbCylinder CylinderTb, VCylinder vCylinder, string action, string 标准, CancellationToken token)
         {
-            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             await Task.Run(async () =>
             {
-                if (action == "伸出")
-                    vCylinder.Extend();
-                else
-                    vCylinder.Retract();
-
-                var timeout = TimeSpan.FromSeconds(5);
-                var sw = System.Diagnostics.Stopwatch.StartNew();
+                // 获取当前状态和目标位置
+                int currentPos = (int)vCylinder.GetCurrentPos();  // 10=伸出, 0=缩回
                 int targetPos = action == "伸出" ? 10 : 0;
-                while (vCylinder.GetCurrentPos() != targetPos)
+                var timeout = TimeSpan.FromSeconds(5);
+
+                try
                 {
-                    if (sw.Elapsed > timeout)
+                    // 如果气缸已经在目标状态，先执行反向动作到位（不计时）
+                    if (currentPos == targetPos)
                     {
-                        //CylinderTb.实测 = "动作超时";
-                        break;
+                        LogStatus($"气缸 [{vCylinder.Name}] 已在{action}状态，先执行反向动作做准备");
+
+                        int reversePos = targetPos == 10 ? 0 : 10;
+
+                        // 执行反向动作
+                        if (reversePos == 10)
+                            vCylinder.Extend();
+                        else
+                            vCylinder.Retract();
+
+                        // 等待反向动作完成（不计时）
+                        await WaitForPosition(vCylinder, reversePos, timeout, token);
                     }
-                    await Task.Delay(10);
+
+                    // 现在开始执行目标动作并计时
+                    var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+                    if (action == "伸出")
+                        vCylinder.Extend();
+                    else
+                        vCylinder.Retract();
+
+                    // 等待目标动作完成
+                    await WaitForPosition(vCylinder, targetPos, timeout, token);
+
+                    stopwatch.Stop();
+
+                    // 更新UI
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        var TIME = stopwatch.ElapsedMilliseconds.ToString();
+                        CylinderTb.实测 = TIME;
+                        if (string.IsNullOrEmpty(CylinderTb.实测))
+                        {
+                            CylinderTb.状态 = "未完成";
+                        }
+                        else if (CylinderTb.标准 == CylinderTb.实测)
+                        {
+                            CylinderTb.状态 = "OK";
+                        }
+                        else if (CylinderTb.标准.Contains('~'))
+                        {
+                            var range = ParseColumnRange(CylinderTb.标准);
+                            double.TryParse(CylinderTb.实测, out double 实测浮点值);
+                            if (实测浮点值 >= range.lower && 实测浮点值 <= range.upper)
+                            {
+                                CylinderTb.状态 = "OK";
+                            }
+                            else
+                            {
+                                CylinderTb.状态 = "NG";
+                            }
+                        }
+                        else if (double.TryParse(CylinderTb.标准, out double std) && double.TryParse(CylinderTb.实测, out double act))
+                        {
+                            CylinderTb.状态 = std > act ? "OK" : "NG";
+                        }
+                        else
+                        {
+                            CylinderTb.状态 = "NG";
+                        }
+                    });
+                }
+                catch (TimeoutException ex)
+                {
+                    // 超时异常：更新UI为超时状态
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        CylinderTb.实测 = "";
+                        CylinderTb.状态 = "超时";
+                        LogStatus($"气缸 [{vCylinder.Name}] {action}动作超时: {ex.Message}");
+                    });
+                }
+                catch (OperationCanceledException)
+                {
+                    // 取消操作：更新UI为未完成状态
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        CylinderTb.实测 = "";
+                        CylinderTb.状态 = "已取消";
+                    });
+                }
+                catch (Exception ex)
+                {
+                    // 其他异常：更新UI为错误状态
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        CylinderTb.实测 = "";
+                        CylinderTb.状态 = "错误";
+                        LogStatus($"气缸 [{vCylinder.Name}] {action}动作异常: {ex.Message}");
+                    });
                 }
             }, token);
-            stopwatch.Stop();
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                var TIME = stopwatch.ElapsedMilliseconds.ToString();
-                CylinderTb.实测 = TIME; //  + "ms"
-                if (string.IsNullOrEmpty(CylinderTb.实测))
-                {
-                    CylinderTb.状态 = "未完成";
-                }
-                else if (CylinderTb.标准 == CylinderTb.实测)
-                {
-                    CylinderTb.状态 = "OK";
-                }
-                else if (CylinderTb.标准.Contains('~'))
-                {
-                    var range = ParseColumnRange(CylinderTb.标准);
-                    double.TryParse(CylinderTb.实测, out double 实测浮点值);
-                    if (实测浮点值 >= range.lower && 实测浮点值 <= range.upper)
-                    {
-                        CylinderTb.状态 = "OK";
-                    }
-                    else
-                    {
-                        CylinderTb.状态 = "NG";
-                    }
-                }
-                else if (double.TryParse(CylinderTb.标准, out double std) && double.TryParse(CylinderTb.实测, out double act))
-                {
-                    CylinderTb.状态 = std > act ? "OK" : "NG";
-                }
-                else
-                {
-                    CylinderTb.状态 = "NG";
-                }
+        }
 
-                //if (标准.Length>=3)
-                //{
-                //    if (long.TryParse(TIME, out long 实测值) && long.TryParse(标准.Replace("ms",""), out long 标准值))
-                //        CylinderTb.状态 = ((实测值 < 标准值)) ? "OK" : "NG";
-                //    else
-                //        CylinderTb.状态 = "格式错误";
-                //}
-                //else
-                //{
-                //    CylinderTb.状态 = "标准值格式错误";
-                //}
-                //    CylinderTb.实测 = TIME + "ms";
-            });
+        /// <summary>
+        /// 气缸交替检测方法
+        /// 执行"取反（计时）→还原（计时）"，实测值 = 两个动作的总耗时
+        /// </summary>
+        /// <param name="CylinderTb">气缸数据表项</param>
+        /// <param name="vCylinder">气缸设备</param>
+        /// <param name="标准">标准值（范围或单值）</param>
+        /// <param name="token">取消令牌</param>
+        private async Task CheckCylinderAlternatingAsync(AssTbCylinder CylinderTb, VCylinder vCylinder, string 标准, CancellationToken token)
+        {
+            await Task.Run(async () =>
+            {
+                var timeout = TimeSpan.FromSeconds(5);
+
+                try
+                {
+                    // 1. 获取当前状态
+                    int currentPos = (int)vCylinder.GetCurrentPos();  // 10=伸出, 0=缩回
+
+                    // 2. 确定取反位置
+                    int reversePos = currentPos == 10 ? 0 : 10;
+
+                    // 3. 确定还原位置
+                    int restorePos = currentPos;
+
+                    LogStatus($"气缸 [{vCylinder.Name}] 开始交替检测，当前状态: {currentPos}，取反目标: {reversePos}，还原目标: {restorePos}");
+
+                    // 4. 执行取反动作并计时
+                    var reverseStopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+                    if (reversePos == 10)
+                        vCylinder.Extend();
+                    else
+                        vCylinder.Retract();
+
+                    await WaitForPosition(vCylinder, reversePos, timeout, token);
+
+                    reverseStopwatch.Stop();
+                    long reverseTime = reverseStopwatch.ElapsedMilliseconds;
+
+                    LogStatus($"气缸 [{vCylinder.Name}] 取反动作完成，耗时: {reverseTime}ms");
+
+                    // 5. 执行还原动作并计时
+                    var restoreStopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+                    if (restorePos == 10)
+                        vCylinder.Extend();
+                    else
+                        vCylinder.Retract();
+
+                    await WaitForPosition(vCylinder, restorePos, timeout, token);
+
+                    restoreStopwatch.Stop();
+                    long restoreTime = restoreStopwatch.ElapsedMilliseconds;
+
+                    LogStatus($"气缸 [{vCylinder.Name}] 还原动作完成，耗时: {restoreTime}ms");
+
+                    // 6. 计算总耗时
+                    long totalTime = reverseTime + restoreTime;
+
+                    // 7. 更新UI
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        CylinderTb.实测 = totalTime.ToString();
+
+                        // 8. 根据 标准 判定状态
+                        if (string.IsNullOrEmpty(CylinderTb.实测))
+                        {
+                            CylinderTb.状态 = "未完成";
+                        }
+                        else if (CylinderTb.标准 == CylinderTb.实测)
+                        {
+                            CylinderTb.状态 = "OK";
+                        }
+                        else if (CylinderTb.标准.Contains('~'))
+                        {
+                            var range = ParseColumnRange(CylinderTb.标准);
+                            double.TryParse(CylinderTb.实测, out double 实测浮点值);
+                            if (实测浮点值 >= range.lower && 实测浮点值 <= range.upper)
+                            {
+                                CylinderTb.状态 = "OK";
+                            }
+                            else
+                            {
+                                CylinderTb.状态 = "NG";
+                            }
+                        }
+                        else if (double.TryParse(CylinderTb.标准, out double std) && double.TryParse(CylinderTb.实测, out double act))
+                        {
+                            CylinderTb.状态 = std > act ? "OK" : "NG";
+                        }
+                        else
+                        {
+                            CylinderTb.状态 = "NG";
+                        }
+                    });
+                }
+                catch (TimeoutException ex)
+                {
+                    // 超时异常：更新UI为超时状态
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        CylinderTb.实测 = "";
+                        CylinderTb.状态 = "超时";
+                        LogStatus($"气缸 [{vCylinder.Name}] 交替检测超时: {ex.Message}");
+                    });
+                }
+                catch (OperationCanceledException)
+                {
+                    // 取消操作：更新UI为已取消状态
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        CylinderTb.实测 = "";
+                        CylinderTb.状态 = "已取消";
+                    });
+                }
+                catch (Exception ex)
+                {
+                    // 其他异常：更新UI为错误状态
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        CylinderTb.实测 = "";
+                        CylinderTb.状态 = "错误";
+                        LogStatus($"气缸 [{vCylinder.Name}] 交替检测异常: {ex.Message}");
+                    });
+                }
+            }, token);
+        }
+
+        /// <summary>
+        /// 等待气缸到达目标位置
+        /// </summary>
+        /// <param name="cylinder">气缸设备</param>
+        /// <param name="targetPos">目标位置（10=伸出, 0=缩回）</param>
+        /// <param name="timeout">超时时间</param>
+        /// <param name="token">取消令牌</param>
+        private async Task WaitForPosition(VCylinder cylinder, int targetPos, TimeSpan timeout, CancellationToken token)
+        {
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+            while (cylinder.GetCurrentPos() != targetPos)
+            {
+                if (sw.Elapsed > timeout)
+                {
+                    throw new TimeoutException($"气缸 {cylinder.Name} 动作超时，未能在 {timeout.TotalSeconds} 秒内到达目标位置 {targetPos}");
+                }
+                if (token.IsCancellationRequested)
+                {
+                    throw new OperationCanceledException(token);
+                }
+                await Task.Delay(10, token);
+            }
         }
 
         private Task<ButtonResult> ShowConfirmAsync(string message)
@@ -656,7 +940,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     }
                     _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"从CSV文件成功读取 {ItemModels.Count} 条数据 ({SelectedReportPage.Name})" });
                     PageStatusService.Instance.UpdateStatus(PageName, "未点检");
-                    if (ItemModels.Count>1)
+                    if (ItemModels.Count > 1)
                     {
                         return; // CSV读取成功，直接返回
                     }
@@ -703,21 +987,12 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                         AssTbCylinder item = new AssTbCylinder()
                         {
                             项序 = i,
-                            项次 = cylinder.Name + "/" + "伸出",
-                            标准 = "100~200", // 默认标准值为0
-                            实测 = "", // 默认实测值为0
-                            完成时间 = DateTime.Now
-                        };
-                        AssTbCylinder item1 = new AssTbCylinder()
-                        {
-                            项序 = i,
-                            项次 = cylinder.Name + "/" + "缩回",
-                            标准 = "100~200", // 默认标准值为0
+                            项次 = cylinder.Name + "/" + "交替检",
+                            标准 = "200~400", // 两个动作的总和范围
                             实测 = "", // 默认实测值为0
                             完成时间 = DateTime.Now
                         };
                         tempCollection.Add(item);
-                        tempCollection.Add(item1);
                     }
                 }
 
@@ -1204,16 +1479,16 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                         if (vio != null && vio.Behavior == IOBehavior.Output)
                         {
                             bool targetLevel = !Convert.ToBoolean(outIO.标准);
-                            
+
                             // 等待当前输出对话框关闭（确保同时只有一个对话框）
                             while (_currentOutputDialog != null)
                             {
                                 await Task.Delay(50, token);
                             }
-                            
+
                             // 使用TaskCompletionSource等待对话框关闭
                             var tcs = new TaskCompletionSource<(IOCheckResult Result, bool IsButtonClicked)>();
-                            
+
                             // 在UI线程上弹出对话框（非阻塞）
                             await _dispatcher.InvokeAsync(() =>
                             {
@@ -1225,11 +1500,11 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                                         tcs.SetResult((IOCheckResult.Skip, false));
                                         return;
                                     }
-                                    
+
                                     // 弹出窗体，用于人工确认输出状态
                                     var dialog = new IOCheckDialog(vio, targetLevel, i, _configService, _floatingInfoService);
                                     _currentOutputDialog = dialog;
-                                    
+
                                     dialog.Closed += (s, e) =>
                                     {
                                         lock (_dialogLock)
@@ -1238,15 +1513,15 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                                         }
                                         tcs.TrySetResult((dialog.Result, dialog.IsButtonClicked));
                                     };
-                                    
+
                                     // 使用Show()而非ShowDialog()，非阻塞显示
                                     dialog.Show();
                                 }
                             });
-                            
+
                             // 等待对话框关闭
                             var dialogResult = await tcs.Task;
-                            
+
                             if (dialogResult.IsButtonClicked == false)
                             {
                                 if (vio.GetDigitalOut().ToString() != outIO.标准)
@@ -1733,5 +2008,361 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         //        throw;
         //    }
         //}));
+
+        #region 批量导入IO点检图片功能
+
+        /// <summary>
+        /// 批量导入IO点检图片命令处理方法
+        /// </summary>
+        private async void OnBatchImportImages()
+        {
+            await ImportIOImagesAsync();
+        }
+
+        /// <summary>
+        /// 批量导入IO点检图片的核心逻辑
+        /// </summary>
+        private async Task ImportIOImagesAsync()
+        {
+            try
+            {
+                // 获取默认图片目录
+                var basePath = _configService.GetBasePath();
+                var defaultImageDir = Path.Combine(basePath, "Images");
+
+                // 使用文件夹浏览器对话框选择图片目录
+                using (var dialog = new System.Windows.Forms.FolderBrowserDialog())
+                {
+                    dialog.Description = "选择存放IO点检图片的文件夹";
+                    dialog.ShowNewFolderButton = true;
+
+                    if (Directory.Exists(defaultImageDir))
+                    {
+                        dialog.SelectedPath = defaultImageDir;
+                    }
+
+                    var result = System.Windows.Forms.DialogResult.OK;
+
+                    // 在UI线程上显示对话框
+                    await _dispatcher.InvokeAsync(() =>
+                    {
+                        result = dialog.ShowDialog();
+                    });
+
+                    if (result != System.Windows.Forms.DialogResult.OK)
+                    {
+                        return;
+                    }
+
+                    string selectedPath = dialog.SelectedPath;
+
+                    // 检查目录是否存在
+                    if (!Directory.Exists(selectedPath))
+                    {
+                        await ShowMessageAsync("错误", $"选择的目录不存在: {selectedPath}");
+                        return;
+                    }
+
+                    // 获取目录下所有支持的图片文件
+                    var imageFiles = GetImageFiles(selectedPath);
+
+                    if (imageFiles.Count == 0)
+                    {
+                        await ShowMessageAsync("提示", $"在目录 {selectedPath} 中未找到支持的图片文件。\n支持的格式: .png, .jpg, .jpeg, .bmp, .gif");
+                        return;
+                    }
+
+                    // 获取所有IO名称
+                    var ioNames = GetAllIONames();
+
+                    // 执行匹配
+                    var matchResult = MatchImagesWithIOs(imageFiles, ioNames);
+
+                    // 如果没有匹配成功，显示结果并返回
+                    if (matchResult.MatchedCount == 0)
+                    {
+                        ShowImportResultDialog(matchResult, selectedPath, false);
+                        return;
+                    }
+
+                    // 确认是否更新配置
+                    var confirmResult = await ShowConfirmAsync(
+                        $"找到 {matchResult.MatchedCount} 个匹配的IO图片\n" +
+                        $"未匹配的图片: {matchResult.UnmatchedImages.Count}\n" +
+                        $"未匹配的IO: {matchResult.UnmatchedIONames.Count}\n\n" +
+                        $"是否继续更新配置？");
+
+                    if (confirmResult != ButtonResult.OK)
+                    {
+                        return;
+                    }
+
+                    // 备份原配置文件
+                    BackupConfigFile();
+
+                    // 更新配置
+                    await UpdateConfigsAsync(matchResult, basePath);
+
+                    // 显示成功结果
+                    ShowImportResultDialog(matchResult, selectedPath, true);
+                }
+            }
+            catch (Exception ex)
+            {
+                await ShowMessageAsync("错误", $"批量导入失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 获取指定目录下所有支持的图片文件
+        /// </summary>
+        /// <param name="directory">图片目录</param>
+        /// <returns>图片文件字典（文件名不含扩展名 -> 完整路径）</returns>
+        private Dictionary<string, string> GetImageFiles(string directory)
+        {
+            var supportedExtensions = new[] { ".png", ".jpg", ".jpeg", ".bmp", ".gif" };
+            var imageFiles = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var file in Directory.GetFiles(directory))
+            {
+                var extension = Path.GetExtension(file).ToLower();
+                if (supportedExtensions.Contains(extension))
+                {
+                    var fileNameWithoutExt = Path.GetFileNameWithoutExtension(file);
+                    imageFiles[fileNameWithoutExt] = file;
+                }
+            }
+
+            return imageFiles;
+        }
+
+        /// <summary>
+        /// 获取所有IO名称
+        /// </summary>
+        /// <returns>IO名称列表</returns>
+        private List<string> GetAllIONames()
+        {
+            var ioNames = new List<string>();
+
+            // 从设备引擎获取所有VIO设备
+            var vios = _deviceEngine.GetDevices(typeof(VIO));
+            foreach (var vio in vios)
+            {
+                if (!string.IsNullOrEmpty(vio.Name) &&
+                    !vio.Name.Contains("备用") &&
+                    !vio.Name.Contains("弃用"))
+                {
+                    ioNames.Add(vio.Name);
+                }
+            }
+
+            return ioNames;
+        }
+
+        /// <summary>
+        /// 匹配图片文件与IO名称
+        /// </summary>
+        /// <param name="imageFiles">图片文件字典</param>
+        /// <param name="ioNames">IO名称列表</param>
+        /// <returns>匹配结果</returns>
+        private ImageMatchResult MatchImagesWithIOs(Dictionary<string, string> imageFiles, List<string> ioNames)
+        {
+            var result = new ImageMatchResult();
+
+            foreach (var ioName in ioNames)
+            {
+                // 不区分大小写匹配
+                var matchedImage = imageFiles.FirstOrDefault(kvp =>
+                    string.Equals(kvp.Key, ioName, StringComparison.OrdinalIgnoreCase)).Value;
+
+                if (!string.IsNullOrEmpty(matchedImage))
+                {
+                    result.MatchedPairs.Add(ioName, matchedImage);
+                }
+                else
+                {
+                    result.UnmatchedIONames.Add(ioName);
+                }
+            }
+
+            // 找出未匹配的图片
+            foreach (var imageFile in imageFiles)
+            {
+                var isMatched = result.MatchedPairs.Values.Any(path =>
+                    string.Equals(path, imageFile.Value, StringComparison.OrdinalIgnoreCase));
+
+                if (!isMatched)
+                {
+                    result.UnmatchedImages.Add(imageFile.Key);
+                }
+            }
+
+            result.MatchedCount = result.MatchedPairs.Count;
+
+            return result;
+        }
+
+        /// <summary>
+        /// 批量更新IO图片配置
+        /// </summary>
+        /// <param name="matchResult">匹配结果</param>
+        /// <param name="basePath">基准路径（recipe根目录）</param>
+        private async Task UpdateConfigsAsync(ImageMatchResult matchResult, string basePath)
+        {
+            await Task.Run(() =>
+            {
+                foreach (var pair in matchResult.MatchedPairs)
+                {
+                    var ioName = pair.Key;
+                    var imagePath = pair.Value;
+
+                    // 计算相对路径
+                    var relativePath = PathConverter.ToRelativePath(imagePath, basePath);
+
+                    // 获取现有配置
+                    var config = _configService.GetConfig(ioName);
+
+                    // 如果配置中没有图片项，创建新配置
+                    if (config.ContentItems == null || config.ContentItems.Count == 0)
+                    {
+                        config.ContentItems = new ObservableCollection<Luster.Common.Assets.FloatingInfo.Models.ContentItem>();
+                    }
+
+                    // 查找是否已有图片项
+                    var existingImageItem = config.ContentItems.OfType<Luster.Common.Assets.FloatingInfo.Models.ImageContentItem>().FirstOrDefault();
+
+                    if (existingImageItem != null)
+                    {
+                        // 更新现有图片路径
+                        existingImageItem.ImagePath = relativePath;
+                    }
+                    else
+                    {
+                        // 添加新的图片项
+                        var imageItem = new Luster.Common.Assets.FloatingInfo.Models.ImageContentItem
+                        {
+                            Order = config.ContentItems.Count,
+                            ImagePath = relativePath,
+                            MaxWidth = 400,
+                            MaxHeight = 300
+                        };
+                        config.ContentItems.Add(imageItem);
+                    }
+
+                    // 保存配置
+                    _configService.SaveConfig(config);
+                }
+            });
+        }
+
+        /// <summary>
+        /// 备份配置文件
+        /// </summary>
+        private void BackupConfigFile()
+        {
+            try
+            {
+                var configPath = _configService.GetConfigPath();
+                if (File.Exists(configPath))
+                {
+                    var backupPath = configPath + ".backup";
+                    File.Copy(configPath, backupPath, true);
+                }
+            }
+            catch
+            {
+                // 备份失败，忽略
+            }
+        }
+
+        /// <summary>
+        /// 显示导入结果对话框
+        /// </summary>
+        /// <param name="result">匹配结果</param>
+        /// <param name="selectedPath">选择的路径</param>
+        /// <param name="isSuccess">是否成功</param>
+        private void ShowImportResultDialog(ImageMatchResult result, string selectedPath, bool isSuccess)
+        {
+            var message = isSuccess ? "批量导入成功！\n\n" : "批量导入结果：\n\n";
+            message += $"成功匹配: {result.MatchedCount} 个\n";
+
+            if (result.UnmatchedImages.Count > 0)
+            {
+                message += $"\n未匹配的图片 ({result.UnmatchedImages.Count} 个):\n";
+                foreach (var img in result.UnmatchedImages.Take(10))
+                {
+                    message += $"  - {img}\n";
+                }
+                if (result.UnmatchedImages.Count > 10)
+                {
+                    message += $"  ... 还有 {result.UnmatchedImages.Count - 10} 个\n";
+                }
+            }
+
+            if (result.UnmatchedIONames.Count > 0)
+            {
+                message += $"\n未匹配的IO ({result.UnmatchedIONames.Count} 个):\n";
+                foreach (var io in result.UnmatchedIONames.Take(10))
+                {
+                    message += $"  - {io}\n";
+                }
+                if (result.UnmatchedIONames.Count > 10)
+                {
+                    message += $"  ... 还有 {result.UnmatchedIONames.Count - 10} 个\n";
+                }
+            }
+
+            _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = message });
+
+            // 显示消息框
+            System.Windows.MessageBox.Show(message, isSuccess ? "导入成功" : "导入结果",
+                System.Windows.MessageBoxButton.OK,
+                isSuccess ? System.Windows.MessageBoxImage.Information : System.Windows.MessageBoxImage.Warning);
+        }
+
+        /// <summary>
+        /// 显示消息对话框
+        /// </summary>
+        private async Task ShowMessageAsync(string title, string message)
+        {
+            await _dispatcher.InvokeAsync(() =>
+            {
+                System.Windows.MessageBox.Show(message, title,
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
+            });
+        }
+
+        #endregion
+
+        #region 内部类
+
+        /// <summary>
+        /// 图片匹配结果
+        /// </summary>
+        private class ImageMatchResult
+        {
+            /// <summary>
+            /// 匹配成功的对 (IO名称 -> 图片路径)
+            /// </summary>
+            public Dictionary<string, string> MatchedPairs { get; set; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            /// <summary>
+            /// 未匹配的IO名称列表
+            /// </summary>
+            public List<string> UnmatchedIONames { get; set; } = new List<string>();
+
+            /// <summary>
+            /// 未匹配的图片名称列表（不含扩展名）
+            /// </summary>
+            public List<string> UnmatchedImages { get; set; } = new List<string>();
+
+            /// <summary>
+            /// 匹配成功的数量
+            /// </summary>
+            public int MatchedCount { get; set; }
+        }
+
+        #endregion
     }
 }

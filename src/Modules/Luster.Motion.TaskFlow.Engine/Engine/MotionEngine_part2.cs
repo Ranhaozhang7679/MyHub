@@ -524,6 +524,8 @@ namespace Luster.Motion.TaskFlow.Engine
                         {
                             OnLog(LogType.Error, $"工站失败->停止:{stationModule.StatusMsg}");
                             Stop();
+                            //此时非正常停止，需要报警红灯蜂鸣
+                            LightManager.StopLight(true);
                         }
 
                         // 休眠1s

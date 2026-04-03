@@ -116,8 +116,8 @@ namespace Luster.Common.Assets
             param.Add("MsgIcon", "\xe65d");
             if (bIsBlock)
             {
-                service.ShowDialog("MessageDialog", param, callback);
-            }
+            service.ShowDialog("MessageDialog", param, callback);
+        }
             else
             {
                 service.Show("MessageDialog", param, callback);

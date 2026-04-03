@@ -177,6 +177,10 @@
                         <ColumnDefinition />
                         <ColumnDefinition />
                     </Grid.ColumnDefinitions>
+                    <!--<Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>-->
                     <TextBlock
                         HorizontalAlignment="Left"
                         Style="{StaticResource CountTextStyle}"
@@ -186,6 +190,12 @@
                         HorizontalAlignment="Right"
                         Style="{StaticResource CountTextStyle}"
                         Text="{Binding RunTime, StringFormat={}运行时间 {0} min}" />
+                    <!--<TextBlock
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        HorizontalAlignment="Right"
+                        Style="{StaticResource CountTextStyle}"
+                        Text="{Binding IdleTime, StringFormat={}空闲时间 {0} min}" />-->
                 </Grid>
                 <Grid Grid.Row="1" Margin="5,0,0,0">
                     <Grid.ColumnDefinitions>

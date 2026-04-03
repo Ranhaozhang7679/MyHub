@@ -14,115 +14,187 @@
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <!-- 状态颜色转换器 -->
         <local:ValidationStatusToColorConverter x:Key="ValidationStatusToColorConverter"/>
-        
+
         <!-- 验证视图数据模板 - 只需要CommonValidationVM，通过Region加载不同配置控件 -->
         <DataTemplate DataType="{x:Type validationVMs:CommonValidationVM}">
             <validations:CommonValidationView/>
         </DataTemplate>
     </UserControl.Resources>
     <Grid Margin="5">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition MinWidth="50" Width="200"/>
-            <ColumnDefinition Width="10" />
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
-        <!-- 左侧面板 -->
-        <Grid Grid.Column="0" Background="{DynamicResource RegionBrush}" Margin="0,0,5,0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
+        <!-- 主内容区域 -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition MinWidth="100" Width="200" x:Name="LeftColumn"/>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" x:Name="RightColumn"/>
+            </Grid.ColumnDefinitions>
 
-            <!-- 顶部添加/删除按钮区域 -->
-            <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5">
-                <Button Command="{Binding AddItemCommand}"
-                        Width="30" Height="30" Margin="0,0,5,0"
-                        ToolTip="添加验证项">
-                    <Path Data="M12,2 C13.1045695,2 14,2.8954305 14,4 L14,10 L20,10 C21.1045695,10 22,10.8954305 22,12 C22,13.1045695 21.1045695,14 20,14 L14,14 L14,20 C14,21.1045695 13.1045695,22 12,22 C10.8954305,22 10,21.1045695 10,20 L10,14 L4,14 C2.8954305,14 2,13.1045695 2,12 C2,10.8954305 2.8954305,10 4,10 L10,10 L10,4 C10,2.8954305 10.8954305,2 12,2 Z"
+            <!-- 左侧面板 -->
+            <Grid Grid.Column="0" Background="{DynamicResource RegionBrush}" Margin="0,0,5,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- 顶部添加/删除按钮区域 -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Right" Margin="5">
+                    <Button Command="{Binding AddItemCommand}"
+                            Width="30" Height="30" Margin="0,0,5,0"
+                            ToolTip="添加验证项">
+                        <Path Data="M12,2 C13.1045695,2 14,2.8954305 14,4 L14,10 L20,10 C21.1045695,10 22,10.8954305 22,12 C22,13.1045695 21.1045695,14 20,14 L14,14 L14,20 C14,21.1045695 13.1045695,22 12,22 C10.8954305,22 10,21.1045695 10,20 L10,14 L4,14 C2.8954305,14 2,13.1045695 2,12 C2,10.8954305 2.8954305,10 4,10 L10,10 L10,4 C10,2.8954305 10.8954305,2 12,2 Z"
                           Fill="Green"
                           Stretch="Uniform" Width="12" Height="12"/>
-                </Button>
-                <Button Command="{Binding RemoveItemCommand}"
-                        Width="30" Height="30" Margin="0,0,5,0"
-                        ToolTip="删除验证项">
-                    <Path Data="M20,12 C20,13.1045695 19.1045695,14 18,14 L6,14 C4.8954305,14 4,13.1045695 4,12 C4,10.8954305 4.8954305,10 6,10 L18,10 C19.1045695,10 20,10.8954305 20,12 Z"
+                    </Button>
+                    <Button Command="{Binding RemoveItemCommand}"
+                            Width="30" Height="30" Margin="0,0,5,0"
+                            ToolTip="删除验证项">
+                        <Path Data="M20,12 C20,13.1045695 19.1045695,14 18,14 L6,14 C4.8954305,14 4,13.1045695 4,12 C4,10.8954305 4.8954305,10 6,10 L18,10 C19.1045695,10 20,10.8954305 20,12 Z"
                           Fill="Red"
                           Stretch="Uniform" Width="12" Height="12"/>
-                </Button>
-                <Button Command="{Binding SaveConfigCommand}"
-                        Width="30" Height="30"
-                        ToolTip="保存配置">
-                    <Path Data="M15,3H9V7.5C9,8.32842712 8.32842712,9 7.5,9H3V19C3,20.1045695 3.8954305,21 5,21H19C20.1045695,21 21,20.1045695 21,19V9L15,3Z M16,16H8V14H16V16Z M16,12H8V10H16V12Z M14,8V4.5L19.5,10H15C14.4477153,10 14,9.55228475 14,9V8Z"
+                    </Button>
+                    <Button Command="{Binding SaveConfigCommand}"
+                            Width="30" Height="30"
+                            ToolTip="保存配置">
+                        <Path Data="M15,3H9V7.5C9,8.32842712 8.32842712,9 7.5,9H3V19C3,20.1045695 3.8954305,21 5,21H19C20.1045695,21 21,20.1045695 21,19V9L15,3Z M16,16H8V14H16V16Z M16,12H8V10H16V12Z M14,8V4.5L19.5,10H15C14.4477153,10 14,9.55228475 14,9V8Z"
                           Fill="{DynamicResource PrimaryTextBrush}"
                           Stretch="Uniform" Width="12" Height="12"/>
-                </Button>
-            </StackPanel>
+                    </Button>
+                </StackPanel>
 
-            <!-- 验证项列表 -->
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                <ItemsControl ItemsSource="{Binding ValidationItems}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border BorderBrush="{DynamicResource BorderBrush}" 
-                                    BorderThickness="1" 
-                                    CornerRadius="5"
-                                    Margin="1"
-                                    Padding="1"
-                                    Background="{DynamicResource RegionBrush}">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="auto"/>
-                                    </Grid.ColumnDefinitions>
+                <!-- 验证项列表 -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding ValidationItems}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="{DynamicResource BorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="5"
+                                        Margin="1"
+                                        Padding="1"
+                                        Background="{DynamicResource RegionBrush}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="auto"/>
+                                        </Grid.ColumnDefinitions>
 
-                                    <!-- 验证项按钮 -->
-                                    <Button Grid.Column="0"
-                                            HorizontalAlignment="Stretch"
-                                            Content="{Binding Name}"
-                                            Command="{Binding DataContext.SelectItemCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                                            CommandParameter="{Binding}"
-                                            Height="35"
-                                            Margin="5,5,0,5"/>
+                                        <!-- 点检状态指示器 -->
+                                        <Ellipse Grid.Column="0" Width="12" Height="12" Margin="5,0,5,0" VerticalAlignment="Center">
+                                            <Ellipse.Style>
+                                                <Style TargetType="Ellipse">
+                                                    <Setter Property="Fill" Value="LightGray"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding Status}" Value="0">
+                                                            <Setter Property="Fill" Value="LightGray"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="1">
+                                                            <Setter Property="Fill" Value="LightGreen"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding Status}" Value="2">
+                                                            <Setter Property="Fill" Value="LightCoral"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Ellipse.Style>
+                                        </Ellipse>
 
-                                    <!-- 状态栏 -->
-                                    <Border Grid.Column="1"
-                                            CornerRadius="3"
-                                            Background="{Binding Status, Converter={StaticResource ValidationStatusToColorConverter}}"
-                                            Width="50"
-                                            Height="35"
-                                            Margin="5,0">
-                                        <TextBlock Text="{Binding StatusText}"
-                                                   Foreground="White"
-                                                   FontWeight="Bold"
-                                                   FontSize="11"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"
-                                                   TextAlignment="Center"/>
-                                    </Border>
-                                </Grid>
-                            </Border>
+                                        <!-- 验证项按钮 -->
+                                        <Button Grid.Column="1"
+                                                HorizontalAlignment="Stretch"
+                                                Content="{Binding Name}"
+                                                HorizontalContentAlignment="Left"
+                                                Command="{Binding DataContext.SelectItemCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding}"
+                                                Height="30"
+                                                Margin="0,5,0,5"/>
+
+                                        <!-- 状态栏 - 已隐藏，使用左侧的点检状态指示器代替 -->
+                                        <Border Grid.Column="2"
+                                                CornerRadius="3"
+                                                Background="{Binding Status, Converter={StaticResource ValidationStatusToColorConverter}}"
+                                                Width="50"
+                                                Height="35"
+                                                Margin="5,0"
+                                                Visibility="Collapsed">
+                                            <TextBlock Text="{Binding StatusText}"
+                                                       Foreground="White"
+                                                       FontWeight="Bold"
+                                                       FontSize="11"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"
+                                                       TextAlignment="Center"/>
+                                        </Border>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+            <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" Background="Transparent" ResizeBehavior="PreviousAndNext">
+                <GridSplitter.Style>
+                    <Style TargetType="GridSplitter">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource PrimaryBrush}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </GridSplitter.Style>
+            </GridSplitter>
+            <!-- 右侧内容区域 -->
+            <Grid Grid.Column="2" Background="{DynamicResource BackgroundBrush}">
+                <!-- 使用 ContentControl 绑定到 CurrentValidationVM，自动根据数据模板选择视图 -->
+                <ContentControl Content="{Binding CurrentValidationVM}">
+                    <ContentControl.Resources>
+                        <!-- 空内容时的默认显示 -->
+                        <DataTemplate x:Key="EmptyTemplate">
+                            <TextBlock Text="请从左侧选择一个验证项"
+                                       FontSize="16"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"/>
                         </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
+                    </ContentControl.Resources>
+                </ContentControl>
+            </Grid>
         </Grid>
-        <GridSplitter Grid.Column="1" Width="10" AllowDrop="True"></GridSplitter>
-        <!-- 右侧内容区域 -->
-        <Grid Grid.Column="2" Background="{DynamicResource BackgroundBrush}">
-            <!-- 使用 ContentControl 绑定到 CurrentValidationVM，自动根据数据模板选择视图 -->
-            <ContentControl Content="{Binding CurrentValidationVM}">
-                <ContentControl.Resources>
-                    <!-- 空内容时的默认显示 -->
-                    <DataTemplate x:Key="EmptyTemplate">
-                        <TextBlock Text="请从左侧选择一个验证项"
-                                   FontSize="16"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Center"
-                                   Foreground="{DynamicResource SecondaryTextBrush}"/>
-                    </DataTemplate>
-                </ContentControl.Resources>
-            </ContentControl>
+
+        <!-- 一键点检/中止点检按钮区域 - 放在底部 -->
+        <Grid Grid.Row="1" Margin="0,5,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*" MinWidth="50"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- 中止点检按钮 -->
+            <Button Grid.Column="0" Content="中止点检"
+                    Command="{Binding EndCommand}"
+                    Margin="0,0,5,0"
+                    Padding="10,5"
+                    MinWidth="80"/>
+
+            <!-- 一键点检按钮 -->
+            <Button Grid.Column="1" Content="一键点检"
+                    Command="{Binding OneKeyCheckCommand}"
+                    Margin="0,0,5,0"
+                    Padding="10,5"
+                    MinWidth="80"/>
+
+            <!-- 进度条 -->
+            <ProgressBar Grid.Column="2"
+                        Value="{Binding ProgressValue}"
+                        Maximum="100"
+                        Height="20"
+                        Margin="5,0"/>
         </Grid>
     </Grid>
 </UserControl>

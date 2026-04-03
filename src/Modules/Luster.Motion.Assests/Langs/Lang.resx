@@ -3160,7 +3160,7 @@
     <value>CPK检测</value>
   </data>
   <data name="AutoVerication" xml:space="preserve">
-    <value>Auto Verication</value>
+    <value>Auto Verification</value>
   </data>
   <data name="SolutionMode" xml:space="preserve">
     <value>工程模式</value>
@@ -3173,5 +3173,8 @@
   </data>
   <data name="DataValidation" xml:space="preserve">
     <value>数据验证</value>
+  </data>
+  <data name="GetSlopeIntercept" xml:space="preserve">
+    <value>获取线性KBR值</value>
   </data>
 </root>
