@@ -456,24 +456,35 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 return;
             }
 
-            // 清空现有数据
-            ValidationItems.Clear();
-            _validationConfigCache.Clear();
+            // 加载期间暂停自动保存，避免 Add 触发保存时 cache 还未更新导致数据丢失
+            ValidationItems.CollectionChanged -= OnValidationItemsCollectionChanged;
 
-            // 加载持久化的验证项
-            foreach (var itemData in data.ValidationItems)
+            try
             {
-                var item = new ValidationItemModel
+                // 清空现有数据
+                ValidationItems.Clear();
+                _validationConfigCache.Clear();
+
+                // 加载持久化的验证项
+                foreach (var itemData in data.ValidationItems)
                 {
-                    Name = itemData.Name,
-                    ValidationType = (ValidationType)itemData.ValidationType,
-                    Status = (ValidationStatus)itemData.Status
-                };
+                    // 先更新缓存，再添加到集合
+                    _validationConfigCache[itemData.Name] = itemData;
 
-                ValidationItems.Add(item);
+                    var item = new ValidationItemModel
+                    {
+                        Name = itemData.Name,
+                        ValidationType = (ValidationType)itemData.ValidationType,
+                        Status = (ValidationStatus)itemData.Status
+                    };
 
-                // 缓存配置数据
-                _validationConfigCache[itemData.Name] = itemData;
+                    ValidationItems.Add(item);
+                }
+            }
+            finally
+            {
+                // 恢复自动保存监听
+                ValidationItems.CollectionChanged += OnValidationItemsCollectionChanged;
             }
         }
 
@@ -507,7 +518,21 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         /// </summary>
         private void OnSaveConfig()
         {
+            // 保存前先同步当前激活的 CommonValidationVM 的最新数据到缓存
+            SyncCurrentValidationVMToCache();
             SaveToPersistence();
+        }
+
+        /// <summary>
+        /// 将当前激活的 CommonValidationVM 的最新配置同步到缓存
+        /// </summary>
+        private void SyncCurrentValidationVMToCache()
+        {
+            if (CurrentValidationVM is CommonValidationVM commonVM && SelectedItem != null)
+            {
+                var updatedData = commonVM.ToConfigData();
+                _validationConfigCache[SelectedItem.Name] = updatedData;
+            }
         }
 
         /// <summary>
@@ -658,6 +683,9 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         {
             if (item != null)
             {
+                // 切换前先同步当前 VM 的最新配置到缓存
+                SyncCurrentValidationVMToCache();
+
                 SelectedItem = item;
                 // 根据验证类型切换右侧显示的ViewModel
                 SwitchValidationView(item);
