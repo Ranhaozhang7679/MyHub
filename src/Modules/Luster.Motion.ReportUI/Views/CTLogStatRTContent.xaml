@@ -47,8 +47,10 @@
                                   CanUserResizeRows="False"
                                   SelectionMode="Single"
                                   SelectionUnit="Cell"
+                                  VirtualizingStackPanel.IsVirtualizing="False"
+                                  ScrollViewer.CanContentScroll="False"
                                   GridLinesVisibility="All"
-                                  HeadersVisibility="None"
+                                  HeadersVisibility="Column"
                                   RowHeaderWidth="0"
                                   IsReadOnly="True"
                                   FrozenColumnCount="5"
@@ -66,12 +68,6 @@
                                         <DataTrigger Binding="{Binding RowType}" Value="TargetCT">
                                             <Setter Property="Background" Value="#C8E6C9"/>
                                         </DataTrigger>
-                                        <!-- 表头行：浅蓝色，设置更大的高度支持换行 -->
-                                        <DataTrigger Binding="{Binding RowType}" Value="Header">
-                                            <Setter Property="Background" Value="#BBDEFB"/>
-                                            <Setter Property="FontWeight" Value="Bold"/>
-                                            <Setter Property="Height" Value="70"/>
-                                        </DataTrigger>
                                         <!-- 数据行：白色 -->
                                         <DataTrigger Binding="{Binding RowType}" Value="Data">
                                             <Setter Property="Background" Value="White"/>
@@ -88,14 +84,6 @@
                                     <Setter Property="HorizontalContentAlignment" Value="Center"/>
                                     <Setter Property="VerticalContentAlignment" Value="Center"/>
                                     <Style.Triggers>
-                                        <!-- 第2行（表头行）的第5列（等待时间）标黄 -->
-                                        <MultiDataTrigger>
-                                            <MultiDataTrigger.Conditions>
-                                                <Condition Binding="{Binding RowType}" Value="Header"/>
-                                                <Condition Binding="{Binding RelativeSource={RelativeSource Self}, Path=Column.DisplayIndex}" Value="4"/>
-                                            </MultiDataTrigger.Conditions>
-                                            <Setter Property="Background" Value="Yellow"/>
-                                        </MultiDataTrigger>
                                         <Trigger Property="IsSelected" Value="True">
                                             <Setter Property="Background" Value="{x:Null}"/>
                                             <Setter Property="Foreground" Value="Black"/>
@@ -106,14 +94,25 @@
 
                             <DataGrid.ColumnHeaderStyle>
                                 <Style TargetType="DataGridColumnHeader">
-                                    <Setter Property="Background" Value="#F5F5F5"/>
-                                    <Setter Property="Foreground" Value="#333333"/>
-                                    <Setter Property="FontWeight" Value="Bold"/>
-                                    <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                                    <Setter Property="VerticalContentAlignment" Value="Center"/>
-                                    <Setter Property="Height" Value="30"/>
-                                    <Setter Property="BorderBrush" Value="#CCCCCC"/>
-                                    <Setter Property="BorderThickness" Value="0,0,1,1"/>
+                                    <Setter Property="MinHeight" Value="80"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="DataGridColumnHeader">
+                                                <Border Background="#BBDEFB"
+                                                        BorderBrush="#CCCCCC"
+                                                        BorderThickness="0,0,1,1"
+                                                        Padding="4,4">
+                                                    <TextBlock Text="{TemplateBinding Content}"
+                                                               TextWrapping="Wrap"
+                                                               TextAlignment="Center"
+                                                               FontWeight="Bold"
+                                                               Foreground="Black"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
                                 </Style>
                             </DataGrid.ColumnHeaderStyle>
                         </DataGrid>

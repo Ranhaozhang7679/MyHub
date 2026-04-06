@@ -55,6 +55,11 @@ namespace Luster.Motion.ReportUI.ViewModel
         private IEventAggregator _eventAggregator;
         private SubscriptionToken _eventToken;
 
+        /// <summary>
+        /// 页面是否处于活跃状态（当前显示中）
+        /// </summary>
+        private bool _isActive = true;
+
         public CTLogStatRTContentVM() : base()
         {
         }
@@ -80,18 +85,27 @@ namespace Luster.Motion.ReportUI.ViewModel
             try
             {
                 var stationNames = _dbManager?.GetCTConfigStationNames();
-                //System.Diagnostics.Debug.WriteLine($"[CTStatRT] GetCTConfigStationNames 返回: {(stationNames == null ? "null" : stationNames.Count.ToString() + " 个站")}");
+                var fullActionNames = _dbManager?.GetCTConfigFullActionNames();
 
                 if (stationNames != null && stationNames.Count > 0)
                 {
                     foreach (var stationName in stationNames)
                     {
-                        //System.Diagnostics.Debug.WriteLine($"[CTStatRT] 创建 Tab 页: {stationName}");
-                        // 如果 Tab 页不存在则创建
                         if (!TabPages.Any(t => t.TabName == stationName))
                         {
                             var tabPage = new CTStatTabPageModel(stationName);
                             TabPages.Add(tabPage);
+
+                            // 用配置的完整动作列表预初始化列（所有步序都显示，目标值默认0.000）
+                            if (fullActionNames != null && fullActionNames.TryGetValue(stationName, out var actions))
+                            {
+                                var initTargetData = new Dictionary<string, string>();
+                                foreach (var action in actions)
+                                {
+                                    initTargetData[action] = "0.000";
+                                }
+                                tabPage.InitializeTargetRow(null, initTargetData);
+                            }
                         }
                     }
                 }
@@ -158,6 +172,7 @@ namespace Luster.Motion.ReportUI.ViewModel
         /// <param name="ctInfoList">CT信息列表</param>
         private void OnCTStatDataReceived(List<TbCTInfo2> ctInfoList)
         {
+            if (!_isActive) return;
             if (ctInfoList == null || ctInfoList.Count == 0) return;
 
             //System.Diagnostics.Debug.WriteLine($"[CTStatRT] 收到数据，共 {ctInfoList.Count} 条");
@@ -212,7 +227,8 @@ namespace Luster.Motion.ReportUI.ViewModel
 
                         if (actionItems.Count == 0) continue;
 
-                        // 如果 Tab 页未初始化，先初始化 TargetCT 行和表头行
+                        // 如果 Tab 页未初始化（未预初始化的情况），用实时数据初始化
+                        // 如果已预初始化（列已从配置生成），则更新目标值
                         if (!tabPage.IsInitialized)
                         {
                             var targetData = new Dictionary<string, string>();
@@ -221,18 +237,17 @@ namespace Luster.Motion.ReportUI.ViewModel
                                 targetData[item.动作] = item.Target_CT.ToString("F3");
                             }
                             tabPage.InitializeTargetRow(null, targetData);
-                            //System.Diagnostics.Debug.WriteLine($"[CTStatRT] 初始化Tab页，动态列数: {targetData.Count}");
                         }
-
-                        // 准备固定列数据
-                        var fixedData = new CTFixedColumnData
+                        else
                         {
-                            Time = startTime,
-                            SN = sn,
-                            TotalCT = "",
-                            NetCT = "",
-                            WaitTime = ""
-                        };
+                            // 已预初始化，更新目标值（首次收到数据时）
+                            var targetData = new Dictionary<string, string>();
+                            foreach (var item in actionItems)
+                            {
+                                targetData[item.动作] = item.Target_CT.ToString("F3");
+                            }
+                            tabPage.UpdateTargetValues(targetData);
+                        }
 
                         // 准备动态列数据（Actual_CT）
                         var dynamicData = new Dictionary<string, string>();
@@ -243,8 +258,27 @@ namespace Luster.Motion.ReportUI.ViewModel
 
                         //System.Diagnostics.Debug.WriteLine($"[CTStatRT] 添加数据行: Time={startTime}, SN={sn}, 动态列数={dynamicData.Count}");
 
-                        // 添加数据行
-                        tabPage.AddDataRow(fixedData, dynamicData);
+                        // 判断是否包含"工站开始"：有则新建一行，无则追加到当前行
+                        bool hasStationStart = actionItems.Any(x => x.动作.Contains("工站开始"));
+
+                        if (hasStationStart)
+                        {
+                            // 新周期开始 — 新建一行
+                            var fixedData = new CTFixedColumnData
+                            {
+                                Time = startTime,
+                                SN = sn,
+                                TotalCT = "",
+                                NetCT = "",
+                                WaitTime = ""
+                            };
+                            tabPage.AddDataRow(fixedData, dynamicData);
+                        }
+                        else
+                        {
+                            // 当前周期数据续传 — 追加到当前行
+                            tabPage.AppendToCurrentRow(dynamicData);
+                        }
                     }
                 }
 
@@ -349,10 +383,12 @@ namespace Luster.Motion.ReportUI.ViewModel
 
         public override void OnNavigatedFrom(NavigationContext navigationContext)
         {
+            _isActive = false;
         }
 
         public override void OnNavigatedTo(NavigationContext navigationContext)
         {
+            _isActive = true;
             base.OnNavigatedTo(navigationContext);
         }
         #endregion
@@ -518,23 +554,8 @@ namespace Luster.Motion.ReportUI.ViewModel
             targetRow.WaitTime = "";
             GridRows.Add(targetRow);
 
-            // 第2行：表头行（浅蓝色背景）
-            var headerRow = new CTGridRowModel
-            {
-                RowType = CTRowType.Header,
-                RowIndex = 2,
-                BackgroundColor = "#BBDEFB"  // 浅蓝色
-            };
-            // 固定列名
-            headerRow.Time = "时间";
-            headerRow.SN = "SN";
-            headerRow.TotalCT = "总CT";
-            headerRow.NetCT = "净CT";
-            headerRow.WaitTime = "等待时间";
-            GridRows.Add(headerRow);
-
-            // 第3-10行：数据行（白色背景，共8行）
-            for (int i = 3; i <= 10; i++)
+            // 第2-9行：数据行（白色背景，共8行）
+            for (int i = 1; i <= 8; i++)
             {
                 var dataRow = new CTGridRowModel
                 {
@@ -575,16 +596,27 @@ namespace Luster.Motion.ReportUI.ViewModel
             // 计算第1行的总CT、净CT、等待时间
             targetRow.CalculateCTValues();
 
-            // 更新第2行：表头行（设置动态列名）
-            var headerRow = GridRows[1];
-            headerRow.DynamicColumns.Clear();
-            foreach (var kvp in dynamicData)
-            {
-                // 列名就是值（用于显示表头）
-                headerRow.DynamicColumns.Add(new DynamicColumnInfo(kvp.Key, kvp.Key) { RowType = CTRowType.Header });
-            }
-
             _isInitialized = true;
+        }
+
+        /// <summary>
+        /// 更新TargetCT行的目标值（用于预初始化后接收实时数据时更新）
+        /// </summary>
+        public void UpdateTargetValues(Dictionary<string, string> targetData)
+        {
+            if (targetData == null) return;
+
+            var targetRow = GridRows[0];
+            foreach (var kvp in targetData)
+            {
+                var existingCol = targetRow.DynamicColumns.FirstOrDefault(c => c.ColumnName == kvp.Key);
+                if (existingCol != null)
+                {
+                    existingCol.Value = kvp.Value;
+                }
+            }
+            targetRow.CalculateCTValues();
+            targetRow.RefreshDynamicColumns();
         }
 
         /// <summary>
@@ -613,20 +645,18 @@ namespace Luster.Motion.ReportUI.ViewModel
             if (_currentDataIndex < 8)
             {
                 // ===== 情况1：有空位，直接填充 =====
-                targetRow = GridRows[2 + _currentDataIndex];
+                targetRow = GridRows[1 + _currentDataIndex];
                 _currentDataIndex++;
             }
             else
             {
                 // ===== 情况2：已满，FIFO队列 =====
-                // 步骤1：移除第3行（GridRows[2]）
-                // 步骤2：第4-10行数据前移
-                for (int i = 2; i < 9; i++)
+                for (int i = 1; i < 8; i++)
                 {
                     GridRows[i].CopyFrom(GridRows[i + 1]);
                 }
-                // 步骤3：最后一行（GridRows[9]）作为目标行
-                targetRow = GridRows[9];
+                // 最后一行（GridRows[8]）作为目标行
+                targetRow = GridRows[8];
                 // FIFO前移后也需要触发刷新
                 ForceRefreshAllRows();
             }
@@ -670,6 +700,49 @@ namespace Luster.Motion.ReportUI.ViewModel
             targetRow.CalculateCTValues();
 
             // 强制刷新：触发所有行的DynamicColumns属性通知
+            ForceRefreshAllRows();
+        }
+
+        /// <summary>
+        /// 追加数据到当前行（不创建新行）
+        /// 用于同一周期内多次收到数据时，合并到同一行
+        /// </summary>
+        public void AppendToCurrentRow(Dictionary<string, string> dynamicData)
+        {
+            if (_currentDataIndex <= 0) return;
+            if (dynamicData == null || dynamicData.Count == 0) return;
+
+            var currentRow = GridRows[_currentDataIndex];
+            var targetCTRRow = GridRows[0];
+
+            foreach (var kvp in dynamicData)
+            {
+                var existingCol = currentRow.DynamicColumns.FirstOrDefault(c => c.ColumnName == kvp.Key);
+
+                // 获取目标值用于比较
+                var targetColumn = targetCTRRow.DynamicColumns.FirstOrDefault(c => c.ColumnName == kvp.Key);
+                double targetValue = 0;
+                if (targetColumn != null && double.TryParse(targetColumn.Value, out double tv))
+                    targetValue = tv;
+                double currentValue = 0;
+                double.TryParse(kvp.Value, out currentValue);
+                bool isOverTarget = currentValue > targetValue;
+
+                if (existingCol != null)
+                {
+                    // 更新已有列的值
+                    existingCol.Value = kvp.Value;
+                    existingCol.IsOverTarget = isOverTarget;
+                }
+                else
+                {
+                    // 新列，追加
+                    currentRow.DynamicColumns.Add(new DynamicColumnInfo(kvp.Key, kvp.Value, isOverTarget) { RowType = CTRowType.Data });
+                }
+            }
+
+            // 重新计算总CT、净CT、等待时间
+            currentRow.CalculateCTValues();
             ForceRefreshAllRows();
         }
 
@@ -837,6 +910,14 @@ namespace Luster.Motion.ReportUI.ViewModel
 
         /// <summary>行类型</summary>
         public CTRowType RowType { get; set; }
+
+        /// <summary>行高度（用于表头行动态计算高度）</summary>
+        private double _rowHeight = 35;
+        public double RowHeight
+        {
+            get => _rowHeight;
+            set => SetProperty(ref _rowHeight, value);
+        }
 
         /// <summary>行索引（从1开始）</summary>
         public int RowIndex { get; set; }

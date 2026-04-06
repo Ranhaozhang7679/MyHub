@@ -4,7 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
+using System.Windows.Media;
 
 namespace Luster.Motion.ReportUI.Views
 {
@@ -190,12 +192,31 @@ namespace Luster.Motion.ReportUI.Views
                     Width = new DataGridLength(60, DataGridLengthUnitType.Pixel)
                 });
 
-                dataGrid.Columns.Add(new DataGridTextColumn
+                // 等待时间列（第5列），表头设为黄色背景，使用ControlTemplate确保高度自适应
+                var waitTimeColumn = new DataGridTextColumn
                 {
                     Header = "等待时间",
                     Binding = new Binding("WaitTime") { Mode = BindingMode.OneWay },
                     Width = new DataGridLength(70, DataGridLengthUnitType.Pixel)
-                });
+                };
+                var waitBorder = new FrameworkElementFactory(typeof(Border));
+                waitBorder.SetValue(Border.BackgroundProperty, Brushes.Yellow);
+                waitBorder.SetValue(Border.BorderBrushProperty, new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CCCCCC")));
+                waitBorder.SetValue(Border.BorderThicknessProperty, new Thickness(4, 2, 4, 2));
+                waitBorder.SetValue(Border.PaddingProperty, new Thickness(0, 0, 0, 1));
+                var waitText = new FrameworkElementFactory(typeof(TextBlock));
+                waitText.SetBinding(TextBlock.TextProperty, new Binding("Content") { RelativeSource = new RelativeSource(RelativeSourceMode.TemplatedParent) });
+                waitText.SetValue(TextBlock.TextWrappingProperty, TextWrapping.Wrap);
+                waitText.SetValue(TextBlock.TextAlignmentProperty, TextAlignment.Center);
+                waitText.SetValue(TextBlock.FontWeightProperty, FontWeights.Bold);
+                waitText.SetValue(TextBlock.ForegroundProperty, Brushes.Black);
+                waitText.SetValue(TextBlock.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+                waitBorder.AppendChild(waitText);
+                waitTimeColumn.HeaderStyle = new Style(typeof(DataGridColumnHeader))
+                {
+                    Setters = { new Setter(DataGridColumnHeader.TemplateProperty, new ControlTemplate { VisualTree = waitBorder }) }
+                };
+                dataGrid.Columns.Add(waitTimeColumn);
 
                 // ========== 动态列（第6列起）==========
                 foreach (var columnName in columnNames)
@@ -224,7 +245,6 @@ namespace Luster.Motion.ReportUI.Views
                     factory.SetValue(TextBlock.TextWrappingProperty, TextWrapping.Wrap);
                     factory.SetValue(TextBlock.TextAlignmentProperty, TextAlignment.Center);
                     factory.SetValue(TextBlock.MaxWidthProperty, 85.0);
-                    factory.SetValue(TextBlock.VerticalAlignmentProperty, VerticalAlignment.Center);
 
                     templateColumn.CellTemplate = new DataTemplate { VisualTree = factory };
                     dataGrid.Columns.Add(templateColumn);

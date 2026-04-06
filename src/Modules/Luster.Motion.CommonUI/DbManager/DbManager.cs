@@ -360,6 +360,47 @@ namespace Luster.Motion.CommonUI
             return new List<string>(listA);
         }
 
+        public Dictionary<string, List<string>> GetCTConfigFullActionNames()
+        {
+            var result = new Dictionary<string, List<string>>(); var kvList = ctConfigs.ToList();
+            for (int i = 0; i + 1 < kvList.Count; i += 2)
+            {
+                var firstValue = kvList[i].Value;
+                string[] parts = firstValue.Split('_');
+                if (parts.Length < 2) continue;
+
+                string stationName = parts[1];
+
+                if (!result.ContainsKey(stationName))
+                {
+                    result[stationName] = new List<string>();
+                    result[stationName].Add($"CT1_{stationName}_工站开始");
+                }
+
+                result[stationName].Add(firstValue);
+
+                bool isLastForStation = true;
+                if (i + 2 < kvList.Count)
+                {
+                    var nextValue = kvList[i + 2].Value;
+                    string[] nextParts = nextValue.Split('_');
+                    if (nextParts.Length > 1 && parts[1] == nextParts[1] && nextParts[0] !=
+        "CT2")
+                    {
+                        isLastForStation = false;
+                    }
+                }
+
+                if (isLastForStation)
+                {
+                    string nextCtNumber = IncrementCtNumber(parts[0]);
+                    result[stationName].Add($"{nextCtNumber}_{stationName}_工站结束");
+                }
+            }
+
+            return result;
+        }
+
         /// <summary>
         /// AOI 数据存储
         /// </summary>
