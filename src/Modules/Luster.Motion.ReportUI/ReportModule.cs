@@ -62,6 +62,7 @@ namespace Luster.Motion.ReportUI
             containerRegistry.RegisterForNavigation<ChangeContent, ChangeContentVM>();
             containerRegistry.RegisterForNavigation<TaikeContent, TaikeContentVM>();
             containerRegistry.RegisterForNavigation<CTLogStatContent, CTLogStatContentVM>();
+            containerRegistry.RegisterForNavigation<CTLogStatRTContent, CTLogStatRTContentVM>();
             LoadReportDlls();
 
             foreach (var item in ViewAndVM)

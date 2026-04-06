@@ -61,6 +61,7 @@ using System.Windows.Documents;
 using System.Text.RegularExpressions;
 using System.Runtime.Remoting.Metadata.W3cXsd2001;
 using HandyControl.Controls;
+using Prism.Events;
 
 namespace Luster.Motion.CommonUI
 {
@@ -87,7 +88,7 @@ namespace Luster.Motion.CommonUI
         //private readonly IConfigManager _configManager;
         // 2025-4-24
         public WebConfig sysConfig = null;
-      
+
         private AlarmTimeCache _alarmTimeCache;
         // 数据写入频率
         private const int DbFrequency = 50;
@@ -108,13 +109,15 @@ namespace Luster.Motion.CommonUI
         private IMotionEngine _motionEngine;
         private WhileTool whileTool = null;
         private ICacheManager _cacheManager;
+        private IEventAggregator _eventAggregator;
 
-        public DbManager(IRepository repository, IMotionController motionController, IMotionEngine motionEngine, ICacheManager cacheManager)
+        public DbManager(IRepository repository, IMotionController motionController, IMotionEngine motionEngine, ICacheManager cacheManager, IEventAggregator eventAggregator)
         {
             _repository = repository;
             _motionController = motionController;
             _cacheManager = cacheManager;
             _motionEngine = motionEngine;
+            _eventAggregator = eventAggregator;
             // 监听出料事件写入数据库
             motionEngine.ProUnloadedDBEvent -= MotionEngine_ProUnloadedEvent;
             motionEngine.ProUnloadedDBEvent += MotionEngine_ProUnloadedEvent;
@@ -142,7 +145,7 @@ namespace Luster.Motion.CommonUI
             System.Threading.Tasks.Task.Run(() =>
             {
                 WriteProductInfoToDB();
-            });   
+            });
         }
         string oldHeader = "";
         // 选择一个可用的磁盘作为日志存储路径的根目录
@@ -344,12 +347,17 @@ namespace Luster.Motion.CommonUI
                             timeSlotByModule[stationName] = DateTime.MinValue;
                         }
                     }
-                }               
+                }
             }
             catch (Exception ex)
             {
                 //OnLog($"CtConfig.csv,读取异常。ex={ex.StackTrace}", "machineParameter");
             }
+        }
+
+        public List<string> GetCTConfigStationNames()
+        {
+            return new List<string>(listA);
         }
 
         /// <summary>
@@ -974,7 +982,7 @@ namespace Luster.Motion.CommonUI
             fileName = tbCTInfos2[0].模块;
             // 移除Start和End
             // fileName = fileName.Replace("-Start", "").Replace("-Middle", "").Replace("-End", "");
-            string timeTag = DateTime.Now.ToString("yyyyMMddHH"); 
+            string timeTag = DateTime.Now.ToString("yyyyMMddHH");
             var fullName2 = Path.Combine(folderName2, $"STEPCT_{fileName}_{timeTag}.csv");
             try
             {
@@ -1213,7 +1221,7 @@ namespace Luster.Motion.CommonUI
                             结束时间 = second.结束时间,
                             Actual_CT = Math.Round((second.结束时间 - first.开始时间).TotalMilliseconds / 1000.0, 3),
                             Target_CT = first.Target_CT,
-                            Gap = Math.Round((second.结束时间 - first.开始时间).TotalMilliseconds / 1000.0 - first.Target_CT, 3), 
+                            Gap = Math.Round((second.结束时间 - first.开始时间).TotalMilliseconds / 1000.0 - first.Target_CT, 3),
                             Time_Slot = timeSlotByModule[parts[1]] //tbStartPerUnit.开始时间
                         };
                         ctInfoSelected.Add(infoSelect);
@@ -1255,7 +1263,10 @@ namespace Luster.Motion.CommonUI
                         ctInfoSelected.Add(tbEnd);
                     }
                 }
-            } 
+            }
+
+            // 2026-3-21 发布CT统计实时事件
+            _eventAggregator?.GetEvent<CTStatRealTimeEvent>().Publish(ctInfoSelected);
 
             //// 2025-7-1 根据配置文件筛选并生成最终存入CTLog的数据
             ////  Process ctInfos
