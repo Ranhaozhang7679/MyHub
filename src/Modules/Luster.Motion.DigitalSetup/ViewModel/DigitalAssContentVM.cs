@@ -23,9 +23,12 @@
 
 using Luster.Common.Assets.FloatingInfo.Services;
 using Luster.Motion.CommonUI;
+using Luster.Motion.CommonUI.Events;
 using Luster.Motion.CommonUI.ViewModel;
+using Luster.Motion.DataStruct;
 using Luster.Motion.DigitalSetup.Datas;
 using Luster.Motion.DigitalSetup.Services;
+using Luster.Motion.TaskFlow.Engine;
 using Prism.Commands;
 using Prism.Events;
 using Prism.Regions;
@@ -88,6 +91,16 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             set { SetProperty(ref _reportSelectVisible, value); }
         }
 
+        /// <summary>
+        /// 设备是否正在运行（用于界面禁用和提示显示）
+        /// </summary>
+        private bool _isMachineRunning = false;
+        public bool IsMachineRunning
+        {
+            get { return _isMachineRunning; }
+            set { SetProperty(ref _isMachineRunning, value); }
+        }
+
 
         /// <summary>
         /// 构造函数
@@ -126,6 +139,9 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
             // 订阅状态变更事件
             _checkStatusService.StatusChanged += OnCheckStatusChanged;
+
+            // 订阅设备运行状态事件，用于禁用界面
+            cBus.EventBus.GetEvent<OperationEvent>().Subscribe(OnMachineStatusChanged);
 
             BuildPages();
         }
@@ -331,6 +347,24 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     }
                 });
             }
+        }
+
+        /// <summary>
+        /// 设备运行状态变更处理 - 运行时禁用界面，停止时恢复
+        /// </summary>
+        private void OnMachineStatusChanged(StatusChanged statusChanged)
+        {
+            Application.Current?.Dispatcher.Invoke(() =>
+            {
+                if (statusChanged.Dst == EngineStatus.Running || statusChanged.Dst == EngineStatus.MaterialPending)
+                {
+                    IsMachineRunning = true;
+                }
+                else if (statusChanged.Dst == EngineStatus.Stop || statusChanged.Dst == EngineStatus.Idle)
+                {
+                    IsMachineRunning = false;
+                }
+            });
         }
 
         /// <summary>
