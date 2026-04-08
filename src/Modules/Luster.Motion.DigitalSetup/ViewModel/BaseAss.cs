@@ -1192,7 +1192,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         }
         // 保存当前页面标识
         private string _currentPage;
-        protected void Selected(CommonPageModel obj)
+        protected virtual void Selected(CommonPageModel obj)
         {
             if (obj != null)
             {

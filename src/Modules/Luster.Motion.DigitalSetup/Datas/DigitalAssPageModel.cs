@@ -298,6 +298,9 @@ namespace Luster.Motion.DigitalSetup.Datas
                          new DigitalAssPageModel()
                         { Name = "AutoVerication",IsSelected=false, Region = "AutoVericationContent",
                             IsVisible=true,IsEnabled=true ,Iconfont="\xe609" },
+                          new DigitalAssPageModel()
+                        { Name = "BUSOP",IsSelected=false, Region = "BusopContent",
+                            IsVisible=true,IsEnabled=true ,Iconfont="\xe609" },
 
                     };
 

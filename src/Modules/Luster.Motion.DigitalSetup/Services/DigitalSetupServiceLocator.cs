@@ -29,5 +29,15 @@ namespace Luster.Motion.DigitalSetup.Services
         /// 获取浮动信息服务
         /// </summary>
         public static IFloatingInfoService FloatingInfoService => _container?.Resolve<IFloatingInfoService>();
+
+        /// <summary>
+        /// IoC 容器，供需要手动解析服务的场景使用
+        /// </summary>
+        public static IContainerProvider Container => _container;
+
+        /// <summary>
+        /// 获取 BUSOP 配置服务
+        /// </summary>
+        public static BusopConfigService BusopConfigService => _container?.Resolve<BusopConfigService>();
     }
 }
