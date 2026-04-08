@@ -210,8 +210,8 @@ namespace Luster.Motion.SubSystem.ViewModel
                         NavigateDebug(target);
                     }
                     break;
-                case 2: // 数字架线标签页
-                    // 暂无子菜单，不需要导航
+                case 2: // 数字架线标签页 - 导航到 DigitalAssContent
+                    _regionManager.RequestNavigate("DigitalAssContentRegion", "DigitalAssContent");
                     break;
             }
         }

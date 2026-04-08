@@ -19,8 +19,12 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- 标签页导航 - 下划线样式 -->
-        <Grid Grid.Row="0" Background="#FFFFFF" Margin="24,24,24,0">
+        <!-- 标签页导航 -->
+        <Grid Grid.Row="0" Margin="5,5,5,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
@@ -29,121 +33,115 @@
             </Grid.ColumnDefinitions>
 
             <!-- 配置标签页 -->
-            <Border Grid.Column="0" Padding="0,0,24,0" Cursor="Hand">
+            <Border Grid.Column="0" Padding="16,10,16,8" Margin="0,0,4,0" Cursor="Hand"
+                    CornerRadius="6,6,0,0">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Background" Value="#FFFFFF" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedTabIndex}" Value="0">
+                                <Setter Property="Background" Value="#3B82F6" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
                 <hc:Interaction.Triggers>
                     <hc:EventTrigger EventName="MouseLeftButtonUp">
                         <hc:EventToCommand Command="{Binding SelectTabCommand}" CommandParameter="0" />
                     </hc:EventTrigger>
                 </hc:Interaction.Triggers>
-                <StackPanel>
-                    <TextBlock FontSize="20" FontWeight="Normal">
-                        <Run Text="1. " />
-                        <Run Text="{lang:Lang Key={x:Static lang:LangKeys.Configuration}}" />
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Foreground" Value="#6B7280" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedTabIndex}" Value="0">
-                                        <Setter Property="Foreground" Value="#3B82F6" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
-                    <Border Height="2" Margin="0,12,0,0">
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="Background" Value="Transparent" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedTabIndex}" Value="0">
-                                        <Setter Property="Background" Value="#3B82F6" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                    </Border>
-                </StackPanel>
+                <TextBlock FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center">
+                    <Run Text="1. " />
+                    <Run Text="{lang:Lang Key={x:Static lang:LangKeys.Configuration}}" />
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="#6B7280" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedTabIndex}" Value="0">
+                                    <Setter Property="Foreground" Value="#FFFFFF" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
             </Border>
 
             <!-- 调试标签页 -->
-            <Border Grid.Column="1" Padding="0,0,24,0" Cursor="Hand">
+            <Border Grid.Column="1" Padding="16,10,16,8" Margin="4,0,4,0" Cursor="Hand"
+                    CornerRadius="6,6,0,0">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Background" Value="#FFFFFF" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedTabIndex}" Value="1">
+                                <Setter Property="Background" Value="#3B82F6" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
                 <hc:Interaction.Triggers>
                     <hc:EventTrigger EventName="MouseLeftButtonUp">
                         <hc:EventToCommand Command="{Binding SelectTabCommand}" CommandParameter="1" />
                     </hc:EventTrigger>
                 </hc:Interaction.Triggers>
-                <StackPanel>
-                    <TextBlock FontSize="20" FontWeight="Normal">
-                        <Run Text="2. " />
-                        <Run Text="{lang:Lang Key={x:Static lang:LangKeys.Debug}}" />
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Foreground" Value="#6B7280" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedTabIndex}" Value="1">
-                                        <Setter Property="Foreground" Value="#3B82F6" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
-                    <Border Height="2" Margin="0,12,0,0">
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="Background" Value="Transparent" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedTabIndex}" Value="1">
-                                        <Setter Property="Background" Value="#3B82F6" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                    </Border>
-                </StackPanel>
+                <TextBlock FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center">
+                    <Run Text="2. " />
+                    <Run Text="{lang:Lang Key={x:Static lang:LangKeys.Debug}}" />
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="#6B7280" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedTabIndex}" Value="1">
+                                    <Setter Property="Foreground" Value="#FFFFFF" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
             </Border>
 
             <!-- 数字架线标签页 -->
-            <Border Grid.Column="2" Cursor="Hand">
+            <Border Grid.Column="2" Padding="16,10,16,8" Margin="4,0,0,0" Cursor="Hand"
+                    CornerRadius="6,6,0,0">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Setter Property="Background" Value="#FFFFFF" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding SelectedTabIndex}" Value="2">
+                                <Setter Property="Background" Value="#3B82F6" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
                 <hc:Interaction.Triggers>
                     <hc:EventTrigger EventName="MouseLeftButtonUp">
                         <hc:EventToCommand Command="{Binding SelectTabCommand}" CommandParameter="2" />
                     </hc:EventTrigger>
                 </hc:Interaction.Triggers>
-                <StackPanel>
-                    <TextBlock FontSize="20" FontWeight="Normal">
-                        <Run Text="3. " />
-                        <Run Text="{lang:Lang Key={x:Static lang:LangKeys.DigitalAss}}" />
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Foreground" Value="#6B7280" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedTabIndex}" Value="2">
-                                        <Setter Property="Foreground" Value="#3B82F6" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
-                    <Border Height="2" Margin="0,12,0,0">
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="Background" Value="Transparent" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding SelectedTabIndex}" Value="2">
-                                        <Setter Property="Background" Value="#3B82F6" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                    </Border>
-                </StackPanel>
+                <TextBlock FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center">
+                    <Run Text="3. " />
+                    <Run Text="{lang:Lang Key={x:Static lang:LangKeys.DigitalAss}}" />
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="#6B7280" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding SelectedTabIndex}" Value="2">
+                                    <Setter Property="Foreground" Value="#FFFFFF" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
             </Border>
+
+            <!-- 底部分隔线 -->
+            <Border Grid.Row="1" Grid.ColumnSpan="4" Height="2" Background="#3B82F6" />
         </Grid>
 
         <!-- 内容区域 -->
-        <Grid Grid.Row="1" Margin="24,0,24,24">
+        <Grid Grid.Row="1" Margin="5,0,5,5">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="240" />
+                <ColumnDefinition Width="Auto" MinWidth="160"/>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
@@ -166,7 +164,7 @@
                     </Style>
                 </Grid.Style>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="240" />
+                    <ColumnDefinition Width="Auto" MinWidth="160"/>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
@@ -258,7 +256,7 @@
                 </Border>
 
                 <!-- 分隔线 -->
-                <Border Grid.Column="1" Width="1" Background="#E5E7EB" />
+                <GridSplitter Grid.Column="1" Width="3" Background="#E5E7EB" />
 
                 <!-- 配置内容区域 -->
                 <hc:ScrollViewer Grid.Column="2" Background="#FFFFFF">
@@ -316,7 +314,7 @@
                     </Style>
                 </Grid.Style>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="240" />
+                    <ColumnDefinition Width="Auto" MinWidth="160"/>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
@@ -408,7 +406,7 @@
                 </Border>
 
                 <!-- 分隔线 -->
-                <Border Grid.Column="1" Width="1" Background="#E5E7EB" />
+                <GridSplitter Grid.Column="1" Width="5" Background="#E5E7EB" />
 
                 <!-- 调试内容区域 -->
                 <Border Grid.Column="2" Background="#FFFFFF">
@@ -448,10 +446,11 @@
                 </Border>
             </Grid>
 
-            <!-- 数字架线标签页内容 -->
-            <Grid Grid.Column="0" Grid.ColumnSpan="3">
-                <Grid.Style>
-                    <Style TargetType="Grid">
+            <!-- 数字架线标签页内容 - 直接承载 DigitalAssContent（自带左侧列表） -->
+            <ContentControl Grid.Column="0" Grid.ColumnSpan="3"
+                            prism:RegionManager.RegionName="DigitalAssContentRegion">
+                <ContentControl.Style>
+                    <Style TargetType="ContentControl">
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding SelectedTabIndex, FallbackValue=0}" Value="2">
                                 <Setter Property="Visibility" Value="Visible" />
@@ -464,48 +463,8 @@
                             </DataTrigger>
                         </Style.Triggers>
                     </Style>
-                </Grid.Style>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="240" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-
-                <!-- 数字架线侧边栏 -->
-                <Border Grid.Column="0" Background="#FFFFFF" BorderBrush="#E5E7EB" BorderThickness="0,0,1,0">
-                    <StackPanel>
-                        <!-- 侧边栏标题 -->
-                        <TextBlock
-                            Margin="24,24,24,16"
-                            FontSize="14"
-                            FontWeight="Normal"
-                            Foreground="#6B7280"
-                            Text="数字架线" />
-
-                        <!-- 占位提示 -->
-                        <TextBlock
-                            Margin="24,16,24,0"
-                            FontSize="14"
-                            Foreground="#9CA3AF"
-                            Text="（功能开发中...）" />
-                    </StackPanel>
-                </Border>
-
-                <!-- 分隔线 -->
-                <Border Grid.Column="1" Width="1" Background="#E5E7EB" />
-
-                <!-- 数字架线内容区域 -->
-                <Border Grid.Column="2" Background="#FFFFFF">
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock FontSize="24" Foreground="#9CA3AF" Text="数字架线功能" />
-                        <TextBlock
-                            Margin="0,12,0,0"
-                            FontSize="14"
-                            Foreground="#9CA3AF"
-                            Text="由其他团队开发，敬请期待" />
-                    </StackPanel>
-                </Border>
-            </Grid>
+                </ContentControl.Style>
+            </ContentControl>
         </Grid>
     </Grid>
 </UserControl>
