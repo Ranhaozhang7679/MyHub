@@ -1,4 +1,4 @@
-﻿#region 作者和版权
+#region 作者和版权
 /*************************************************************************************
 * CLR 版本:       4.0.30319.42000
 * 类 名 称:       MaintainItemModel
@@ -94,6 +94,49 @@ namespace Luster.SimDevice.EngineUI.Models
 
         public IDeviceError Tag { get; set; }
 
+        /// <summary>
+        /// 报警种类下拉选项列表
+        /// </summary>
+        public List<string> AlarmCategoryOptions => ErrorItemCustomModel.AlarmCategoryOptions;
+
+        /// <summary>
+        /// 报警种类
+        /// </summary>
+        private string _alarmCategory;
+        public string AlarmCategory
+        {
+            get { return _alarmCategory; }
+            set
+            {
+                string src = _alarmCategory;
+                SetProperty(ref _alarmCategory, value);
+                if (Tag != null && src != value)
+                {
+                    var vDevice = Tag as Luster.Motion.DataStruct.Virtual.VirtualDeviceBase;
+                    if (vDevice != null) vDevice.AlarmCategory = value;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 维修动作
+        /// </summary>
+        private string _repairAction;
+        public string RepairAction
+        {
+            get { return _repairAction; }
+            set
+            {
+                string src = _repairAction;
+                SetProperty(ref _repairAction, value);
+                if (Tag != null && src != value)
+                {
+                    var vDevice = Tag as Luster.Motion.DataStruct.Virtual.VirtualDeviceBase;
+                    if (vDevice != null) vDevice.RepairAction = value;
+                }
+            }
+        }
+
 
         /// <summary>
         /// 错误代码
@@ -108,6 +151,9 @@ namespace Luster.SimDevice.EngineUI.Models
             ErrorCode = error.Value;
             Tag = tag;
             errorForeignMessage = tag.ErrorMessage;
+            var vDevice = tag as Luster.Motion.DataStruct.Virtual.VirtualDeviceBase;
+            _alarmCategory = vDevice?.AlarmCategory;
+            _repairAction = vDevice?.RepairAction;
         }
     }
 }

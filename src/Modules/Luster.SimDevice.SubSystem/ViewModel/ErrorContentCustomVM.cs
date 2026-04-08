@@ -1,4 +1,4 @@
-﻿using Luster.Common.Assets;
+using Luster.Common.Assets;
 using Luster.Common.Tools;
 using Luster.Motion.DataStruct;
 using Luster.Motion.DataStruct.DataModels;
@@ -111,6 +111,8 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                     r.Parameters.TryGetValue<string>("AlarmCode", out var alarmCode);
                     r.Parameters.TryGetValue<string>("AlarmContent", out var alarmContent);
                     r.Parameters.TryGetValue<string>("AlarmEnglish", out var alarmEnglish);
+                    r.Parameters.TryGetValue<string>("AlarmCategory", out var alarmCategory);
+                    r.Parameters.TryGetValue<string>("RepairAction", out var repairAction);
 
                     // 判断报警代码是否已存在
                     if (!string.IsNullOrEmpty(alarmCode) && ErrorList.Any(e => e.AlarmCode == alarmCode))
@@ -119,11 +121,13 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                         return;
                     }
 
-                    var newModel = new ErrorItemCustomModel(alarmCode, alarmContent, alarmEnglish)
+                    var newModel = new ErrorItemCustomModel(alarmCode, alarmContent, alarmEnglish, alarmCategory ?? "", repairAction ?? "")
                     {
                         AlarmCode = alarmCode,
                         AlarmContent = alarmContent,
                         AlarmEnglish = alarmEnglish,
+                        AlarmCategory = alarmCategory ?? "",
+                        RepairAction = repairAction ?? "",
                     };
                     newModel.PropertyChanged += Item_PropertyChanged;
                     ErrorList.Add(newModel);
@@ -219,7 +223,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                 var csvLines = new List<string>();
 
                 // 添加CSV表头
-                csvLines.Add("AlarmCode,AlarmContent,AlarmEnglish");
+                csvLines.Add("AlarmCode,AlarmContent,AlarmEnglish,AlarmCategory,RepairAction");
 
                 // 添加数据行
                 foreach (var item in items)
@@ -227,8 +231,10 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                     // 处理可能包含逗号的内容（用引号包围）
                     var content = EscapeCsvField(item.AlarmContent ?? "");
                     var english = EscapeCsvField(item.AlarmEnglish ?? "");
+                    var category = EscapeCsvField(item.AlarmCategory ?? "");
+                    var repairAction = EscapeCsvField(item.RepairAction ?? "");
 
-                    csvLines.Add($"{item.AlarmCode},{content},{english}");
+                    csvLines.Add($"{item.AlarmCode},{content},{english},{category},{repairAction}");
                 }
 
                 // 写入文件
@@ -285,11 +291,15 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                         var alarmCode = fields[0];
                         var alarmContent = UnescapeCsvField(fields[1]);
                         var alarmEnglish = UnescapeCsvField(fields[2]);
+                        var alarmCategory = fields.Length > 3 ? UnescapeCsvField(fields[3]) : "";
+                        var repairAction = fields.Length > 4 ? UnescapeCsvField(fields[4]) : "";
 
                         var newModel = new ErrorItemCustomModel(
                             alarmCode: alarmCode,
                             alarmContent: alarmContent,
-                            alarmEnglish: alarmEnglish
+                            alarmEnglish: alarmEnglish,
+                            alarmCategory: alarmCategory,
+                            repairAction: repairAction
                         );
                         newModel.PropertyChanged += Item_PropertyChanged;
                         ErrorList.Add(newModel);
@@ -394,15 +404,17 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                     var csvLines = new List<string>();
 
                     // 添加CSV表头
-                    csvLines.Add("AlarmCode,AlarmContent,AlarmEnglish");
+                    csvLines.Add("AlarmCode,AlarmContent,AlarmEnglish,AlarmCategory,RepairAction");
 
                     // 添加数据行
                     foreach (var item in items)
                     {
                         var content = EscapeCsvField(item.AlarmContent ?? "");
                         var english = EscapeCsvField(item.AlarmEnglish ?? "");
+                        var category = EscapeCsvField(item.AlarmCategory ?? "");
+                        var repairAction = EscapeCsvField(item.RepairAction ?? "");
 
-                        csvLines.Add($"{item.AlarmCode},{content},{english}");
+                        csvLines.Add($"{item.AlarmCode},{content},{english},{category},{repairAction}");
                     }
 
                     // 写入文件
@@ -455,7 +467,9 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                         var newModel = new ErrorItemCustomModel(
                             importedItem.AlarmCode,
                             importedItem.AlarmContent,
-                            importedItem.AlarmEnglish
+                            importedItem.AlarmEnglish,
+                            importedItem.AlarmCategory,
+                            importedItem.RepairAction
                         );
                         newModel.PropertyChanged += Item_PropertyChanged;
                         ErrorList.Add(newModel);
@@ -466,6 +480,8 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                         // 更新现有项
                         existingItem.AlarmContent = importedItem.AlarmContent;
                         existingItem.AlarmEnglish = importedItem.AlarmEnglish;
+                        existingItem.AlarmCategory = importedItem.AlarmCategory;
+                        existingItem.RepairAction = importedItem.RepairAction;
                         updatedCount++;
                     }
                 }
@@ -528,7 +544,9 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                             importedItems.Add(new ErrorItemCustomModel(
                                 alarmCode: fields[0],
                                 alarmContent: UnescapeCsvField(fields[1]),
-                                alarmEnglish: UnescapeCsvField(fields[2])
+                                alarmEnglish: UnescapeCsvField(fields[2]),
+                                alarmCategory: fields.Length > 3 ? UnescapeCsvField(fields[3]) : "",
+                                repairAction: fields.Length > 4 ? UnescapeCsvField(fields[4]) : ""
                             ));
                         }
                         else
