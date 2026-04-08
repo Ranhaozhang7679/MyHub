@@ -18,6 +18,12 @@
 	  <Compile Remove="Views\Virtual\VIOContent - 复制.xaml.cs" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Remove="Resources\布尔F.PNG" />
+	  <None Remove="Resources\布尔T.PNG" />
+	  <None Remove="Views\Virtual\Y-.PNG" />
+	</ItemGroup>
+
 
 	<ItemGroup>
 	  <Page Remove="Views\Dialog\NewDeviceDialog.xaml" />
@@ -42,6 +48,12 @@
 	  <ProjectReference Include="..\Luster.Motion.EditorUI\Luster.Motion.EditorUI.csproj" />
 	  <ProjectReference Include="..\Luster.SimDevice.EngineUI\Luster.SimDevice.EngineUI.csproj" />
 	  <ProjectReference Include="..\Luster.SimDevice.Laser\Luster.SimDevice.Laser.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Resource Include="Resources\布尔F.PNG" />
+	  <Resource Include="Resources\布尔T.PNG" />
+	  <Resource Include="Views\Virtual\Y-.PNG" />
 	</ItemGroup>
 
 	<ItemGroup>
