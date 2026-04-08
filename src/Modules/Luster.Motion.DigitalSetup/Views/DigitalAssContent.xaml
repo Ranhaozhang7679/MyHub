@@ -182,5 +182,18 @@
                     Content="⚙"
                     FontSize="16" />
         </Grid>
+
+        <!-- 运行中禁用遮罩及提示 - 覆盖整个界面 -->
+        <Grid Grid.ColumnSpan="5" Background="Transparent" Visibility="{Binding IsMachineRunning, Converter={StaticResource Boolean2VisibilityConverter}}" IsHitTestVisible="True">
+            <Border Background="#80000000">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    FontSize="32"
+                    FontWeight="Bold"
+                    Foreground="Red"
+                    Text="设备运行中，请勿操作" />
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>
