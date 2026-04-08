@@ -1338,6 +1338,15 @@
   <data name="Configure" xml:space="preserve">
     <value>Configure</value>
   </data>
+  <data name="Configuration" xml:space="preserve">
+    <value>Configuration</value>
+  </data>
+  <data name="Debug" xml:space="preserve">
+    <value>Debug</value>
+  </data>
+  <data name="DebugFunction" xml:space="preserve">
+    <value>DebugFunction</value>
+  </data>
   <data name="Flow" xml:space="preserve">
     <value>Flow</value>
   </data>
@@ -3170,5 +3179,11 @@
   </data>
   <data name="GetSlopeIntercept" xml:space="preserve">
     <value>GetSlopeIntercept</value>
+  </data>
+  <data name="KeyParameters" xml:space="preserve">
+    <value>KeyParameters</value>
+  </data>
+  <data name="IntegratedHardware" xml:space="preserve">
+    <value>IntegratedSoftwareHardware</value>
   </data>
 </root>

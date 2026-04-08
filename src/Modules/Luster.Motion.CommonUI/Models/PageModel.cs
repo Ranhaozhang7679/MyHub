@@ -167,6 +167,9 @@ namespace Luster.Motion.CommonUI.Models
                           new PageModel() {
                               Name = "DigitalAss" ,page_IsSelected=false,Region="DigitalAssContent",
                               Iconfont="\xe64a",page_IsVisible=true,page_IsEnabled=true   },
+                          new PageModel() {
+                              Name = "IntegratedHardware" ,page_IsSelected=false,Region="IntegratedHardwareContent",
+                              Iconfont="\xe64a",page_IsVisible=true,page_IsEnabled=true   },
                           new PageModel() { 
                               Name = "Project" ,page_IsSelected=false,Region="ProjectContent",
                               Iconfont="\xe61c",page_IsVisible=true,page_IsEnabled=true   },

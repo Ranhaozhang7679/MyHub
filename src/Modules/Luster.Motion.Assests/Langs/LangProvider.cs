@@ -198,6 +198,7 @@ namespace Luster.Motion.Assests.Langs
 			OnPropertyChanged(nameof(ConfigComputerNet));
 			OnPropertyChanged(nameof(ConfigSoftwareCom));
 			OnPropertyChanged(nameof(ConfigSoftwareNet));
+			OnPropertyChanged(nameof(Configuration));
 			OnPropertyChanged(nameof(Configure));
 			OnPropertyChanged(nameof(Confirm));
 			OnPropertyChanged(nameof(ConfirmButton));
@@ -213,7 +214,7 @@ namespace Luster.Motion.Assests.Langs
 			OnPropertyChanged(nameof(Copy));
 			OnPropertyChanged(nameof(CopyCreate));
 			OnPropertyChanged(nameof(CopySelectedModule));
-            OnPropertyChanged(nameof(CPKTest));
+			OnPropertyChanged(nameof(CPKTest));
 			OnPropertyChanged(nameof(Create));
 			OnPropertyChanged(nameof(CreateProject));
 			OnPropertyChanged(nameof(CreateTime));
@@ -228,7 +229,6 @@ namespace Luster.Motion.Assests.Langs
 			OnPropertyChanged(nameof(Custom));
 			OnPropertyChanged(nameof(CustomModule));
 			OnPropertyChanged(nameof(Cylinder));
-            OnPropertyChanged(nameof(DataValidation));
 			OnPropertyChanged(nameof(DataBase));
 			OnPropertyChanged(nameof(DataDirectory));
 			OnPropertyChanged(nameof(DataMark));
@@ -236,7 +236,10 @@ namespace Luster.Motion.Assests.Langs
 			OnPropertyChanged(nameof(DataProcess));
 			OnPropertyChanged(nameof(DataTransfer));
 			OnPropertyChanged(nameof(DataType));
+			OnPropertyChanged(nameof(DataValidation));
 			OnPropertyChanged(nameof(Day));
+			OnPropertyChanged(nameof(Debug));
+			OnPropertyChanged(nameof(DebugFunction));
 			OnPropertyChanged(nameof(Dec));
 			OnPropertyChanged(nameof(Default));
 			OnPropertyChanged(nameof(DefaultPath));
@@ -414,7 +417,7 @@ namespace Luster.Motion.Assests.Langs
 			OnPropertyChanged(nameof(GetModbus));
 			OnPropertyChanged(nameof(GetPlaneByObj));
 			OnPropertyChanged(nameof(GetPointByObj));
-            OnPropertyChanged(nameof(GetSlopeIntercept));
+			OnPropertyChanged(nameof(GetSlopeIntercept));
 			OnPropertyChanged(nameof(Global));
 			OnPropertyChanged(nameof(GlobalVar));
 			OnPropertyChanged(nameof(GlobalVariable));
@@ -461,6 +464,7 @@ namespace Luster.Motion.Assests.Langs
 			OnPropertyChanged(nameof(Insert));
 			OnPropertyChanged(nameof(InsertPoint));
 			OnPropertyChanged(nameof(InsightType));
+			OnPropertyChanged(nameof(IntegratedHardware));
 			OnPropertyChanged(nameof(Interval10m));
 			OnPropertyChanged(nameof(Interval1h));
 			OnPropertyChanged(nameof(Interval1m));
@@ -484,8 +488,10 @@ namespace Luster.Motion.Assests.Langs
 			OnPropertyChanged(nameof(JudgeString));
 			OnPropertyChanged(nameof(Jump));
 			OnPropertyChanged(nameof(KeyMaterialQuery));
+			OnPropertyChanged(nameof(KeyParameters));
 			OnPropertyChanged(nameof(KeywordMatching));
 			OnPropertyChanged(nameof(KeyWordWithSymbol));
+			OnPropertyChanged(nameof(LADUpload));
 			OnPropertyChanged(nameof(LangComment));
 			OnPropertyChanged(nameof(LaserScan));
 			OnPropertyChanged(nameof(LaserSensor));
@@ -508,7 +514,6 @@ namespace Luster.Motion.Assests.Langs
 			OnPropertyChanged(nameof(Load));
 			OnPropertyChanged(nameof(LoadCell));
 			OnPropertyChanged(nameof(Loading));
-            OnPropertyChanged(nameof(LADUpload));
 			OnPropertyChanged(nameof(LoadingSilo));
 			OnPropertyChanged(nameof(Log));
 			OnPropertyChanged(nameof(LogBackUpDays));
@@ -1346,11 +1351,6 @@ namespace Luster.Motion.Assests.Langs
 		public string AutoFocusing => Lang.AutoFocusing;
 
         /// <summary>
-        ///   查找类似 Auto Verication 的本地化字符串。
-        /// </summary>
-		public string AutoVerication => Lang.AutoVerication;
-
-        /// <summary>
         ///   查找类似 自动灰度 的本地化字符串。
         /// </summary>
 		public string AutoGrayScale => Lang.AutoGrayScale;
@@ -1374,6 +1374,11 @@ namespace Luster.Motion.Assests.Langs
         ///   查找类似 自动运行 的本地化字符串。
         /// </summary>
 		public string AutoRun => Lang.AutoRun;
+
+        /// <summary>
+        ///   查找类似 Auto Verification 的本地化字符串。
+        /// </summary>
+		public string AutoVerication => Lang.AutoVerication;
 
         /// <summary>
         ///   查找类似 手眼标定 的本地化字符串。
@@ -1843,6 +1848,11 @@ namespace Luster.Motion.Assests.Langs
         /// <summary>
         ///   查找类似 配置 的本地化字符串。
         /// </summary>
+		public string Configuration => Lang.Configuration;
+
+        /// <summary>
+        ///   查找类似 配置 的本地化字符串。
+        /// </summary>
 		public string Configure => Lang.Configure;
 
         /// <summary>
@@ -1911,14 +1921,14 @@ namespace Luster.Motion.Assests.Langs
 		public string CopyCreate => Lang.CopyCreate;
 
         /// <summary>
-        ///   查找类似 CPK检测 的本地化字符串。
-        /// </summary>
-        public string CPKTest => Lang.CPKTest;
-
-        /// <summary>
         ///   查找类似 复制需要选中模块[根节点不支持复制] 的本地化字符串。
         /// </summary>
 		public string CopySelectedModule => Lang.CopySelectedModule;
+
+        /// <summary>
+        ///   查找类似 CPK检测 的本地化字符串。
+        /// </summary>
+		public string CPKTest => Lang.CPKTest;
 
         /// <summary>
         ///   查找类似 新建 的本地化字符串。
@@ -1995,8 +2005,6 @@ namespace Luster.Motion.Assests.Langs
         /// </summary>
 		public string DataBase => Lang.DataBase;
 
-        public string DataValidation => Lang.DataValidation;
-
         /// <summary>
         ///   查找类似 数据目录 的本地化字符串。
         /// </summary>
@@ -2028,9 +2036,24 @@ namespace Luster.Motion.Assests.Langs
 		public string DataType => Lang.DataType;
 
         /// <summary>
+        ///   查找类似 数据验证 的本地化字符串。
+        /// </summary>
+		public string DataValidation => Lang.DataValidation;
+
+        /// <summary>
         ///   查找类似 天 的本地化字符串。
         /// </summary>
 		public string Day => Lang.Day;
+
+        /// <summary>
+        ///   查找类似 调试 的本地化字符串。
+        /// </summary>
+		public string Debug => Lang.Debug;
+
+        /// <summary>
+        ///   查找类似 调试功能 的本地化字符串。
+        /// </summary>
+		public string DebugFunction => Lang.DebugFunction;
 
         /// <summary>
         ///   查找类似 减速度 的本地化字符串。
@@ -2917,8 +2940,10 @@ namespace Luster.Motion.Assests.Langs
         /// </summary>
 		public string GetPointByObj => Lang.GetPointByObj;
 
-
-        public string GetSlopeIntercept => Lang.GetSlopeIntercept;
+        /// <summary>
+        ///   查找类似 获取线性KBR值 的本地化字符串。
+        /// </summary>
+		public string GetSlopeIntercept => Lang.GetSlopeIntercept;
 
         /// <summary>
         ///   查找类似 全局 的本地化字符串。
@@ -3151,6 +3176,11 @@ namespace Luster.Motion.Assests.Langs
 		public string InsightType => Lang.InsightType;
 
         /// <summary>
+        ///   查找类似 软硬件调试 的本地化字符串。
+        /// </summary>
+		public string IntegratedHardware => Lang.IntegratedHardware;
+
+        /// <summary>
         ///   查找类似 间隔10分钟 的本地化字符串。
         /// </summary>
 		public string Interval10m => Lang.Interval10m;
@@ -3266,6 +3296,11 @@ namespace Luster.Motion.Assests.Langs
 		public string KeyMaterialQuery => Lang.KeyMaterialQuery;
 
         /// <summary>
+        ///   查找类似 关键参数 的本地化字符串。
+        /// </summary>
+		public string KeyParameters => Lang.KeyParameters;
+
+        /// <summary>
         ///   查找类似 关键字匹配 的本地化字符串。
         /// </summary>
 		public string KeywordMatching => Lang.KeywordMatching;
@@ -3274,6 +3309,11 @@ namespace Luster.Motion.Assests.Langs
         ///   查找类似 关键字 ： 的本地化字符串。
         /// </summary>
 		public string KeyWordWithSymbol => Lang.KeyWordWithSymbol;
+
+        /// <summary>
+        ///   查找类似 LAD Upload 的本地化字符串。
+        /// </summary>
+		public string LADUpload => Lang.LADUpload;
 
         /// <summary>
         ///   查找类似 查找类似 {0} 的本地化字符串。 的本地化字符串。
@@ -3384,11 +3424,6 @@ namespace Luster.Motion.Assests.Langs
         ///   查找类似 运行中 的本地化字符串。
         /// </summary>
 		public string Loading => Lang.Loading;
-
-        /// <summary>
-        ///   查找类似 LAD Upload 的本地化字符串。
-        /// </summary>
-		public string LADUpload => Lang.LADUpload;
 
         /// <summary>
         ///   查找类似 上料仓 的本地化字符串。
@@ -6455,11 +6490,6 @@ namespace Luster.Motion.Assests.Langs
 		public static string AutoGrayScale = nameof(AutoGrayScale);
 
         /// <summary>
-        ///   查找类似 Auto Verication 的本地化字符串。
-        /// </summary>
-		public static string AutoVerication = nameof(AutoVerication);
-
-        /// <summary>
         ///   查找类似 自动压印 的本地化字符串。
         /// </summary>
 		public static string AutomaticEmbossing = nameof(AutomaticEmbossing);
@@ -6478,6 +6508,11 @@ namespace Luster.Motion.Assests.Langs
         ///   查找类似 自动运行 的本地化字符串。
         /// </summary>
 		public static string AutoRun = nameof(AutoRun);
+
+        /// <summary>
+        ///   查找类似 Auto Verification 的本地化字符串。
+        /// </summary>
+		public static string AutoVerication = nameof(AutoVerication);
 
         /// <summary>
         ///   查找类似 手眼标定 的本地化字符串。
@@ -6947,6 +6982,11 @@ namespace Luster.Motion.Assests.Langs
         /// <summary>
         ///   查找类似 配置 的本地化字符串。
         /// </summary>
+		public static string Configuration = nameof(Configuration);
+
+        /// <summary>
+        ///   查找类似 配置 的本地化字符串。
+        /// </summary>
 		public static string Configure = nameof(Configure);
 
         /// <summary>
@@ -7022,7 +7062,7 @@ namespace Luster.Motion.Assests.Langs
         /// <summary>
         ///   查找类似 CPK检测 的本地化字符串。
         /// </summary>
-        public static string CPKTest = nameof(CPKTest);
+		public static string CPKTest = nameof(CPKTest);
 
         /// <summary>
         ///   查找类似 新建 的本地化字符串。
@@ -7130,9 +7170,24 @@ namespace Luster.Motion.Assests.Langs
 		public static string DataType = nameof(DataType);
 
         /// <summary>
+        ///   查找类似 数据验证 的本地化字符串。
+        /// </summary>
+		public static string DataValidation = nameof(DataValidation);
+
+        /// <summary>
         ///   查找类似 天 的本地化字符串。
         /// </summary>
 		public static string Day = nameof(Day);
+
+        /// <summary>
+        ///   查找类似 调试 的本地化字符串。
+        /// </summary>
+		public static string Debug = nameof(Debug);
+
+        /// <summary>
+        ///   查找类似 调试功能 的本地化字符串。
+        /// </summary>
+		public static string DebugFunction = nameof(DebugFunction);
 
         /// <summary>
         ///   查找类似 减速度 的本地化字符串。
@@ -8020,6 +8075,11 @@ namespace Luster.Motion.Assests.Langs
 		public static string GetPointByObj = nameof(GetPointByObj);
 
         /// <summary>
+        ///   查找类似 获取线性KBR值 的本地化字符串。
+        /// </summary>
+		public static string GetSlopeIntercept = nameof(GetSlopeIntercept);
+
+        /// <summary>
         ///   查找类似 全局 的本地化字符串。
         /// </summary>
 		public static string Global = nameof(Global);
@@ -8250,6 +8310,11 @@ namespace Luster.Motion.Assests.Langs
 		public static string InsightType = nameof(InsightType);
 
         /// <summary>
+        ///   查找类似 软硬件调试 的本地化字符串。
+        /// </summary>
+		public static string IntegratedHardware = nameof(IntegratedHardware);
+
+        /// <summary>
         ///   查找类似 间隔10分钟 的本地化字符串。
         /// </summary>
 		public static string Interval10m = nameof(Interval10m);
@@ -8365,6 +8430,11 @@ namespace Luster.Motion.Assests.Langs
 		public static string KeyMaterialQuery = nameof(KeyMaterialQuery);
 
         /// <summary>
+        ///   查找类似 关键参数 的本地化字符串。
+        /// </summary>
+		public static string KeyParameters = nameof(KeyParameters);
+
+        /// <summary>
         ///   查找类似 关键字匹配 的本地化字符串。
         /// </summary>
 		public static string KeywordMatching = nameof(KeywordMatching);
@@ -8373,6 +8443,11 @@ namespace Luster.Motion.Assests.Langs
         ///   查找类似 关键字 ： 的本地化字符串。
         /// </summary>
 		public static string KeyWordWithSymbol = nameof(KeyWordWithSymbol);
+
+        /// <summary>
+        ///   查找类似 LAD Upload 的本地化字符串。
+        /// </summary>
+		public static string LADUpload = nameof(LADUpload);
 
         /// <summary>
         ///   查找类似 查找类似 {0} 的本地化字符串。 的本地化字符串。
@@ -8483,11 +8558,6 @@ namespace Luster.Motion.Assests.Langs
         ///   查找类似 运行中 的本地化字符串。
         /// </summary>
 		public static string Loading = nameof(Loading);
-
-        /// <summary>
-        ///   查找类似 LAD Upload 的本地化字符串。
-        /// </summary>
-		public static string LADUpload = nameof(LADUpload);
 
         /// <summary>
         ///   查找类似 上料仓 的本地化字符串。

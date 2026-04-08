@@ -1458,6 +1458,15 @@ namespace Luster.Motion.Assests.Langs {
         /// <summary>
         ///   查找类似 配置 的本地化字符串。
         /// </summary>
+        public static string Configuration {
+            get {
+                return ResourceManager.GetString("Configuration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 配置 的本地化字符串。
+        /// </summary>
         public static string Configure {
             get {
                 return ResourceManager.GetString("Configure", resourceCulture);
@@ -1803,6 +1812,24 @@ namespace Luster.Motion.Assests.Langs {
         public static string Day {
             get {
                 return ResourceManager.GetString("Day", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 调试 的本地化字符串。
+        /// </summary>
+        public static string Debug {
+            get {
+                return ResourceManager.GetString("Debug", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 调试功能 的本地化字符串。
+        /// </summary>
+        public static string DebugFunction {
+            get {
+                return ResourceManager.GetString("DebugFunction", resourceCulture);
             }
         }
         
@@ -3823,6 +3850,15 @@ namespace Luster.Motion.Assests.Langs {
         }
         
         /// <summary>
+        ///   查找类似 软硬件调试 的本地化字符串。
+        /// </summary>
+        public static string IntegratedHardware {
+            get {
+                return ResourceManager.GetString("IntegratedHardware", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 间隔10分钟 的本地化字符串。
         /// </summary>
         public static string Interval10m {
@@ -4026,6 +4062,15 @@ namespace Luster.Motion.Assests.Langs {
         public static string KeyMaterialQuery {
             get {
                 return ResourceManager.GetString("KeyMaterialQuery", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 关键参数 的本地化字符串。
+        /// </summary>
+        public static string KeyParameters {
+            get {
+                return ResourceManager.GetString("KeyParameters", resourceCulture);
             }
         }
         

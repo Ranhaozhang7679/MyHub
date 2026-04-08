@@ -1341,6 +1341,15 @@
   <data name="Configure" xml:space="preserve">
     <value>配置</value>
   </data>
+  <data name="Configuration" xml:space="preserve">
+    <value>配置</value>
+  </data>
+  <data name="Debug" xml:space="preserve">
+    <value>调试</value>
+  </data>
+  <data name="DebugFunction" xml:space="preserve">
+    <value>调试功能</value>
+  </data>
   <data name="Flow" xml:space="preserve">
     <value>流程</value>
   </data>
@@ -3176,5 +3185,11 @@
   </data>
   <data name="GetSlopeIntercept" xml:space="preserve">
     <value>获取线性KBR值</value>
+  </data>
+  <data name="KeyParameters" xml:space="preserve">
+    <value>关键参数</value>
+  </data>
+  <data name="IntegratedHardware" xml:space="preserve">
+    <value>软硬件调试</value>
   </data>
 </root>
