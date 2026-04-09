@@ -844,6 +844,15 @@ namespace Luster.Motion.Assests.Langs {
         }
         
         /// <summary>
+        ///   查找类似 BUSOP 的本地化字符串。
+        /// </summary>
+        public static string BUSOP {
+            get {
+                return ResourceManager.GetString("BUSOP", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 按钮 的本地化字符串。
         /// </summary>
         public static string Button {

@@ -3192,4 +3192,7 @@
   <data name="IntegratedHardware" xml:space="preserve">
     <value>软硬件调试</value>
   </data>
+  <data name="BUSOP" xml:space="preserve">
+    <value>BUSOP</value>
+  </data>
 </root>

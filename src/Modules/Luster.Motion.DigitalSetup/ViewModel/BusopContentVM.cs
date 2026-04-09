@@ -447,6 +447,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         /// <summary>
         /// 通过 COM 互操作打开文件并激活指定 Sheet 页
         /// 支持 Microsoft Excel 和 WPS 表格
+        /// 使用反射调用，兼容不同 COM 接口
         /// </summary>
         private void OpenExcelToSheet(string filePath, string sheetName)
         {
@@ -462,36 +463,44 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
             if (appType == null)
             {
-                // 未找到任何表格应用，回退为默认程序打开
                 Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
                 return;
             }
 
-            dynamic app = Activator.CreateInstance(appType);
+            object app = null;
+            object workbooks = null;
+            object workbook = null;
             try
             {
-                app.Visible = true;
-                app.DisplayAlerts = false;
+                app = Activator.CreateInstance(appType);
+                app.GetType().InvokeMember("Visible", System.Reflection.BindingFlags.SetProperty, null, app, new object[] { true });
+                app.GetType().InvokeMember("DisplayAlerts", System.Reflection.BindingFlags.SetProperty, null, app, new object[] { false });
 
-                dynamic workbooks = app.Workbooks;
-                dynamic workbook = workbooks.Open(filePath);
+                workbooks = app.GetType().InvokeMember("Workbooks", System.Reflection.BindingFlags.GetProperty, null, app, null);
+                workbook = workbooks.GetType().InvokeMember("Open", System.Reflection.BindingFlags.InvokeMethod, null, workbooks, new object[] { filePath });
 
                 // 查找并激活指定 Sheet
-                dynamic sheets = workbook.Worksheets;
-                for (int i = 1; i <= sheets.Count; i++)
+                object sheets = workbook.GetType().InvokeMember("Worksheets", System.Reflection.BindingFlags.GetProperty, null, workbook, null);
+                int sheetCount = (int)sheets.GetType().InvokeMember("Count", System.Reflection.BindingFlags.GetProperty, null, sheets, null);
+                for (int i = 1; i <= sheetCount; i++)
                 {
-                    dynamic sheet = sheets[i];
-                    if (string.Equals(sheet.Name, sheetName, StringComparison.OrdinalIgnoreCase))
+                    object sheet = sheets.GetType().InvokeMember("Item", System.Reflection.BindingFlags.GetProperty, null, sheets, new object[] { i });
+                    string name = (string)sheet.GetType().InvokeMember("Name", System.Reflection.BindingFlags.GetProperty, null, sheet, null);
+                    if (string.Equals(name, sheetName, StringComparison.OrdinalIgnoreCase))
                     {
-                        sheet.Activate();
+                        sheet.GetType().InvokeMember("Activate", System.Reflection.BindingFlags.InvokeMethod, null, sheet, null);
                         break;
                     }
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // COM 失败时回退
-                //Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
+                System.Diagnostics.Debug.WriteLine($"COM 打开失败: {ex.Message}，回退为默认程序打开");
+                try
+                {
+                    Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
+                }
+                catch { }
             }
         }
 
