@@ -130,6 +130,7 @@ namespace Luster.Motion.Assests.Langs
 			OnPropertyChanged(nameof(BranchGroup));
 			OnPropertyChanged(nameof(Broswer));
 			OnPropertyChanged(nameof(Business));
+			OnPropertyChanged(nameof(BUSOP));
 			OnPropertyChanged(nameof(Button));
 			OnPropertyChanged(nameof(ButtonControl));
 			OnPropertyChanged(nameof(Buzzer));
@@ -1504,6 +1505,11 @@ namespace Luster.Motion.Assests.Langs
         ///   查找类似 业务 的本地化字符串。
         /// </summary>
 		public string Business => Lang.Business;
+
+        /// <summary>
+        ///   查找类似 BUSOP 的本地化字符串。
+        /// </summary>
+		public string BUSOP => Lang.BUSOP;
 
         /// <summary>
         ///   查找类似 按钮 的本地化字符串。
@@ -6638,6 +6644,11 @@ namespace Luster.Motion.Assests.Langs
         ///   查找类似 业务 的本地化字符串。
         /// </summary>
 		public static string Business = nameof(Business);
+
+        /// <summary>
+        ///   查找类似 BUSOP 的本地化字符串。
+        /// </summary>
+		public static string BUSOP = nameof(BUSOP);
 
         /// <summary>
         ///   查找类似 按钮 的本地化字符串。
