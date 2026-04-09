@@ -1,0 +1,42 @@
+digraph 配方流程 {
+  label="配方流程";
+  labelloc=t;
+  fontname="Microsoft YaHei";
+  node [fontname="Microsoft YaHei", fontsize=10];
+  edge [fontname="Microsoft YaHei", fontsize=9];
+  rankdir=TB;
+
+  nVAhfaZF3XIDQAhkbVtpE_26 [label="创建虚拟硬件", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nVAhfaZF3XIDQAhkbVtpE_29 [label="仿真硬件", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nVAhfaZF3XIDQAhkbVtpE_30 [label="虚拟出来的通过连接模式来判断", shape=ellipse, style="filled", fillcolor="#DAE8FC"];
+  nVAhfaZF3XIDQAhkbVtpE_31 [label="配置硬件参数", shape=ellipse, style="filled", fillcolor="#DAE8FC"];
+  nVAhfaZF3XIDQAhkbVtpE_37 [label="执行", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nVAhfaZF3XIDQAhkbVtpE_38 [label="拍照", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nVAhfaZF3XIDQAhkbVtpE_39 [label="轴卡运动", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nVAhfaZF3XIDQAhkbVtpE_40 [label="光源开启", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nVAhfaZF3XIDQAhkbVtpE_41 [label="扫码", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nVAhfaZF3XIDQAhkbVtpE_42 [label="线激光触发", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nVAhfaZF3XIDQAhkbVtpE_45 [label="离线模式", shape=ellipse, style="filled", fillcolor="#FFE6CC"];
+  njdhnDh4jpjLmjEl_1m3O_0 [label="获取值", shape=box, style="filled", fillcolor="#DAE8FC"];
+  njdhnDh4jpjLmjEl_1m3O_9 [label="图片", shape=box, style="filled", fillcolor="#DAE8FC"];
+  njdhnDh4jpjLmjEl_1m3O_4 [label="点云", shape=box, style="filled", fillcolor="#DAE8FC"];
+  njdhnDh4jpjLmjEl_1m3O_5 [label="二维码", shape=box, style="filled", fillcolor="#DAE8FC"];
+  njdhnDh4jpjLmjEl_1m3O_21 [label="关联硬件", shape=box, style="filled", fillcolor="#DAE8FC"];
+
+  nVAhfaZF3XIDQAhkbVtpE_26 -> nVAhfaZF3XIDQAhkbVtpE_29 [];
+  nVAhfaZF3XIDQAhkbVtpE_26 -> nVAhfaZF3XIDQAhkbVtpE_30 [];
+  nVAhfaZF3XIDQAhkbVtpE_26 -> njdhnDh4jpjLmjEl_1m3O_21 [];
+  nVAhfaZF3XIDQAhkbVtpE_29 -> nVAhfaZF3XIDQAhkbVtpE_31 [];
+  nVAhfaZF3XIDQAhkbVtpE_29 -> nVAhfaZF3XIDQAhkbVtpE_37 [];
+  nVAhfaZF3XIDQAhkbVtpE_37 -> nVAhfaZF3XIDQAhkbVtpE_39 [];
+  nVAhfaZF3XIDQAhkbVtpE_37 -> nVAhfaZF3XIDQAhkbVtpE_40 [];
+  nVAhfaZF3XIDQAhkbVtpE_37 -> nVAhfaZF3XIDQAhkbVtpE_38 [];
+  nVAhfaZF3XIDQAhkbVtpE_37 -> nVAhfaZF3XIDQAhkbVtpE_41 [];
+  nVAhfaZF3XIDQAhkbVtpE_37 -> nVAhfaZF3XIDQAhkbVtpE_42 [];
+  nVAhfaZF3XIDQAhkbVtpE_37 -> njdhnDh4jpjLmjEl_1m3O_0 [];
+  njdhnDh4jpjLmjEl_1m3O_0 -> njdhnDh4jpjLmjEl_1m3O_9 [];
+  njdhnDh4jpjLmjEl_1m3O_0 -> njdhnDh4jpjLmjEl_1m3O_4 [];
+  njdhnDh4jpjLmjEl_1m3O_0 -> njdhnDh4jpjLmjEl_1m3O_5 [];
+  njdhnDh4jpjLmjEl_1m3O_21 -> njdhnDh4jpjLmjEl_1m3O_0 [];
+  njdhnDh4jpjLmjEl_1m3O_21 -> nVAhfaZF3XIDQAhkbVtpE_37 [];
+}

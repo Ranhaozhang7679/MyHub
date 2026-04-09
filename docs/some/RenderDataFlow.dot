@@ -1,0 +1,67 @@
+digraph FullArchitecture {
+    fontname="Microsoft YaHei";
+    rankdir=TB;
+    compound=true;
+    node [shape=box, style=filled, fontname="Microsoft YaHei"];
+    edge [fontname="Microsoft YaHei", fontsize=10];
+
+    // ===== 模块定义层 =====
+    subgraph cluster_module {
+        label="模块定义层 (Luster.Module.Motion.*)";
+        style=filled; color="#E8F5E9";
+        Alarm [label="Alarm : Group\n\n[Parameter] AlarmMethod Method (Sort=0)\n[Parameter] bool IsAlarm (Sort=1, DependOn=Normal)\n[Parameter] LExpression Express (Sort=2, DependOn=Condition)\n[Parameter] AlarmType AlarmType (Sort=4)\n[Parameter] string AlarmCode (Sort=5)\n[Parameter] string Message (Sort=6)\n[Parameter] string Detail (Sort=7)\n[Parameter] LightType LightType (Sort=8)\n[Parameter] bool IsBuzzer (Sort=9)\n[Parameter] VAlarm AlarmC (Sort=4, EditorType=VAlarm)", color="lightgreen"];
+        Script [label="Script : MotionFunction", color="lightgreen"];
+        Calculator [label="Calculator : MotionFunction", color="lightgreen"];
+    }
+
+    // ===== 任务流引擎层 =====
+    subgraph cluster_engine {
+        label="任务流引擎层 (Luster.TaskFlow)";
+        style=filled; color="#E3F2FD";
+        MotionFunc [label="MotionFunction\n- Owner 赋值 → InitParameters()\n- BuildDynamicAxisM()\n- WaitFunc()", color="lightblue"];
+        Function [label="Function (基类)\n- InitParameters() 反射 [Parameter]\n- ExportXml() / ParserXml()\n- BuildExternParameters()", color="lightblue"];
+        ParamAttr [label="ParameterAttribute\nName | Type | CN | Group | Sort\nParamType(IN/OUT) | CanRef\nRefOut | Value | EditorType\nDependOns | Visible | IsReadOnly", color="lightyellow", shape=note];
+        ModuleDict [label="IModule.Parameters\nDictionary<string, ParameterAttribute>\n\nSort排序 → 决定显示顺序\nGroup → InputParameter / OutputParameter\nType → 决定编辑器类型", color="lightyellow"];
+    }
+
+    // ===== 控件层 =====
+    subgraph cluster_control {
+        label="控件层 (Luster.Control.Wpf.Motion)";
+        style=filled; color="#FFF3E0";
+        ParamGrid [label="ParamGrid : ListBox\n\nUpdateItems(module)\n  → 遍历 module.Parameters\n  → CreatePropertyItem(p)\n  → 设置 IsBindUI=true\n\n事件:\n  ItemConfigEvent (配置按钮点击)\n  SelectedObjectChanged", color="#FFE0B2"];
+        ParamItem [label="ParamItem\n\nDisplayName | Value | Editor\nParamType(Link/Normal/Save)\nIsRef | ForeColor(Green/Red)\nUIVisible | Sort", color="#FFE0B2"];
+        Resolver [label="ParamResolver\n\nResolveEditor(p) → Editor\n  Type → 匹配 Editor 类型\n  OUT → ReadOnlyTextEditor\n  RefOut != null → CiteEditor\n\nResolveRef(p) → Link/Normal/Save\n  CanRef | Type | ParamType", color="#FFE0B2"];
+        Editors [label="16种 Editors\n\nPlainText   → TextBox\nNumber      → NumericUpDown\nSwitch      → ToggleSwitch\nEnum        → ComboBox\nDevice      → DeviceCtrl + 🔍\nAlarm       → AlarmCtrl + 🔍\nAxisM       → AxisMCtrl\nConfig      → ConfigCtrl (弹窗按钮)\nPath        → FileDialog\nRange       → Min/Max\nCite        → 引用显示(绿色)\nReadOnly    → 只读文本", color="#FFCC80"];
+    }
+
+    // ===== UI 视图层 =====
+    subgraph cluster_ui {
+        label="UI 视图层 (Luster.Motion.EditorUI)";
+        style=filled; color="#FCE4EC";
+        InParamView [label="InParamContent.xaml\n\n<param:ParamGrid\n  SelectedObject=\"{Binding ModuleObj}\">\n\n上下文菜单: RefNodes\n(链接变量选择)", color="#F8BBD0"];
+        InParamVM [label="InParamContentVM\n\n事件订阅:\n  ModuleSelectedEvent → 设置ModuleObj\n  ModuleUpdateEvent → 刷新参数\n  ModulePrevAddEvent → 预处理弹窗\n\n命令:\n  ItemConfigCommand → 按Type分发弹窗\n  ShowLinkCommand → 显示链接菜单\n  LinkCommand → 设置RefOut", color="#F8BBD0"];
+        ModuleView [label="ModuleContent.xaml\n\nItemsControl → Expander 分组\n  → WrapPanel 布局\n  → ModuleNode 卡片(图标+文字)", color="#F8BBD0"];
+        ModuleVM [label="ModuleContentVM\n\nBuildModule(rootNode)\n  LNode → ModuleNode 转换\n\nDoubleAddCommand\n  单击 → DragDrop 拖拽\n  双击 → OnAddModule()", color="#F8BBD0"];
+    }
+
+    // ===== 继承关系 =====
+    Alarm -> MotionFunc [label="继承", style=dashed, color=green];
+    Script -> MotionFunc [label="继承", style=dashed, color=green];
+    Calculator -> MotionFunc [label="继承", style=dashed, color=green];
+    MotionFunc -> Function [label="继承", style=dashed, color=green];
+
+    // ===== 数据流 =====
+    Function -> ParamAttr [label="反射 [Parameter]\nCreateByProperty()", color=blue];
+    ParamAttr -> ModuleDict [label="添加到字典", color=blue];
+    ModuleDict -> ParamGrid [label="SelectedObject 绑定\n(ModuleSelectedEvent)", color=red];
+    ParamGrid -> ParamItem [label="CreatePropertyItem()\n构建 UI 项", color=red];
+    ParamGrid -> Resolver [label="ResolveEditor()", color=red];
+    Resolver -> Editors [label="返回 Editor 实例", color=red];
+    Editors -> ParamItem [label="CreateElement()\nCreateBinding()", color=red];
+
+    // ===== UI 事件流 =====
+    InParamView -> InParamVM [label="事件绑定", color=purple];
+    InParamVM -> ParamGrid [label="ItemConfigCommand\n处理配置弹窗", color=purple];
+    ModuleView -> ModuleVM [label="事件绑定", color=purple];
+    ModuleVM -> ModuleDict [label="OnAddModule()\n添加新模块", color=purple];
+}

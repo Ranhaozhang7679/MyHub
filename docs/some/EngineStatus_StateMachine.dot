@@ -1,0 +1,156 @@
+digraph EngineStatus_StateMachine {
+    // 全局属性
+    rankdir=TB;
+    fontname="Microsoft YaHei";
+    node [fontname="Microsoft YaHei", fontsize=11, style=filled, shape=Mrecord];
+    edge [fontname="Microsoft YaHei", fontsize=9];
+
+    // ===================================================================
+    // 状态节点定义
+    // ===================================================================
+    Idle           [fillcolor="#B0BEC5", label="{空闲中|Idle (0)}"];
+    Homing         [fillcolor="#FFF9C4", label="{回零中|Homing (1)}"];
+    Ready          [fillcolor="#C8E6C9", label="{待启动|Ready (2)}"];
+    Running        [fillcolor="#A5D6A7", label="{运行中|Running (4)}"];
+    Alarm          [fillcolor="#EF9A9A", label="{报警中|Alarm (8)}"];
+    Pause          [fillcolor="#FFE0B2", label="{暂停中|Pause (16)}"];
+    Stop           [fillcolor="#BDBDBD", label="{停止中|Stop (32)}"];
+    Resetting      [fillcolor="#E1BEE7", label="{复位中|Resetting (64)}"];
+    MaterialPending [fillcolor="#B3E5FC", label="{待料中|MaterialPending (128)\l(仅UI显示，不参与状态转换)\l}", style="filled,dashed"];
+
+    // ===================================================================
+    // 优化项：建议新增的缺失状态
+    // ===================================================================
+    HomingFailed   [fillcolor="#FFAB91", label="{回零失败|HomingFailed (建议新增)\l当前无此状态，失败后卡在Homing\l只能Stop重来\l}", style="filled,bold"];
+
+    // ===================================================================
+    // 标准流程
+    // ===================================================================
+    Idle -> Homing     [label="Home()\n(非Running, 非虚拟模式)", color="#1565C0", penwidth=1.5];
+    Homing -> Ready    [label="HomeTask成功", color="#2E7D32", penwidth=1.5];
+    Ready -> Running   [label="RunStations()\n(仅Ready可启动)", color="#2E7D32", penwidth=2.0];
+    Running -> Pause   [label="Pause(isAlarm=false)\n用户主动暂停", color="#E65100", penwidth=1.5];
+    Pause -> Running   [label="Recovery()\npauseResetEvent.Set()", color="#1565C0", penwidth=1.5];
+
+    // ===================================================================
+    // 报警路径
+    // ===================================================================
+    Running -> Alarm   [label="Pause(isAlarm=true)\nWarningTip/FailError/\lTimeout/PopInfoTip报警\l", color="#C62828", penwidth=1.5];
+    Homing -> Alarm    [label="报警触发", color="#C62828", style=dashed];
+
+    // ★ 优化项 #1: PLC报警直接赋值绕过所有守卫 (红色粗线标注问题)
+    Running -> Alarm   [label="⚠ PLC报警\n直接赋值 EngineStatus=Alarm\n绕过Pause()中的IO/灯/机器人清理", color="#FF0000", penwidth=2.5, style=bold];
+
+    // ===================================================================
+    // 复位路径
+    // ===================================================================
+    Alarm -> Resetting [label="Recovery()\n-> Reset()\n(需安全门关闭, 无急停,\l无光栅遮挡, 无PLC报警)\l", color="#6A1B9A", penwidth=1.5];
+    Pause -> Resetting [label="Start() 从Pause恢复\n-> Reset() + Recovery()", color="#6A1B9A", style=dashed];
+
+    // Resetting 完成
+    // ★ 优化项 #6: 恢复目标依赖 alarmInfo.EStatus 暗示耦合
+    Resetting -> Ready  [label="复位成功\nalarmInfo.EStatus==Ready\n⚠ 优化: 应改为显式targetStatus参数", color="#2E7D32"];
+    Resetting -> Pause  [label="复位成功\n其他EStatus", color="#E65100"];
+    Resetting -> Idle   [label="复位成功\nalarmInfo.EStatus==Idle", color="#546E7A"];
+
+    // ★ 优化项: Resetting 失败 -- 状态不一致风险
+    Resetting -> Alarm  [label="⚠ 复位失败\n部分模块已复位成功,部分未完成\n→ 状态不一致风险\n建议: 复位操作应整体原子化", color="#FF0000", style="bold,dashed", penwidth=2.0];
+
+    // ===================================================================
+    // 停止路径 (从任意状态)
+    // ★ 优化项 #3: lockCommand 泄漏可能导致 Stop 被拦截
+    // ===================================================================
+    Idle -> Stop       [label="Stop()", color="#37474F", style=dotted];
+    Homing -> Stop     [label="Stop()", color="#37474F", style=dotted];
+    Ready -> Stop      [label="Stop()", color="#37474F", style=dotted];
+    Running -> Stop    [label="Stop()", color="#37474F", penwidth=1.5];
+
+    // ★ Stop 被拦截问题
+    Alarm -> Stop      [label="⚠ Stop() 可能被 lockCommand>0 拦截\n→ 报警状态无法停止\n建议: Stop 应忽略 lockCommand", color="#FF0000", style="bold,dotted", penwidth=2.0];
+    Pause -> Stop      [label="Stop()", color="#37474F", style=dotted];
+
+    // ★ 优化项: Resetting 中 Stop 打断导致不一致
+    Resetting -> Stop  [label="⚠ Stop() 可中断复位\n已复位的模块无法回滚\n→ 部分复位的不一致状态", color="#FF0000", style="bold,dotted", penwidth=2.0];
+
+    // Stop -> Homing (重新回零)
+    Stop -> Homing     [label="Home()", color="#1565C0", penwidth=1.0];
+
+    // ===================================================================
+    // Homing 失败
+    // ★ 优化项: 缺少 HomingFailed 状态
+    // ===================================================================
+    Homing -> HomingFailed [label="HomeTask失败\n★ 优化: 应转到 HomingFailed\n而非卡在 Homing", color="#FF6F00", penwidth=2.0, style=bold];
+    HomingFailed -> Stop   [label="只能 Stop 后重新回零", color="#37474F"];
+    HomingFailed -> Homing [label="或支持 Retry 重试", color="#1565C0", style=dashed];
+
+    // 原有: Homing 自环 (当前实际行为)
+    Homing -> Homing   [label="(当前行为)\nHomeTask失败\n状态保持Homing, 用户只能Stop", color="#C62828", style=dashed];
+
+    // ===================================================================
+    // MaterialPending 虚线 (仅UI)
+    // ★ 优化项 #2: [Flags] 标记与互斥使用矛盾
+    // ===================================================================
+    Running -> MaterialPending [label="90s无料\n(仅UI显示)\l⚠ [Flags]矛盾: 若意外组合值\l所有 == 判断失效\l建议: 移除 [Flags] 属性\l", color="#FF6F00", style="bold,dashed", penwidth=2.0];
+
+    // ===================================================================
+    // 子图分组
+    // ===================================================================
+    subgraph cluster_normal {
+        label="正常流程";
+        style=dashed;
+        color="#2E7D32";
+        Idle; Homing; Ready; Running; Pause;
+    }
+    subgraph cluster_alarm {
+        label="报警流程";
+        style=dashed;
+        color="#C62828";
+        Alarm; Resetting;
+    }
+    subgraph cluster_stop {
+        label="终止状态";
+        style=dashed;
+        color="#37474F";
+        Stop; HomingFailed;
+    }
+
+    // ===================================================================
+    // 优化项总结标注 (右上角独立区域)
+    // ===================================================================
+    subgraph cluster_optimizations {
+        label="优化项汇总";
+        style=filled;
+        color="#FFF9C4";
+        fontsize=11;
+        node [shape=note, fillcolor="#FFF176", style="filled,bold"];
+
+        opt1 [label="#1 高优先级: setter 中增加合法转换表\l当前: 任何代码可从 Idle 直接设为 Running\l建议: Dictionary<EngineStatus, HashSet<EngineStatus>> 校验\l"];
+        opt2 [label="#2 中优先级: 移除 [Flags] 属性\l当前: [Flags] 允许组合值, 但所有逻辑假设互斥\l若意外组合, 所有 == 判断失效\l"];
+        opt3 [label="#3 中优先级: lockCommand 替换为 SemaphoreSlim\l当前: int + Interlocked, 异常路径易泄漏\l递增后异常不递减 → 永久锁定\l"];
+        opt4 [label="#4 中优先级: EngineStatusEvent 双重职责分离\l当前: 多播委托只取最后返回值, canChange 可能为 null\l建议: 状态校验与UI通知分离\l"];
+        opt5 [label="#5 低优先级: Thread.Sleep 替换为时间戳去抖\l当前: 定时器回调中 Sleep 阻塞监控线程\l"];
+        opt6 [label="#6 低优先级: Recovery 显式 targetStatus 参数\l当前: 恢复目标依赖 alarmInfo.EStatus 暗示耦合\l"];
+
+        opt1 -> opt2 -> opt3 -> opt4 -> opt5 -> opt6 [style=invis];
+    }
+
+    // ===================================================================
+    // 图例
+    // ===================================================================
+    subgraph cluster_legend {
+        label="图例";
+        style=solid;
+        color="#666666";
+        fontsize=10;
+        node [shape=plaintext, fillcolor=white, style=""];
+
+        legend1 [label="粗实线: 主要转换路径"];
+        legend2 [label="细实线: 次要转换路径"];
+        legend3 [label="虚线: 条件/异常路径"];
+        legend4 [label="点线: Stop(任意状态可达)"];
+        legend5 [label="⚠ 红色粗线: 存在问题的转换路径"];
+        legend6 [label="★ 橙色粗线: 建议新增/优化的路径"];
+
+        legend1 -> legend2 -> legend3 -> legend4 -> legend5 -> legend6 [style=invis];
+    }
+}

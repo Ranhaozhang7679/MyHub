@@ -1,0 +1,154 @@
+digraph InParamTerminal_Extension {
+    fontname="Microsoft YaHei";
+    rankdir=TB;
+    compound=true;
+    node [shape=box, style=filled, fontname="Microsoft YaHei", fontsize=11];
+    edge [fontname="Microsoft YaHei", fontsize=9];
+
+    // ===== 图例 =====
+    subgraph cluster_legend {
+        label="图例";
+        style=filled; color="#F5F5F5";
+        leg_search [label="橙色 = 搜索按钮功能链路", color="#FFE0B2"];
+        leg_link [label="绿色 = 链接变量功能链路", color="#C8E6C9"];
+        leg_code [label="蓝色 = 需要新增/修改的代码", color="#BBDEFB"];
+    }
+
+    // ============================================
+    // A. 搜索按钮完整链路 (以 VAlarm 为参考实例)
+    // ============================================
+    subgraph cluster_search {
+        label="A. 搜索按钮 (🔍) 完整事件链路 — 以 VAlarm/AlarmEditor 为参考实例";
+        style=filled; color="#FFF3E0";
+
+        // A1. 控件层
+        subgraph cluster_search_ctrl {
+            label="A1. 控件层: 定义带搜索按钮的 WPF 控件";
+            style=filled; color="#FFE0B2";
+
+            AlarmCtrlCode [label="AlarmCtrl.cs (已有参考)\n(Controls/AlarmCtrl.cs)\n\npublic class AlarmCtrl : Control\n{\n  // DependencyProperty:\n  //   Value, Text, IsReadOnly\n  //   Parameter (ParameterAttribute)\n\n  // 关键设计模式:\n  //   1. 内嵌 Button x:Name=\"PART_BtnConfig\"\n  //   2. OnApplyTemplate() 获取按钮引用\n  //   3. BtnView_Click → Parameter.OnConfig(this.Parameter)\n  //   4. Parameter 赋值时更新 Text 显示\n  //   5. Value DP 变更回调更新 Text\n}", color="#FFE0B2"];
+
+            AlarmCtrlXaml [label="Generic.xaml 中 AlarmCtrl 的模板\n\n<ControlTemplate TargetType=\"{x:Type local:AlarmCtrl}\">\n  <Grid>\n    <!-- 文本显示区 -->\n    <TextBlock Text=\"{Binding Text, ...}\" />\n    <!-- 搜索按钮 -->\n    <Button x:Name=\"PART_BtnConfig\"\n      Content=\"🔍\" />\n  </Grid>\n</ControlTemplate>", color="#FFE0B2"];
+
+            AlarmCtrlCode -> AlarmCtrlXaml [label="XAML 模板", style=dashed];
+        }
+
+        // A2. Editor 层
+        subgraph cluster_search_editor {
+            label="A2. Editor 层: 连接控件到 ParamGrid";
+            style=filled; color="#FFE0B2";
+
+            AlarmEditorCode [label="AlarmEditor.cs (已有参考)\n(ParamGrid/Editors/AlarmEditor.cs)\n\npublic class AlarmEditor : ParamEditorBase\n{\n  override CreateElement(propertyItem):\n    var alarm = new AlarmCtrl();\n    alarm.IsReadOnly = propertyItem.IsReadOnly;\n    alarm.Parameter = propertyItem.Value as ParameterAttribute;\n    propertyItem.ParamType = \"Normal\";\n    return alarm;\n\n  override GetDependencyProperty():\n    return AlarmCtrl.ValueProperty;\n}", color="#FFE0B2"];
+
+            EditorBase [label="ParamEditorBase (抽象基类)\n\n两个抽象方法:\n  CreateElement(ParamItem) → FrameworkElement\n  GetDependencyProperty() → DependencyProperty\n\n一个虚方法:\n  CreateBinding() → 自动绑定 Value", color="#BBDEFB"];
+        }
+
+        // A3. ParamResolver 映射
+        subgraph cluster_search_resolver {
+            label="A3. ParamResolver: Type → Editor 映射";
+            style=filled; color="#BBDEFB";
+
+            ResolverMap [label="ParamResolver.ResolveEditor()\n\n已有映射:\n  TypeCodeDic[typeof(string)] → PlainTextEditor\n  TypeCodeDic[typeof(double)] → NumberEditor\n  TypeCodeDic[typeof(bool)] → SwitchEditor\n  p.Type == typeof(VDevice) → DeviceEditor\n  p.Type == typeof(VAlarm) → AlarmEditor  ◄── 参考此行\n  p.Type == typeof(SocketAction) → SlaveEditor\n  p.Type.IsSubclassOf(typeof(Enum)) → EnumEditor\n\n▼ 新增自定义类型只需添加 else if: ▼\n  else if (p.Type == typeof(MyCustomType))\n    editor = new MyCustomEditor();", color="#BBDEFB"];
+        }
+
+        // A4. 事件冒泡链
+        subgraph cluster_search_event {
+            label="A4. 事件冒泡链: 按钮点击 → 弹窗";
+            style=filled; color="#FFE0B2";
+
+            E1 [label="① 用户点击 🔍 按钮", color="orange", shape=ellipse];
+            E2 [label="② AlarmCtrl.BtnView_Click()\n  → Parameter.OnConfig(Parameter)", color="#FFE0B2"];
+            E3 [label="③ ParameterAttribute.ConfigEvent\n  触发 (event Action<ParameterAttribute>)", color="#FFE0B2"];
+            E4 [label="④ ParamGrid.P_ConfigEvent()\n  → OnItemConfig() 冒泡", color="#FFE0B2"];
+            E5 [label="⑤ ParamGrid.ItemConfigEvent\n  路由冒泡事件 (RoutedEvent)", color="#FFE0B2"];
+            E6 [label="⑥ InParamContent.xaml 中\n  hc:EventTrigger 捕获\n  → ItemConfigCommand", color="#FFE0B2"];
+            E7 [label="⑦ InParamContentVM.ItemConfigCommand\n  if (args.Paramter.Type == typeof(VAlarm))\n  → _dialogService.ShowAlarmConfig()", color="#FFE0B2"];
+            E8 [label="⑧ DialogExtension.ShowAlarmConfig()\n  → service.ShowDialog(\"AlarmCodeDialog\",...)", color="#FFE0B2"];
+            E9 [label="⑨ AlarmCodeDialog 弹窗显示\n  用户搜索/选择报警代码", color="#FFE0B2"];
+            E10 [label="⑩ 回调 callback:\n  args.Paramter.Value = vAlarm;\n  ModuleObj = null; ModuleObj = src;\n  → ParamGrid 刷新 UI", color="#FFE0B2"];
+
+            E1 -> E2 -> E3 -> E4 -> E5 -> E6 -> E7 -> E8 -> E9 -> E10 [color=orange, style=bold];
+        }
+
+        // A5. 弹窗实现
+        subgraph cluster_search_dialog {
+            label="A5. 弹窗实现: Dialog (IDialogAware)";
+            style=filled; color="#FFE0B2";
+
+            DialogImpl [label="Prism Dialog 实现模式:\n\n1. View: XxxDialog.xaml\n   - UserControl 实现 IDialogAware 接口的宿主\n   - hc:Dialog.Title 标题栏\n   - 内容区: 搜索框 + 列表 + 确认按钮\n\n2. ViewModel: XxxDialogVM.cs\n   - 继承 MotionDialogVM (或实现 IDialogAware)\n   - OnDialogOpened(): 接收 NavigationParameters\n   - SelectCommand: 用户选择后\n     → new DialogResult(ButtonResult.OK)\n     → r.Parameters.Add(\"Key\", result)\n     → RaiseRequestClose(r)\n\n3. DI 注册:\n   EditorModule.RegisterTypes():\n   containerRegistry.RegisterDialog<\n     XxxDialog, XxxDialogVM>();\n\n4. DialogService 扩展方法:\n   DialogExtension.cs 中添加:\n   public static void ShowXxxConfig(\n     this IDialogService service,\n     ParameterAttribute pAttr,\n     Action<IDialogResult> callback)", color="#FFE0B2"];
+        }
+    }
+
+    // ============================================
+    // B. 链接变量完整链路
+    // ============================================
+    subgraph cluster_link {
+        label="B. 链接变量 (🔗) 完整事件链路";
+        style=filled; color="#E8F5E9";
+
+        // B1. 显示判断
+        subgraph cluster_link_visible {
+            label="B1. 链接图标显示判断";
+            style=filled; color="#C8E6C9";
+
+            RefResolve [label="ParamResolver.ResolveRef(p)\n\n返回 ParamItem.ParamType 字符串:\n\n\"Link\"  → 显示绿色链接图标\n\"Normal\" → 不显示链接图标\n\"Save\"  → 显示保存图标 (OUT参数)\n\n判断逻辑:\n  1. OUT 参数 → \"Save\" 或 \"Normal\"\n  2. CanRef == ParamRef.Ref → \"Link\"\n  3. CanRef == ParamRef.NoRef → \"Normal\"\n  4. 枚举/值类型/string/复杂类型 → \"Normal\"\n  5. 其他 (自定义类) → \"Link\" (默认)\n\n▼ 控制自定义类型是否可链接: ▼\n  添加到 \"Normal\" 判断链:\n  typeof(LFileSelect).IsAssignableFrom(p.Type)", color="#C8E6C9"];
+
+            RefDisplay [label="ParamGrid.CreatePropertyItem()\n\nParamItem 构建:\n  ParamType = ParamResolver.ResolveRef(p)\n    → \"Link\" / \"Normal\" / \"Save\"\n  IsRef = (p.RefOut != null)\n    → 已链接 = true (绿色)\n    → 未链接 = false (红色)\n  ForeColor = IsRef ? \"Green\" : \"Red\"", color="#C8E6C9"];
+        }
+
+        // B2. 事件链路
+        subgraph cluster_link_event {
+            label="B2. 链接点击 → 选择引用源 → 设置引用";
+            style=filled; color="#C8E6C9";
+
+            L1 [label="① 点击参数名旁的链接图标区域\n  (ParamGrid 中 TextBlock Tag=ParameterAttribute)", color="#81C784", shape=ellipse];
+            L2 [label="② ParamGrid.PreviewMouseLeftButtonDown\n  → ShowLinkCommand (EventToCommand)", color="#C8E6C9"];
+            L3 [label="③ InParamContentVM.ExcuteShowLinkCommand()\n\n  检查: pGrid.HasPermission (权限)\n  判断: p.ParamType == ParamType.IN\n  获取可引用节点:\n    eventBus.GetRefNodes(p) → LNode 列表\n  构建 ContextMenu:\n    RefNodes 集合\n    + Separator (\"-\")\n    + Clear 选项 (红色)\n  设置: pGrid.Tag = \"True\" (显示菜单)", color="#C8E6C9"];
+            L4 [label="④ ContextMenu 右键菜单显示\n\n  菜单项 = 可引用的输出参数\n  每项的 Command = LinkCommand\n  每项的 CommandParameter = LNode\n  图标 = 参数所属 Function 的 Icon", color="#C8E6C9"];
+            L5 [label="⑤ LinkCommand 执行\n\n  ExcuteLinkCommand(LNode lNode):\n    if (lNode.Text == \"Clear\")\n      dst.RefOut = null;  // 清除引用\n    else\n      dst.RefOut = src;   // 设置引用\n      // src = lNode.Tag as ParameterAttribute\n      // dst = lNode.Tag1 as ParameterAttribute", color="#C8E6C9"];
+            L6 [label="⑥ RefOut 赋值触发\n\n  ParameterAttribute.RefOut setter:\n    1. Owner.UnRegisterByRef() 取消旧引用\n    2. _refOut = value 设置新引用\n    3. RefChangedEvent?.Invoke(this)\n    4. Owner.UpdateReferences() 更新引用表\n    5. Owner.OnLog() 记录日志\n    6. Owner.OnUpdate(ParameterVal) 通知", color="#C8E6C9"];
+            L7 [label="⑦ ParamGrid.P_RefChangedEvent()\n\n  遍历所有 ParamItem:\n    - 更新 IsRef / ForeColor\n    - 重新 ResolveEditor (切换编辑器)\n    - InitElement() 刷新 UI\n    - BuildRelyDataSource() 更新依赖\n\n  UI 效果:\n    已引用 → 绿色 CiteEditor (显示引用源名称)\n    清除引用 → 红色 + 恢复原编辑器", color="#C8E6C9"];
+
+            L1 -> L2 -> L3 -> L4 -> L5 -> L6 -> L7 [color=green, style=bold];
+        }
+
+        // B3. 引用数据源获取
+        subgraph cluster_link_datasource {
+            label="B3. GetRefNodes() 引用数据源获取";
+            style=filled; color="#C8E6C9";
+
+            GetRefNodes [label="InParamContentVM.GetVarNodes(p)\n\n1. 获取根节点树:\n   eventBus.GetRootModule().GetTreeNode(true, icon)\n\n2. 获取当前模块所属工站:\n   curModule.UpdateStation()\n\n3. 根据工站类型过滤:\n   IHomeStation → 只保留回零站参数\n   ITestStation → 只保留测试站参数\n   其他 → 排除回零站和测试站\n\n4. 插入全局变量节点:\n   GetGlobalNode(icon) → 全局参数树\n   pRoot.Children.Insert(0, globalNode)\n\n5. 返回过滤后的可引用参数列表\n   每个节点 = LNode { Text, Key, Tag, Icon }", color="#C8E6C9"];
+
+            InParamShowLink [label="InParamContentVM.ExcuteShowLinkCommand()\n\n调用 GetRefNodes(p) 后:\n  RefNodes = new ObservableCollection<LNode>()\n  foreach (item in GetRefNodes)\n    RefNodes.Add(item)\n\n  if (p.RefOut != null):\n    RefNodes.Add(separator)\n    RefNodes.Add(clearNode)\n\n  → ContextMenu 绑定 RefNodes\n  → 显示给用户选择", color="#C8E6C9"];
+
+            GetRefNodes -> InParamShowLink [label="提供数据源"];
+        }
+    }
+
+    // ============================================
+    // C. 新增自定义搜索/链接控件的总步骤清单
+    // ============================================
+    subgraph cluster_checklist {
+        label="C. 新增自定义 InParam 终端控件 — 完整步骤清单";
+        style=filled; color="#E8EAF6";
+
+        Step1 [label="① 数据模型\n\n新建: Models/LMyType.cs\n实现: IXMLParser\n注册: ParameterAttribute.ResgisterTypeMaps()", color="#C8E6C9"];
+        Step2 [label="② WPF 控件\n\n新建: Controls/MyTypeCtrl.cs\n继承: System.Windows.Controls.Control\n包含: PART_BtnConfig 按钮\n触发: Parameter.OnConfig()\n模板: Generic.xaml 中定义样式", color="#C8E6C9"];
+        Step3 [label="③ Editor\n\n新建: Editors/MyTypeEditor.cs\n继承: ParamEditorBase\n实现: CreateElement() → new MyTypeCtrl()\n实现: GetDependencyProperty()", color="#C8E6C9"];
+        Step4 [label="④ ParamResolver 注册\n\n修改: ParamResolver.ResolveEditor()\n添加: else if (p.Type == typeof(LMyType))\n        editor = new MyTypeEditor();\n\n修改: ParamResolver.ResolveRef()\n添加: typeof(LMyType) → \"Normal\" (如不需链接)", color="#BBDEFB"];
+        Step5 [label="⑤ Dialog 弹窗\n\n新建: Views/Dialogs/MyTypeDialog.xaml\n新建: ViewModel/Dialogs/MyTypeDialogVM.cs\nVM 实现: OnDialogOpened(), SelectCommand\n调用: RaiseRequestClose(DialogResult)", color="#C8E6C9"];
+        Step6 [label="⑥ DI 注册\n\n修改: EditorModule.RegisterTypes()\n添加: containerRegistry.RegisterDialog<\n        MyTypeDialog, MyTypeDialogVM>();", color="#BBDEFB"];
+        Step7 [label="⑦ DialogService 扩展\n\n修改: DialogExtension.cs\n添加: public static void ShowMyTypeConfig(\n  this IDialogService, ParameterAttribute,\n  Action<IDialogResult>)", color="#BBDEFB"];
+        Step8 [label="⑧ InParamContentVM 处理\n\n修改: ItemConfigCommand\n添加: else if (args.Paramter.Type == typeof(LMyType))\n  → _dialogService.ShowMyTypeConfig(...)\n  → callback: args.Paramter.Value = result\n  → ModuleObj 刷新", color="#BBDEFB"];
+        Step9 [label="⑨ 在 Function 中使用\n\n[Parameter(\"描述\", sort, CN=\"中文名\")]\npublic LMyType MyParam { get; set; }", color="#C8E6C9"];
+
+        Step1 -> Step2 -> Step3 -> Step4 -> Step5 -> Step6 -> Step7 -> Step8 -> Step9 [color=purple, style=bold];
+    }
+
+    // 交叉引用
+    AlarmCtrlCode -> E2 [label="触发", style=dotted, color=orange];
+    AlarmEditorCode -> ResolverMap [label="被引用", style=dotted, color=blue];
+    DialogImpl -> E9 [label="实例", style=dotted, color=orange];
+    RefResolve -> RefDisplay [label="结果", style=dotted];
+    GetRefNodes -> L3 [label="数据源", style=dotted, color=green];
+}

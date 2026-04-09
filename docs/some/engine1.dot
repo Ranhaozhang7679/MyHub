@@ -1,0 +1,48 @@
+digraph EngineStatusMachine {
+    rankdir=LR;
+    node [shape=box, style="rounded,filled", fontname="Microsoft YaHei", fillcolor="lightblue"];
+    edge [fontname="Microsoft YaHei", fontsize=10];
+    
+    // 定义状态节点
+    Idle [label="Idle\n(空闲中)", fillcolor="#E8E8E8"];
+    Homing [label="Homing\n(回零中)", fillcolor="#FFFFE0"];
+    Ready [label="Ready\n(待启动)", fillcolor="#90EE90"];
+    Running [label="Running\n(运行中)", fillcolor="#98FB98"];
+    Alarm [label="Alarm\n(报警中)", fillcolor="#FFB6C1"];
+    Pause [label="Pause\n(暂停中)", fillcolor="#FFDAB9"];
+    Stop [label="Stop\n(停止中)", fillcolor="#D3D3D3"];
+    Resetting [label="Resetting\n(复位中)", fillcolor="#E6E6FA"];
+    MaterialPending [label="MaterialPending\n(待料中\n仅UI表现)", fillcolor="#F0F8FF", style="rounded,dashed"];
+
+    // 状态流转规则
+    Idle -> Homing [label="调用 Home()"];
+    Idle -> Running [label="流程初始化触发"];
+    
+    Homing -> Ready [label="回零成功"];
+    Homing -> Stop [label="异常中断或手工停止"];
+    
+    Ready -> Running [label="调用 Start()"];
+    
+    Running -> Pause [label="调用 Pause()"];
+    Running -> Alarm [label="异常/触发报警"];
+    Running -> Stop [label="调用 Stop() / NG导致异常停止"];
+    Running -> MaterialPending [label="90s无料 (UI展示)"];
+    Running -> Idle [label="正常结束空闲"];
+    
+    MaterialPending -> Running [label="有料恢复运行"];
+
+    Pause -> Running [label="调用 Recovery()"];
+    Pause -> Stop [label="调用 Stop()"];
+    Pause -> Resetting [label="调用 Reset()"];
+
+    Alarm -> Pause [label="解除报警/复位前"];
+    Alarm -> Stop [label="调用 Stop()"];
+    Alarm -> Resetting [label="调用 Reset()"];
+
+    Resetting -> Idle [label="复位成功(返回空闲)"];
+    Resetting -> Ready [label="复位成功(返回待启动)"];
+    Resetting -> Pause [label="复位中断/异常"];
+    Resetting -> Stop [label="复位期间手工停止"];
+
+    Stop -> Idle [label="释放资源后"];
+}

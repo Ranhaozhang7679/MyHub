@@ -1,0 +1,43 @@
+digraph 业务逻辑 {
+  label="业务逻辑";
+  labelloc=t;
+  fontname="Microsoft YaHei";
+  node [fontname="Microsoft YaHei", fontsize=10];
+  edge [fontname="Microsoft YaHei", fontsize=9];
+  rankdir=TB;
+
+  nlhKJeP8xx5Ao8kk567zl_2 [label="自动重试", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nlhKJeP8xx5Ao8kk567zl_3 [label="超时模组", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nlhKJeP8xx5Ao8kk567zl_8 [label="取料", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nlhKJeP8xx5Ao8kk567zl_9 [label="失败", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nlhKJeP8xx5Ao8kk567zl_14 [label="取料", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nlhKJeP8xx5Ao8kk567zl_16 [label="失败", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nlhKJeP8xx5Ao8kk567zl_20 [label="异步模组", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nlhKJeP8xx5Ao8kk567zl_22 [label="装配", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nlhKJeP8xx5Ao8kk567zl_24 [label="3D", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nlhKJeP8xx5Ao8kk567zl_27 [label="轮询模组", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nlhKJeP8xx5Ao8kk567zl_29 [label="保压1", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nlhKJeP8xx5Ao8kk567zl_30 [label="保压2", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nlhKJeP8xx5Ao8kk567zl_32 [label="条件模组", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nlhKJeP8xx5Ao8kk567zl_34 [label="条件1", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nlhKJeP8xx5Ao8kk567zl_35 [label="条件2", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nlhKJeP8xx5Ao8kk567zl_38 [label="步骤模组", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nlhKJeP8xx5Ao8kk567zl_40 [label="进料", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nlhKJeP8xx5Ao8kk567zl_41 [label="拍照", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nKlyRxH707nrewrbkODg5_1 [label="转盘模组", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nKlyRxH707nrewrbkODg5_4 [label="进料", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nKlyRxH707nrewrbkODg5_5 [label="拍照", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nKlyRxH707nrewrbkODg5_6 [label="拍照", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nKlyRxH707nrewrbkODg5_8 [label="拍照", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nIdeoq62ZKl9Yp8hB64XK_0 [label="扫码", shape=ellipse, style="filled", fillcolor="#FFE6CC"];
+  nIdeoq62ZKl9Yp8hB64XK_2 [label="所有动作模块", shape=ellipse, style="filled", fillcolor="#FFE6CC"];
+
+  nlhKJeP8xx5Ao8kk567zl_9 -> nlhKJeP8xx5Ao8kk567zl_8 [];
+  nlhKJeP8xx5Ao8kk567zl_8 -> nlhKJeP8xx5Ao8kk567zl_9 [];
+  nlhKJeP8xx5Ao8kk567zl_16 -> nlhKJeP8xx5Ao8kk567zl_14 [];
+  nlhKJeP8xx5Ao8kk567zl_14 -> nlhKJeP8xx5Ao8kk567zl_16 [];
+  nlhKJeP8xx5Ao8kk567zl_40 -> nlhKJeP8xx5Ao8kk567zl_41 [];
+  nKlyRxH707nrewrbkODg5_4 -> nKlyRxH707nrewrbkODg5_5 [];
+  nKlyRxH707nrewrbkODg5_5 -> nKlyRxH707nrewrbkODg5_6 [];
+  nKlyRxH707nrewrbkODg5_6 -> nKlyRxH707nrewrbkODg5_8 [];
+}
