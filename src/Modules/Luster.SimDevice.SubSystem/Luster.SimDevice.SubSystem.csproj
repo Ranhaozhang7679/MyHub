@@ -21,7 +21,18 @@
 	<ItemGroup>
 	  <None Remove="Resources\布尔F.PNG" />
 	  <None Remove="Resources\布尔T.PNG" />
+	  <None Remove="Views\Virtual\U+.PNG" />
+	  <None Remove="Views\Virtual\U-.PNG" />
+	  <None Remove="Views\Virtual\V+.PNG" />
+	  <None Remove="Views\Virtual\V-.PNG" />
+	  <None Remove="Views\Virtual\W+.PNG" />
+	  <None Remove="Views\Virtual\W-.PNG" />
+	  <None Remove="Views\Virtual\X+.PNG" />
+	  <None Remove="Views\Virtual\X-.PNG" />
+	  <None Remove="Views\Virtual\Y+.PNG" />
 	  <None Remove="Views\Virtual\Y-.PNG" />
+	  <None Remove="Views\Virtual\Z+.PNG" />
+	  <None Remove="Views\Virtual\Z-.PNG" />
 	</ItemGroup>
 
 
@@ -53,7 +64,18 @@
 	<ItemGroup>
 	  <Resource Include="Resources\布尔F.PNG" />
 	  <Resource Include="Resources\布尔T.PNG" />
+	  <Resource Include="Views\Virtual\U+.PNG" />
+	  <Resource Include="Views\Virtual\U-.PNG" />
+	  <Resource Include="Views\Virtual\V+.PNG" />
+	  <Resource Include="Views\Virtual\V-.PNG" />
+	  <Resource Include="Views\Virtual\W+.PNG" />
+	  <Resource Include="Views\Virtual\W-.PNG" />
+	  <Resource Include="Views\Virtual\X+.PNG" />
+	  <Resource Include="Views\Virtual\X-.PNG" />
+	  <Resource Include="Views\Virtual\Y+.PNG" />
 	  <Resource Include="Views\Virtual\Y-.PNG" />
+	  <Resource Include="Views\Virtual\Z+.PNG" />
+	  <Resource Include="Views\Virtual\Z-.PNG" />
 	</ItemGroup>
 
 	<ItemGroup>
