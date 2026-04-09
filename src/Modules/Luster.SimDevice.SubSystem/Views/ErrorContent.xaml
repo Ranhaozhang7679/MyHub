@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     x:Class="Luster.SimDevice.SubSystem.Views.ErrorContent"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -141,6 +141,35 @@
                         CanUserSort="False"
                         ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
                         Header="{lang:Lang Key={x:Static lang:LangKeys.AlarmConfig}}"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
+                        IsReadOnly="False" />
+
+                    <DataGridTemplateColumn
+                        Width="150"
+                        MinWidth="150"
+                        Header="报警种类"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
+                        IsReadOnly="False">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <ComboBox
+                                    ItemsSource="{Binding AlarmCategoryOptions}"
+                                    SelectedItem="{Binding AlarmCategory, UpdateSourceTrigger=PropertyChanged}"
+                                    IsEditable="False"
+                                    HorizontalContentAlignment="Center"
+                                    BorderThickness="0"
+                                    Background="Transparent" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+
+                    <DataGridTextColumn
+                        Width="150"
+                        MinWidth="150"
+                        Binding="{Binding RepairAction, UpdateSourceTrigger=LostFocus}"
+                        CanUserSort="False"
+                        ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                        Header="维修动作"
                         HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
                         IsReadOnly="False" />
 
