@@ -58,8 +58,8 @@ namespace Luster.Motion.DigitalSetup
 
             // BUSOP 页面注册
             containerRegistry.RegisterForNavigation<BusopContent, BusopContentVM>();
-            containerRegistry.RegisterForNavigation<BusopSubItem, BusopSubItemVM>();
             containerRegistry.RegisterDialog<BusopSettingsDialog, BusopSettingsDialogVM>("BusopSettingsDialog");
+            containerRegistry.RegisterDialog<TextInputDialog, TextInputDialogVM>("TextInputDialog");
             containerRegistry.RegisterSingleton<BusopConfigService>();
 
         }

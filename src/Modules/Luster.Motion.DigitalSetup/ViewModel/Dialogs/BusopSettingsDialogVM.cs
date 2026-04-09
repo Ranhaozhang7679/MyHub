@@ -18,6 +18,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel.Dialogs
     public class BusopSettingsDialogVM : BindableBase, IDialogAware
     {
         private readonly BusopConfigService _configService;
+        private readonly ICommonBus _commonBus;
 
         private string _excelFilePath;
         /// <summary>
@@ -73,6 +74,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel.Dialogs
         public BusopSettingsDialogVM(BusopConfigService configService, ICommonBus commonBus)
         {
             _configService = configService;
+            _commonBus = commonBus;
             AvailableSheets = new ObservableCollection<string>();
 
             SaveCommand = new DelegateCommand(OnSave);
@@ -124,7 +126,17 @@ namespace Luster.Motion.DigitalSetup.ViewModel.Dialogs
 
             if (dialog.ShowDialog() == true)
             {
-                ExcelFilePath = dialog.FileName;
+                // 如果文件在配方目录下，自动转为相对路径
+                var recipeDir = _commonBus?.CurrentRecipe?.GetRecipePath() ?? "";
+                var fullPath = dialog.FileName;
+                if (!string.IsNullOrEmpty(recipeDir) && fullPath.StartsWith(recipeDir, StringComparison.OrdinalIgnoreCase))
+                {
+                    ExcelFilePath = fullPath.Substring(recipeDir.Length).TrimStart('\\', '/');
+                }
+                else
+                {
+                    ExcelFilePath = fullPath;
+                }
                 OnRefreshSheets();
             }
         }
@@ -138,7 +150,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel.Dialogs
             if (string.IsNullOrWhiteSpace(ExcelFilePath))
                 return;
 
-            var sheets = _configService.GetSheetNames(ExcelFilePath);
+            var fullPath = _configService.GetExcelFullPath(ExcelFilePath);
+            var sheets = _configService.GetSheetNames(fullPath);
             foreach (var sheet in sheets)
             {
                 AvailableSheets.Add(sheet);

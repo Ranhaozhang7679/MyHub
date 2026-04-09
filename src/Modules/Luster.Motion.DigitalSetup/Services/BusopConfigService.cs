@@ -16,14 +16,11 @@ namespace Luster.Motion.DigitalSetup.Services
     {
         private readonly ICommonBus _commonBus;
         private readonly JsonSerializerOptions _jsonOptions;
-        private string _configFilePath;
 
         // 18个子界面的默认名称（占位，后续替换）
         private static readonly string[] DefaultSubItemNames = new string[]
         {
-            "BUSOP01", "BUSOP02", "BUSOP03", "BUSOP04", "BUSOP05", "BUSOP06",
-            "BUSOP07", "BUSOP08", "BUSOP09", "BUSOP10", "BUSOP11", "BUSOP12",
-            "BUSOP13", "BUSOP14", "BUSOP15", "BUSOP16", "BUSOP17", "BUSOP18"
+            "BUSOP01"
         };
 
         public BusopConfigService(ICommonBus commonBus)
@@ -35,13 +32,12 @@ namespace Luster.Motion.DigitalSetup.Services
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 PropertyNameCaseInsensitive = true
             };
-            InitializeConfigPath();
         }
 
         /// <summary>
-        /// 初始化配置文件路径
+        /// 动态获取配置文件路径（每次调用时重新计算，确保 recipe 变更后路径正确）
         /// </summary>
-        private void InitializeConfigPath()
+        private string GetConfigFilePath()
         {
             var recipeDir = _commonBus?.CurrentRecipe?.GetRecipePath() ?? "D:\\LusterMotion\\DigitalSetup";
             var configDir = Path.Combine(recipeDir, "db", "Ass_Data");
@@ -49,7 +45,7 @@ namespace Luster.Motion.DigitalSetup.Services
             {
                 Directory.CreateDirectory(configDir);
             }
-            _configFilePath = Path.Combine(configDir, "BusopConfig.json");
+            return Path.Combine(configDir, "BusopConfig.json");
         }
 
         /// <summary>
@@ -59,9 +55,9 @@ namespace Luster.Motion.DigitalSetup.Services
         {
             try
             {
-                if (File.Exists(_configFilePath))
+                if (File.Exists(GetConfigFilePath()))
                 {
-                    var json = File.ReadAllText(_configFilePath);
+                    var json = File.ReadAllText(GetConfigFilePath());
                     var config = JsonSerializer.Deserialize<BusopConfig>(json, _jsonOptions);
                     if (config != null && config.SubItems != null && config.SubItems.Count > 0)
                     {
@@ -84,7 +80,7 @@ namespace Luster.Motion.DigitalSetup.Services
             try
             {
                 var json = JsonSerializer.Serialize(config, _jsonOptions);
-                File.WriteAllText(_configFilePath, json);
+                File.WriteAllText(GetConfigFilePath(), json);
                 return true;
             }
             catch (Exception ex)
