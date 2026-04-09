@@ -1,4 +1,4 @@
-﻿using Luster.Common.DataStruct.Enums;
+using Luster.Common.DataStruct.Enums;
 using Luster.Motion.DataStruct.DataModels;
 using Luster.Motion.DataStruct.Real;
 using Luster.SimDevice.EngineUI;
@@ -13,6 +13,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Xml.Serialization;
+using Luster.SimDevice.EngineUI.Models;
 
 namespace Luster.SimDevice.SubSystem.ViewModel.Dialog
 {
@@ -57,6 +58,31 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Dialog
         {
             get => _alarmEnglish;
             set => SetProperty(ref _alarmEnglish, value);
+        }
+
+        /// <summary>
+        /// 报警种类（下拉选项）
+        /// </summary>
+        private string _alarmCategory;
+        public string AlarmCategory
+        {
+            get => _alarmCategory;
+            set => SetProperty(ref _alarmCategory, value);
+        }
+
+        /// <summary>
+        /// 报警种类下拉选项列表
+        /// </summary>
+        public List<string> AlarmCategoryOptions => ErrorItemCustomModel.AlarmCategoryOptions;
+
+        /// <summary>
+        /// 维修动作（可编辑文本）
+        /// </summary>
+        private string _repairActionText;
+        public string RepairActionText
+        {
+            get => _repairActionText;
+            set => SetProperty(ref _repairActionText, value);
         }
 
         #region 向导生成器相关属性
@@ -348,6 +374,10 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Dialog
                 AlarmContent = content;
             if (parameters.TryGetValue<string>("AlarmEnglish", out var english))
                 AlarmEnglish = english;
+            if (parameters.TryGetValue<string>("AlarmCategory", out var category))
+                AlarmCategory = category;
+            if (parameters.TryGetValue<string>("RepairAction", out var repairAction))
+                RepairActionText = repairAction;
             if (parameters.TryGetValue<List<string>>("ExistingCodes", out var codes))
                 _existingCodes = codes ?? new List<string>();
         }
@@ -357,6 +387,8 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Dialog
             result.Parameters.Add("AlarmCode", AlarmCode);
             result.Parameters.Add("AlarmContent", AlarmContent);
             result.Parameters.Add("AlarmEnglish", AlarmEnglish);
+            result.Parameters.Add("AlarmCategory", AlarmCategory ?? "");
+            result.Parameters.Add("RepairAction", RepairActionText ?? "");
         }
     }
 }

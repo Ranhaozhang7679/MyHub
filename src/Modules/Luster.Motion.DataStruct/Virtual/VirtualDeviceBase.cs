@@ -245,6 +245,16 @@ namespace Luster.Motion.DataStruct.Virtual
         }
 
         /// <summary>
+        /// 报警种类
+        /// </summary>
+        public string AlarmCategory { get; set; }
+
+        /// <summary>
+        /// 维修动作
+        /// </summary>
+        public string RepairAction { get; set; }
+
+        /// <summary>
         /// 无参构造函数的目的是能够通过反射构造对象
         /// </summary>
         public VirtualDeviceBase()
@@ -462,6 +472,22 @@ namespace Luster.Motion.DataStruct.Virtual
 
                 xRoot.Add(new XElement("ErrorMessage", ErrorMessage));
             }
+
+            if (!string.IsNullOrEmpty(AlarmCategory))
+            {
+                var exist = xRoot.Element("AlarmCategory");
+                if (exist != null)
+                    exist.Remove();
+                xRoot.Add(new XElement("AlarmCategory", AlarmCategory));
+            }
+
+            if (!string.IsNullOrEmpty(RepairAction))
+            {
+                var exist = xRoot.Element("RepairAction");
+                if (exist != null)
+                    exist.Remove();
+                xRoot.Add(new XElement("RepairAction", RepairAction));
+            }
             return xRoot;
         }
 
@@ -557,6 +583,18 @@ namespace Luster.Motion.DataStruct.Virtual
                 if (mElement != null)
                 {
                     ErrorMessage = mElement.Value;
+                }
+
+                var catElement = xElement.Element("AlarmCategory");
+                if (catElement != null)
+                {
+                    AlarmCategory = catElement.Value;
+                }
+
+                var repairElement = xElement.Element("RepairAction");
+                if (repairElement != null)
+                {
+                    RepairAction = repairElement.Value;
                 }
             }
 

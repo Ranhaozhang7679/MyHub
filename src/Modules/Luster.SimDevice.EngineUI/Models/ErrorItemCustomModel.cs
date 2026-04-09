@@ -1,4 +1,4 @@
-﻿#region 作者和版权
+#region 作者和版权
 /*************************************************************************************
 * CLR 版本:       4.0.30319.42000
 * 类 名 称:       MaintainItemModel
@@ -76,12 +76,45 @@ namespace Luster.SimDevice.EngineUI.Models
             set { SetProperty(ref _alarmEnglish, value); }
         }
 
-        public ErrorItemCustomModel(string alarmCode, string alarmContent, string alarmEnglish)
+        /// <summary>
+        /// 报警种类（下拉选项：Actual Downtime, Waiting for OP, Tossing, Retry）
+        /// </summary>
+        private string _alarmCategory;
+        public string AlarmCategory
+        {
+            get { return _alarmCategory; }
+            set { SetProperty(ref _alarmCategory, value); }
+        }
+
+        /// <summary>
+        /// 报警种类下拉选项列表
+        /// </summary>
+        public static List<string> AlarmCategoryOptions { get; } = new List<string>
+        {
+            "Actual Downtime",
+            "Waiting for OP",
+            "Tossing",
+            "Retry"
+        };
+
+        /// <summary>
+        /// 维修动作（可编辑文本）
+        /// </summary>
+        private string _repairAction;
+        public string RepairAction
+        {
+            get { return _repairAction; }
+            set { SetProperty(ref _repairAction, value); }
+        }
+
+        public ErrorItemCustomModel(string alarmCode, string alarmContent, string alarmEnglish, string alarmCategory = "", string repairAction = "")
         {
             AlarmCode = alarmCode;
             OldAlarmCode = alarmCode;
             AlarmContent = alarmContent;
             AlarmEnglish = alarmEnglish;
+            AlarmCategory = alarmCategory;
+            RepairAction = repairAction;
         }
     }
 }
