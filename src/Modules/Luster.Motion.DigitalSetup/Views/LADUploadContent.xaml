@@ -209,6 +209,10 @@
 
                     <!-- 工站管理按钮 -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="10,0,0,0">
+                        <Button Content="编辑工站" Command="{Binding EditStationCommand}"
+                                Width="80" Height="30" Margin="0,0,5,0"
+                                Background="#FF9800" Foreground="White" FontWeight="Bold"
+                                BorderThickness="0"/>
                         <Button Content="添加工站" Command="{Binding AddStationCommand}"
                                 Width="80" Height="30" Margin="0,0,5,0"
                                 Background="#2196F3" Foreground="White" FontWeight="Bold"

@@ -1,0 +1,44 @@
+﻿<UserControl x:Class="Luster.Motion.DigitalSetup.Views.Dialogs.InputDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Luster.Motion.DigitalSetup.Views.Dialogs"
+             mc:Ignorable="d" 
+             d:DesignHeight="160" d:DesignWidth="400">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock x:Name="MessageTextBlock" 
+                   Text="请输入新的工站名称：" 
+                   Grid.Row="0"
+                   Margin="0,0,0,10"
+                   TextWrapping="Wrap"/>
+
+        <TextBox x:Name="InputTextBox" 
+                 Grid.Row="1"
+                 Height="30"
+                 VerticalContentAlignment="Center"
+                 Margin="0,0,0,15"/>
+
+        <StackPanel Grid.Row="2" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Right">
+            <Button x:Name="ConfirmButton" 
+                    Content="确定" 
+                    Width="75" 
+                    Height="30" 
+                    Margin="0,0,10,0"
+                    IsDefault="True"/>
+            <Button x:Name="CancelButton" 
+                    Content="取消" 
+                    Width="75" 
+                    Height="30"
+                    IsCancel="True"/>
+        </StackPanel>
+    </Grid>
+</UserControl>

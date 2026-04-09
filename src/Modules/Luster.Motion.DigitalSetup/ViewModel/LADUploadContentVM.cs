@@ -10,9 +10,11 @@ using Luster.Motion.DigitalSetup.AssTables;
 using Luster.Motion.DigitalSetup.Datas;
 using Luster.Motion.DigitalSetup.Helpers;
 using Luster.Motion.DigitalSetup.Services;
+using Luster.Motion.DigitalSetup.ViewModel;
 using Luster.Motion.EditorUI;
 using Luster.Motion.TaskFlow.Engine;
 using Luster.TaskFlow.Common.Enums;
+using Luster.TaskFlow.Motion;
 using Microsoft.Win32;
 using Prism.Commands;
 using Prism.Mvvm;
@@ -28,8 +30,8 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
-using Luster.Motion.DigitalSetup.ViewModel;
 
 namespace Luster.Motion.DigitalSetup.ViewModel
 {
@@ -225,6 +227,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         // 工站管理命令
         public ICommand AddStationCommand { get; private set; }
         public ICommand DeleteStationCommand { get; private set; }
+        public ICommand EditStationCommand { get; private set; }
 
         // 多工站配置相关
         private ObservableCollection<LADStationConfig> _ladStations;
@@ -475,6 +478,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             // 工站管理命令
             AddStationCommand = new DelegateCommand(OnAddStation);
             DeleteStationCommand = new DelegateCommand(OnDeleteStation, CanDeleteStation);
+            EditStationCommand = new DelegateCommand(OnEditStation);
 
             BrowseTempFile1Command = new DelegateCommand(OnBrowseTempFile1);
             BrowseTempFile2Command = new DelegateCommand(OnBrowseTempFile2);
@@ -669,6 +673,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 {
                     LoadConfigFromObject(newStation.LadConfig);
                 }
+                SetStationGlobalVariable(newStation.StationName);
             }
             catch (Exception ex)
             {
@@ -793,6 +798,173 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         private bool CanDeleteStation()
         {
             return LADStations != null && LADStations.Count > 1 && SelectedLADStation != null;
+        }
+
+        /// <summary>
+        /// 编辑工站名称
+        /// </summary>
+        private void OnEditStation()
+        {
+            try
+            {
+                if (SelectedLADStation == null)
+                {
+                    MessageBox.Show("请先选择要编辑的工站！", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // 使用 InputDialog 显示输入对话框
+                string newName = Views.Dialogs.InputDialog.ShowDialog(
+                    "编辑工站名称",
+                    "请输入新的工站名称：",
+                    SelectedLADStation.StationName,
+                    Application.Current.MainWindow);
+
+                if (!string.IsNullOrWhiteSpace(newName))
+                {
+                    newName = newName.Trim();
+
+                    if (LADStations.Any(s => s.StationName == newName && s != SelectedLADStation))
+                    {
+                        MessageBox.Show($"工站名称 '{newName}' 已存在，请使用其他名称！",
+                            "名称重复", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        return;
+                    }
+
+                    string oldName = SelectedLADStation.StationName;
+                    SelectedLADStation.StationName = newName;
+                    RenameStationConfigFile(oldName, newName);
+                    UpdateStationStatusKey(oldName, newName);
+                    SaveStationsList();
+
+                    AddLog($"工站名称已从 '{oldName}' 更改为 '{newName}'");
+                    RaisePropertyChanged(nameof(LADStations));
+                }
+            }
+            catch (Exception ex)
+            {
+                _commonbus?.OnLog(new LogInfo()
+                {
+                    LogType = LogType.Error,
+                    LogMessage = $"编辑工站失败: {ex.Message}"
+                });
+                MessageBox.Show($"编辑工站失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// 重命名工站配置文件
+        /// </summary>
+        private void RenameStationConfigFile(string oldStationName, string newStationName)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(_configDirectory))
+                {
+                    InitializeConfigPath();
+                }
+
+                string oldConfigPath = GetStationConfigPath(oldStationName);
+                string newConfigPath = GetStationConfigPath(newStationName);
+
+                if (File.Exists(oldConfigPath) && oldConfigPath != newConfigPath)
+                {
+                    // 如果新路径的文件已存在，先备份
+                    if (File.Exists(newConfigPath))
+                    {
+                        string backupPath = newConfigPath + ".bak";
+                        File.Copy(newConfigPath, backupPath, true);
+                        File.Delete(newConfigPath);
+                    }
+
+                    File.Move(oldConfigPath, newConfigPath);
+                    SelectedLADStation.ConfigFilePath = newConfigPath;
+                    AddLog($"配置文件已重命名: {oldConfigPath} -> {newConfigPath}");
+                }
+            }
+            catch (Exception ex)
+            {
+                AddLog($"重命名配置文件失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 更新工站状态键
+        /// </summary>
+        private void UpdateStationStatusKey(string oldStationName, string newStationName)
+        {
+            try
+            {
+                string oldKey = $"LADUpload_{oldStationName}";
+                string newKey = $"LADUpload_{newStationName}";
+
+                // 获取旧状态值
+                var oldStatus = PageStatusService.Instance.GetStatus(oldKey);
+
+                if (!string.IsNullOrEmpty(oldStatus))
+                {
+                    // 复制状态到新键
+                    PageStatusService.Instance.UpdateStatus(newKey, oldStatus);
+                    // 清除旧键
+                    PageStatusService.Instance.UpdateStatus(oldKey, null);
+                }
+            }
+            catch (Exception ex)
+            {
+                AddLog($"更新状态键失败: {ex.Message}");
+            }
+        }
+
+
+        /// <summary>
+        /// 获取全局模块
+        /// </summary>
+        private IMotionModule GetGlobal()
+        {
+            try
+            {
+                var globalId = Luster.TaskFlow.Motion.Logic.GlobalModule.GlobalID;
+                return _mController?.MotionEngine?.Get(globalId);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 根据工站名称设置对应的全局变量为 true
+        /// </summary>
+        private void SetStationGlobalVariable(string stationName)
+        {
+            try
+            {
+                var globalModule = GetGlobal();
+                if (globalModule?.Parameters == null) return;
+
+                foreach (var item in globalModule.Parameters)
+                {
+                    if (item.Value == null || !item.Value.Visible) continue;
+
+                    // 匹配全局变量名称
+                    if (item.Value.Name == stationName || item.Value.CN == stationName)
+                    {
+                        if (item.Value.Value is bool)
+                        {
+                            item.Value.Value = true;
+                        }
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _commonbus?.OnLog(new LogInfo()
+                {
+                    LogType = LogType.Error,
+                    LogMessage = $"设置工站全局变量失败: {ex.Message}"
+                });
+            }
         }
 
         /// <summary>
