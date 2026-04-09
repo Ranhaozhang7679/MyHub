@@ -21,15 +21,20 @@
             </Grid.RowDefinitions>
             <Grid Grid.Row="0">
                 <Button
-                    Margin="0,0,120,0"
+                    Margin="0,0,280,0"
                     Command="{Binding BatchImportCommand}"
                     Content="导入"
                     Style="{StaticResource ButtonPrimary}" Width="100" HorizontalAlignment="Right" />
                 <Button
-                    Margin="0,0,0,0"
+                    Margin="0,0,160,0"
                     Command="{Binding BatchExportCommand}"
                     Content="导出"
                     Style="{StaticResource ButtonPrimary}" Width="100" HorizontalAlignment="Right" />
+                <Button
+                    Margin="0,0,0,0"
+                    Command="{Binding GenerateErrorCodeListCommand}"
+                    Content="生成ErrorCodeList"
+                    Style="{StaticResource ButtonPrimary}" Width="150" HorizontalAlignment="Right" />
             </Grid>
             <DataGrid
                     Grid.Row="1"
