@@ -250,7 +250,25 @@
                 <!-- 控制按钮区域 -->
                 <Border Grid.Row="0" Padding="15" Background="#F4F6FA" CornerRadius="5" BorderBrush="LightGray" BorderThickness="1">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center">
-                        <Button Content="Run" Command="{Binding RunCommand}" 
+                        <Button Command="{Binding MonitorCommand}"
+                    Width="90" Height="35" Margin="0,0,10,0"
+                    FontWeight="Bold"
+                    BorderThickness="0">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Content" Value="监控"/>
+                                    <Setter Property="Background" Value="#2196F3"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsMonitoring}" Value="True">
+                                            <Setter Property="Content" Value="停止监控"/>
+                                            <Setter Property="Background" Value="#FF9800"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <Button Content="Run" Command="{Binding RunCommand}"
                     Width="70" Height="35" Margin="0,0,10,0" 
                     Background="#4CAF50" Foreground="White" FontWeight="Bold"
                     BorderThickness="0"/>

@@ -5,6 +5,7 @@ using Luster.Common.DataStruct;
 using Luster.Common.DataStruct.DataModels;
 using Luster.Common.DataStruct.Enums;
 using Luster.Motion.CommonUI;
+using Luster.Motion.CommonUI.Events;
 using Luster.Motion.DataStruct;
 using Luster.Motion.DigitalSetup.AssTables;
 using Luster.Motion.DigitalSetup.Datas;
@@ -29,6 +30,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -229,9 +231,20 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         public ICommand DeleteStationCommand { get; private set; }
         public ICommand EditStationCommand { get; private set; }
 
+        // 监控命令
+        public ICommand MonitorCommand { get; private set; }
+
         // 多工站配置相关
         private ObservableCollection<LADStationConfig> _ladStations;
         private LADStationConfig _selectedLADStation;
+
+        // 监控相关字段
+        private bool _isMonitoring;
+        private long _lastFileLength;
+        private CancellationTokenSource _monitorCts;
+        private Dictionary<string, List<double>> _accumulatedData = new Dictionary<string, List<double>>();
+        private Dictionary<string, double> _accumulatedMinDict = new Dictionary<string, double>();
+        private Dictionary<string, double> _accumulatedMaxDict = new Dictionary<string, double>();
 
         /// <summary>
         /// 流程Bus
@@ -374,6 +387,15 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         }
 
         /// <summary>
+        /// 监控运行状态
+        /// </summary>
+        public bool IsMonitoring
+        {
+            get => _isMonitoring;
+            set => SetProperty(ref _isMonitoring, value);
+        }
+
+        /// <summary>
         /// LAD 工站配置集合
         /// </summary>
         public ObservableCollection<LADStationConfig> LADStations
@@ -479,6 +501,9 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             AddStationCommand = new DelegateCommand(OnAddStation);
             DeleteStationCommand = new DelegateCommand(OnDeleteStation, CanDeleteStation);
             EditStationCommand = new DelegateCommand(OnEditStation);
+
+            // 监控命令
+            MonitorCommand = new DelegateCommand(OnMonitor);
 
             BrowseTempFile1Command = new DelegateCommand(OnBrowseTempFile1);
             BrowseTempFile2Command = new DelegateCommand(OnBrowseTempFile2);
@@ -849,6 +874,337 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     LogMessage = $"编辑工站失败: {ex.Message}"
                 });
                 MessageBox.Show($"编辑工站失败: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// 切换监控开关
+        /// </summary>
+        private void OnMonitor()
+        {
+            if (_isMonitoring)
+            {
+                // 停止监控
+                _monitorCts?.Cancel();
+                IsMonitoring = false;
+                AddLog("已停止CPK文件监控");
+                return;
+            }
+
+            try
+            {
+                // 检查前置条件
+                if (string.IsNullOrEmpty(ConfigFile1) || !File.Exists(ConfigFile1))
+                {
+                    MessageBox.Show("请先配置有效的CPK文件路径！", "配置缺失", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // 检查当前模式是否为 CPK 模式
+                string currentMode = _mController.GetCurrentMode();
+                if (string.IsNullOrEmpty(currentMode) || !currentMode.Contains("CPK"))
+                {
+                    MessageBox.Show($"当前模式为 \"{currentMode}\"，请先手动切换到 CPK 相关模式！", "模式不匹配", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // 检查设备状态
+                if (_deviceEngine.GetMachineStatus() != EngineStatus.Ready)
+                {
+                    MessageBox.Show("设备未就绪，请先回零！", "设备状态", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                // 启动 CPK 工站流程
+                var stations = _mController.MotionEngine.GetStations();
+                var stationId = SelectedLADStation?.StationName ?? "CPK测试";
+                var stat = stations.FirstOrDefault(s => s.Alias == stationId);
+                if (stat != null)
+                {
+                    flowBus.OnRunOne(stat.ID);
+                }
+
+                // 初始化累积数据，加载已有数据
+                _accumulatedData.Clear();
+                _accumulatedMinDict.Clear();
+                _accumulatedMaxDict.Clear();
+
+                // 清空并重新解析已有数据作为初始累积
+                AllChartItems.Clear();
+                AllCPKData.Clear();
+                ParseCPKFile(ConfigFile1);
+
+                // 从解析结果中提取累积数据
+                foreach (var cpkData in AllCPKData)
+                {
+                    _accumulatedData[cpkData.ParameterName] = new List<double>(cpkData.DataValues ?? new List<double>());
+                    _accumulatedMinDict[cpkData.ParameterName] = cpkData.MinValue;
+                    _accumulatedMaxDict[cpkData.ParameterName] = cpkData.MaxValue;
+                }
+
+                // 记录当前文件长度
+                var fileInfo = new FileInfo(ConfigFile1);
+                _lastFileLength = fileInfo.Length;
+
+                // 启动后台监控
+                _monitorCts = new CancellationTokenSource();
+                IsMonitoring = true;
+                var token = _monitorCts.Token;
+                Task.Run(() => MonitorCPKFileAsync(token), token);
+
+                AddLog($"开始监控CPK文件: {ConfigFile1}");
+            }
+            catch (Exception ex)
+            {
+                IsMonitoring = false;
+                AddLog($"启动监控失败: {ex.Message}");
+                _commonbus?.OnLog(new LogInfo()
+                {
+                    LogType = LogType.Error,
+                    LogMessage = $"启动CPK监控失败: {ex.Message}"
+                });
+            }
+        }
+
+        /// <summary>
+        /// 后台监控CPK文件变化
+        /// </summary>
+        private async Task MonitorCPKFileAsync(CancellationToken token)
+        {
+            try
+            {
+                while (!token.IsCancellationRequested)
+                {
+                    try
+                    {
+                        await Task.Delay(2000, token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        break;
+                    }
+
+                    // 检查文件是否存在
+                    string filePath = null;
+                    Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        filePath = ConfigFile1;
+                    });
+
+                    if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+                    {
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            AddLog("CPK文件不存在，停止监控");
+                            _monitorCts?.Cancel();
+                            IsMonitoring = false;
+                        });
+                        break;
+                    }
+
+                    try
+                    {
+                        // 获取当前文件长度
+                        var fileInfo = new FileInfo(filePath);
+                        long currentLength = fileInfo.Length;
+
+                        if (currentLength == _lastFileLength)
+                        {
+                            continue; // 无变化
+                        }
+
+                        // 读取新增内容
+                        string newContent;
+                        using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                        {
+                            fs.Seek(_lastFileLength, SeekOrigin.Begin);
+                            using (var reader = new StreamReader(fs))
+                            {
+                                newContent = reader.ReadToEnd();
+                            }
+                        }
+                        _lastFileLength = currentLength;
+
+                        // 解析增量数据
+                        ParseIncrementalCPKData(newContent);
+
+                        // 回到 UI 线程更新图表
+                        Application.Current.Dispatcher.Invoke(() =>
+                        {
+                            UpdateChartsWithAccumulatedData();
+                            AddLog("检测到新数据组，已更新图表");
+                        });
+                    }
+                    catch (IOException)
+                    {
+                        // 文件被占用，下次重试
+                        continue;
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // 正常退出
+            }
+            catch (Exception ex)
+            {
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    AddLog($"监控异常: {ex.Message}");
+                    IsMonitoring = false;
+                });
+            }
+        }
+
+        /// <summary>
+        /// 解析增量CPK数据
+        /// </summary>
+        private void ParseIncrementalCPKData(string newContent)
+        {
+            if (string.IsNullOrEmpty(newContent)) return;
+
+            string pattern = @"@pdata@([^@]+)@([^@]+)@([^@]*)@([^@]*)@([^@]*)";
+            var matches = Regex.Matches(newContent, pattern);
+
+            foreach (Match match in matches)
+            {
+                if (!match.Success) continue;
+
+                string paramName = match.Groups[1].Value;
+                string valueStr = match.Groups[2].Value;
+                string minStr = match.Groups[3].Value;
+                string maxStr = match.Groups[4].Value;
+
+                // 跳过非数值参数
+                if (paramName.Contains("ID") || paramName.Contains("Mode") || paramName.Contains("Priority"))
+                    continue;
+
+                double value;
+                if (!double.TryParse(valueStr, out value))
+                    continue;
+
+                // 累积数据
+                if (!_accumulatedData.ContainsKey(paramName))
+                {
+                    _accumulatedData[paramName] = new List<double>();
+                }
+                _accumulatedData[paramName].Add(value);
+
+                // 更新 Min/Max 规格
+                double minValue;
+                if (!string.IsNullOrEmpty(minStr) && double.TryParse(minStr, out minValue))
+                {
+                    _accumulatedMinDict[paramName] = minValue;
+                }
+
+                double maxValue;
+                if (!string.IsNullOrEmpty(maxStr) && double.TryParse(maxStr, out maxValue))
+                {
+                    _accumulatedMaxDict[paramName] = maxValue;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 用累积数据更新图表和CPK数据
+        /// </summary>
+        private void UpdateChartsWithAccumulatedData()
+        {
+            string[] colors = { "#2196F3", "#4CAF50", "#FF9800", "#9C27B0", "#F44336", "#00BCD4", "#FF5722", "#8BC34A", "#E91E63", "#3F51B5", "#009688", "#FFC107" };
+            int colorIndex = 0;
+
+            var cpkDataList = new List<CPKDataModel>();
+            var newChartItems = new ObservableCollection<ChartItemModel>();
+
+            foreach (var kvp in _accumulatedData)
+            {
+                string paramName = kvp.Key;
+                List<double> values = kvp.Value;
+
+                if (values.Count < 1) continue;
+
+                // 计算 CPK 统计值
+                double mean = values.Average();
+                double sigma = CalculateStdDev(values);
+
+                double min = _accumulatedMinDict.ContainsKey(paramName) ? _accumulatedMinDict[paramName] : 0;
+                double max = _accumulatedMaxDict.ContainsKey(paramName) ? _accumulatedMaxDict[paramName] : 100;
+                double target = (min + max) / 2;
+
+                double halfRange = (max - min) / 2;
+                double ca = halfRange > 0 ? Math.Abs((mean - target) / halfRange) : 0;
+                double cp = sigma > 0 ? (max - min) / (6 * sigma) : 0;
+                double cpk = (1 - ca) * cp;
+
+                // 更新或创建 ChartItemModel
+                var existingItem = AllChartItems.FirstOrDefault(x => x.PositionName == paramName);
+                if (existingItem != null)
+                {
+                    existingItem.CPKValue = cpk;
+                    existingItem.MaxValue = max;
+                    existingItem.TargetValue = target;
+                    existingItem.MinValue = min;
+                    existingItem.ChartSeriesCollection = GenerateCPKChartData(values, min, max, target);
+                    newChartItems.Add(existingItem);
+                }
+                else
+                {
+                    newChartItems.Add(new ChartItemModel
+                    {
+                        PositionName = paramName,
+                        PositionColor = colors[colorIndex % colors.Length],
+                        CPKValue = cpk,
+                        MaxValue = max,
+                        TargetValue = target,
+                        MinValue = min,
+                        ChartSeriesCollection = GenerateCPKChartData(values, min, max, target)
+                    });
+                }
+
+                // 更新 AllCPKData
+                var existingCpkData = AllCPKData.FirstOrDefault(x => x.ParameterName == paramName);
+                if (existingCpkData != null)
+                {
+                    existingCpkData.Mean = mean;
+                    existingCpkData.Sigma = sigma;
+                    existingCpkData.MinValue = min;
+                    existingCpkData.MaxValue = max;
+                    existingCpkData.TargetValue = target;
+                    existingCpkData.Ca = ca;
+                    existingCpkData.Cp = cp;
+                    existingCpkData.Cpk = cpk;
+                    existingCpkData.DataValues = values;
+                }
+                else
+                {
+                    cpkDataList.Add(new CPKDataModel
+                    {
+                        ParameterName = paramName,
+                        Mean = mean,
+                        Sigma = sigma,
+                        MinValue = min,
+                        MaxValue = max,
+                        TargetValue = target,
+                        Ca = ca,
+                        Cp = cp,
+                        Cpk = cpk,
+                        DataValues = values
+                    });
+                }
+
+                colorIndex++;
+            }
+
+            // 添加新增的 CPK 数据项
+            foreach (var item in cpkDataList)
+            {
+                AllCPKData.Add(item);
+            }
+
+            // 更新图表集合（仅在有新增项时替换）
+            if (newChartItems.Count > AllChartItems.Count)
+            {
+                AllChartItems = newChartItems;
             }
         }
 
@@ -2190,7 +2546,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             PythonScriptPath = TempPythonScriptPath;
             PythonExePath = TempPythonExePath;
 
-            // 重新解析CPK文件
+            // 重新解析CPK文件    
             if (!string.IsNullOrEmpty(ConfigFile1))
             {
                 ParseCPKFile(ConfigFile1);
