@@ -412,10 +412,15 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             get => _selectedLADStation;
             set
             {
+                if (_selectedLADStation == value) return;
+
+                var oldStation = _selectedLADStation;
+                var newStation = value;
+
                 if (SetProperty(ref _selectedLADStation, value))
                 {
-                    // 工站切换时保存当前配置并加载新工站配置
-                    OnStationChanged(value);
+                    // 工站切换时保存当前配置并加载新工站配置，传入旧值和新值
+                    OnStationChanged(oldStation, newStation);
 
                     // 更新删除命令的可用状态
                     ((DelegateCommand)DeleteStationCommand)?.RaiseCanExecuteChanged();
@@ -681,24 +686,24 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         /// <summary>
         /// 工站切换处理
         /// </summary>
-        private void OnStationChanged(LADStationConfig newStation)
+        private void OnStationChanged(LADStationConfig oldStation, LADStationConfig newStation)
         {
             if (newStation == null) return;
 
             try
             {
-                // 保存当前工站配置（如果之前有选中的工站）
-                if (SelectedLADStation != null && SelectedLADStation != newStation)
+                if (oldStation != null)
                 {
-                    SaveStationConfig(SelectedLADStation);
+                    SaveStationConfig(oldStation);
+                    SetStationGlobalVariable(oldStation.StationName, false);
                 }
-
-                // 加载新工站配置到界面
                 if (newStation.LadConfig != null)
                 {
                     LoadConfigFromObject(newStation.LadConfig);
                 }
-                SetStationGlobalVariable(newStation.StationName);
+
+                // 将新工站的全局变量设为 true
+                SetStationGlobalVariable(newStation.StationName, true);
             }
             catch (Exception ex)
             {
@@ -1291,13 +1296,18 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         /// <summary>
         /// 根据工站名称设置对应的全局变量为 true
         /// </summary>
-        private void SetStationGlobalVariable(string stationName)
+        private void SetStationGlobalVariable(string stationName, bool isSelected)
         {
             try
             {
                 var globalModule = GetGlobal();
-                if (globalModule?.Parameters == null) return;
+                if (globalModule?.Parameters == null)
+                {
+                    AddLog($"设置工站全局变量失败: 无法获取全局模块");
+                    return;
+                }
 
+                bool found = false;
                 foreach (var item in globalModule.Parameters)
                 {
                     if (item.Value == null || !item.Value.Visible) continue;
@@ -1307,10 +1317,16 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     {
                         if (item.Value.Value is bool)
                         {
-                            item.Value.Value = true;
+                            item.Value.Value = isSelected;
+                            found = true;
                         }
                         break;
                     }
+                }
+
+                if (!found)
+                {
+                    AddLog($"未找到匹配的全局变量: {stationName}");
                 }
             }
             catch (Exception ex)
