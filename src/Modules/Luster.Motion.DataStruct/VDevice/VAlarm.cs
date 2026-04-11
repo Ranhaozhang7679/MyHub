@@ -1,4 +1,4 @@
-﻿using Luster.Motion.DataStruct.FXVirtual;
+using Luster.Motion.DataStruct.FXVirtual;
 using Luster.Motion.DataStruct.Real;
 using Luster.Motion.DataStruct.Virtual;
 using System;

@@ -1,4 +1,4 @@
-﻿<UserControl
+<UserControl
     x:Class="Luster.SimDevice.SubSystem.Views.Dialog.ErrorCustomDialog"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -34,6 +34,22 @@
             hc:InfoElement.Title="报警英文"
             Style="{StaticResource TextBoxValidationStyle}"
             Text="{Binding AlarmEnglish}" />
+
+        <ComboBox
+            Margin="0,0,0,20"
+            hc:InfoElement.Placeholder="报警种类"
+            hc:InfoElement.Title="报警种类"
+            Style="{StaticResource ComboBoxExtendBaseStyle}"
+            ItemsSource="{Binding AlarmCategoryOptions}"
+            SelectedItem="{Binding AlarmCategory}"
+            IsEditable="False" />
+
+        <TextBox
+            Margin="0,0,0,20"
+            hc:InfoElement.Placeholder="维修动作"
+            hc:InfoElement.Title="维修动作"
+            Style="{StaticResource TextBoxExtendBaseStyle}"
+            Text="{Binding RepairActionText}" />
 
         <!-- 生成器块 -->
         <Expander IsExpanded="False" Background="Transparent" Margin="0,10,0,0">
