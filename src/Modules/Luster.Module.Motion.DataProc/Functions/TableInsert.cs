@@ -66,7 +66,7 @@ namespace Luster.Module.Motion.DataProc.Functions
 
 
         [DependOn("IsTemporaryWrite", false)]
-        [Parameter("清空上一批最新数据", 2, CN = "是否清空上一批最新数据", DefaultV = true, CanRef = ParamRef.Ref)]
+        [Parameter("清空上一批最新数据", 2, CN = "是否清空上一批最新数据", DefaultV = false, CanRef = ParamRef.Ref)]
         public bool ClearLatestData { get; set; } = true;
 
         /// <summary>
