@@ -100,6 +100,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Device
                         // 设备状态变更事件
                         device.StatusChangedEvent -= Device_StatusChangedEvent;
                         device.StatusChangedEvent += Device_StatusChangedEvent;
+                        item.Status = device.Status; // 界面同步当前控制卡状态
                     }
                 }
                 else
