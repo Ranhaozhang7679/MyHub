@@ -150,11 +150,23 @@ namespace Luster.Motion.ReportUI.Views
             var columnNames = tabPage.DynamicColumnNames;
             if (columnNames == null) columnNames = new List<string>();
 
-            // 检查是否需要重新生成列（至少要有5个固定列）
-            int currentDynamicColumnCount = dataGrid.Columns.Count - 5; // 减去5个固定列
+            // 检查是否需要重新生成列：比较列数和列名
+            int currentDynamicColumnCount = dataGrid.Columns.Count - 5;
             if (currentDynamicColumnCount == columnNames.Count && dataGrid.Columns.Count >= 5)
             {
-                return; // 列数匹配，无需重新生成
+                // 列数匹配，再比较实际列名是否一致
+                bool namesMatch = true;
+                for (int i = 0; i < columnNames.Count; i++)
+                {
+                    // 动态列从第6列开始（index 5）
+                    var header = dataGrid.Columns[5 + i].Header as string;
+                    if (header != columnNames[i])
+                    {
+                        namesMatch = false;
+                        break;
+                    }
+                }
+                if (namesMatch) return; // 列名也完全匹配，无需重新生成
             }
 
             dataGrid.BeginInit();
@@ -247,6 +259,34 @@ namespace Luster.Motion.ReportUI.Views
                     factory.SetValue(TextBlock.MaxWidthProperty, 85.0);
 
                     templateColumn.CellTemplate = new DataTemplate { VisualTree = factory };
+
+                    // 如果列名包含"等待"，仅将表头背景改为黄色，其余格式保持与默认模板一致
+                    if (columnName.Contains("等待"))
+                    {
+                        var yellowBorder = new FrameworkElementFactory(typeof(Border));
+                        yellowBorder.SetValue(Border.BackgroundProperty, Brushes.Yellow);
+                        yellowBorder.SetValue(Border.BorderBrushProperty, new SolidColorBrush((Color)ColorConverter.ConvertFromString("#CCCCCC")));
+                        yellowBorder.SetValue(Border.BorderThicknessProperty, new Thickness(4, 2, 4, 2));
+                        yellowBorder.SetValue(Border.PaddingProperty, new Thickness(0, 0, 0, 1));
+                        var yellowText = new FrameworkElementFactory(typeof(TextBlock));
+                        yellowText.SetBinding(TextBlock.TextProperty, new Binding("Content") { RelativeSource = new RelativeSource(RelativeSourceMode.TemplatedParent) });
+                        yellowText.SetValue(TextBlock.TextWrappingProperty, TextWrapping.Wrap);
+                        yellowText.SetValue(TextBlock.TextAlignmentProperty, TextAlignment.Center);
+                        yellowText.SetValue(TextBlock.FontWeightProperty, FontWeights.Bold);
+                        yellowText.SetValue(TextBlock.ForegroundProperty, Brushes.Black);
+                        yellowText.SetValue(TextBlock.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+                        yellowText.SetValue(TextBlock.VerticalAlignmentProperty, VerticalAlignment.Center);
+                        yellowBorder.AppendChild(yellowText);
+                        templateColumn.HeaderStyle = new Style(typeof(DataGridColumnHeader))
+                        {
+                            Setters =
+                            {
+                                new Setter(DataGridColumnHeader.MinHeightProperty, 80.0),
+                                new Setter(DataGridColumnHeader.TemplateProperty, new ControlTemplate { VisualTree = yellowBorder })
+                            }
+                        };
+                    }
+
                     dataGrid.Columns.Add(templateColumn);
                 }
             }
