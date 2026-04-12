@@ -829,8 +829,8 @@ namespace Luster.Motion.TaskFlow.Engine
             //service.Show("HiveStartDialog2", param, null);
 
             // 0 首先运行开始工站
-            _deviceEngine.OnLog(LogType.Info, "首先执行开始工站");
-            MotionEngine.RunStartStation();
+            //_deviceEngine.OnLog(LogType.Info, "首先执行开始工站");
+            //MotionEngine.RunStartStation();
 
             AlarmInfo = null;
             RecoveryIOSetInit();
@@ -843,6 +843,8 @@ namespace Luster.Motion.TaskFlow.Engine
                 if (lockCommand > 0) { _deviceEngine.OnLog(LogType.Info, $"暂停lockcommand次数>0,:{lockCommand}，直接退出!"); return false; }
                 Interlocked.Increment(ref lockCommand);
                 _deviceEngine.OnLog(LogType.Info, $"lockCommand为{lockCommand}");
+                //_deviceEngine.OnLog(LogType.Info, "首先执行开始工站");
+                //MotionEngine.RunStartStation();
 
                 // PLC 和监控要进行复位检查
                 if (_deviceEngine.Recovery())
@@ -924,6 +926,8 @@ namespace Luster.Motion.TaskFlow.Engine
                 if (lockCommand > 0) { _deviceEngine.OnLog(LogType.Info, $"lockcommand次数>0,:{lockCommand}，直接退出!"); return false; }
                 Interlocked.Increment(ref lockCommand);
                 _deviceEngine.OnLog(LogType.Info, $"监控lockcommand次数，当前为:{lockCommand}");
+                _deviceEngine.OnLog(LogType.Info, "首先执行开始工站");
+                MotionEngine.RunStartStation();
                 _deviceEngine.OnLog(LogType.Info, $"开始检查轴状态!");
                 // 1.Plc启动
                 // 设备回零检查
