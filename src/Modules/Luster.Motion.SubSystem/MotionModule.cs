@@ -134,7 +134,10 @@ namespace Luster.Motion.SubSystem
             containerRegistry.RegisterForNavigation<FFUComContent, FFUComContentVM>();
 
             containerRegistry.RegisterForNavigation<DustContent, DustContentVM>();
-            
+
+            // 硬件调试配置集成内容
+            containerRegistry.RegisterForNavigation<IntegratedHardwareContent, IntegratedHardwareContentVM>();
+
             ////  数字架线
             //containerRegistry.RegisterForNavigation<DigitalAssContent, DigitalAssContentVM>();      //  数字架线一级菜单界面
             //containerRegistry.RegisterForNavigation<IOinspectionContent, IOinspectionContentVM>();  // IO点检
