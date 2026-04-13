@@ -22,6 +22,7 @@
 #endregion
 
 using Luster.Common.DataStruct;
+using Luster.Motion.DataStruct;
 using Luster.Common.DataStruct.Attributes;
 using Luster.Common.DataStruct.DataModels;
 using Luster.Common.DataStruct.Enums;
@@ -152,8 +153,9 @@ namespace Luster.Module.Motion.Protocol.Functions
                     }, $"Wait等待值 {OpRule.GetDescription()} {v}", 50, -1);
                 };
             }
-
-            WaitFunc(() =>
+            try
+            {
+                WaitFunc(() =>
             {
                 // 是否监控PLC地址
                 if (PlcMonitor && monitorAddr != null)
@@ -193,7 +195,11 @@ namespace Luster.Module.Motion.Protocol.Functions
                 bool isTrue = Luster.Motion.DataStruct.Network.CompareVal<double>.Compare(OpRule, v, plcAddr.Value);
                 return isTrue;
             }, $"Wait等待值 {OpRule.GetDescription()} {v}", 50, waitOveTime, retryAction);
-
+            }
+            catch (DeviceTimeoutException ex)
+            {
+                OnAlarm(AlarmType.WarningTip, $"等待变量{OpRule.GetDescription()} == {v}超时!");
+            }
             // PLC发生初始化，将中断循环的条件关闭
             if (IsPlcInit)
             {
