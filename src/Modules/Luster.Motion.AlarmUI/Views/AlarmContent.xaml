@@ -377,7 +377,7 @@
                             </DataGrid.Columns>
                         </DataGrid>
 
-                        <!-- Statistics List (Alarm+Warning summary; downtime only counts Alarm types) -->
+                        <!-- Statistics List (Alarm+Warning summary) -->
                         <DataGrid
                             AutoGenerateColumns="False"
                             Margin="5"
@@ -390,7 +390,7 @@
                             HeadersVisibility="Column"
                             HorizontalScrollBarVisibility="Auto"
                             IsReadOnly="True"
-                            ItemsSource="{Binding AlarmStatisticsRows}"
+                            ItemsSource="{Binding PagedStatisticsRows}"
                             RowStyle="{StaticResource CustomDataGridRowStyle}"
                             GridLinesVisibility="None"
                             HorizontalGridLinesBrush="Transparent"
@@ -493,8 +493,6 @@
 
                                 <TextBlock Margin="10,8,10,0" FontSize="14" FontWeight="SemiBold" Text="设备宕机时间段(按天)" />
 
-                                <!-- 关键：用横向滚动容器 + 给图一个较大的最小宽度，形成“展开的甘特图”效果 -->
-                                <!-- DownTimeChart 区域：用一个容器 Grid 把 Chart + Tooltip 叠在一起 -->
                                 <Grid Grid.Row="1">
                                     <chart:CartesianChart
                                         MinWidth="1200"
@@ -519,7 +517,6 @@
                                             </chart:Axis>
                                         </chart:CartesianChart.AxisX>
 
-                                        <!-- DownTime Chart: AxisY -->
                                         <chart:CartesianChart.AxisY>
                                             <chart:Axis
                                                 Title="日期"
@@ -527,8 +524,6 @@
                                                 MinValue="{Binding DownTimeYMinValue}"
                                                 MaxValue="{Binding DownTimeYMaxValue}">
                                                 <chart:Axis.Separator>
-                                                    <!-- 必须启用，否则不会生成刻度/标签 -->
-                                                    <!-- Stroke=Transparent: 不显示横向分隔线，但保留刻度与 LabelFormatter -->
                                                     <chart:Separator Step="1"/>
                                                 </chart:Axis.Separator>
                                             </chart:Axis>
@@ -583,7 +578,7 @@
                             HeadersVisibility="Column"
                             HorizontalScrollBarVisibility="Auto"
                             IsReadOnly="True"
-                            ItemsSource="{Binding DownTimeSegments}"
+                            ItemsSource="{Binding PagedDownTimeSegments}"
                             RowStyle="{StaticResource CustomDataGridRowStyle}"
                             GridLinesVisibility="None"
                             HorizontalGridLinesBrush="Transparent"
@@ -680,9 +675,14 @@
                         <Style TargetType="StackPanel">
                             <Setter Property="Visibility" Value="Collapsed" />
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsAlarmView}" Value="True">
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding IsAlarmView}" Value="True" />
+                                        <Condition Binding="{Binding IsStatisticsTab}" Value="False" />
+                                        <Condition Binding="{Binding IsDownTimeBomTab}" Value="False" />
+                                    </MultiDataTrigger.Conditions>
                                     <Setter Property="Visibility" Value="Visible" />
-                                </DataTrigger>
+                                </MultiDataTrigger>
                             </Style.Triggers>
                         </Style>
                     </StackPanel.Style>
@@ -761,9 +761,83 @@
                         </hc:Interaction.Triggers>
                     </hc:Pagination>
                 </StackPanel>
-            </Grid>
 
+                <!-- Footer paging: Towntime -->
+                <StackPanel
+                    Grid.Row="2"
+                    Margin="5,0,5,5"
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding IsAlarmView}" Value="True" />
+                                        <Condition Binding="{Binding IsDownTimeBomTab}" Value="True" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <hc:NumericUpDown
+                        Height="30"
+                        hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.MaxPerPage}}"
+                        hc:InfoElement.TitlePlacement="Left"
+                        hc:InfoElement.TitleWidth="80"
+                        Minimum="1"
+                        Style="{StaticResource NumericUpDownExtend}"
+                        Value="{Binding DownTimePerPageCount}" />
+                    <hc:Pagination
+                        Margin="5,5,0,5"
+                        AutoHiding="False"
+                        DataCountPerPage="{Binding DownTimePerPageCount}"
+                        IsJumpEnabled="True"
+                        MaxPageCount="{Binding DownTimePageCount}"
+                        MaxPageInterval="3"
+                        PageIndex="{Binding DownTimePageIndex, Mode=TwoWay}" />
+                </StackPanel>
+
+                <!-- Footer paging: Statistics -->
+                <StackPanel
+                    Grid.Row="2"
+                    Margin="5,0,5,5"
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding IsAlarmView}" Value="True" />
+                                        <Condition Binding="{Binding IsStatisticsTab}" Value="True" />
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <hc:NumericUpDown
+                        Height="30"
+                        hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.MaxPerPage}}"
+                        hc:InfoElement.TitlePlacement="Left"
+                        hc:InfoElement.TitleWidth="80"
+                        Minimum="1"
+                        Style="{StaticResource NumericUpDownExtend}"
+                        Value="{Binding StatisticsPerPageCount}" />
+                    <hc:Pagination
+                        Margin="5,5,0,5"
+                        AutoHiding="False"
+                        DataCountPerPage="{Binding StatisticsPerPageCount}"
+                        IsJumpEnabled="True"
+                        MaxPageCount="{Binding StatisticsPageCount}"
+                        MaxPageInterval="3"
+                        PageIndex="{Binding StatisticsPageIndex, Mode=TwoWay}" />
+                </StackPanel>
+            </Grid>
         </Grid>
     </Border>
 </UserControl>
-    
