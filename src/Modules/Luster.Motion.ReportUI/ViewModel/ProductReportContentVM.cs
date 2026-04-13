@@ -161,7 +161,7 @@ namespace Luster.Motion.ReportUI.ViewModel
         /// <summary>
         /// chart宽度
         /// </summary>
-        private double _chartWidth=440;
+        private double _chartWidth = 440;
         public double ChartWidth
         {
             get { return _chartWidth; }
@@ -259,7 +259,7 @@ namespace Luster.Motion.ReportUI.ViewModel
         /// </summary>
         private void InitIphoneChart()
         {
-         
+
             var okRate = new ChartValues<double>();
             var ngRate = new ChartValues<double>();
 
@@ -417,7 +417,7 @@ namespace Luster.Motion.ReportUI.ViewModel
         /// <summary>
         /// 获取图表分析数据
         /// </summary>
-        private void GetWeekCapacity(DateTime startTime,DateTime endTime)
+        private void GetWeekCapacity(DateTime startTime, DateTime endTime)
         {
             var products = reporitory.GetList<TbProductInfo>(x => x.CreateTime > startTime && x.CreateTime < endTime, x => x.ID).ToList();
             // 2根据小时分组
@@ -448,7 +448,7 @@ namespace Luster.Motion.ReportUI.ViewModel
                     {
                         model.OkCount = item.Value.Count(x => x.Result == "OK");
                         model.NgCount = item.Value.Count(x => x.Result != "OK");
-                        var sumCT=item.Value.Sum(x=>x.CT);
+                        var sumCT = item.Value.Sum(x => x.CT);
                         model.SumCT = sumCT;
                     }
                     else
@@ -469,7 +469,7 @@ namespace Luster.Motion.ReportUI.ViewModel
                 {
                     var rate = Math.Round(((double)analyzeModels[i].OkCount) / (analyzeModels[i].OkCount + analyzeModels[i].NgCount) * 100, 2);
                     analyzeModels[i].OkRate = rate;
-                    analyzeModels[i].NgRate = Math.Round(100 - rate,2);
+                    analyzeModels[i].NgRate = Math.Round(100 - rate, 2);
                 }
             }
             _analyzeWeekModels = analyzeModels.OrderBy(x => x.Time).ToList();
@@ -483,22 +483,22 @@ namespace Luster.Motion.ReportUI.ViewModel
             double sumCT = 0;
             foreach (var item in _analyzeWeekModels)
             {
-                totalOkCount+=item.OkCount;
-                totalNgCount+=item.NgCount;
+                totalOkCount += item.OkCount;
+                totalNgCount += item.NgCount;
                 sumCT += item.SumCT;
             }
-            InOutCount = $"{totalNgCount+totalOkCount}/{totalNgCount + totalOkCount}";
+            InOutCount = $"{totalNgCount + totalOkCount}/{totalNgCount + totalOkCount}";
             PassFailCount = $"{totalOkCount}/{totalNgCount}";
             Yield = Math.Round(totalOkCount / (totalOkCount + totalNgCount), 2).ToString();
             RealCT = Math.Round(sumCT / (totalOkCount + totalNgCount), 2).ToString();
             double TargetUph = _mController.SysConfig.CT == 0 ? 0 : (int)(3600 / _mController.SysConfig.CT);
-            UPH = RealCT=="0" ? TargetUph.ToString() : Math.Round((3600 / Convert.ToDouble(RealCT)),0).ToString();
+            UPH = RealCT == "0" ? TargetUph.ToString() : Math.Round((3600 / Convert.ToDouble(RealCT)), 0).ToString();
             if (_mController.SysConfig.ListRecipe != null)
             {
-               var currentRecipe= _mController.SysConfig.ListRecipe.FirstOrDefault(x=>x.IsActive=true);
-               RecipeName= currentRecipe.RecipeName;
+                var currentRecipe = _mController.SysConfig.ListRecipe.FirstOrDefault(x => x.IsActive = true);
+                RecipeName = currentRecipe.RecipeName;
             }
-           
+
         }
 
         /// <summary>
@@ -532,11 +532,11 @@ namespace Luster.Motion.ReportUI.ViewModel
             RateSeriesCollection.Add(new StackedColumnSeries
             {
                 StackMode = StackMode.Values,
-                DataLabels= true,
-                LabelsPosition=BarLabelPosition.Perpendicular,
+                DataLabels = true,
+                LabelsPosition = BarLabelPosition.Perpendicular,
                 Fill = new SolidColorBrush(Color.FromRgb(255, 0, 0)),
                 Title = "NG",
-                Values =ngValue
+                Values = ngValue
             });
 
         }
@@ -595,20 +595,20 @@ namespace Luster.Motion.ReportUI.ViewModel
                     if (token.IsCancellationRequested) return;
 
                     _analyzeModels = analyzeModels;
-                    ChartWidth = _analyzeModels.Count > 11 ? 40 * _analyzeModels.Count : 440;
 
-                    RateLabels = labels.ToArray();
-                    CapacityLabels = labels.ToArray();
-                    RateFormatter = v => v.ToString("G");
-                    CapacityFormatter = v => v.ToString("G");
+                    // 直接赋值后备字段，避免每次 SetProperty 触发独立渲染
+                    _chartWidth = _analyzeModels.Count > 11 ? 40 * _analyzeModels.Count : 440;
+                    _rateLables = labels.ToArray();
+                    _capacityLabels = labels.ToArray();
+                    _rateFormatter = v => v.ToString("G");
+                    _capacityFormatter = v => v.ToString("G");
 
-                    RateSeriesCollection = new SeriesCollection
+                    _rateSeriesCollection = new SeriesCollection
                     {
                         new StackedColumnSeries
                         {
                             StackMode = StackMode.Values,
-                            DataLabels = true,
-                            LabelsPosition = BarLabelPosition.Perpendicular,
+                            DataLabels = false,
                             Fill = new SolidColorBrush(Color.FromRgb(0, 255, 0)),
                             Title = "OK",
                             Values = rateOk
@@ -616,15 +616,14 @@ namespace Luster.Motion.ReportUI.ViewModel
                         new StackedColumnSeries
                         {
                             StackMode = StackMode.Values,
-                            DataLabels = true,
-                            LabelsPosition = BarLabelPosition.Perpendicular,
+                            DataLabels = false,
                             Fill = new SolidColorBrush(Color.FromRgb(255, 0, 0)),
                             Title = "NG",
                             Values = rateNg
                         }
                     };
 
-                    CapacitySeriesCollection = new SeriesCollection
+                    _capacitySeriesCollection = new SeriesCollection
                     {
                         new LineSeries
                         {
@@ -646,10 +645,22 @@ namespace Luster.Motion.ReportUI.ViewModel
                         }
                     };
 
-                    // load first page
-                    PageUpdated(new FunctionEventArgs<int>(1));
-                    PageIndex = 1;
-                }));
+                    // 统一触发一次 PropertyChanged，让 LiveCharts 只渲染一次
+                    RaisePropertyChanged(nameof(ChartWidth));
+                    RaisePropertyChanged(nameof(RateLabels));
+                    RaisePropertyChanged(nameof(CapacityLabels));
+                    RaisePropertyChanged(nameof(RateFormatter));
+                    RaisePropertyChanged(nameof(CapacityFormatter));
+                    RaisePropertyChanged(nameof(RateSeriesCollection));
+                    RaisePropertyChanged(nameof(CapacitySeriesCollection));
+
+                    // 分页加载延迟到下一帧，避免与图表在同一帧内双重渲染
+                    _dispatcher?.BeginInvoke(new Action(() =>
+                    {
+                        PageUpdated(new FunctionEventArgs<int>(1));
+                        PageIndex = 1;
+                    }), DispatcherPriority.Background);
+                }), DispatcherPriority.Background);
             }, token);
         }
 

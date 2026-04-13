@@ -1,0 +1,68 @@
+digraph AlarmDataFlow {
+    rankdir=TB;
+    node [shape=box, style=rounded, fontname="Microsoft YaHei"];
+    edge [fontname="Microsoft YaHei"];
+
+    subgraph cluster_phase1 {
+        label="阶段1：报警触发与对象生成（模块层）";
+        style=dashed;
+        color="#ffcccc";
+        fontcolor=red;
+        f1 [label="TaskFunction 抛出异常 / 发生超时"];
+        m1 [label="MotionModule 捕获异常 (catch)"];
+        m2 [label="创建 AlarmInfo 对象\n设定 Status = Alarmed"];
+        f1 -> m1 -> m2;
+    }
+
+    subgraph cluster_phase2 {
+        label="阶段2：报警上抛与引擎拦截";
+        style=dashed;
+        color="#ffcc99";
+        fontcolor=orange;
+        m3 [label="触发 AlarmEvent_module 上抛数据"];
+        e1 [label="MotionEngine 接收报警\n触发至 UI (AlarmEvent_MEngine)"];
+        re1 [label="MotionRunEngine 拦截返回假状态 (ProcessAlarm)"];
+        re2 [label="挂载 AlarmProcEvent 监听委托"];
+        re3 [label="BrokenOff.Wait() 阻塞并挂起当前生产线程"];
+        
+        m2 -> m3 -> e1;
+        m2 -> re1 [label="DoFunction 返回 false", style=dashed];
+        re1 -> re2 -> re3;
+    }
+
+    subgraph cluster_phase3 {
+        label="阶段3：用户与策略干预决策";
+        style=dashed;
+        color="#ccccff";
+        fontcolor=blue;
+        ui1 [label="前端界面 (UI) 接收 AlarmInfo 弹窗展示"];
+        ui2 [label="操作员点选动作\n(Retry / Ng / Continue)"];
+        ui3 [label="回填 AlarmInfo.AlarmProc\n自动触发委托回调"];
+        
+        e1 -> ui1;
+        ui1 -> ui2 -> ui3;
+    }
+
+    subgraph cluster_phase4 {
+        label="阶段4：引擎恢复流转";
+        style=dashed;
+        color="#ccffcc";
+        fontcolor=green;
+        re4 [label="MotionRunEngine 捕获回调事件\n解除阻塞 (释放 BrokenOff)"];
+        
+        act_retry [label="策略：Retry\n原位重新调用 DoFunction()"];
+        act_ng [label="策略：Ng\n寻找 NG 排料模块并清料"];
+        act_cont [label="策略：Continue\n强制置为 Success，清空 AlarmInfo"];
+        
+        re5 [label="流转至下一步：\n执行 NextModule"];
+
+        ui3 -> re4;
+        re4 -> act_retry [label="选择 Retry"];
+        re4 -> act_ng [label="选择 Ng"];
+        re4 -> act_cont [label="选择 Continue"];
+        
+        act_retry -> re5;
+        act_ng -> re5;
+        act_cont -> re5;
+    }
+}

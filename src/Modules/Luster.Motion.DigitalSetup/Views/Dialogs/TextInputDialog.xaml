@@ -1,0 +1,31 @@
+<UserControl
+    x:Class="Luster.Motion.DigitalSetup.Views.Dialogs.TextInputDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:prism="http://prismlibrary.com/"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    mc:Ignorable="d"
+    Height="150" d:DesignHeight="150" d:DesignWidth="350">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="{Binding Title}" FontSize="14" FontWeight="Bold" Margin="0,0,0,10" />
+        <TextBox Grid.Row="1" Text="{Binding InputText, UpdateSourceTrigger=PropertyChanged}"
+                 FontSize="13" Padding="5" hc:InfoElement.Placeholder="请输入名称"
+                 x:Name="InputTextBox" VerticalContentAlignment="Center" />
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+            <Button Content="确定" Command="{Binding ConfirmCommand}"
+                    Style="{StaticResource ButtonPrimary}"
+                    Width="70" Height="28" Margin="0,0,10,0" />
+            <Button Content="取消" Command="{Binding CancelCommand}"
+                    Width="70" Height="28" />
+        </StackPanel>
+    </Grid>
+</UserControl>

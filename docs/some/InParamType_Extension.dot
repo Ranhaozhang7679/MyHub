@@ -1,0 +1,128 @@
+digraph InParamType_Extension {
+    fontname="Microsoft YaHei";
+    rankdir=TB;
+    compound=true;
+    node [shape=box, style=filled, fontname="Microsoft YaHei", fontsize=11];
+    edge [fontname="Microsoft YaHei", fontsize=9];
+
+    // ===== 图例 =====
+    subgraph cluster_legend {
+        label="图例";
+        style=filled; color="#F5F5F5";
+        leg_new [label="绿色 = 新增文件", color="#C8E6C9"];
+        leg_exist [label="蓝色 = 已有文件需修改", color="#BBDEFB"];
+        leg_auto [label="黄色 = 自动触发的运行时行为", color="#FFF9C4"];
+    }
+
+    // ===== 步骤1: 数据模型层 =====
+    subgraph cluster_step1 {
+        label="步骤1: 定义数据模型 (TaskFlow.Common/Models/)";
+        style=filled; color="#E8F5E9";
+
+        Model [label="LFileSelect.cs\n\npublic class LFileSelect : IXMLParser\n{\n  public string FilePath { get; set; }\n  public string Filter { get; set; }\n\n  // 实现 IXMLParser\n  public XElement ExportXml() { ... }\n  public void ParserXml(XElement x) { ... }\n}", color="#C8E6C9", shape=note];
+
+        Register [label="类型注册 (模块初始化时)\n\nParameterAttribute.ResgisterTypeMaps(\n  \"LFileSelect\",\n  typeof(LFileSelect)\n);", color="#C8E6C9"];
+    }
+
+    // ===== 步骤2: 自定义控件层 =====
+    subgraph cluster_step2 {
+        label="步骤2: 创建自定义 WPF 控件 (Controls/)";
+        style=filled; color="#E8F5E9";
+
+        Ctrl [label="FileSelectCtrl.cs\n(Controls/FileSelectCtrl.cs)\n\npublic class FileSelectCtrl : Control\n{\n  // 1. 定义 DP: Value, Text, IsReadOnly\n  // 2. 持有 ParameterAttribute 引用\n  // 3. 内嵌 Button (PART_BtnConfig)\n  // 4. Button.Click → Parameter.OnConfig()\n}", color="#C8E6C9"];
+
+        CtrlTemplate [label="Generic.xaml (或 Themes/)\n\n<Style TargetType=\"{x:Type local:FileSelectCtrl}\">\n  <Setter Property=\"Template\">\n    <Setter.Value>\n      <ControlTemplate>\n        <Grid>\n          <TextBlock Text=\"{Binding Text}\" />\n          <Button x:Name=\"PART_BtnConfig\" Content=\"🔍\" />\n        </Grid>\n      </ControlTemplate>\n    </Setter.Value>\n  </Setter>\n</Style>", color="#C8E6C9"];
+
+        Ctrl -> CtrlTemplate [label="控件模板", style=dashed];
+    }
+
+    // ===== 步骤3: Editor 层 =====
+    subgraph cluster_step3 {
+        label="步骤3: 创建 Editor (ParamGrid/Editors/)";
+        style=filled; color="#E8F5E9";
+
+        Editor [label="FileSelectEditor.cs\n(ParamGrid/Editors/FileSelectEditor.cs)\n\npublic class FileSelectEditor : ParamEditorBase\n{\n  // CreateElement():\n  //   创建 FileSelectCtrl 实例\n  //   设置 IsReadOnly, Parameter\n  //   绑定 ValueChanged 事件\n\n  // GetDependencyProperty():\n  //   返回 FileSelectCtrl.ValueProperty\n}", color="#C8E6C9"];
+
+        EditorBase [label="ParamEditorBase (已有,抽象基类)\n\nCreateElement(ParamItem)\nCreateBinding(ParamItem, element)\nGetDependencyProperty()\nOnParamValueChanged()", color="#BBDEFB"];
+    }
+
+    // ===== 步骤4: ParamResolver 注册 =====
+    subgraph cluster_step4 {
+        label="步骤4: 注册到 ParamResolver (ParamGrid/ParamResolver.cs)";
+        style=filled; color="#BBDEFB";
+
+        Resolver [label="ParamResolver.ResolveEditor()\n\n已有的类型判断链:\n  TypeCodeDic.TryGetValue() → 基础类型\n  typeof(VDevice) → DeviceEditor\n  typeof(VAlarm) → AlarmEditor\n  typeof(LCondition) → ConfigEditor\n  ...\n\n▼ 在 else if 链末尾添加: ▼\n  else if (p.Type == typeof(LFileSelect))\n  {\n    editor = new FileSelectEditor();\n  }", color="#BBDEFB"];
+
+        ResolverRef [label="ParamResolver.ResolveRef()\n\n判断参数是否显示链接图标:\n  已有类型默认 \"Normal\"\n  其他类型默认 \"Link\"\n\n如果不需要链接:\n  在判断链中添加:\n  typeof(LFileSelect).IsAssignableFrom(p.Type)\n  → return \"Normal\"", color="#BBDEFB"];
+    }
+
+    // ===== 步骤5: 弹窗层 =====
+    subgraph cluster_step5 {
+        label="步骤5: 创建配置弹窗 (EditorUI/Views/Dialogs/)";
+        style=filled; color="#E8F5E9";
+
+        DialogView [label="FileSelectDialog.xaml\n\n<hci:Dialog>\n  <TextBox Text=\"{Binding FilePath}\" />\n  <Button Command=\"{Binding SelectCommand}\" />\n  <Button Command=\"{Binding OKCommand}\" />\n</hci:Dialog>", color="#C8E6C9"];
+
+        DialogVM [label="FileSelectDialogVM.cs\n(EditorUI/ViewModel/Dialogs/)\n\npublic class FileSelectDialogVM : MotionDialogVM\n{\n  // 实现 IDialogAware\n  // OnDialogOpened(): 接收参数\n  // SelectCommand: 打开文件对话框\n  // OK/Cancel: RaiseRequestClose()\n}", color="#C8E6C9"];
+
+        DialogView -> DialogVM [label="ViewModelLocator\n自动关联"];
+    }
+
+    // ===== 步骤6: DI 注册 =====
+    subgraph cluster_step6 {
+        label="步骤6: 注册弹窗到 DI 容器 (EditorModule.cs)";
+        style=filled; color="#BBDEFB";
+
+        DIRegister [label="EditorModule.RegisterTypes()\n\ncontainerRegistry.RegisterDialog<\n  FileSelectDialog,\n  FileSelectDialogVM\n>();", color="#BBDEFB"];
+    }
+
+    // ===== 步骤7: DialogService 扩展 =====
+    subgraph cluster_step7 {
+        label="步骤7: 添加 DialogService 扩展方法 (DialogExtension.cs)";
+        style=filled; color="#BBDEFB";
+
+        DialogExt [label="DialogServiceExntesion.cs 或\nDialogExtension.cs\n\npublic static void ShowFileSelectDialog(\n  this IDialogService service,\n  ParameterAttribute pAttr,\n  Action<IDialogResult> callback)\n{\n  DialogParameters param = new();\n  param.Add(\"Title\", pAttr.CN);\n  param.Add(\"Parameter\", pAttr);\n  service.ShowDialog(\n    \"FileSelectDialog\", param, callback);\n}", color="#BBDEFB"];
+    }
+
+    // ===== 步骤8: InParamContentVM 处理 =====
+    subgraph cluster_step8 {
+        label="步骤8: 在 InParamContentVM 中添加处理 (InParamContentVM.cs)";
+        style=filled; color="#BBDEFB";
+
+        ItemConfig [label="ItemConfigCommand\n(已有一长串 if-else if 链)\n\n添加新分支:\n\nelse if (args.Paramter.Type == typeof(LFileSelect))\n{\n  _dialogService.ShowFileSelectDialog(\n    args.Paramter, r =>\n  {\n    if (r.Result == ButtonResult.OK\n      && r.Parameters.TryGetValue<LFileSelect>(\n        \"FileSelect\", out var sel))\n    {\n      args.Paramter.Value = sel;\n    }\n    // 刷新 UI\n    var src = ModuleObj;\n    ModuleObj = null;\n    ModuleObj = src;\n  });\n}", color="#BBDEFB"];
+    }
+
+    // ===== 步骤9: 使用 =====
+    subgraph cluster_step9 {
+        label="步骤9: 在 Function 中使用 (模块项目)";
+        style=filled; color="#E8F5E9";
+
+        Usage [label="MyFunction.cs\n\npublic class MyFunction : MotionFunction\n{\n  [Parameter(\"配置文件路径\", 0,\n    CN = \"配置文件\")]\n  public LFileSelect ConfigFile { get; set; }\n\n  public override bool DoExcute(out string errMsg)\n  {\n    errMsg = \"\";\n    string path = ConfigFile.FilePath;\n    // 使用参数...\n    return true;\n  }\n}", color="#C8E6C9"];
+    }
+
+    // ===== 运行时自动链路 =====
+    subgraph cluster_runtime {
+        label="运行时自动链路 (无需手动编码)";
+        style=filled; color="#FFF9C4";
+
+        RT1 [label="1. Function.Owner 赋值\n→ InitParameters()\n→ 反射扫描 [Parameter]\n→ CreateByProperty(typeof(LFileSelect))", color="#FFF9C4"];
+        RT2 [label="2. ParamGrid.UpdateItems()\n→ 遍历 Parameters\n→ CreatePropertyItem(p)\n→ ParamResolver.ResolveEditor(p)\n  p.Type == typeof(LFileSelect)\n  → new FileSelectEditor()", color="#FFF9C4"];
+        RT3 [label="3. ParamItem.InitElement()\n→ Editor.CreateElement()\n  → new FileSelectCtrl()\n→ Editor.CreateBinding()\n  → 绑定 Value 属性", color="#FFF9C4"];
+        RT4 [label="4. 用户点击🔍按钮\n→ FileSelectCtrl.BtnView_Click()\n→ Parameter.OnConfig()\n→ ConfigEvent 触发\n→ ParamGrid.P_ConfigEvent()\n→ ItemConfigEvent 冒泡\n→ InParamContentVM.ItemConfigCommand", color="#FFF9C4"];
+        RT5 [label="5. ItemConfigCommand 分发\n→ typeof(LFileSelect) 分支\n→ ShowFileSelectDialog() 弹窗\n→ 用户选择文件\n→ callback 设置 parameter.Value\n→ ModuleObj 刷新", color="#FFF9C4"];
+
+        RT1 -> RT2 -> RT3 -> RT4 -> RT5 [color=orange, style=bold];
+    }
+
+    // 步骤间关系
+    Model -> Register [label="注册"];
+    Ctrl -> Editor [label="被 Editor 引用"];
+    Editor -> Resolver [label="被 ParamResolver 返回"];
+    DialogView -> DIRegister [label="注册到 DI"];
+    DIRegister -> DialogExt [label="扩展方法调用"];
+    DialogExt -> ItemConfig [label="被 VM 调用"];
+    ItemConfig -> Usage [label="处理 Function 中的参数"];
+
+    // 运行时关联
+    Usage -> RT1 [label="启动", style=dotted, color=orange];
+}

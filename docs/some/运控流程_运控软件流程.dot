@@ -1,0 +1,37 @@
+digraph 运控软件流程 {
+  label="运控软件流程";
+  labelloc=t;
+  fontname="Microsoft YaHei";
+  node [fontname="Microsoft YaHei", fontsize=10];
+  edge [fontname="Microsoft YaHei", fontsize=9];
+  rankdir=TB;
+
+  nJXw49lZUsGuziKoaznla_5 [label="1.扫码", shape=box, style="filled,rounded", fillcolor="#DAE8FC"];
+  nJXw49lZUsGuziKoaznla_8 [label="AOI检测", shape=box, style="filled,rounded", fillcolor="#DAE8FC"];
+  nJXw49lZUsGuziKoaznla_10 [label="3D尺寸检测", shape=box, style="filled,rounded", fillcolor="#DAE8FC"];
+  nJXw49lZUsGuziKoaznla_12 [label="下料", shape=box, style="filled,rounded", fillcolor="#DAE8FC"];
+  nJXw49lZUsGuziKoaznla_14 [label="要料", shape=box, style="filled,rounded", fillcolor="#DAE8FC"];
+  nJXw49lZUsGuziKoaznla_17 [label="拍照扫码", shape=box, style="filled,rounded", fillcolor="#DAE8FC"];
+  nJXw49lZUsGuziKoaznla_20 [label="AOI", shape=box, style="filled,rounded", fillcolor="#DAE8FC"];
+  nJXw49lZUsGuziKoaznla_23 [label="拍照", shape=box, style="filled,rounded", fillcolor="#DAE8FC"];
+  nJXw49lZUsGuziKoaznla_24 [label="分拣", shape=box, style="filled,rounded", fillcolor="#DAE8FC"];
+  nJXw49lZUsGuziKoaznla_27 [label="组装并行", shape=box, style="filled,rounded", fillcolor="#DAE8FC"];
+  nJXw49lZUsGuziKoaznla_31 [label="撕膜", shape=box, style="filled,rounded", fillcolor="#DAE8FC"];
+  nJXw49lZUsGuziKoaznla_33 [label="拧螺丝", shape=box, style="filled,rounded", fillcolor="#DAE8FC"];
+  nTOJGru3RObnsotdByx5V_0 [label="拍照", shape=box, style="filled,rounded", fillcolor="#DAE8FC"];
+  nTOJGru3RObnsotdByx5V_2 [label="3D测量", shape=box, style="filled,rounded", fillcolor="#DAE8FC"];
+
+  nJXw49lZUsGuziKoaznla_5 -> nJXw49lZUsGuziKoaznla_14 [];
+  nJXw49lZUsGuziKoaznla_5 -> nJXw49lZUsGuziKoaznla_27 [];
+  nJXw49lZUsGuziKoaznla_8 -> nJXw49lZUsGuziKoaznla_10 [];
+  nJXw49lZUsGuziKoaznla_8 -> nJXw49lZUsGuziKoaznla_23 [];
+  nJXw49lZUsGuziKoaznla_10 -> nJXw49lZUsGuziKoaznla_12 [];
+  nJXw49lZUsGuziKoaznla_10 -> nTOJGru3RObnsotdByx5V_0 [];
+  nJXw49lZUsGuziKoaznla_12 -> nJXw49lZUsGuziKoaznla_24 [];
+  nJXw49lZUsGuziKoaznla_14 -> nJXw49lZUsGuziKoaznla_17 [];
+  nJXw49lZUsGuziKoaznla_23 -> nJXw49lZUsGuziKoaznla_20 [];
+  nJXw49lZUsGuziKoaznla_27 -> nJXw49lZUsGuziKoaznla_8 [];
+  nJXw49lZUsGuziKoaznla_27 -> nJXw49lZUsGuziKoaznla_31 [];
+  nJXw49lZUsGuziKoaznla_27 -> nJXw49lZUsGuziKoaznla_33 [];
+  nTOJGru3RObnsotdByx5V_0 -> nTOJGru3RObnsotdByx5V_2 [];
+}
