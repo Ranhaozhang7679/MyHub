@@ -1,3 +1,4 @@
+using Luster.Common.Assets.FloatingInfo.Models;
 using Luster.Motion.DigitalSetup.Datas;
 using Luster.Motion.DigitalSetup.Views;
 using Luster.Motion.EditorUI.Views;
@@ -76,6 +77,24 @@ namespace Luster.Motion.DigitalSetup.ViewModel.Validations
         private readonly IRegionManager _regionManager;
 
         private const string PageName = "DataValidation";
+
+        /// <summary>
+        /// 已知的路径类型配置键（这些键对应的值是文件/目录路径，需要做相对路径转换）
+        /// </summary>
+        private static readonly HashSet<string> PathConfigKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "template", "data_file", "data_dir", "mapping_file"
+        };
+
+        /// <summary>
+        /// 基准路径（配方目录），用于相对路径与绝对路径之间的转换
+        /// </summary>
+        private string _basePath;
+        public string BasePath
+        {
+            get => _basePath;
+            set => SetProperty(ref _basePath, value);
+        }
         #region 属性
 
         private string _validationName;
@@ -463,6 +482,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel.Validations
         {
             if (configData == null) return;
 
+            string basePath = BasePath;
+
             // 暂时取消集合变化监听
             ConfigItems.CollectionChanged -= OnConfigItemsCollectionChanged;
 
@@ -486,16 +507,16 @@ namespace Luster.Motion.DigitalSetup.ViewModel.Validations
                     ValidationResult = configData.ValidationResult;
                 }
 
-                // 加载脚本路径
+                // 加载脚本路径（相对路径转绝对路径）
                 if (!string.IsNullOrEmpty(configData.ScriptPath))
                 {
-                    ScriptPath = configData.ScriptPath;
+                    ScriptPath = PathConverter.ToAbsolutePath(configData.ScriptPath, basePath);
                 }
 
-                // 加载Python解释器路径
+                // 加载Python解释器路径（相对路径转绝对路径）
                 if (!string.IsNullOrEmpty(configData.PyexePath))
                 {
-                    PyexePath = configData.PyexePath;
+                    PyexePath = PathConverter.ToAbsolutePath(configData.PyexePath, basePath);
                 }
 
                 // 加载配置项 - 先取消所有现有项的订阅
@@ -505,10 +526,13 @@ namespace Luster.Motion.DigitalSetup.ViewModel.Validations
                 }
                 ConfigItems.Clear();
 
-                // 添加新配置项并订阅属性变化
+                // 添加新配置项并订阅属性变化（路径配置项转为绝对路径）
                 foreach (var configItem in configData.ConfigItems)
                 {
-                    var newItem = new ConfigItemModel(configItem.Key, configItem.Value, configItem.Description);
+                    var newItem = new ConfigItemModel(
+                        configItem.Key,
+                        ConvertConfigValueToAbsolute(configItem.Key, configItem.Value, basePath),
+                        configItem.Description);
                     newItem.PropertyChanged += OnConfigItemPropertyChanged;
                     ConfigItems.Add(newItem);
                 }
@@ -529,21 +553,56 @@ namespace Luster.Motion.DigitalSetup.ViewModel.Validations
         /// <returns>配置数据</returns>
         public ValidationItemData ToConfigData()
         {
+            string basePath = BasePath;
+
             var data = new ValidationItemData
             {
                 Name = ValidationName,
                 Description = Description,
                 LastRunTime = LastRunTime,
                 ValidationResult = ValidationResult,
-                ScriptPath = ScriptPath,
-                PyexePath = PyexePath,
+                ScriptPath = PathConverter.ToRelativePathIfUnderBase(ScriptPath, basePath),
+                PyexePath = PathConverter.ToRelativePathIfUnderBase(PyexePath, basePath),
                 ConfigItems = ConfigItems
                     .Where(c => !string.IsNullOrWhiteSpace(c.Key))
-                    .Select(c => new ConfigItemData { Key = c.Key, Value = c.Value, Description = c.Description })
+                    .Select(c => new ConfigItemData
+                    {
+                        Key = c.Key,
+                        Value = ConvertConfigValueToRelative(c.Key, c.Value, basePath),
+                        Description = c.Description
+                    })
                     .ToList()
             };
 
             return data;
+        }
+
+        /// <summary>
+        /// 将配置项的值转为相对路径（仅对已知的路径类型配置键进行转换）
+        /// </summary>
+        private string ConvertConfigValueToRelative(string key, string value, string basePath)
+        {
+            if (string.IsNullOrEmpty(value) || string.IsNullOrEmpty(basePath))
+                return value;
+
+            if (!PathConfigKeys.Contains(key))
+                return value;
+
+            return PathConverter.ToRelativePathIfUnderBase(value, basePath);
+        }
+
+        /// <summary>
+        /// 将配置项的值从相对路径解析为绝对路径（仅对已知的路径类型配置键进行转换）
+        /// </summary>
+        private string ConvertConfigValueToAbsolute(string key, string value, string basePath)
+        {
+            if (string.IsNullOrEmpty(value) || string.IsNullOrEmpty(basePath))
+                return value;
+
+            if (!PathConfigKeys.Contains(key))
+                return value;
+
+            return PathConverter.ToAbsolutePath(value, basePath);
         }
 
         /// <summary>

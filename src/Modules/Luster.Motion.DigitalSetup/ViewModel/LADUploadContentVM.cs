@@ -11,6 +11,7 @@ using Luster.Motion.DigitalSetup.Datas;
 using Luster.Motion.DigitalSetup.Helpers;
 using Luster.Motion.DigitalSetup.Services;
 using Luster.Motion.DigitalSetup.ViewModel;
+using Luster.Common.Assets.FloatingInfo.Models;
 using Luster.Motion.EditorUI;
 using Luster.Motion.TaskFlow.Engine;
 using Luster.TaskFlow.Common.Enums;
@@ -1513,6 +1514,14 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         }
 
         /// <summary>
+        /// 获取配方基准路径（用于相对路径转换）
+        /// </summary>
+        private string GetRecipeBasePath()
+        {
+            return _commonbus?.CurrentRecipe?.GetRecipePath() ?? "D:\\Luster\\DigitalSetUp\\";
+        }
+
+        /// <summary>
         /// 初始化配置文件保存路径
         /// </summary>
         private void InitializeConfigPath()
@@ -1583,8 +1592,9 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 }
 
                 string configPath = GetCurrentStationConfigPath();
+                string basePath = GetRecipeBasePath();
 
-                // 保存到当前选中工站的配置
+                // 运行时配置（绝对路径）
                 var config = new LADUpdateConfig
                 {
                     ConfigFile1 = this.ConfigFile1,
@@ -1595,10 +1605,21 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     MappingItems = this.MappingItems?.ToList() ?? new List<MappingItem>()
                 };
 
-                string json = Newtonsoft.Json.JsonConvert.SerializeObject(config, Newtonsoft.Json.Formatting.Indented);
+                // 持久化配置（路径转为相对路径，仅转换配方目录下的路径）
+                var persistConfig = new LADUpdateConfig
+                {
+                    ConfigFile1 = PathConverter.ToRelativePathIfUnderBase(this.ConfigFile1, basePath),
+                    ConfigFile2 = PathConverter.ToRelativePathIfUnderBase(this.ConfigFile2, basePath),
+                    PythonScriptPath = PathConverter.ToRelativePathIfUnderBase(this.PythonScriptPath, basePath),
+                    PythonExePath = PathConverter.ToRelativePathIfUnderBase(this.PythonExePath, basePath),
+                    SelectedParameters = this.SelectedParameters?.ToList() ?? new List<string>(),
+                    MappingItems = this.MappingItems?.ToList() ?? new List<MappingItem>()
+                };
+
+                string json = Newtonsoft.Json.JsonConvert.SerializeObject(persistConfig, Newtonsoft.Json.Formatting.Indented);
                 File.WriteAllText(configPath, json);
 
-                // 同时更新 SelectedLADStation 的配置
+                // 同时更新 SelectedLADStation 的配置（运行时使用绝对路径）
                 if (SelectedLADStation != null)
                 {
                     SelectedLADStation.LadConfig = config;
@@ -1625,7 +1646,20 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             try
             {
                 string configPath = GetStationConfigPath(station.StationName);
-                string json = Newtonsoft.Json.JsonConvert.SerializeObject(station.LadConfig, Newtonsoft.Json.Formatting.Indented);
+                string basePath = GetRecipeBasePath();
+
+                // 持久化配置（路径转为相对路径，仅转换配方目录下的路径）
+                var persistConfig = new LADUpdateConfig
+                {
+                    ConfigFile1 = PathConverter.ToRelativePathIfUnderBase(station.LadConfig.ConfigFile1, basePath),
+                    ConfigFile2 = PathConverter.ToRelativePathIfUnderBase(station.LadConfig.ConfigFile2, basePath),
+                    PythonScriptPath = PathConverter.ToRelativePathIfUnderBase(station.LadConfig.PythonScriptPath, basePath),
+                    PythonExePath = PathConverter.ToRelativePathIfUnderBase(station.LadConfig.PythonExePath, basePath),
+                    SelectedParameters = station.LadConfig.SelectedParameters,
+                    MappingItems = station.LadConfig.MappingItems
+                };
+
+                string json = Newtonsoft.Json.JsonConvert.SerializeObject(persistConfig, Newtonsoft.Json.Formatting.Indented);
                 File.WriteAllText(configPath, json);
                 station.ConfigFilePath = configPath;
             }
@@ -1724,19 +1758,22 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         {
             if (config == null) return;
 
-            ConfigFile1 = config.ConfigFile1;
-            ConfigFile2 = config.ConfigFile2;
+            string basePath = GetRecipeBasePath();
+
+            // 将相对路径解析为绝对路径
+            ConfigFile1 = PathConverter.ToAbsolutePath(config.ConfigFile1, basePath);
+            ConfigFile2 = PathConverter.ToAbsolutePath(config.ConfigFile2, basePath);
 
             // 加载Python脚本路径
             if (!string.IsNullOrEmpty(config.PythonScriptPath))
             {
-                PythonScriptPath = config.PythonScriptPath;
+                PythonScriptPath = PathConverter.ToAbsolutePath(config.PythonScriptPath, basePath);
             }
 
             // 加载Python.exe路径
             if (!string.IsNullOrEmpty(config.PythonExePath))
             {
-                PythonExePath = config.PythonExePath;
+                PythonExePath = PathConverter.ToAbsolutePath(config.PythonExePath, basePath);
             }
 
             // 加载映射配置
@@ -1808,6 +1845,13 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
                 if (config != null)
                 {
+                    // 将配置中的相对路径转为绝对路径（运行时使用绝对路径）
+                    string basePath = GetRecipeBasePath();
+                    config.ConfigFile1 = PathConverter.ToAbsolutePath(config.ConfigFile1, basePath);
+                    config.ConfigFile2 = PathConverter.ToAbsolutePath(config.ConfigFile2, basePath);
+                    config.PythonScriptPath = PathConverter.ToAbsolutePath(config.PythonScriptPath, basePath);
+                    config.PythonExePath = PathConverter.ToAbsolutePath(config.PythonExePath, basePath);
+
                     station.LadConfig = config;
                     station.ConfigFilePath = configPath;
                 }

@@ -703,6 +703,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             // 所有验证类型都使用CommonValidationVM，通过Region加载特定配置控件
             // 传入RegionManager以支持Region导航
             var commonVM = new CommonValidationVM(_regionManager);
+            commonVM.BasePath = _commonbus?.CurrentRecipe?.GetRecipePath() ?? "";
             commonVM.Initialize(item.Name, item.ValidationType);
 
             // 监听配置变化（必须在LoadFromConfigData之前订阅，因为LoadFromConfigData内部会调用UpdateConfigItemsByValidationType触发ConfigChanged）
