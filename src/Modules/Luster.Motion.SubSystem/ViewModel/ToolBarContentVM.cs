@@ -1247,6 +1247,14 @@ namespace Luster.Motion.SubSystem.ViewModel
                         mController.CloseOperateIO(SystemOperation.Pause);
                         break;
                     case DataStruct.Enums.SystemOperation.Stop:
+                        if (MStatus == EngineStatus.Alarm.GetDescription() || MStatus == EngineStatus.Pause.GetDescription())
+                        {
+                            mController.Stop();
+                            mController.CloseOperateIO(SystemOperation.Stop);
+                            Commands[0].ChangeButton(new StatusChanged(mController.MachineStatus, mController.MachineStatus));
+                            _dbManager.AddSysOperation(command.Key, memo, commonBus.CurrentUser?.UserName);
+                            return;
+                        }
                         mController.Pause(false);
                         mController.CloseOperateIO(SystemOperation.Pause);
                         break;
