@@ -23,6 +23,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Xml.Linq;
 
 
 namespace Luster.SimDevice.SubSystem.ViewModel
@@ -685,7 +686,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel
         ///   1. 预定义默认行
         ///   2. 当前配方目录下的 CustomErrors.csv
         ///   3. 当前配方目录下的 Hardware.dproj
-        /// 输出：D:/Hive/{timestamp}.csv
+        /// 输出：D:/Hive/xxx LUSTER ERROR LIST.csv
         /// </summary>
         private void GenerateErrorCodeList()
         {
@@ -719,8 +720,46 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                     try { Directory.CreateDirectory(outputDir); } catch { }
                 }
 
-                string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-                string outputPath = Path.Combine(outputDir, $"{timestamp}.csv");
+                // 获取配置中的 机种 和 工站名称
+                string machineModel = "V6x";
+                string stationName = "CGx";
+                try
+                {
+                    string webConfigPath = "";
+                    DirectoryInfo dir = new DirectoryInfo(deviceEngine.RecipeConfigPath);
+                    while (dir != null)
+                    {
+                        string testPath = Path.Combine(dir.FullName, "WebConfig.xml");
+                        if (File.Exists(testPath))
+                        {
+                            webConfigPath = testPath;
+                            break;
+                        }
+                        dir = dir.Parent;
+                    }
+
+                    if (!string.IsNullOrEmpty(webConfigPath))
+                    {
+                        var xml = System.Xml.Linq.XElement.Load(webConfigPath);
+                        var pNameElem = xml.Element("Product");
+                        if (pNameElem != null && !string.IsNullOrWhiteSpace(pNameElem.Value))
+                        {
+                            machineModel = pNameElem.Value.Trim();
+                        }
+                        var sNameElem = xml.Element("StationName");
+                        if (sNameElem != null && !string.IsNullOrWhiteSpace(sNameElem.Value))
+                        {
+                            stationName = sNameElem.Value.Trim();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Warning, $"获取文件名配置字段失败: {ex.Message}");
+                }
+
+                string targetFileName = $"{machineModel} {stationName} LUSTER ERROR LIST.csv";
+                string outputPath = Path.Combine(outputDir, targetFileName);
 
                 // CSV 表头
                 string[] headers = { "Error Description", "Code", "Category", "Error Description (Chinese)", "Repair Actions", "Local Alarm Code" };
@@ -730,55 +769,38 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                 // 1. 添加预定义默认行
                 string defaultXmlPath = Path.Combine(configPath, "DefaultErrorCodes.xml");
                 var defaultRows = GetOrUpdateDefaultErrorCodeRows(defaultXmlPath);
-                foreach (var defaultRow in defaultRows)
-                {
-                    rows.Add(defaultRow);
-                }
+                rows.AddRange(defaultRows);
 
-                // 2. 解析 CustomErrors.csv
+                // 2. 读取并添加 CustomErrors.csv
                 if (File.Exists(customErrorsPath))
                 {
                     try
                     {
-                        var lines = File.ReadAllLines(customErrorsPath, Encoding.UTF8);
-                        if (lines.Length > 1)
+                        var customLines = File.ReadAllLines(customErrorsPath, System.Text.Encoding.UTF8);
+                        bool isFirstLine = true;
+                        foreach (var line in customLines)
                         {
-                            // 解析表头确定列索引
-                            var headerFields = ParseCsvLine(lines[0]);
-                            int idxCode = Array.IndexOf(headerFields, "AlarmCode");
-                            int idxContent = Array.IndexOf(headerFields, "AlarmContent");
-                            int idxEnglish = Array.IndexOf(headerFields, "AlarmEnglish");
-                            int idxCategory = Array.IndexOf(headerFields, "AlarmCategory");
-                            int idxRepair = Array.IndexOf(headerFields, "RepairAction");
-
-                            for (int i = 1; i < lines.Length; i++)
+                            if (isFirstLine)
                             {
-                                if (string.IsNullOrWhiteSpace(lines[i])) continue;
-                                var fields = ParseCsvLine(lines[i]);
+                                isFirstLine = false;
+                                continue;
+                            }
+                            if (string.IsNullOrWhiteSpace(line)) continue;
 
-                                string code = idxCode >= 0 && idxCode < fields.Length ? fields[idxCode].Trim() : "";
-                                string content = idxContent >= 0 && idxContent < fields.Length ? fields[idxContent].Trim() : "";
-                                string english = idxEnglish >= 0 && idxEnglish < fields.Length ? fields[idxEnglish].Trim() : "";
-                                string category = idxCategory >= 0 && idxCategory < fields.Length ? fields[idxCategory].Trim() : "";
-                                string repair = idxRepair >= 0 && idxRepair < fields.Length ? fields[idxRepair].Trim() : "";
-
-                                //// 过滤 TBD
-                                //if (code == "TBD") continue;
-
-                                if (!string.IsNullOrEmpty(code) || !string.IsNullOrEmpty(content) || !string.IsNullOrEmpty(english))
-                                {
-                                    rows.Add(new[] { english, code, category, content, repair, code });
-                                }
+                            var parts = line.Split(',');
+                            if (parts.Length >= 5)
+                            {
+                                rows.Add(new string[] { parts[0], parts[1], parts[2], parts[3], parts[4], parts[1] });
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Warning, $"解析 CustomErrors.csv 时遇到异常: {ex.Message}");
+                        SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Warning, $"读取 CustomErrors.csv 失败: {ex.Message}");
                     }
                 }
 
-                // 3. 解析 Hardware.dproj
+                // 3. 读取 Hardware.dproj
                 if (File.Exists(dprojPath))
                 {
                     try
@@ -836,24 +858,34 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                     }
                 }
 
-                // 4. 写入 CSV
-                var csvLines = new List<string>();
-                csvLines.Add(string.Join(",", headers.Select(h => EscapeCsvField(h))));
-                foreach (var row in rows)
+                // 4. 生成目标 CSV
+                using (var sw = new StreamWriter(outputPath, false, new System.Text.UTF8Encoding(true)))
                 {
-                    csvLines.Add(string.Join(",", row.Select(f => EscapeCsvField(f ?? ""))));
+                    sw.WriteLine(string.Join(",", headers));
+                    foreach (var row in rows)
+                    {
+                        //if (row[1] == "TBD") continue; // 过滤 TBD 错误
+
+                        // 简单的 CSV 格式化, 处理包含逗号的字段
+                        for (int i = 0; i < row.Length; i++)
+                        {
+                            if (row[i].Contains(","))
+                            {
+                                row[i] = "\"" + row[i] + "\"";
+                            }
+                        }
+                        sw.WriteLine(string.Join(",", row));
+                    }
                 }
 
-                File.WriteAllLines(outputPath, csvLines, new UTF8Encoding(true)); // UTF-8 BOM
-
-                SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Info, $"ErrorCodeList 生成成功！输出路径: {outputPath}");
+                SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Info, $"ErrorCodeList 已生成: {outputPath}");
 
                 // 弹窗提示
                 dialogService.ShowConfirm($"ErrorCodeList 生成成功！\n输出路径: {outputPath}", _ => { });
             }
             catch (Exception ex)
             {
-                SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Error, $"生成ErrorCodeList失败: {ex.Message}");
+                SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Error, $"生成ErrorCodeList时发生错误: {ex.Message}");
             }
         }
 
