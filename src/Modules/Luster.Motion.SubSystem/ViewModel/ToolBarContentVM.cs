@@ -1243,6 +1243,8 @@ namespace Luster.Motion.SubSystem.ViewModel
                         break;
 
                     case DataStruct.Enums.SystemOperation.Pause:
+                        useHiveDialog = true;
+                        Commands[0].SetEnabled(false);
                         mController.Pause(false);
                         mController.CloseOperateIO(SystemOperation.Pause);
                         break;
@@ -1255,6 +1257,8 @@ namespace Luster.Motion.SubSystem.ViewModel
                             _dbManager.AddSysOperation(command.Key, memo, commonBus.CurrentUser?.UserName);
                             return;
                         }
+                        useHiveDialog = true;
+                        Commands[0].SetEnabled(false);
                         mController.Pause(false);
                         mController.CloseOperateIO(SystemOperation.Pause);
                         break;
