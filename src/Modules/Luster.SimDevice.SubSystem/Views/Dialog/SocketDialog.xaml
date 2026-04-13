@@ -87,7 +87,7 @@
                 hc:InfoElement.Necessary="True"
                 hc:InfoElement.Placeholder="{lang:Lang Key={x:Static lang:LangKeys.Port}}"
                 hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.Port}}"
-                Text="{Binding Port}"
+                Text="{Binding PortText, UpdateSourceTrigger=PropertyChanged}"
                 Visibility="{Binding IsSocket, Converter={StaticResource Boolean2VisibilityConverter}}" />
 
             <hc:ComboBox
