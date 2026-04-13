@@ -44,6 +44,44 @@ namespace Luster.Common.Assets.FloatingInfo.Models
         }
 
         /// <summary>
+        /// 仅当路径在基准目录下时才转换为相对路径，否则保持绝对路径不变。
+        /// 适用于路径可能位于配方目录之外（如CCD图片、中转数据）的场景。
+        /// </summary>
+        /// <param name="absolutePath">绝对路径</param>
+        /// <param name="basePath">基准路径（通常是配方目录）</param>
+        /// <returns>如果在基准目录下则返回相对路径，否则返回原绝对路径</returns>
+        public static string ToRelativePathIfUnderBase(string absolutePath, string basePath)
+        {
+            if (string.IsNullOrEmpty(absolutePath) || string.IsNullOrEmpty(basePath))
+                return absolutePath;
+
+            if (IsUncPath(absolutePath))
+                return absolutePath;
+
+            if (!Path.IsPathRooted(absolutePath))
+                return absolutePath;
+
+            try
+            {
+                // 规范化路径用于比较
+                string normPath = Path.GetFullPath(absolutePath);
+                string normBase = Path.GetFullPath(basePath)
+                    .TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                    + Path.DirectorySeparatorChar;
+
+                // 仅当路径在基准目录下时才转换
+                if (!normPath.StartsWith(normBase, StringComparison.OrdinalIgnoreCase))
+                    return absolutePath;
+
+                return ToRelativePath(absolutePath, basePath);
+            }
+            catch
+            {
+                return absolutePath;
+            }
+        }
+
+        /// <summary>
         /// 将绝对路径转换为相对路径
         /// </summary>
         /// <param name="absolutePath">绝对路径</param>

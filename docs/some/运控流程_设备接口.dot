@@ -1,0 +1,40 @@
+digraph 设备接口 {
+  label="设备接口";
+  labelloc=t;
+  fontname="Microsoft YaHei";
+  node [fontname="Microsoft YaHei", fontsize=10];
+  edge [fontname="Microsoft YaHei", fontsize=9];
+  rankdir=TB;
+
+  niwYn0RLUsIvqQGtRUmUK_2 [label="«interface»IVirtualDevice", shape=box, style="filled", fillcolor="#DAE8FC"];
+  niwYn0RLUsIvqQGtRUmUK_3 [label="«interface»VirtualAxis", shape=box, style="filled", fillcolor="#DAE8FC"];
+  niwYn0RLUsIvqQGtRUmUK_5 [label="«interface»VirtualIO", shape=box, style="filled", fillcolor="#DAE8FC"];
+  niwYn0RLUsIvqQGtRUmUK_9 [label="«interface»VirtualCom", shape=box, style="filled", fillcolor="#DAE8FC"];
+  niwYn0RLUsIvqQGtRUmUK_11 [label="«interface»VirtualCamera", shape=box, style="filled", fillcolor="#DAE8FC"];
+  niwYn0RLUsIvqQGtRUmUK_13 [label="«interface»VirtualLineLaser", shape=box, style="filled", fillcolor="#DAE8FC"];
+  niwYn0RLUsIvqQGtRUmUK_17 [label="«interface»VirtualLight", shape=box, style="filled", fillcolor="#DAE8FC"];
+  niwYn0RLUsIvqQGtRUmUK_27 [label="«interface»IXmlParser", shape=box, style="filled", fillcolor="#DAE8FC"];
+  niwYn0RLUsIvqQGtRUmUK_34 [label="«interface»IDevice", shape=box, style="filled", fillcolor="#DAE8FC"];
+  n9HquLE2e6PTyNMFzDHKi_6 [label="«interface»IIO", shape=box, style="filled", fillcolor="#DAE8FC"];
+  n9HquLE2e6PTyNMFzDHKi_7 [label="«interface»ICom", shape=box, style="filled", fillcolor="#DAE8FC"];
+  n9HquLE2e6PTyNMFzDHKi_11 [label="«interface»ICamera", shape=box, style="filled", fillcolor="#DAE8FC"];
+  n9HquLE2e6PTyNMFzDHKi_12 [label="«interface»ILineLaser", shape=box, style="filled", fillcolor="#DAE8FC"];
+  n9HquLE2e6PTyNMFzDHKi_13 [label="«interface»IMotionCard", shape=box, style="filled", fillcolor="#DAE8FC"];
+  n9HquLE2e6PTyNMFzDHKi_14 [label="«interface»ILight", shape=box, style="filled", fillcolor="#DAE8FC"];
+  n9HquLE2e6PTyNMFzDHKi_21 [label="MVCamera", shape=box, style="filled", fillcolor="#DAE8FC"];
+
+  niwYn0RLUsIvqQGtRUmUK_2 -> niwYn0RLUsIvqQGtRUmUK_3 [];
+  niwYn0RLUsIvqQGtRUmUK_2 -> niwYn0RLUsIvqQGtRUmUK_5 [];
+  niwYn0RLUsIvqQGtRUmUK_2 -> niwYn0RLUsIvqQGtRUmUK_9 [];
+  niwYn0RLUsIvqQGtRUmUK_2 -> niwYn0RLUsIvqQGtRUmUK_11 [];
+  niwYn0RLUsIvqQGtRUmUK_2 -> niwYn0RLUsIvqQGtRUmUK_13 [];
+  niwYn0RLUsIvqQGtRUmUK_2 -> niwYn0RLUsIvqQGtRUmUK_17 [];
+  niwYn0RLUsIvqQGtRUmUK_27 -> niwYn0RLUsIvqQGtRUmUK_2 [];
+  niwYn0RLUsIvqQGtRUmUK_27 -> niwYn0RLUsIvqQGtRUmUK_34 [];
+  niwYn0RLUsIvqQGtRUmUK_34 -> n9HquLE2e6PTyNMFzDHKi_6 [];
+  niwYn0RLUsIvqQGtRUmUK_34 -> n9HquLE2e6PTyNMFzDHKi_7 [];
+  niwYn0RLUsIvqQGtRUmUK_34 -> n9HquLE2e6PTyNMFzDHKi_11 [];
+  niwYn0RLUsIvqQGtRUmUK_34 -> n9HquLE2e6PTyNMFzDHKi_12 [];
+  niwYn0RLUsIvqQGtRUmUK_34 -> n9HquLE2e6PTyNMFzDHKi_13 [];
+  niwYn0RLUsIvqQGtRUmUK_34 -> n9HquLE2e6PTyNMFzDHKi_14 [];
+}

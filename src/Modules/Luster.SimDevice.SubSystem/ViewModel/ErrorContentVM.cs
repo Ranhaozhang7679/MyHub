@@ -1,4 +1,4 @@
-﻿#region 作者和版权
+#region 作者和版权
 /*************************************************************************************
 * CLR 版本:       4.0.30319.42000
 * 类 名 称:       MaintainContentVm
@@ -138,8 +138,8 @@ namespace Luster.SimDevice.SubSystem.ViewModel
         {
             excel.RemoveWorkSheet(0);
             excel.AddWorksheet(sheetName);
-            var header = new string[4] { "设备名称", "名称", "报警代码",  "报警配置"};
-            var data = new object[4];
+            var header = new string[6] { "设备名称", "名称", "报警代码",  "报警配置", "报警种类", "维修动作"};
+            var data = new object[6];
             excel.SetHeaders(0, 0, header);
             for (int i = 0; i < errorList.Count(); i++)
             {
@@ -147,6 +147,8 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                 data[1] = errorList[i].Name;
                 data[2] = errorList[i].ErrorCode;
                 data[3] = errorList[i].ErrorForeignMessage;
+                data[4] = errorList[i].AlarmCategory;
+                data[5] = errorList[i].RepairAction;
                 excel.WriteRowDatas(i + 1, 0, data);
             }
         }
@@ -188,6 +190,10 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                     item.Name = diTable.Rows[i][1].ToString();
                     item.ErrorCode = diTable.Rows[i][2].ToString();
                     item.ErrorForeignMessage = diTable.Rows[i][3].ToString();
+                    if (diTable.Columns.Count > 4)
+                        item.AlarmCategory = diTable.Rows[i][4]?.ToString();
+                    if (diTable.Columns.Count > 5)
+                        item.RepairAction = diTable.Rows[i][5]?.ToString();
                     i++;
                 }
                 //for (int i = 0; i < diTable.Rows.Count; i++)

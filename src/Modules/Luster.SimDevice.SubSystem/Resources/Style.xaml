@@ -207,7 +207,7 @@
                     <Image x:Name="Img" Width="45" Height="32" Source="/Luster.SimDevice.SubSystem;component/Resources/布尔F.PNG"/>
                     <ControlTemplate.Triggers>
                         <Trigger Property="Tag" Value="True">
-                            <Setter TargetName="Img" Property="Source" Value="/Luster.SimDevice.SubSystem;component/Resources/布尔F.PNG"/>
+                            <Setter TargetName="Img" Property="Source" Value="/Luster.SimDevice.SubSystem;component/Resources/布尔T.PNG"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

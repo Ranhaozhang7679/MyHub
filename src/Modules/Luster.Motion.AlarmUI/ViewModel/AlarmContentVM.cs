@@ -275,6 +275,130 @@ namespace Luster.Motion.AlarmUI.ViewModel
 
         #endregion
 
+        #region Towntime 分页参数
+
+        private int _downTimePerPageCount = 20;
+        public int DownTimePerPageCount
+        {
+            get => _downTimePerPageCount;
+            set
+            {
+                if (SetProperty(ref _downTimePerPageCount, value))
+                    UpdatePagedDownTimeSegments();
+            }
+        }
+
+        private int _downTimePageIndex = 1;
+        public int DownTimePageIndex
+        {
+            get => _downTimePageIndex;
+            set
+            {
+                if (SetProperty(ref _downTimePageIndex, value))
+                    UpdatePagedDownTimeSegments();
+            }
+        }
+
+        private int _downTimePageCount;
+        public int DownTimePageCount
+        {
+            get => _downTimePageCount;
+            set => SetProperty(ref _downTimePageCount, value);
+        }
+
+        private ObservableCollection<DownTimeSegment> _pagedDownTimeSegments;
+        public ObservableCollection<DownTimeSegment> PagedDownTimeSegments
+        {
+            get => _pagedDownTimeSegments;
+            set => SetProperty(ref _pagedDownTimeSegments, value);
+        }
+
+        private void UpdatePagedDownTimeSegments()
+        {
+            if (DownTimeSegments == null || DownTimeSegments.Count == 0)
+            {
+                PagedDownTimeSegments = new ObservableCollection<DownTimeSegment>();
+                DownTimePageCount = 1;
+                return;
+            }
+
+            var all = DownTimeSegments.ToList();
+            int total = all.Count;
+            DownTimePageCount = (int)Math.Ceiling((double)total / DownTimePerPageCount);
+            if (DownTimePageCount < 1) DownTimePageCount = 1;
+
+            DownTimePageIndex = Math.Max(1, Math.Min(DownTimePageIndex, DownTimePageCount));
+
+            var paged = all.Skip((DownTimePageIndex - 1) * DownTimePerPageCount)
+                           .Take(DownTimePerPageCount)
+                           .ToList();
+            PagedDownTimeSegments = new ObservableCollection<DownTimeSegment>(paged);
+        }
+
+        #endregion
+
+        #region 统计信息分页参数
+
+        private int _statisticsPerPageCount = 20;
+        public int StatisticsPerPageCount
+        {
+            get => _statisticsPerPageCount;
+            set
+            {
+                if (SetProperty(ref _statisticsPerPageCount, value))
+                    UpdatePagedStatisticsRows();
+            }
+        }
+
+        private int _statisticsPageIndex = 1;
+        public int StatisticsPageIndex
+        {
+            get => _statisticsPageIndex;
+            set
+            {
+                if (SetProperty(ref _statisticsPageIndex, value))
+                    UpdatePagedStatisticsRows();
+            }
+        }
+
+        private int _statisticsPageCount;
+        public int StatisticsPageCount
+        {
+            get => _statisticsPageCount;
+            set => SetProperty(ref _statisticsPageCount, value);
+        }
+
+        private ObservableCollection<AlarmStatisticsRowModel> _pagedStatisticsRows;
+        public ObservableCollection<AlarmStatisticsRowModel> PagedStatisticsRows
+        {
+            get => _pagedStatisticsRows;
+            set => SetProperty(ref _pagedStatisticsRows, value);
+        }
+
+        private void UpdatePagedStatisticsRows()
+        {
+            if (AlarmStatisticsRows == null || AlarmStatisticsRows.Count == 0)
+            {
+                PagedStatisticsRows = new ObservableCollection<AlarmStatisticsRowModel>();
+                StatisticsPageCount = 1;
+                return;
+            }
+
+            var all = AlarmStatisticsRows.ToList();
+            int total = all.Count;
+            StatisticsPageCount = (int)Math.Ceiling((double)total / StatisticsPerPageCount);
+            if (StatisticsPageCount < 1) StatisticsPageCount = 1;
+
+            StatisticsPageIndex = Math.Max(1, Math.Min(StatisticsPageIndex, StatisticsPageCount));
+
+            var paged = all.Skip((StatisticsPageIndex - 1) * StatisticsPerPageCount)
+                           .Take(StatisticsPerPageCount)
+                           .ToList();
+            PagedStatisticsRows = new ObservableCollection<AlarmStatisticsRowModel>(paged);
+        }
+
+        #endregion
+
         #region DownTime(宕机时间段图)
 
         public class DownTimeSegment
@@ -467,6 +591,10 @@ namespace Luster.Motion.AlarmUI.ViewModel
                     BuildStatistics(startTime, endTime);
                 }
                 else if (SelectedAlarmTab == AlarmSubTab.DownTime)
+                {
+                    BuildDownTimeChart(startTime, endTime);
+                }
+                else if (SelectedAlarmTab == AlarmSubTab.DownTimeBom)
                 {
                     BuildDownTimeChart(startTime, endTime);
                 }
@@ -677,7 +805,8 @@ namespace Luster.Motion.AlarmUI.ViewModel
                 }
 
                 DownTimeSeries = seriesCollection;
-
+                DownTimePageIndex = 1;
+                UpdatePagedDownTimeSegments();
                 // legend 同原逻辑（略）
             }
             catch (Exception ex)
@@ -2124,7 +2253,9 @@ namespace Luster.Motion.AlarmUI.ViewModel
                 }
 
                 AlarmStatisticsRows = new ObservableCollection<AlarmStatisticsRowModel>(rows);
-
+                // 初始化分页
+                StatisticsPageIndex = 1;
+                UpdatePagedStatisticsRows();
                 // 统计页不应主动重建 DownTime 图（避免覆盖 DownTimeTab 的 RowSeries）
             }
             catch (Exception ex)

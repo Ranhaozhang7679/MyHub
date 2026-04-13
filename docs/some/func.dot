@@ -1,0 +1,53 @@
+digraph LusterMotionArchitecture {
+    fontname="Microsoft YaHei";
+    rankdir=LR;
+    node [shape=box, style=filled, fontname="Microsoft YaHei", color="lightblue", margin=0.2];
+
+    subgraph cluster_logic {
+        label = "模型工厂与逻辑层\n(Luster.TaskFlow.Common/Motion.Logic)";
+        style = dashed;
+        color = gray;
+        IModuleCreator [label="IModuleCreator\n(定义模块/收集方法)"];
+        IModule [label="IModule\n(包含 FuncTypes)"];
+        MotionFunction [label="MotionFunction\n(基类)"];
+        ScriptFunction [label="Script (实例)\n- DllPath [Parameter]", color="lightgreen"];
+        
+        IModuleCreator -> IModule [label="Create()"];
+        IModule -> MotionFunction [label="载入扩展功能"];
+        ScriptFunction -> MotionFunction [dir=back, arrowtail=empty];
+    }
+
+    subgraph cluster_vm {
+        label = "ViewModel控制层\n(Luster.Motion.EditorUI.ViewModel)";
+        style = solid;
+        color = lightgrey;
+        ModuleFactory [label="ModuleFactory\n(产出 LNode 功能树)"];
+        ModuleContentVM [label="ModuleContentVM\n(维护并推送Nodes)"];
+        InParamContentVM [label="InParamContentVM\n(跟踪当前实例 ModuleObj)"];
+        
+        IModuleCreator -> ModuleFactory [label="注入发现"];
+        ModuleFactory -> ModuleContentVM [label="产出节点"];
+    }
+
+    subgraph cluster_ui {
+        label = "动态渲染层\n(EditorUI / Control.Wpf.Motion)";
+        style = dashed;
+        color = gray;
+        ModuleContent [label="ModuleContent.xaml\n(绘制左侧工具箱树)"];
+        ParamGrid [label="ParamGrid (核心控件)\n解析 SelectedObject", color="gold"];
+        ParamResolver [label="ParamResolver\n类型映射中心"];
+        ParamEditorBase [label="ParamEditorBase\n(例如 PathEditor)"];
+        WpfControl [label="具体 WPF 控件\n(如 FileSelector)", color="lightpink"];
+    }
+
+    // 主干连线
+    ModuleContentVM -> ModuleContent [label="绑定 ObservableCollection"];
+    ModuleContent -> InParamContentVM [label="触发选中节点"];
+    InParamContentVM -> ParamGrid [label="SelectedObject 绑定实例 (如Script)"];
+    
+    // 解析过程引脚
+    ScriptFunction -> ParamGrid [label="读取 [Parameter]"];
+    ParamGrid -> ParamResolver [label="传递 ParamItem"];
+    ParamResolver -> ParamEditorBase [label="类型对照/反射生成"];
+    ParamEditorBase -> WpfControl [label="CreateElement() && 绑定 DP"];
+}

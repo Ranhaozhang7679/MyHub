@@ -1,0 +1,173 @@
+digraph EngineStatus_Architecture {
+    // 全局属性
+    rankdir=LR;
+    fontname="Microsoft YaHei";
+    node [fontname="Microsoft YaHei", fontsize=10, style=filled];
+    edge [fontname="Microsoft YaHei", fontsize=9];
+
+    // ===== UI 层 =====
+    subgraph cluster_ui {
+        label="UI 层 (Prism MVVM)";
+        style=filled;
+        color="#E3F2FD";
+        fontsize=12;
+
+        CommonUI     [fillcolor="#BBDEFB", shape=box, label="CommonBus\n(首页状态绑定)"];
+        EditorUI     [fillcolor="#BBDEFB", shape=box, label="FlowBus\n(编辑器调试运行)"];
+        ToolBarVM    [fillcolor="#BBDEFB", shape=box, label="ToolBarContentVM\n(MaterialPending显示)"];
+        HiveUI       [fillcolor="#BBDEFB", shape=box, label="Hive界面\n(启停控制面板)"];
+    }
+
+    // ===== 控制器层 =====
+    subgraph cluster_controller {
+        label="控制器层 (MotionController)";
+        style=filled;
+        color="#FFF3E0";
+        fontsize=12;
+
+        MC_Start     [fillcolor="#FFE0B2", shape=box, label="Start()\n启动/恢复"];
+        MC_Stop      [fillcolor="#FFE0B2", shape=box, label="Stop()\n停止"];
+        MC_Pause     [fillcolor="#FFE0B2", shape=box, label="Pause()\n暂停"];
+        MC_Home      [fillcolor="#FFE0B2", shape=box, label="Home()\n回零"];
+        MC_Recovery  [fillcolor="#FFE0B2", shape=box, label="Recovery()\n复位"];
+        MC_Alarm     [fillcolor="#FFCDD2", shape=box, label="OnAlarm()\n报警分发"];
+        MC_Monitor   [fillcolor="#FFE0B2", shape=box, label="MachineMonitor()\nIO/按钮监控"];
+        MC_Light     [fillcolor="#E8F5E9", shape=box, label="LightManager\n三色灯控制"];
+        MC_Robot     [fillcolor="#E8F5E9", shape=box, label="RobotDO\n机器人信号"];
+
+        // ★ 优化项 #3: lockCommand 问题标注
+        MC_LockCmd   [fillcolor="#FFAB91", shape=note, style="filled,bold",
+                      label="⚠ lockCommand (int + Interlocked)\n问题: 异常路径泄漏 → 永久锁定\n优化: 替换为 SemaphoreSlim(1,1)\n或 try/finally 保证释放"];
+    }
+
+    // ===== 引擎层 =====
+    subgraph cluster_engine {
+        label="引擎层 (MotionEngine)";
+        style=filled;
+        color="#E8F5E9";
+        fontsize=12;
+
+        // ★ 优化项 #1: EngineStatus setter 无守卫
+        ME_EngineStatus [fillcolor="#FFAB91", shape=doubleoctagon, style="filled,bold",
+                         label="⚠ EngineStatus 属性\n问题: setter 无合法转换校验\l  EngineStatusEvent 多播委托\l  只取最后一个返回值\l  canChange 可能为 null → NRE\l\l优化 #1: 增加合法转换表校验\l优化 #4: 分离状态校验与UI通知\l"];
+
+        ME_RunStations  [fillcolor="#C8E6C9", shape=box, label="RunStations()\nReady->Running"];
+        ME_Pause        [fillcolor="#C8E6C9", shape=box, label="Pause()\n阻塞工站线程"];
+        ME_Recovery     [fillcolor="#C8E6C9", shape=box, label="Recovery()\nPause->Running"];
+        ME_Reset        [fillcolor="#FFAB91", shape=box, style="filled,bold",
+                         label="⚠ Reset()\n问题: 复位中断 → 部分不一致\l优化 #6: 显式 targetStatus 参数\l而非依赖 alarmInfo.EStatus\l"];
+        ME_Stop         [fillcolor="#C8E6C9", shape=box, label="Stop()\n取消所有线程"];
+        ME_Home         [fillcolor="#C8E6C9", shape=box, label="Home()\nIdle->Homing->Ready"];
+        ME_PauseReset   [fillcolor="#FFF9C4", shape=note, label="pauseResetEvent\nManualResetEventSlim"];
+        ME_CancelToken  [fillcolor="#FFF9C4", shape=note, label="tokenSource\nCancellationTokenSource"];
+    }
+
+    // ===== 设备层 =====
+    subgraph cluster_device {
+        label="设备层 (IDeviceEngine)";
+        style=filled;
+        color="#F3E5F5";
+        fontsize=12;
+
+        DE_Recovery [fillcolor="#E1BEE7", shape=box, label="Recovery()\n硬件安全检查"];
+        DE_Stop     [fillcolor="#E1BEE7", shape=box, label="Stop()\n硬件停止"];
+        DE_Home     [fillcolor="#E1BEE7", shape=box, label="IsHome() / 回零"];
+        DE_Alarm    [fillcolor="#E1BEE7", shape=box, label="AlarmEvent\n设备报警事件"];
+    }
+
+    // ===================================================================
+    // UI -> Controller
+    // ===================================================================
+    HiveUI -> MC_Start     [label="按钮点击"];
+    HiveUI -> MC_Stop      [label="按钮点击"];
+    HiveUI -> MC_Pause     [label="按钮点击"];
+    HiveUI -> MC_Home      [label="按钮点击"];
+    HiveUI -> MC_Recovery  [label="按钮点击"];
+    EditorUI -> ME_EngineStatus [label="调试结束->Idle", style=dashed];
+
+    // ===================================================================
+    // Monitor -> Controller Methods
+    // ===================================================================
+    MC_Monitor -> MC_Start    [label="IO信号触发", style=dashed];
+    MC_Monitor -> MC_Pause    [label="IO信号触发", style=dashed];
+    MC_Monitor -> MC_Home     [label="IO信号触发", style=dashed];
+    MC_Monitor -> MC_Recovery [label="IO信号触发", style=dashed];
+    MC_Monitor -> MC_Alarm    [label="急停/光幕/烟雾", style=dashed, color="#C62828"];
+
+    // ★ 优化项 #5: Monitor 中 Thread.Sleep 阻塞
+    MC_Monitor -> MC_Monitor  [label="⚠ 内含 Thread.Sleep(10) 去抖\n阻塞 100ms 定时器回调线程\n优化: 替换为时间戳比对", color="#FF6F00", style="bold,dashed", penwidth=1.5];
+
+    // ===================================================================
+    // Controller -> Engine
+    // ===================================================================
+    MC_Start -> ME_RunStations  [label="Ready状态"];
+    MC_Start -> ME_Reset        [label="Pause状态"];
+    MC_Start -> ME_Recovery     [label="Pause恢复"];
+    MC_Stop -> ME_Stop;
+    MC_Pause -> ME_Pause;
+    MC_Home -> ME_Home;
+    MC_Recovery -> ME_Reset;
+
+    // ★ 优化项 #1: PLC报警绕过所有守卫
+    MC_Alarm -> ME_Pause        [label="WarningTip等\n走正常 Pause 流程", color="#C62828"];
+    MC_Alarm -> ME_EngineStatus [label="⚠ PLC报警\n直接赋值 EngineStatus=Alarm\n绕过 Pause() 中的:\l  · IO 清理\l  · 三色灯切换\l  · 机器人信号处理\l  · 门锁控制\l\l优化 #1: 应统一走 Pause(isAlarm=true)", color="#FF0000", penwidth=2.5, style=bold];
+
+    // ===================================================================
+    // Engine 内部
+    // ===================================================================
+    ME_EngineStatus -> CommonUI  [label="EngineStatusEvent\n⚠ 多播委托只取最后返回值\l优化 #4: 分离校验与通知\l", color="#FF6F00", fontcolor="#FF6F00"];
+    ME_EngineStatus -> ToolBarVM [label="状态变更通知", color="#1565C0"];
+    ME_RunStations -> ME_EngineStatus [label="=Running", color="#2E7D32"];
+    ME_Pause -> ME_EngineStatus  [label="=Alarm/Pause"];
+    ME_Recovery -> ME_EngineStatus [label="=Running"];
+    ME_Reset -> ME_EngineStatus  [label="=Resetting\n->Ready/Pause/Idle"];
+    ME_Stop -> ME_EngineStatus   [label="=Stop"];
+    ME_Home -> ME_EngineStatus   [label="=Homing->Ready"];
+
+    ME_Pause -> ME_PauseReset    [label="Reset()阻塞", style=dashed];
+    ME_Recovery -> ME_PauseReset [label="Set()释放", style=dashed];
+    ME_Stop -> ME_CancelToken    [label="Cancel()", style=dashed];
+
+    // ===================================================================
+    // Controller -> Device
+    // ===================================================================
+    MC_Recovery -> DE_Recovery;
+    MC_Stop -> DE_Stop;
+    MC_Home -> DE_Home;
+    DE_Alarm -> MC_Alarm        [label="设备报警", color="#C62828"];
+
+    // ===================================================================
+    // Controller -> 辅助系统
+    // ===================================================================
+    MC_Start -> MC_Light  [label="RunningLight()"];
+    MC_Pause -> MC_Light  [label="PauseLight()"];
+    MC_Stop -> MC_Light   [label="UnHome()"];
+    MC_Start -> MC_Robot  [label="机器人启动"];
+    MC_Pause -> MC_Robot  [label="机器人暂停"];
+    MC_Stop -> MC_Robot   [label="机器人停止"];
+
+    // ===================================================================
+    // ★ 竞态问题标注 (跨层贯穿)
+    // ===================================================================
+    MC_Start -> ME_EngineStatus [label="⚠ 竞态: 检查 MachineStatus 后\n到调用 MotionEngine 方法之间\n状态可能已被其他线程修改\n优化: 使用锁或原子操作保证\n检查-操作的原子性", color="#FF0000", style="bold,dashed", penwidth=2.0];
+
+    // ===================================================================
+    // 优化项总结标注
+    // ===================================================================
+    subgraph cluster_optimizations {
+        label="★ 架构级优化建议";
+        style=filled;
+        color="#FFF9C4";
+        fontsize=11;
+        node [shape=note, fillcolor="#FFF176", style="filled,bold"];
+
+        opt_arch1 [label="#1 高优先级: setter 集中式转换表\l  → 堵住 PLC 报警绕过守卫等问题\l  → 所有赋值路径统一校验\l"];
+        opt_arch2 [label="#2 中优先级: 移除 [Flags] + 枚举改为普通枚举\l  → 消除组合值导致的判断失效风险\l"];
+        opt_arch3 [label="#3 中优先级: lockCommand → SemaphoreSlim\l  → 消除异常路径永久锁定风险\l"];
+        opt_arch4 [label="#4 中优先级: EngineStatusEvent 职责分离\l  → 状态校验 vs UI 通知独立\l  → 解决多播委托只取最后返回值问题\l"];
+        opt_arch5 [label="#5 低优先级: Thread.Sleep → 时间戳去抖\l  → 释放定时器回调线程\l"];
+        opt_arch6 [label="#6 低优先级: Recovery 显式 targetStatus\l  → 消除 alarmInfo.EStatus 暗示耦合\l"];
+
+        opt_arch1 -> opt_arch2 -> opt_arch3 -> opt_arch4 -> opt_arch5 -> opt_arch6 [style=invis];
+    }
+}

@@ -1,0 +1,19 @@
+digraph 流程模拟 {
+  label="流程模拟";
+  labelloc=t;
+  fontname="Microsoft YaHei";
+  node [fontname="Microsoft YaHei", fontsize=10];
+  edge [fontname="Microsoft YaHei", fontsize=9];
+  rankdir=TB;
+
+  nyS6gH7feoSW_Uw_S69Mj_2 [label="上料站", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nyS6gH7feoSW_Uw_S69Mj_3 [label="搬运", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nyS6gH7feoSW_Uw_S69Mj_7 [label="启动", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nyS6gH7feoSW_Uw_S69Mj_9 [label="装配站", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nyS6gH7feoSW_Uw_S69Mj_11 [label="搬运", shape=box, style="filled", fillcolor="#DAE8FC"];
+
+  nyS6gH7feoSW_Uw_S69Mj_2 -> nyS6gH7feoSW_Uw_S69Mj_3 [];
+  nyS6gH7feoSW_Uw_S69Mj_3 -> nyS6gH7feoSW_Uw_S69Mj_7 [];
+  nyS6gH7feoSW_Uw_S69Mj_7 -> nyS6gH7feoSW_Uw_S69Mj_9 [];
+  nyS6gH7feoSW_Uw_S69Mj_9 -> nyS6gH7feoSW_Uw_S69Mj_11 [];
+}

@@ -1,0 +1,78 @@
+digraph EngineStatusMachineOptimized {
+    rankdir=LR;
+    node [shape=box, style="rounded,filled", fontname="Microsoft YaHei", fillcolor="lightblue"];
+    edge [fontname="Microsoft YaHei", fontsize=10];
+    
+    // 整体优化建议说明
+    OptimizationNote [
+        shape=note, 
+        fillcolor="#FFFFCC", 
+        fontname="Microsoft YaHei", 
+        fontsize=11, 
+        label="【状态机重构优化项】\n1. 剥离 UI：将 MaterialPending 移出核心枚举，作为派生状态。\n2. FSM 约束：去除[Flags]，利用排他性单向流转。\n3. 统一入口：禁止直接赋值，由 TryChangeState() 加锁跳转。\n4. 事件解耦：废弃拦截式回调，变更为单向 EventAggregator 广播。"
+    ];
+
+    // UI 显示层隔离（解决优化项1）
+    subgraph cluster_UI {
+        label="UI展示层 (派生/计算属性)";
+        fontname="Microsoft YaHei";
+        style=dashed;
+        color=gray;
+        
+        MaterialPending [label="MaterialPending\n(待料中)\n[优化: 由 Running 状态 + 传感器超时联合推导]", fillcolor="#F0F8FF"];
+    }
+
+    // 核心设备引擎状态层（解决优化项2、3、4）
+    subgraph cluster_CoreFSM {
+        label="核心业务驱动层 (排他互斥的严格FSM)";
+        fontname="Microsoft YaHei";
+        style=bold;
+        color="#4169E1";
+        bgcolor="#F5F5F5"
+        
+        Idle [label="Idle\n(空闲中)", fillcolor="#E8E8E8"];
+        Homing [label="Homing\n(回零中)", fillcolor="#FFFFE0"];
+        Ready [label="Ready\n(待启动)", fillcolor="#90EE90"];
+        Running [label="Running\n(运行中)", fillcolor="#98FB98"];
+        Alarm [label="Alarm\n(报警中)", fillcolor="#FFB6C1"];
+        Pause [label="Pause\n(暂停中)", fillcolor="#FFDAB9"];
+        Stop [label="Stop\n(停止中)", fillcolor="#D3D3D3"];
+        Resetting [label="Resetting\n(复位中)", fillcolor="#E6E6FA"];
+    }
+    
+    // 连接注释，声明所有的修改动作都需要经过统一控制
+    OptimizationNote -> cluster_CoreFSM [style=dotted, arrowhead=none, color=red];
+
+    // 状态流转规则：强调使用 [Cmd] 统一入口进行调用
+    Idle -> Homing [label="[Cmd] Home()"];
+    Idle -> Running [label="流程初始化触发"];
+    
+    Homing -> Ready [label="回零成功"];
+    Homing -> Stop [label="异常中断 / 手工停止"];
+    
+    Ready -> Running [label="[Cmd] Start()"];
+    
+    Running -> Pause [label="[Cmd] Pause()"];
+    Running -> Alarm [label="异常 / 抛出报警事件"];
+    Running -> Stop [label="[Cmd] Stop() / 异常强停"];
+    Running -> Idle [label="任务正常结束"];
+    
+    // UI依赖关系，非引擎内部真实跳转（虚线表示计算影响）
+    Running -> MaterialPending [label="运行中 && \n90s超时无料", style=dotted, color="#808080"];
+    MaterialPending -> Running [label="传感器触发复跑", style=dotted, color="#808080"];
+
+    Pause -> Running [label="[Cmd] Recovery()"];
+    Pause -> Stop [label="[Cmd] Stop()"];
+    Pause -> Resetting [label="[Cmd] Reset()"];
+
+    Alarm -> Pause [label="解除报警"];
+    Alarm -> Stop [label="[Cmd] Stop()"];
+    Alarm -> Resetting [label="[Cmd] Reset()"];
+
+    Resetting -> Idle [label="复位成功 (无料状态)"];
+    Resetting -> Ready [label="复位成功 (备绪状态)"];
+    Resetting -> Pause [label="复位异常中止"];
+    Resetting -> Stop [label="[Cmd] Stop()"];
+
+    Stop -> Idle [label="释放硬件/复位完成"];
+}

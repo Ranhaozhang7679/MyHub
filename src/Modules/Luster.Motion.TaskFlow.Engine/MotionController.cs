@@ -1895,13 +1895,15 @@ namespace Luster.Motion.TaskFlow.Engine
                     return;
                 }
                 // 记录PLC状态是否发生变更
-                //bool isPlcChanged = plcStatus != status;
-                //plcStatus = status;
-
+                bool isPlcChanged = plcStatus != status;
+                plcStatus = status;
 
                 // 如果从普通状态切换到报警状态
-                if (status == PlcStatus.Alarm /*&& isPlcChanged*/)
+                if (status == PlcStatus.Alarm && isPlcChanged)
                 {
+                    // 先设置报警状态，防止定时器重入导致重复报警
+                    MotionEngine.EngineStatus = EngineStatus.Alarm;
+
                     //如果当前在报警中，则退出
                     Thread.Sleep(100);
                     if (vPlc == null)
@@ -1919,7 +1921,6 @@ namespace Luster.Motion.TaskFlow.Engine
                         var plcAlarm = new AlarmInfo(this, AlarmType.PlcAlarm, "PLC报警&PLC Alarm", "F98OOOO-13", "System", "PLC");
 
                         //WritePlcValueInt(SysConfig.TricolorStatusAddr, 5);
-                        MotionEngine.EngineStatus = EngineStatus.Alarm;
                         MotionEngine.OnAlarm(plcAlarm);
                     });
                 }

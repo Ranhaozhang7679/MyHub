@@ -11,7 +11,7 @@
         <PackageReference Include="LiveChartsCore.SkiaSharpView.WPF" />
         <PackageReference Include="Luster.Prism" />
         <PackageReference Include="MinVer" />
-        <PackageReference Include="System.Text.Json" />  
+        <PackageReference Include="System.Text.Json" />
   </ItemGroup>
 
   <ItemGroup>
