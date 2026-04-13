@@ -1,0 +1,50 @@
+digraph 硬控总体设计 {
+  label="硬控总体设计";
+  labelloc=t;
+  fontname="Microsoft YaHei";
+  node [fontname="Microsoft YaHei", fontsize=10];
+  edge [fontname="Microsoft YaHei", fontsize=9];
+  rankdir=TB;
+
+  nDQTEIvrKwm8C2k_z6_U5_2 [label="相机", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nDQTEIvrKwm8C2k_z6_U5_3 [label="IO轴卡", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nDQTEIvrKwm8C2k_z6_U5_4 [label="串口", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nDQTEIvrKwm8C2k_z6_U5_5 [label="IO", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nDQTEIvrKwm8C2k_z6_U5_6 [label="设备管理API", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nDQTEIvrKwm8C2k_z6_U5_8 [label="MQTT", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nDQTEIvrKwm8C2k_z6_U5_9 [label="Main.Exe", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nDQTEIvrKwm8C2k_z6_U5_11 [label="UserControl", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nDQTEIvrKwm8C2k_z6_U5_12 [label="PLC", shape=box, style="filled", fillcolor="#DAE8FC"];
+  n2gyxIWzhVRWuKbvHm77e_0 [label="参数配方", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__5 [label="通信协议（Socket ModBus）", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__6 [label="硬件引擎", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__9 [label="逻辑模块", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__10 [label="3D", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__11 [label="2D", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__12 [label="外观", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__13 [label="相机", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__14 [label="IO轴卡", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__15 [label="串口", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__16 [label="IO", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__17 [label="PLC", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__18 [label="上料", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__19 [label="下料", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__20 [label="真空吸", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__21 [label="拍照", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__23 [label="任务流程引擎", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__25 [label="首页", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__26 [label="设备管理", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__27 [label="报警管理", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__28 [label="报表管理", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__29 [label="权限", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__30 [label="流程设计", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__31 [label="命令管理", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__32 [label="通用配置", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__33 [label="通用接口和方法", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__35 [label="界面交互", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__36 [label="模块引擎", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__37 [label="抽象业务", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__38 [label="设备引擎", shape=box, style="filled", fillcolor="#DAE8FC"];
+  nvHtEhupMi9zrffWe5bG__39 [label="设备驱动", shape=box, style="filled", fillcolor="#DAE8FC"];
+
+}

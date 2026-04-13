@@ -53,6 +53,7 @@
                         MinWidth="{Binding ChartWidth}"
                         Margin="5"
                         Background="{DynamicResource RegionBrush}"
+                        DisableAnimations="True"
                         LegendLocation="None"
                         Series="{Binding RateSeriesCollection}">
                         <chart:CartesianChart.AxisX>
@@ -80,6 +81,7 @@
                         MinWidth="{Binding ChartWidth}"
                         Margin="5"
                         Background="{DynamicResource RegionBrush}"
+                        DisableAnimations="True"
                         LegendLocation="Bottom"
                         Series="{Binding CapacitySeriesCollection}">
                         <chart:CartesianChart.AxisX>

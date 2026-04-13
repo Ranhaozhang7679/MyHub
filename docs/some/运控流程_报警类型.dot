@@ -1,0 +1,23 @@
+digraph 报警类型 {
+  label="报警类型";
+  labelloc=t;
+  fontname="Microsoft YaHei";
+  node [fontname="Microsoft YaHei", fontsize=10];
+  edge [fontname="Microsoft YaHei", fontsize=9];
+  rankdir=TB;
+
+  nhAb8NRqKITiuYRzj2GLK_0 [label="报警类型", shape=box, style="filled,rounded", fillcolor="#DAE8FC"];
+  n8JEoryY9pizoPrjTVAUM_0 [label="重要报警", shape=box, style="filled,rounded", fillcolor="#DAE8FC"];
+  n8JEoryY9pizoPrjTVAUM_2 [label="轻度报警", shape=box, style="filled,rounded", fillcolor="#DAE8FC"];
+  n8JEoryY9pizoPrjTVAUM_5 [label="预警", shape=box, style="filled,rounded", fillcolor="#DAE8FC"];
+  nHZA8UKXC_W2heUc8D_OD_0 [label="设备有问题", shape=box, style="filled,rounded", fillcolor="#DAE8FC"];
+  nHZA8UKXC_W2heUc8D_OD_2 [label="可重试", shape=box, style="filled,rounded", fillcolor="#DAE8FC"];
+  nHZA8UKXC_W2heUc8D_OD_4 [label="料快完成、设备健康", shape=box, style="filled,rounded", fillcolor="#DAE8FC"];
+
+  nhAb8NRqKITiuYRzj2GLK_0 -> n8JEoryY9pizoPrjTVAUM_2 [];
+  nhAb8NRqKITiuYRzj2GLK_0 -> n8JEoryY9pizoPrjTVAUM_0 [];
+  nhAb8NRqKITiuYRzj2GLK_0 -> n8JEoryY9pizoPrjTVAUM_5 [];
+  n8JEoryY9pizoPrjTVAUM_0 -> nHZA8UKXC_W2heUc8D_OD_0 [];
+  n8JEoryY9pizoPrjTVAUM_2 -> nHZA8UKXC_W2heUc8D_OD_2 [];
+  n8JEoryY9pizoPrjTVAUM_5 -> nHZA8UKXC_W2heUc8D_OD_4 [];
+}

@@ -1,0 +1,127 @@
+digraph MotionModuleRelation {
+    // 全局样式
+    rankdir=TB;
+    fontname="Microsoft YaHei";
+    fontsize=12;
+    node [shape=box, style="rounded,filled", fontname="Microsoft YaHei", fontsize=10];
+    edge [fontname="Microsoft YaHei", fontsize=9];
+
+    // ==================== 节点定义（按层次分组） ====================
+
+    subgraph cluster_ui {
+        label="UI 层";
+        style=dashed;
+        color="#666666";
+        fontcolor="#666666";
+
+        FlowBus [label="FlowBus.cs\n(UI编辑器事件总线)", fillcolor="#E3F2FD", color="#1565C0"];
+        MotionModule_UI [label="MotionModule.cs (SubSystem)\n(Prism UI模块注册)", fillcolor="#E8F5E9", color="#2E7D32"];
+    }
+
+    subgraph cluster_controller {
+        label="设备控制层";
+        style=dashed;
+        color="#666666";
+        fontcolor="#666666";
+
+        MotionController [label="MotionController.cs\n(设备级控制器)", fillcolor="#FFF3E0", color="#E65100"];
+    }
+
+    subgraph cluster_engine {
+        label="流程引擎层";
+        style=dashed;
+        color="#666666";
+        fontcolor="#666666";
+
+        MotionEngine_part1 [label="MotionEngine_part1.cs\n(模块管理/创建/序列化)", fillcolor="#F3E5F5", color="#6A1B9A"];
+        MotionEngine_part2 [label="MotionEngine_part2.cs\n(状态机/启停/回零)", fillcolor="#F3E5F5", color="#6A1B9A"];
+    }
+
+    subgraph cluster_runner {
+        label="运行执行层";
+        style=dashed;
+        color="#666666";
+        fontcolor="#666666";
+
+        MotionRunEngine [label="MotionRunEngine.cs\n(递归执行模块链表)", fillcolor="#FCE4EC", color="#AD1457"];
+    }
+
+    subgraph cluster_module {
+        label="模块基础层";
+        style=dashed;
+        color="#666666";
+        fontcolor="#666666";
+
+        MotionModule [label="MotionModule.cs (TaskFlow)\n(运动模块抽象基类)", fillcolor="#E0F7FA", color="#00695C"];
+    }
+
+    // ==================== 类持有/组合关系（实线） ====================
+
+    // MotionController 持有 IMotionEngine
+    MotionController -> MotionEngine_part1 [label="持有 IMotionEngine", style=bold, color="#E65100"];
+    MotionController -> MotionEngine_part2 [label="持有 IMotionEngine", style=bold, color="#E65100"];
+
+    // FlowBus 持有 IMotionEngine
+    FlowBus -> MotionEngine_part1 [label="持有 IMotionEngine", style=bold, color="#1565C0"];
+
+    // MotionEngine 持有 MotionRunEngine
+    MotionEngine_part1 -> MotionRunEngine [label="内部创建并持有\nmotionRunEngine", style=bold, color="#6A1B9A"];
+
+    // part1 和 part2 是同一个 partial class
+    MotionEngine_part1 -> MotionEngine_part2 [label="partial class\n(同一类)", style=dashed, color="#6A1B9A", dir=both, arrowhead=none, arrowtail=none];
+
+    // ==================== 方法调用关系（虚线） ====================
+
+    // --- 调用链1: 设备启动流程 ---
+    MotionController -> MotionEngine_part2 [label="Start()\n→ RunStartStation()\n→ RunStations()", color="#E65100", style=dashed];
+
+    // --- 调用链2: 模块运行流程 ---
+    MotionEngine_part1 -> MotionRunEngine [label="Run(mId)\n→ motionRunEngine.Run()", color="#6A1B9A", style=dashed];
+    MotionRunEngine -> MotionModule [label="Run()\n→ module.DoFunction()\n→ 递归 NextModule", color="#AD1457", style=dashed];
+
+    // --- 调用链3: 报警处理流程 ---
+    MotionModule -> MotionEngine_part1 [label="OnAlarm()\n→ AlarmEvent_MEngine", color="#D32F2F", style=dashed];
+    MotionEngine_part1 -> MotionController [label="AlarmEvent\n→ OnAlarm()", color="#D32F2F", style=dashed];
+    MotionController -> MotionEngine_part2 [label="报警暂停\n→ Pause()", color="#D32F2F", style=dashed];
+    MotionRunEngine -> MotionRunEngine [label="ProcessAlarm()\n→ Retry / Ng / Continue", color="#D32F2F", style=dashed];
+
+    // --- 调用链4: UI编辑器操作 ---
+    FlowBus -> MotionEngine_part1 [label="OnRun() → RunAll()/Run()\nOnAddModule() → CreateByName()\nOnStop() → RunStop()", color="#1565C0", style=dotted];
+
+    // --- 调用链5: 设备回零流程 ---
+    MotionController -> MotionEngine_part2 [label="Home()\n→ HomeTask()\n→ ModuleHome()", color="#FF8F00", style=dashed];
+
+    // --- 调用链6: 暂停/恢复/复位 ---
+    MotionEngine_part2 -> MotionRunEngine [label="Stop() → SetBreak\nRecovery() → pauseResetEvent.Set()", color="#6A1B9A", style=dashed];
+
+    // ==================== 图例 ====================
+    subgraph cluster_legend {
+        label="图例";
+        style=solid;
+        color="#333333";
+        fontcolor="#333333";
+        fontsize=11;
+
+        legend_node [shape=plaintext, fillcolor=white, label=<
+            <table border="0" cellpadding="4" cellspacing="2">
+                <tr><td align="left"><b>线型说明:</b></td></tr>
+                <tr><td align="left">━━━ 实线粗箭头 = 持有/组合关系</td></tr>
+                <tr><td align="left">- - - 虚线箭头 = 方法调用关系</td></tr>
+                <tr><td align="left">····· 点线箭头 = UI交互调用</td></tr>
+                <tr><td align="left">─ ─ ─ 无箭头 = 同一类(partial)</td></tr>
+                <tr><td></td></tr>
+                <tr><td align="left"><b>颜色说明:</b></td></tr>
+                <tr><td align="left"><font color="#1565C0">■ 蓝色 = UI层</font></td></tr>
+                <tr><td align="left"><font color="#E65100">■ 橙色 = 设备控制层</font></td></tr>
+                <tr><td align="left"><font color="#6A1B9A">■ 紫色 = 流程引擎层</font></td></tr>
+                <tr><td align="left"><font color="#AD1457">■ 粉色 = 运行执行层</font></td></tr>
+                <tr><td align="left"><font color="#00695C">■ 青色 = 模块基础层</font></td></tr>
+                <tr><td align="left"><font color="#D32F2F">■ 红色 = 报警流程</font></td></tr>
+                <tr><td align="left"><font color="#2E7D32">■ 绿色 = 独立UI注册(无代码依赖)</font></td></tr>
+            </table>
+        >];
+    }
+
+    // 独立节点标注
+    MotionModule_UI [label="MotionModule.cs (SubSystem)\n(Prism UI模块注册)\n※ 与其他文件无直接代码依赖"];
+}

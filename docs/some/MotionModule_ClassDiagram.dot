@@ -1,0 +1,23 @@
+digraph ClassDiagram {
+    rankdir=BT;
+    node [shape=record, fontname="Microsoft YaHei"];
+    edge [fontname="Microsoft YaHei"];
+    
+    AbsModule [label="{AbsModule|+ DoFunction() : bool\n+ Parameters : Dictionary\n+ Children : List\<IModule\>}"];
+    MotionModule [label="{MotionModule|+ PrevModule : IMotionModule\n+ NextModule : IMotionModule\n+ Status : RunStatus\n+ TriggerEvents()}"];
+    MotionRunEngine [label="{MotionRunEngine|+ Run(IMotionModule, ref bool)\n- ProcessAlarm(IMotionModule)\n- RegisterAlarm(IMotionModule)}"];
+    MotionEngine [label="{MotionEngine|+ EngineStatus : EngineStatus\n+ WorkFlow : WorkFlow\n+ Home()\n+ InitGlobals()}"];
+    MotionController [label="{MotionController|+ Control Hardware}"];
+    FlowBus [label="{FlowBus|+ Bus : IEventAggregator\n+ OnAddModule() : IMotionModule\n+ GetCurrent() : IMotionModule}"];
+
+    // 继承
+    MotionModule -> AbsModule [arrowhead=empty, label="继承"];
+    
+    // 组合、依赖关系
+    MotionEngine -> MotionRunEngine [arrowhead=diamond, dir=back, label="组合/调度"];
+    MotionEngine -> MotionModule [arrowhead=odiamond, dir=back, label="缓存/统筹树"];
+    MotionRunEngine -> MotionModule [style=dashed, label="递归调用 DoFunction()"];
+    MotionController -> MotionEngine [label="初始化/硬件状态流转"];
+    FlowBus -> MotionEngine [label="同步修改树结构"];
+    FlowBus -> MotionModule [style=dashed, label="编辑节点插入"];
+}

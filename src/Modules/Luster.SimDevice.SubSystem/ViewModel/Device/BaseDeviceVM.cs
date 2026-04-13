@@ -131,10 +131,22 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Device
         private void Device_StatusChangedEvent(IDevice device, DeviceStatus newStatus)
         {
             var deviceModel = DeviceList.FirstOrDefault(u => u.ID == device.ID);
-            if (deviceModel != null)
+            if (deviceModel == null)
+            {
+                return;
+            }
+
+            var dispatcher = System.Windows.Application.Current?.Dispatcher;
+            if (dispatcher == null || dispatcher.CheckAccess())
             {
                 deviceModel.Status = newStatus;
+                return;
             }
+
+            dispatcher.BeginInvoke(new Action(() =>
+            {
+                deviceModel.Status = newStatus;
+            }));
         }
 
         /// <summary>
@@ -149,6 +161,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Device
                 var deviceModel = new DeviceModel(device.Name, deviceType);
                 deviceModel.SelectedChangedEvent += DeviceModel_SelectedChangedEvent;
                 deviceModel.SetModel(device);
+                deviceModel.Status = device.Status;
                 DeviceList.Add(deviceModel);
             }
         }

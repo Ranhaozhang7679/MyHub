@@ -274,6 +274,11 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Dialog
             }
             else
             {
+                if (deviceEngine.GetVDevices<VCommuncation>().Any(u => u.Name.ToLower() == newName && u.ID != _current.ID))
+                {
+                    throw new DeviceException($"名称:{newName}已经存在!");
+                }
+
                 _current.Name = newName;
                 _current.Module = Module;
                 _current.Communication = comm;
