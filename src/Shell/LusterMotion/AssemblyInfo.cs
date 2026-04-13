@@ -11,4 +11,4 @@ using System.Windows;
 )]
 
 // 产品版本号（安装程序等使用的版本）
-[assembly: AssemblyInformationalVersion("03.16")]
+[assembly: AssemblyInformationalVersion("03.17")]
