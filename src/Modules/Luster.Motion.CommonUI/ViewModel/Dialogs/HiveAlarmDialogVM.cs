@@ -165,7 +165,7 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                 //    //补发Help Request
                 //    hiveAPI.HelpRequest(ErrorMessage, ErrorCode);
                 //}
-                
+
                 if (!isOpen)   // ReportEnd窗口关闭，按钮恢复可点击状态（如果时间未到）
                 {
                     IsButtonEnable = !_greenIsOpen && (beginTime - DateTime.Now).TotalSeconds > 0;
@@ -397,7 +397,8 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                             Application.Current.Dispatcher.Invoke(() =>
                             {
                                 _bus.OnLog(Common.DataStruct.Enums.LogType.Info, $"刷卡信息响应成功，[Alarm]窗口即将关闭");
-                                base.CloseDialog("ok");
+                                //base.CloseDialog("ok");
+                                CloseDialog("ok");
                                 _dialogService.ShowHiveStopDialog("停机", r =>
                                 {
                                     //0720，取消每次刷卡后都停止，减少回零次数
@@ -472,7 +473,7 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
             if (!isHome || _motionController.IsHoming)
             {
                 _bus.OnLog(Common.DataStruct.Enums.LogType.Info, $"设备未回零完成!!!");
-                base.CloseDialog("ok");
+                CloseDialog("ok");
                 _motionController.Stop();
                 return;
                 throw new FriendlyException($"设备未回零完成！！！");
@@ -503,7 +504,7 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
 
             if (hsa1.Contains(_motionController.MachineStatus))
             {
-                base.CloseDialog("ok");
+                CloseDialog("ok");
                 _bus.OnLog(Common.DataStruct.Enums.LogType.Info, $"当前设备状态Stop,不满足启动条件");
                 //hiveAPI.ClearAlarm();
                 return;
@@ -512,7 +513,7 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
             HashSet<EngineStatus> hsb = new HashSet<EngineStatus>() { EngineStatus.Ready, EngineStatus.Running };
             if (hsb.Contains(_motionController.MachineStatus))
             {
-                base.CloseDialog("ok");
+                CloseDialog("ok");
                 _bus.OnLog(Common.DataStruct.Enums.LogType.Info, $"当前设备状态可保持原状,无需启动");
                 return;
             }
@@ -522,20 +523,24 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
             if (_motionController.Start())
             {
                 _bus.OnLog(Common.DataStruct.Enums.LogType.Info, $"设备从报警状态中成功启动，[Alarm]窗口即将关闭");
-                base.CloseDialog("ok");
+                //base.CloseDialog("ok");
+                CloseDialog("ok");
                 hiveAPI.ClearAlarm();
             }
             else
                 throw new FriendlyException($"设备启动失败,请再次执行复位操作！");
         }));
 
+        private bool _isNormalClosed = false;
+
         protected override void CloseDialog(string parameter)
         {
+            _isNormalClosed = true;
             base.CloseDialog(parameter);
             dispatcherTimer.Stop();
             // 取消事件订阅
             if (_alarmClosedToken != null)
-                _bus.EventBus.GetEvent<AlarmEventOnboardClosed>().Unsubscribe(_alarmClosedToken);
+                _bus.EventBus.GetEvent<HiveReportStateChangedEvent>().Unsubscribe(_alarmClosedToken);
         }
         private string closeWay = "";
         protected override void Ok(IDialogResult result)
@@ -547,7 +552,17 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
             dispatcherTimer.Stop();
             // 取消事件订阅
             if (_alarmClosedToken != null)
-                _bus.EventBus.GetEvent<AlarmEventOnboardClosed>().Unsubscribe(_alarmClosedToken);
+                _bus.EventBus.GetEvent<HiveReportStateChangedEvent>().Unsubscribe(_alarmClosedToken);
+        }
+
+        public override void OnDialogClosed()
+        {
+            base.OnDialogClosed();
+            if (_isNormalClosed) return;
+            hiveAPI.RepairStart(ErrorMessage, ErrorCode, "L3");
+            dispatcherTimer.Stop();
+            if (_alarmClosedToken != null)
+                _bus.EventBus.GetEvent<HiveReportStateChangedEvent>().Unsubscribe(_alarmClosedToken);
         }
     }
 }
