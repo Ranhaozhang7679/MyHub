@@ -81,6 +81,32 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Dialog
         private int _port = 502;
         public int Port { get => _port; set => SetProperty(ref _port, value); }
 
+        private string _portText = "502";
+        public string PortText
+        {
+            get => _portText;
+            set
+            {
+                SetProperty(ref _portText, value);
+
+                // 空内容
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    Port = 0;
+                    return;
+                }
+
+                // 成功转数字 → 赋值
+                if (int.TryParse(value, out int num))
+                {
+                    Port = num;
+                }
+                else
+                {
+                    Port = 0;
+                }
+            }
+        }
 
         /// <summary>
         /// socket 类型
@@ -232,7 +258,10 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Dialog
                 {
                     throw new DeviceException($" IpAddress 不能为空!");
                 }
-
+                if (string.IsNullOrWhiteSpace(PortText) || Port <= 0)
+                {
+                    throw new DeviceException("端口号不能为空且必须大于 0！");
+                }
                 comm = new CommTCP()
                 {
                     Network = new LNetwork() { Ip = IpAddress, Port = Port, SocketRole = this.SocketRole.ToString() }
