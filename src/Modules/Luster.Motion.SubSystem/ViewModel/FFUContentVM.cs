@@ -372,7 +372,7 @@ namespace Luster.Motion.SubSystem.ViewModel
                 }
                 catch (Exception ex)
                 {
-                    alarmInfo = new AlarmInfo(null, AlarmType.InfoTip, $"FFU连接失败", "F98OOOO-02");
+                    alarmInfo = new AlarmInfo(null, AlarmType.InfoTip, $"FFU连接失败", "N03OOOO-01");
                     _mController.MotionEngine.OnAlarm(alarmInfo);
 
                 }
@@ -389,13 +389,13 @@ namespace Luster.Motion.SubSystem.ViewModel
                 Thread.Sleep(10);
                 if (coilVs == null)
                 {
-                    alarmInfo = new AlarmInfo(null, AlarmType.InfoTip, $"{ffu.Name}未读取到值!!!&{ffu.Name}No value was read", "F98OOOO-03");
+                    alarmInfo = new AlarmInfo(null, AlarmType.InfoTip, $"{ffu.Name}未读取到值!!!&{ffu.Name}No value was read", "N03OOOO-01");
                     _mController.MotionEngine.OnAlarm(alarmInfo);
                     return;
                 }
                 if (coilVs.Count < 6)
                 {
-                    alarmInfo = new AlarmInfo(null, AlarmType.InfoTip, $"{ffu.Name}未读取到值!!!&{ffu.Name}No value was read", "F98OOOO-03");
+                    alarmInfo = new AlarmInfo(null, AlarmType.InfoTip, $"{ffu.Name}未读取到值!!!&{ffu.Name}No value was read", "N03OOOO-01");
                     _mController.MotionEngine.OnAlarm(alarmInfo);
                     return;
                 }
@@ -403,7 +403,7 @@ namespace Luster.Motion.SubSystem.ViewModel
                 if (int.Parse(coilVs[4].ToString()) == 0)
                 {
                     FFUSwitch = "关机中";
-                    alarmInfo = new AlarmInfo(null, AlarmType.InfoTip, "FFU风扇未开启&The FFU fan is not started", "F98OOOO-04");
+                    alarmInfo = new AlarmInfo(null, AlarmType.InfoTip, "FFU风扇未开启&The FFU fan is not started", "N03OOOO-01");
                     _mController.MotionEngine.OnAlarm(alarmInfo);
                     return;
                 }
@@ -430,7 +430,7 @@ namespace Luster.Motion.SubSystem.ViewModel
             }
             catch (Exception ex)
             {
-                alarmInfo = new AlarmInfo(null, AlarmType.InfoTip, $"FFU连接失败&FFU Connected Fail", "F98OOOO-02");
+                alarmInfo = new AlarmInfo(null, AlarmType.InfoTip, $"FFU连接失败&FFU Connected Fail", "N03OOOO-01");
                 _mController.MotionEngine.OnAlarm(alarmInfo);
             }
         }

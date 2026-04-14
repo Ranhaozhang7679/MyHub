@@ -195,7 +195,7 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
             {
                 ErrorStartTime = alarmInfo.StartTime.ToString();
                 if (string.IsNullOrEmpty(alarmInfo.AlarmCode))
-                    alarmInfo.AlarmCode = "S12ABC99-01@alarm";
+                    alarmInfo.AlarmCode = "O99OOOO-01@alarm";
                 string[] arrAlarm = alarmInfo.AlarmCode.Split('@');
                 ErrorCode = arrAlarm[0];
                 ErrorMessage = arrAlarm.Length > 1 ? arrAlarm[1] : "Recipe Config Error,please recheck";
@@ -221,7 +221,7 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                 {
                     ErrorStartTime = alarmInfo.StartTime.ToString();
                     if (string.IsNullOrEmpty(alarmInfo.AlarmCode))
-                        alarmInfo.AlarmCode = "S12ABC99-01@Track temperature alarm";
+                        alarmInfo.AlarmCode = "O99OOOO-01@Track temperature alarm";
                     string[] arrAlarm = alarmInfo.AlarmCode.Split('@');
                     ErrorCode = arrAlarm[0];
                     ErrorMessage = arrAlarm.Length > 1 ? arrAlarm[1] : "Axis Error";
