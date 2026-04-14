@@ -164,20 +164,6 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Dialog
 
         private void InitWizardDicts()
         {
-            string configDir = deviceEngine?.RecipeConfigPath;
-            if (string.IsNullOrEmpty(configDir))
-            {
-                configDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config");
-            }
-            
-            if (!Directory.Exists(configDir))
-            {
-                Directory.CreateDirectory(configDir);
-            }
-            string configPath = Path.Combine(configDir, "AlarmWizardConfig.xml");
-            
-            XmlSerializer serializer = new XmlSerializer(typeof(AlarmWizardConfigModel));
-
             // 保存目前选中的项的值，以便在重新加载后尝试恢复选项
             string oldType = SelectedErrorType?.Value;
             string oldSubType = SelectedErrorSubType?.Value;
@@ -185,38 +171,9 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Dialog
             string oldSubComp = SelectedSubComponent;
             string oldAction = SelectedRepairAction?.Value;
 
-            if (File.Exists(configPath))
-            {
-                try
-                {
-                    using (FileStream fs = new FileStream(configPath, FileMode.Open, FileAccess.Read))
-                    {
-                        _wizardConfig = (AlarmWizardConfigModel)serializer.Deserialize(fs);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // 若解析失败，退回使用默认
-                    _wizardConfig = AlarmWizardConfigModel.GetDefaultConfig();
-                    SimEngineUI?.OnLog(LogType.Warning, $"解析报警字典配置文件失败，使用默认配置。异常: {ex.Message}");
-                }
-            }
-            else
-            {
-                _wizardConfig = AlarmWizardConfigModel.GetDefaultConfig();
-                try
-                {
-                    using (StreamWriter sw = new StreamWriter(configPath, false, Encoding.UTF8))
-                    {
-                        serializer.Serialize(sw, _wizardConfig);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    SimEngineUI?.OnLog(LogType.Warning, $"保存缺省报警字典 XML 配置文件失败。异常: {ex.Message}");
-                }
-            }
-            
+            // 强制使用代码中带有中英文的最新默认配置
+            _wizardConfig = AlarmWizardConfigModel.GetDefaultConfig();
+
             // 如果未能成功初始化，生成空的防御
             if (_wizardConfig == null)
             {
@@ -248,10 +205,6 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Dialog
             if (SelectedRepairAction == null) SelectedRepairAction = RepairActions.FirstOrDefault(r => r.Value == "");
             if (SelectedRepairAction == null) SelectedRepairAction = RepairActions.FirstOrDefault();
         }
-
-        private DelegateCommand _reloadConfigCommand;
-        public DelegateCommand ReloadConfigCommand => 
-            _reloadConfigCommand ?? (_reloadConfigCommand = new DelegateCommand(InitWizardDicts));
 
         private void RefreshSubTypes()
         {
