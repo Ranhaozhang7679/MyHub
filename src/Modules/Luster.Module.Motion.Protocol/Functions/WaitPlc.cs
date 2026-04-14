@@ -48,7 +48,7 @@ using System.Threading.Tasks;
 
 namespace Luster.Module.Motion.Protocol.Functions
 {
-    public class WaitPlc : PlcBase, IWait, IRefFunction, IGoToFunction
+    public class WaitPlc : PlcBase, IWait, IRefFunction, IGoToFunction, IPauseFunction
     {
         [Parameter("阈值规则", 3, CN = "阈值规则", DefaultV = OpRule.Equal)]
         public OpRule OpRule { get; set; }
