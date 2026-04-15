@@ -152,19 +152,19 @@ namespace LusterMotion
             }
             else
             {
-                //var mResult = MessageBox.Show("程序已经在运行,确认再次开启?", "警告", MessageBoxButton.OKCancel);
-                //if (mResult == MessageBoxResult.Cancel)
-                //{
-                //    this.Shutdown();
-                //}
-                //else
-                //{
-                //    //base.OnStartup(e);//允许双开
-                //    this.Shutdown();
-                //}
-
-                MessageBox.Show("程序已经在运行,禁止多开!", "警告", MessageBoxButton.OK);
-                this.Shutdown();
+                // 读取配置：是否允许程序多开
+                var allowMultiple = System.Configuration.ConfigurationManager.AppSettings["AllowMultipleInstances"];
+                if (string.Equals(allowMultiple, "True", StringComparison.OrdinalIgnoreCase))
+                {
+                    // 允许多开，继续启动
+                    MessageBox.Show("程序已经多开", "警告", MessageBoxButton.OK);
+                    base.OnStartup(e);
+                }
+                else
+                {
+                    MessageBox.Show("程序已经在运行，禁止多开！\n如需多开请在App.config中设置AllowMultipleInstances为True", "警告", MessageBoxButton.OK);
+                    this.Shutdown();
+                }
             }
 
             if (e.Args.Length > 0 && File.Exists(e.Args[0]))
