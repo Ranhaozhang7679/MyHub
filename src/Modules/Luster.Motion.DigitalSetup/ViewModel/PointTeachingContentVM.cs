@@ -1,4 +1,5 @@
-﻿using HandyControl.Data;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using HandyControl.Data;
 using Luster.Common.Assets;
 using Luster.Common.DataAccess.Repositories;
 using Luster.Common.DataStruct;
@@ -11,6 +12,7 @@ using Luster.Motion.DataStruct.Interfaces;
 using Luster.Motion.DigitalSetup.AssTables;
 using Luster.Motion.DigitalSetup.Datas;
 using Luster.Motion.DigitalSetup.Helpers;
+using Luster.Motion.DigitalSetup.Services;
 using Luster.Motion.EditorUI;
 using Luster.Motion.TaskFlow.Engine;
 using Luster.Motion.TaskFlow.Engine.HyperTrain;
@@ -18,6 +20,7 @@ using Luster.SimDevice.Engine;
 using Luster.SimDevice.EngineUI;
 using Luster.SimDevice.EngineUI.Models;
 using Luster.TaskFlow.Common.Enums;
+using Luster.TaskFlow.Motion;
 using Luster.TaskFlow.Motion.Logic;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -36,7 +39,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Luster.Motion.DigitalSetup.Services;
 
 namespace Luster.Motion.DigitalSetup.ViewModel
 {
@@ -509,7 +511,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 if (_deviceEngine.GetMachineStatus() == EngineStatus.Ready)
                 {
                     var stations = _mController.MotionEngine.GetStations();
-                    var stat = stations.FirstOrDefault(s => s.Alias == "点位示教");
+                    var stat = stations?.FirstOrDefault(s => string.Equals(s?.Alias, "点位示教"));
                     if (stat != null)
                     {
                         flowBus.OnRunOne(stat.ID);
@@ -571,12 +573,58 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         }
 
         /// <summary>
-        /// 获取页面整体状态
+        /// 点位示教不使用 AssTb 表格模式，ItemModels 中是 PositionItem，
+        /// 基类的 GetCurrentPageCheckStatus() 无法识别，因此重写为直接读取已保存的点检状态。
         /// </summary>
-        private string GetOverallStatus()
+        protected override CheckStatus GetCurrentPageCheckStatus()
         {
-            // 点位示教默认返回OK
-            return "OK";
+            if (SelectedReportPage == null)
+                return CheckStatus.NotChecked;
+
+            return SelectedReportPage.CheckStatus;
+        }
+
+        /// <summary>
+        /// 重写状态同步：点位示教是轴维度的页面，不适用基类中工站维度的聚合逻辑。
+        /// 基类的 UpdateAllSubPagesCheckStatus 会遍历所有工站，因只有当前工站有状态
+        /// 而把已保存的 OK 覆盖为 NotChecked。这里直接使用已保存的子页面状态。
+        /// </summary>
+        protected override void SyncOverallStatusToPageStatusService()
+        {
+            var currentPageStatus = GetCurrentPageCheckStatus();
+            string pageStatusText = currentPageStatus switch
+            {
+                CheckStatus.CheckedOK => "OK",
+                CheckStatus.CheckedFail => "NG",
+                _ => "未点检"
+            };
+
+            string pageStatusName = DigitalAssPageModel.GetNameByRegion(_parentRegionName);
+            if (string.IsNullOrEmpty(pageStatusName))
+                return;
+
+            // 更新 PageStatusService
+            PageStatusService.Instance.UpdateStatus(pageStatusName, pageStatusText);
+
+            // 更新 DigitalAssPageModel 的聚合状态（基于所有轴子页面的状态）
+            var overallStatus = GetOverallCheckStatus();
+            string overallStatusText = overallStatus switch
+            {
+                CheckStatus.CheckedOK => "OK",
+                CheckStatus.CheckedFail => "NG",
+                _ => "未点检"
+            };
+            PageStatusService.Instance.UpdateStatus(pageStatusName, overallStatusText);
+
+            // 更新 DigitalAssPageModel 的 CheckStatus（用于一级界面状态圆圈显示）
+            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                var parentPage = DigitalAssPageModel.FindPageByRegion(_parentRegionName);
+                if (parentPage != null)
+                {
+                    parentPage.CheckStatus = GetOverallCheckStatus();
+                }
+            }), System.Windows.Threading.DispatcherPriority.Background);
         }
 
         private void SaveOffsetsToJson()
