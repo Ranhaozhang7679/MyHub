@@ -35,6 +35,11 @@ namespace Luster.SimDevice.SubSystem.ViewModel
         private IDialogService _dialogService;
         private readonly IDeviceEngine deviceEngine;
 
+        /// <summary>
+        /// 当前 VM 绑定的配方路径，用于防止跨配方写入
+        /// </summary>
+        private string _boundRecipePath;
+
         public override bool IsShowRemove => true;
 
         private ObservableCollection<ErrorItemCustomModel> selectedList;
@@ -68,10 +73,43 @@ namespace Luster.SimDevice.SubSystem.ViewModel
             BatchImportCommand = new DelegateCommand(ImportTotalCommand);
             GenerateErrorCodeListCommand = new DelegateCommand(GenerateErrorCodeList);
 
+            _boundRecipePath = deviceEngine.RecipeConfigPath;
             LoadFromCsvFile();
 
-            // 监听全局保存事件，点击全局保存按钮时自动保存自定义报警配置CSV
-            deviceEngine.SaveEvent += () => SaveToCsvFile(ErrorList);
+            // 使用命名方法，便于取消订阅，防止跨配方写入
+            deviceEngine.SaveEvent += OnSaveEvent;
+
+            // 监听引擎初始化完成事件（配方切换时会触发）
+            deviceEngine.InitializedEvent += OnEngineInitialized;
+        }
+
+        /// <summary>
+        /// 保存事件处理：只保存当前配方的数据
+        /// </summary>
+        private void OnSaveEvent()
+        {
+            // 检查配方路径是否仍然匹配，防止旧VM写入新配方
+            if (_boundRecipePath == deviceEngine.RecipeConfigPath)
+            {
+                SaveToCsvFile(ErrorList);
+            }
+        }
+
+        /// <summary>
+        /// 引擎初始化完成（配方切换）时，重新加载数据
+        /// </summary>
+        private void OnEngineInitialized(IDeviceEngine engine, string deviceTask)
+        {
+            string newPath = deviceEngine.RecipeConfigPath;
+            if (newPath != _boundRecipePath)
+            {
+                _boundRecipePath = newPath;
+                // 需要在 UI 线程执行，因为会修改 ObservableCollection
+                System.Windows.Application.Current?.Dispatcher?.Invoke(() =>
+                {
+                    LoadFromCsvFile();
+                });
+            }
         }
 
         private void Item_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -218,11 +256,11 @@ namespace Luster.SimDevice.SubSystem.ViewModel
 
         private void SaveToCsvFile(ObservableCollection<ErrorItemCustomModel> items)
         {
-            //if (items == null || items.Count == 0) return;
-
             try
             {
-                string csvPath = Path.Combine(deviceEngine.RecipeConfigPath, "CustomErrors.csv");
+                // 使用绑定路径而非引擎当前路径，防止跨配方污染
+                string savePath = _boundRecipePath ?? deviceEngine.RecipeConfigPath;
+                string csvPath = Path.Combine(savePath, "CustomErrors.csv");
                 var csvLines = new List<string>();
 
                 // 添加CSV表头
@@ -231,7 +269,6 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                 // 添加数据行
                 foreach (var item in items)
                 {
-                    // 处理可能包含逗号的内容（用引号包围）
                     var content = EscapeCsvField(item.AlarmContent ?? "");
                     var english = EscapeCsvField(item.AlarmEnglish ?? "");
                     var category = EscapeCsvField(item.AlarmCategory ?? "");
@@ -240,7 +277,6 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                     csvLines.Add($"{item.AlarmCode},{content},{english},{category},{repairAction}");
                 }
 
-                // 写入文件
                 File.WriteAllLines(csvPath, csvLines, Encoding.UTF8);
             }
             catch (Exception ex)
@@ -268,68 +304,108 @@ namespace Luster.SimDevice.SubSystem.ViewModel
         private void LoadFromCsvFile()
         {
             string csvPath = Path.Combine(deviceEngine.RecipeConfigPath, "CustomErrors.csv");
-            if (!File.Exists(csvPath))
+
+            // 清空现有 UI 数据
+            ErrorList.Clear();
+
+            // 1. 读取 CSV 数据（CSV 是唯一真相源）
+            var csvEntries = new List<(string code, string content, string english, string category, string repair)>();
+
+            if (File.Exists(csvPath))
             {
-                System.Diagnostics.Debug.WriteLine("CSV文件不存在，使用空数据");
-                ErrorList.Clear();
-                return;
-            }
-
-            try
-            {
-                var lines = File.ReadAllLines(csvPath, Encoding.UTF8);
-
-                // 清空现有数据
-                ErrorList.Clear();
-
-                // 跳过表头（第一行）
-                for (int i = 1; i < lines.Length; i++)
+                try
                 {
-                    var line = lines[i];
-                    if (string.IsNullOrWhiteSpace(line)) continue;
-
-                    var fields = ParseCsvLine(line);
-                    if (fields.Length >= 3)
+                    var lines = File.ReadAllLines(csvPath, Encoding.UTF8);
+                    for (int i = 1; i < lines.Length; i++)
                     {
-                        var alarmCode = fields[0];
-                        var alarmContent = UnescapeCsvField(fields[1]);
-                        var alarmEnglish = UnescapeCsvField(fields[2]);
-                        var alarmCategory = fields.Length > 3 ? UnescapeCsvField(fields[3]) : "";
-                        var repairAction = fields.Length > 4 ? UnescapeCsvField(fields[4]) : "";
+                        var line = lines[i];
+                        if (string.IsNullOrWhiteSpace(line)) continue;
 
-                        var newModel = new ErrorItemCustomModel(
-                            alarmCode: alarmCode,
-                            alarmContent: alarmContent,
-                            alarmEnglish: alarmEnglish,
-                            alarmCategory: alarmCategory,
-                            repairAction: repairAction
-                        );
-                        newModel.PropertyChanged += Item_PropertyChanged;
-                        ErrorList.Add(newModel);
-
-                        // CSV中有数据但deviceEngine中没有对应的VAlarm时，自动补建
-                        if (deviceEngine != null && !string.IsNullOrEmpty(alarmCode))
+                        var fields = ParseCsvLine(line);
+                        if (fields.Length >= 3)
                         {
-                            var existing = deviceEngine.GetVDevices<VAlarm>()
-                                ?.FirstOrDefault(a => a.AlarmKey == alarmCode);
-                            if (existing == null)
-                            {
-                                deviceEngine.AddVirtual(new VAlarm()
-                                {
-                                    AlarmKey = alarmCode,
-                                    AlarmCN = alarmContent,
-                                    AlarmEn = alarmEnglish,
-                                    ID = Guid.NewGuid()
-                                });
-                            }
+                            csvEntries.Add((
+                                code: fields[0],
+                                content: UnescapeCsvField(fields[1]),
+                                english: UnescapeCsvField(fields[2]),
+                                category: fields.Length > 3 ? UnescapeCsvField(fields[3]) : "",
+                                repair: fields.Length > 4 ? UnescapeCsvField(fields[4]) : ""
+                            ));
                         }
                     }
                 }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"读取CSV文件失败: {ex.Message}");
+                }
             }
-            catch (Exception ex)
+
+            // 2. 填充 UI 列表
+            foreach (var entry in csvEntries)
             {
-                System.Diagnostics.Debug.WriteLine($"读取CSV文件失败: {ex.Message}");
-                ErrorList.Clear();
+                var newModel = new ErrorItemCustomModel(
+                    alarmCode: entry.code,
+                    alarmContent: entry.content,
+                    alarmEnglish: entry.english,
+                    alarmCategory: entry.category,
+                    repairAction: entry.repair
+                );
+                newModel.PropertyChanged += Item_PropertyChanged;
+                ErrorList.Add(newModel);
+            }
+
+            // 3. 以 CSV 为唯一真相源，同步引擎中的 VAlarm
+            SyncEngineVAlarms(csvEntries);
+        }
+
+        /// <summary>
+        /// 以 CSV 数据为唯一真相源，同步引擎中的 VAlarm：
+        /// - 删除不在 CSV 中的孤立 VAlarm
+        /// - 去重（同 AlarmKey 只保留一个）
+        /// - 补建 CSV 中有但引擎中缺失的 VAlarm
+        /// </summary>
+        private void SyncEngineVAlarms(List<(string code, string content, string english, string category, string repair)> csvEntries)
+        {
+            if (deviceEngine == null) return;
+
+            var csvCodes = new HashSet<string>(csvEntries.Select(e => e.code).Where(c => !string.IsNullOrEmpty(c)));
+            var allVAlarms = deviceEngine.GetVDevices<VAlarm>().ToList();
+
+            // 删除不在 CSV 中的孤立 VAlarm
+            foreach (var alarm in allVAlarms)
+            {
+                if (!csvCodes.Contains(alarm.AlarmKey))
+                {
+                    try { deviceEngine.ReomoveVirtual(alarm.ID); }
+                    catch { }
+                }
+            }
+
+            // 去重（同 AlarmKey 保留第一个）
+            var remaining = deviceEngine.GetVDevices<VAlarm>().ToList();
+            foreach (var group in remaining.GroupBy(a => a.AlarmKey).Where(g => g.Count() > 1))
+            {
+                foreach (var dup in group.Skip(1))
+                {
+                    try { deviceEngine.ReomoveVirtual(dup.ID); }
+                    catch { }
+                }
+            }
+
+            // 补建 CSV 中有但引擎中缺失的 VAlarm
+            var currentKeys = new HashSet<string>(deviceEngine.GetVDevices<VAlarm>().Select(a => a.AlarmKey));
+            foreach (var entry in csvEntries)
+            {
+                if (!string.IsNullOrEmpty(entry.code) && !currentKeys.Contains(entry.code))
+                {
+                    deviceEngine.AddVirtual(new VAlarm()
+                    {
+                        AlarmKey = entry.code,
+                        AlarmCN = entry.content,
+                        AlarmEn = entry.english,
+                        ID = Guid.NewGuid()
+                    });
+                }
             }
         }
 
@@ -489,16 +565,29 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                     }
                 }
 
-                // 同步到设备引擎
+                // 同步到设备引擎（先检查是否已存在，避免重复创建）
                 foreach (var item in items)
                 {
-                    deviceEngine?.AddVirtual(new VAlarm()
+                    if (deviceEngine == null || string.IsNullOrEmpty(item.AlarmCode)) continue;
+
+                    var existing = deviceEngine.GetVDevices<VAlarm>()
+                        ?.FirstOrDefault(a => a.AlarmKey == item.AlarmCode);
+
+                    if (existing != null)
                     {
-                        AlarmKey = item.AlarmCode,
-                        AlarmCN = item.AlarmContent,
-                        AlarmEn = item.AlarmEnglish,
-                        ID = Guid.NewGuid()
-                    });
+                        existing.AlarmCN = item.AlarmContent;
+                        existing.AlarmEn = item.AlarmEnglish;
+                    }
+                    else
+                    {
+                        deviceEngine.AddVirtual(new VAlarm()
+                        {
+                            AlarmKey = item.AlarmCode,
+                            AlarmCN = item.AlarmContent,
+                            AlarmEn = item.AlarmEnglish,
+                            ID = Guid.NewGuid()
+                        });
+                    }
                 }
 
                 SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Info, $"导入完成：新增 {addedCount} 条，更新 {updatedCount} 条");

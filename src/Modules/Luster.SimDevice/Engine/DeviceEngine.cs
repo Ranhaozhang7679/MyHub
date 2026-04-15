@@ -381,6 +381,10 @@ namespace Luster.SimDevice.Engine
                 // 由于调用了AddDevice，默认将IsNeedSave更新为True，所以需要置为false
                 IsNeedSave = false;
                 this.deviceTask = deviceTask;
+
+                // dproj 加载完成后，以 CustomErrors.csv 为基准同步 VAlarm
+                SyncCustomAlarms();
+
                 InitializedEvent?.Invoke(this, deviceTask);
 
                 //获取设备类型字典
@@ -390,6 +394,64 @@ namespace Luster.SimDevice.Engine
             catch (XmlException xE)
             {
                 throw xE;
+            }
+        }
+
+        /// <summary>
+        /// 以 CustomErrors.csv 为唯一真相源，同步引擎中的 VAlarm。
+        /// 清理 dproj 中残留的孤立/重复 VAlarm。
+        /// </summary>
+        private void SyncCustomAlarms()
+        {
+            try
+            {
+                string configPath = RecipeConfigPath;
+                if (string.IsNullOrEmpty(configPath)) return;
+
+                string csvPath = Path.Combine(configPath, "CustomErrors.csv");
+
+                var csvCodes = new HashSet<string>();
+                if (File.Exists(csvPath))
+                {
+                    var lines = File.ReadAllLines(csvPath, Encoding.UTF8);
+                    for (int i = 1; i < lines.Length; i++)
+                    {
+                        var line = lines[i];
+                        if (string.IsNullOrWhiteSpace(line)) continue;
+                        var commaIndex = line.IndexOf(',');
+                        var code = commaIndex > 0 ? line.Substring(0, commaIndex).Trim() : line.Trim();
+                        if (!string.IsNullOrEmpty(code))
+                            csvCodes.Add(code);
+                    }
+                }
+
+                var allVAlarms = GetVDevices<VAlarm>().ToList();
+                if (allVAlarms.Count == 0 && csvCodes.Count == 0) return;
+
+                // 删除不在 CSV 中的孤立 VAlarm
+                foreach (var alarm in allVAlarms)
+                {
+                    if (!csvCodes.Contains(alarm.AlarmKey))
+                    {
+                        try { ReomoveVirtual(alarm.ID); }
+                        catch { }
+                    }
+                }
+
+                // 去重
+                var remaining = GetVDevices<VAlarm>().ToList();
+                foreach (var group in remaining.GroupBy(a => a.AlarmKey).Where(g => g.Count() > 1))
+                {
+                    foreach (var dup in group.Skip(1))
+                    {
+                        try { ReomoveVirtual(dup.ID); }
+                        catch { }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"SyncCustomAlarms 异常: {ex.Message}");
             }
         }
 
