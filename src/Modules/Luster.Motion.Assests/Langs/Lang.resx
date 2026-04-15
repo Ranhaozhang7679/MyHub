@@ -3195,4 +3195,7 @@
   <data name="BUSOP" xml:space="preserve">
     <value>BUSOP</value>
   </data>
+  <data name="TaikeAnnotatedCurve" xml:space="preserve">
+    <value>压力曲线堆叠图</value>
+  </data>
 </root>

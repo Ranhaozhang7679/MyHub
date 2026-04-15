@@ -7972,6 +7972,15 @@ namespace Luster.Motion.Assests.Langs {
         }
         
         /// <summary>
+        ///   查找类似 压力曲线堆叠图 的本地化字符串。
+        /// </summary>
+        public static string TaikeAnnotatedCurve {
+            get {
+                return ResourceManager.GetString("TaikeAnnotatedCurve", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 泰科统计 的本地化字符串。
         /// </summary>
         public static string TaikeContent {

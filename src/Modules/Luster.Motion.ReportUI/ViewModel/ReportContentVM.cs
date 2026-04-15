@@ -53,6 +53,7 @@ namespace Luster.Control.Wpf.Motion
             Pages.Add(new ReportPageModel() { Name = "FlingMaterialStatistics", IsSelected = false, Region = "FlingMaterialContent" });
             Pages.Add(new ReportPageModel() { Name = "ChangeRecord", IsSelected = false, Region = "ChangeContent" });
             Pages.Add(new ReportPageModel() { Name = "TaikeCurve", IsSelected = false, Region = "TaikeContent" });
+            Pages.Add(new ReportPageModel() { Name = "TaikeAnnotatedCurve", IsSelected = false, Region = "TaikeAnnotatedContent" });
             //Pages.Add(new ReportPageModel() { Name = "CTLogÍ³¼Æ", IsSelected = false, Region = "CTLogStatContent" });
 
             LoadFromDll();
