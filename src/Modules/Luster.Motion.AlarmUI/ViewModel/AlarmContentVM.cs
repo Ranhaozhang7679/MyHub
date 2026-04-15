@@ -22,16 +22,19 @@
 #endregion
 using HandyControl.Data;
 using LiveCharts;
+using LiveCharts.Configurations;
 using LiveCharts.Defaults;
 using LiveCharts.Wpf;
-using LiveCharts.Configurations;
 using Luster.Common.DataAccess.Repositories;
 using Luster.Common.DataAccess.Tables;
+using Luster.Common.DataStruct.Extensions;
 using Luster.Common.Tools;
 using Luster.Motion.AlarmUI.Model;
 using Luster.Motion.CommonUI;
 using Luster.Motion.CommonUI.Models;
 using Luster.Motion.CommonUI.ViewModel;
+using Luster.Motion.DataStruct;
+using Luster.Motion.DataStruct.Enums;
 using Microsoft.Win32;
 using Prism.Commands;
 using Prism.Regions;
@@ -42,8 +45,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
-using Luster.Motion.DataStruct.Enums;
-using Luster.Common.DataStruct.Extensions;
 
 namespace Luster.Motion.AlarmUI.ViewModel
 {
@@ -582,6 +583,12 @@ namespace Luster.Motion.AlarmUI.ViewModel
         {
             var startTime = StartTime.AddHours(_firstClassTime.Hour).AddMinutes(_firstClassTime.Minute);
             var endTime = EndTime.AddHours(_firstClassTime.Hour).AddMinutes(_firstClassTime.Minute);
+
+            var checkData = _dbManager.GetAnalyzeModels(startTime, endTime)?.ToList();
+            if (checkData == null || checkData.Count == 0)
+            {
+                throw new DeviceException("提示：", "当前时间段数据库为空，请检查");
+            }
 
             if (IsAlarmView)
             {
