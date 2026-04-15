@@ -166,7 +166,7 @@ namespace Luster.TaskFlow.Motion
                     }
                     else
                     {
-                        throw new DeviceTimeoutException("N03OOOO-01", $"WaitFunc等待超时");
+                        throw new DeviceTimeoutException("N03OOOO-01@Wait timeout", $"WaitFunc等待超时");
                     }
                 }
             }

@@ -1919,7 +1919,7 @@ namespace Luster.Motion.TaskFlow.Engine
                     {
                         string alarmMsg = $"PLC:{string.Join(",", alarms.Select(u => u.Desc))}";
 
-                        var plcAlarm = new AlarmInfo(this, AlarmType.PlcAlarm, "PLC报警&PLC Alarm", "N03OOOO-01", "System", "PLC");
+                        var plcAlarm = new AlarmInfo(this, AlarmType.PlcAlarm, "PLC报警&PLC Alarm", "N03PLOO-01@PLC Alarm", "System", "PLC");
 
                         //WritePlcValueInt(SysConfig.TricolorStatusAddr, 5);
                         MotionEngine.OnAlarm(plcAlarm);
