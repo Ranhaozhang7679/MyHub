@@ -1553,7 +1553,7 @@ namespace Luster.Motion.CommonUI
         /// <param name="count"></param>
         /// <returns></returns>
         public IEnumerable<TbAlarm> GetAlarmPageData(DateTime startTime, DateTime endTime, string searchContent,
-            string sort, int pageIndex, int perPageCount, out long count, List<string> filterTypes = null, bool excludeTypes = false)
+    string sort, int pageIndex, int perPageCount, out long count, List<string> filterTypes = null, bool excludeTypes = false)
         {
             //orm 拼接条件 查询  
             Expression<Func<TbAlarm, bool>> where = null;
@@ -1564,16 +1564,21 @@ namespace Luster.Motion.CommonUI
                 {
                     if (excludeTypes)
                     {
-                        where = x => x.CreateTime > startTime && x.CreateTime < endTime && x.Module.Contains(searchContent) && !filterTypes.Contains(x.AlarmType);
+                        where = x => x.CreateTime > startTime && x.CreateTime < endTime
+                            && (x.Module.Contains(searchContent) || (x.AlarmType != null && x.AlarmType.Contains(searchContent)))
+                            && !filterTypes.Contains(x.AlarmType);
                     }
                     else
                     {
-                        where = x => x.CreateTime > startTime && x.CreateTime < endTime && x.Module.Contains(searchContent) && filterTypes.Contains(x.AlarmType);
+                        where = x => x.CreateTime > startTime && x.CreateTime < endTime
+                            && (x.Module.Contains(searchContent) || (x.AlarmType != null && x.AlarmType.Contains(searchContent)))
+                            && filterTypes.Contains(x.AlarmType);
                     }
                 }
                 else
                 {
-                    where = x => x.CreateTime > startTime && x.CreateTime < endTime && x.Module.Contains(searchContent);
+                    where = x => x.CreateTime > startTime && x.CreateTime < endTime
+                        && (x.Module.Contains(searchContent) || (x.AlarmType != null && x.AlarmType.Contains(searchContent)));
                 }
             }
             else
