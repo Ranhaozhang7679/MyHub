@@ -9,6 +9,7 @@
 	  <ProjectReference Include="..\TaiKeCommon\TaiKeCommon.csproj" />
 	  <!--<ProjectReference Include="..\Luster.TaskFlow.Motion\Luster.TaskFlow.Motion.csproj" />-->
 	  <ProjectReference Include="..\Luster.Module.Motion.Logic\Luster.Module.Motion.Logic.csproj" />
+		  <ProjectReference Include="..\Luster.SimDevice.MotionCard\Luster.SimDevice.MotionCard.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
