@@ -19,6 +19,9 @@ namespace Luster.Module.Motion.Device.Functions
         [Description("回零")]
         Home,
 
+        [Description("非标回零")]
+        HomeNonStandard,
+
         [Description("硬着陆")]
         HardLanding,
 

@@ -74,6 +74,14 @@ namespace Luster.Module.Motion.Device.Functions
         public int SoftLandingTimeout { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
+        [Parameter("电流匹配容差(0x6077与0x5018的偏差)", 24, CN = "电流容差", DefaultV = 10)]
+        public int SoftLandingCurrentTolerance { get; set; }
+
+        [DependOn("ActionType", VCMActionType.SoftLanding)]
+        [Parameter("速度判定阈值(mm/s)", 25, CN = "速度阈值", DefaultV = 0.5)]
+        public double SoftLandingSpeedThreshold { get; set; }
+
+        [DependOn("ActionType", VCMActionType.SoftLanding)]
         [Parameter("压力标定系数K(压力=K×电流+B)", 13, CN = "标定系数K", DefaultV = 1.0)]
         public double PressureCalibrationK { get; set; }
 
@@ -92,24 +100,34 @@ namespace Luster.Module.Motion.Device.Functions
 
         // ===== 回零参数 =====
         [DependOn("ActionType", VCMActionType.Home)]
-        [Parameter("回零模式代码", 17, CN = "回零模式", DefaultV = (short)0)]
+        [DependOn("ActionType", VCMActionType.HomeNonStandard)]
+        [Parameter("回零超时(秒)", 17, CN = "回零超时", DefaultV = 60)]
+        public int HomeTimeout { get; set; }
+
+        // ===== 非标回零参数 =====
+        [DependOn("ActionType", VCMActionType.HomeNonStandard)]
+        [Parameter("回零模式代码", 18, CN = "回零模式", DefaultV = (short)0)]
         public short HomeMode { get; set; }
 
-        [DependOn("ActionType", VCMActionType.Home)]
-        [Parameter("回零高速(mm/s)", 18, CN = "回零高速", DefaultV = 50.0)]
+        [DependOn("ActionType", VCMActionType.HomeNonStandard)]
+        [Parameter("回零高速(mm/s)", 19, CN = "回零高速", DefaultV = 50.0)]
         public double HomeSpeed { get; set; }
 
-        [DependOn("ActionType", VCMActionType.Home)]
-        [Parameter("回零低速(mm/s)", 19, CN = "回零低速", DefaultV = 10.0)]
+        [DependOn("ActionType", VCMActionType.HomeNonStandard)]
+        [Parameter("回零低速(mm/s)", 20, CN = "回零低速", DefaultV = 10.0)]
         public double HomeLowSpeed { get; set; }
 
-        [DependOn("ActionType", VCMActionType.Home)]
-        [Parameter("回零加速度(mm/s²)", 20, CN = "回零加速度", DefaultV = 1000.0)]
+        [DependOn("ActionType", VCMActionType.HomeNonStandard)]
+        [Parameter("回零加速度(mm/s²)", 21, CN = "回零加速度", DefaultV = 1000.0)]
         public double HomeAcc { get; set; }
 
-        [DependOn("ActionType", VCMActionType.Home)]
-        [Parameter("回零超时(秒)", 21, CN = "回零超时", DefaultV = 60)]
-        public int HomeTimeout { get; set; }
+        [DependOn("ActionType", VCMActionType.HomeNonStandard)]
+        [Parameter("碰撞回零电流阈值(千分比)", 22, CN = "碰撞电流阈值", DefaultV = 500)]
+        public int HomeCollisionCurrent { get; set; }
+
+        [DependOn("ActionType", VCMActionType.HomeNonStandard)]
+        [Parameter("碰撞电流检测时间(ms)", 23, CN = "电流检测时间", DefaultV = 100)]
+        public int HomeCollisionTime { get; set; }
 
         // ===== 输出参数 =====
         [Parameter("执行结果", 30, CN = "执行结果", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
@@ -168,6 +186,9 @@ namespace Luster.Module.Motion.Device.Functions
                     case VCMActionType.Home:
                         ExecuteHome();
                         break;
+                    case VCMActionType.HomeNonStandard:
+                        ExecuteHomeNonStandard();
+                        break;
                     case VCMActionType.HardLanding:
                         ExecuteHardLanding();
                         break;
@@ -204,20 +225,6 @@ namespace Luster.Module.Motion.Device.Functions
             _axis.SDOWrite(0x6040, 0, value, 2);
         }
 
-        private bool WaitForStatus(int expectedMasked, int mask = 0x006F, int timeoutMs = 5000)
-        {
-            int elapsed = 0;
-            while (elapsed < timeoutMs)
-            {
-                int status = ReadStatusWord();
-                if ((status & mask) == expectedMasked)
-                    return true;
-                Thread.Sleep(10);
-                elapsed += 10;
-            }
-            return false;
-        }
-
         private bool IsFaultState()
         {
             int status = ReadStatusWord();
@@ -239,127 +246,107 @@ namespace Luster.Module.Motion.Device.Functions
 
         private void ExecuteServoOn()
         {
-            for (int attempt = 0; attempt < 2; attempt++)
-            {
-                if (IsFaultState())
-                {
-                    if (!ClearFault())
-                    {
-                        if (attempt == 0) continue;
-                        OutResult = false;
-                        OutFailReason = "使能失败: 报警清除失败";
-                        return;
-                    }
-                }
-
-                WriteControlWord(0x0006);
-                if (!WaitForStatus(0x0021))
-                {
-                    if (attempt == 0) continue;
-                    OutResult = false;
-                    OutFailReason = $"使能失败: 无法进入 Ready to switch on, 状态字: 0x{ReadStatusWord():X4}";
-                    return;
-                }
-
-                WriteControlWord(0x0007);
-                if (!WaitForStatus(0x0023))
-                {
-                    if (attempt == 0) continue;
-                    OutResult = false;
-                    OutFailReason = $"使能失败: 无法进入 Switched on, 状态字: 0x{ReadStatusWord():X4}";
-                    return;
-                }
-
-                WriteControlWord(0x000F);
-                if (!WaitForStatus(0x0027))
-                {
-                    if (attempt == 0) continue;
-                    OutResult = false;
-                    OutFailReason = $"使能失败: 无法进入 Operation enabled, 状态字: 0x{ReadStatusWord():X4}";
-                    return;
-                }
-
-                OutResult = true;
-                return;
-            }
+            _axis.ServOn(true);
+            OutResult = true;
         }
 
         private void ExecuteReset()
         {
-            if (!IsFaultState())
-            {
-                OutResult = true;
-                return;
-            }
-            OutResult = ClearFault();
-            if (!OutResult)
-                OutFailReason = "复位失败: 报警清除失败";
+            _axis.ResetStatus();
+            OutResult = true;
         }
 
         private void ExecuteServoOff()
         {
-            WriteControlWord(0x0000);
-            Thread.Sleep(50);
+            _axis.ServOn(false);
             OutResult = true;
         }
 
         #endregion
 
-        #region 回零(大寰非标回零)
+        #region 回零
 
         /// <summary>
-        /// 回零流程(大寰非标回零)
-        /// 调用 Ec6000_HomeMove.M60_HomMove 启动回零
-        /// 调用 M60_WaitHoming 等待回零完成
-        /// 错误码: -11=超时, -12=模式切换失败
+        /// 常规回零(LCMotionCard.Home)
+        /// 使用轴卡标准回零方法
         /// </summary>
         private void ExecuteHome()
         {
+            _axis.Home();
+            _axis.CheckHomeDone(HomeTimeout);
+            OutResult = true;
+        }
+
+        /// <summary>
+        /// 非标回零(大寰文档P34推荐方式)
+        /// 执行顺序: 设参数(模式34占位) → 切回零模式 → SDO写正确模式/堵转电流/时间 → 启动回零
+        /// </summary>
+        private void ExecuteHomeNonStandard()
+        {
             short axis = (short)_axis.AxisNo;
             short card = 0;
-            short homsts = 0;
 
-            short ret = Ec6000_HomeMove.M60_HomMove(
-                axis,
-                (short)HomeMode,
-                ref homsts,
-                0,
-                (uint)(HomeSpeed * 1000),
-                (uint)(HomeLowSpeed * 1000),
-                (uint)(HomeAcc * 1000),
-                card);
+            // 1. 速度/加速度单位转换 (mm/s → pls/s)
+            uint velHi = (uint)(HomeSpeed * _axis.PerPluse);
+            uint velLo = (uint)(HomeLowSpeed * _axis.PerPluse);
+            uint accUint = (uint)(HomeAcc * _axis.PerPluse);
 
+            // 2. 设定回零参数(模式暂用34占位)
+            short ret = ecat_motion.M_SetHomingPrm(axis, 34, 0, velHi, velLo, accUint, 0, card);
             if (ret != 0)
             {
                 OutResult = false;
-                OutFailReason = $"回零启动失败, 错误码: {ret}";
+                OutFailReason = $"非标回零: 设置回零参数失败, 错误码: {ret}";
                 return;
             }
 
-            ret = Ec6000_HomeMove.M60_WaitHoming(
-                axis,
-                (short)(HomeTimeout * 1000),
-                ref homsts,
-                card);
+            // 3. 切换至回零模式(Mode=6)
+            ret = ecat_motion.M_SetHomingMode(axis, 6, card);
+            Thread.Sleep(50);
+            if (ret != 0)
+            {
+                OutResult = false;
+                OutFailReason = $"非标回零: 切换回零模式失败, 错误码: {ret}";
+                return;
+            }
+
+            // 4. SDO写入正确的回零模式、堵转电流、堵转时间
+            _axis.SDOWrite(0x6098, 0, HomeMode, 1);
+            _axis.SDOWrite(0x5000, 5, HomeCollisionCurrent, 2);
+            _axis.SDOWrite(0x5000, 6, HomeCollisionTime, 2);
+
+            // 5. 启动回零
+            ret = ecat_motion.M_HomingStart(axis, card);
+            if (ret != 0)
+            {
+                OutResult = false;
+                OutFailReason = $"非标回零: 启动回零失败, 错误码: {ret}";
+                return;
+            }
+
+            // 等待回零完成
+            short homsts = 0;
+            int timeoutMs = Math.Min(HomeTimeout * 1000, short.MaxValue);
+            ret = Ec6000_HomeMove.M60_WaitHoming(axis, (short)timeoutMs, ref homsts, card);
 
             if (ret == -11)
             {
                 OutResult = false;
-                OutFailReason = $"回零超时({HomeTimeout}秒)";
+                OutFailReason = $"非标回零超时({HomeTimeout}秒)";
                 return;
             }
 
             if (ret == -12)
             {
                 OutResult = false;
-                OutFailReason = "回零完成但模式切换失败(未能切回CSP模式)";
+                OutFailReason = "非标回零完成但模式切换失败(未能切回CSP模式)";
                 return;
             }
 
             if (ret != 0)
             {
                 OutResult = false;
-                OutFailReason = $"回零失败, 错误码: {ret}, 回零状态: {homsts}";
+                OutFailReason = $"非标回零失败, 错误码: {ret}, 回零状态: {homsts}";
                 return;
             }
 
@@ -398,8 +385,16 @@ namespace Luster.Module.Motion.Device.Functions
         /// </summary>
         private double ReadPressure()
         {
+            return ReadRawCurrent() * PressureCalibrationK + PressureCalibrationB;
+        }
+
+        /// <summary>
+        /// 读取0x6077原始电流值(千分比)
+        /// </summary>
+        private int ReadRawCurrent()
+        {
             _axis.SDORead(0x6077, 0, 2, out int currentValue, 1);
-            return currentValue * PressureCalibrationK + PressureCalibrationB;
+            return currentValue;
         }
 
         private int PressureToCurrentLimit(double pressure)
@@ -436,16 +431,25 @@ namespace Luster.Module.Motion.Device.Functions
 
                 int elapsed = 0;
                 int timeoutMs = SoftLandingTimeout * 1000;
+                double lastPos = _axis.GetCurrentPos();
 
                 while (elapsed < timeoutMs)
                 {
                     if (_isBreak) return;
 
-                    double position = _axis.GetCurrentPos();
-                    double pressure = ReadPressure();
+                    Thread.Sleep(10);
+                    elapsed += 10;
 
-                    if (position >= PositionLowerLimit && position <= PositionUpperLimit
-                        && pressure >= PressureLowerLimit && pressure <= PressureUpperLimit)
+                    double position = _axis.GetCurrentPos();
+                    int rawCurrent = ReadRawCurrent();
+                    double speed = Math.Abs(position - lastPos) * 100; // mm/10ms → mm/s
+                    lastPos = position;
+
+                    // 文档P50判定: 0x6077 ∈ (0x5018 ± tolerance) AND 速度 ≤ 阈值
+                    bool currentMatch = Math.Abs(rawCurrent - currentLimit) <= SoftLandingCurrentTolerance;
+                    bool speedLow = speed <= SoftLandingSpeedThreshold;
+
+                    if (currentMatch && speedLow)
                     {
                         _axis.Stop();
                         Thread.Sleep(50);
@@ -462,12 +466,9 @@ namespace Luster.Module.Motion.Device.Functions
                         OutPosition = _axis.GetCurrentPos();
                         OutPressure = ReadPressure();
                         OutResult = false;
-                        OutFailReason = $"到达位置上限({PositionUpperLimit}mm)防撞停止, 当前压力:{pressure:F2}, 范围[{PressureLowerLimit:F2}, {PressureUpperLimit:F2}]";
+                        OutFailReason = $"到达位置上限({PositionUpperLimit}mm)防撞停止, 电流:{rawCurrent}, 限制:{currentLimit}";
                         return;
                     }
-
-                    Thread.Sleep(5);
-                    elapsed += 5;
                 }
 
                 _axis.Stop();
