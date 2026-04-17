@@ -276,6 +276,81 @@ namespace Luster.Motion.EditorUI
             return newModule;
         }
 
+        /// <summary>
+        /// 添加模块（指定父模块，用于弹窗场景）
+        /// </summary>
+        public IMotionModule OnAddModule(string module, string func, IMotionModule parent, int index = -1, int row = 0, int col = 0)
+        {
+            var newModule = _engine.CreateByName(module, func);
+            newModule.Alias = GetDefaultAlias(newModule);
+            newModule.Parent = parent;
+
+            if (parent == null)
+            {
+                throw new FriendlyException($"模块名:{module},函数名:{func} 父模块不存在!");
+            }
+
+            if (parent.Parent == null)
+            {
+                var station = newModule.TaskFunction as IStation;
+                if (station == null)
+                {
+                    throw new FriendlyException($"主页面只能添加工站模块!");
+                }
+                else
+                {
+                    if (row > 0 || col > 0)
+                    {
+                        station.Row = row;
+                        station.Column = col;
+                    }
+                    else
+                    {
+                        var stations = _engine.GetStations();
+                        if (stations.Count > 0)
+                        {
+                            var maxRow = stations.Max(u => (u.TaskFunction as IStation).Row);
+                            station.Row = maxRow + 1;
+                        }
+                        else
+                        {
+                            station.Row = 0;
+                        }
+                    }
+
+                    newModule.Station = newModule;
+                }
+            }
+            else
+            {
+                if (newModule.TaskFunction is IStation station)
+                {
+                    throw new FriendlyException($"工站只能添加在主页中!");
+                }
+            }
+
+            Bus.GetEvent<ModulePrevAddEvent>().Publish(newModule);
+            if ((newModule.TaskFunction is ISwitch || newModule.TaskFunction is IBranch) && newModule.Children.Count == 0)
+            {
+                return newModule;
+            }
+
+            OnRecipeChanged();
+
+            _engine.Insert(newModule, index);
+            _engine.BuildPrimModule();
+
+            SortModule(parent);
+            newModule.UpdateStation();
+
+            Bus.GetEvent<ModuleAddEvent>().Publish(newModule);
+
+            commonBus.OnChangeRecord(OperationType.Add, newModule.Alias, "", $"模块新增:{newModule.Alias}");
+            commonBus.OnLog(LogType.Info, $"模块新增:{newModule.Alias}");
+
+            return newModule;
+        }
+
         private bool MatchParameter(ParameterAttribute outParam, ParameterAttribute dstParam)
         {
             ParamType pType = outParam.Owner.Name == "Global" ? ParamType.IN : ParamType.OUT;
@@ -622,6 +697,58 @@ namespace Luster.Motion.EditorUI
 
             string moduleNames = string.Join(",", modules.Select(u => u.Alias).ToArray());
             // 5.log 记录
+            commonBus.OnLog(LogType.Info, $"模块移动:{moduleNames} {srcIndex}->{destIndex}");
+
+
+
+            Bus.GetEvent<ModuleMovedEvent>().Publish(modules.ToArray());
+        }
+
+        /// <summary>
+        /// 模块移动（指定父模块，用于弹窗场景）
+        /// </summary>
+        public void OnMoveModule(List<IMotionModule> modules, int destIndex, IMotionModule parent)
+        {
+            if (modules.Count == 0)
+            {
+                throw new FriendlyException("要移动的模块不存在!");
+            }
+
+            OnRecipeChanged();
+
+            var curModule = parent;
+            var srcIndex = modules[0].Sort;
+
+            if (srcIndex > destIndex)
+            {
+                var descModules = modules.OrderByDescending(u => u.Sort);
+                foreach (var item in descModules)
+                {
+                    curModule.Children.RemoveAt(item.Sort);
+                }
+
+                foreach (var item in modules)
+                {
+                    curModule.Children.Insert(destIndex++, item);
+                }
+            }
+            else
+            {
+                foreach (var item in modules)
+                {
+                    destIndex++;
+                    curModule.Children.Insert(destIndex, item);
+                }
+
+                foreach (var item in modules)
+                {
+                    curModule.Children.RemoveAt(item.Sort);
+                }
+            }
+
+            SortModule(curModule);
+
+            string moduleNames = string.Join(",", modules.Select(u => u.Alias).ToArray());
             commonBus.OnLog(LogType.Info, $"模块移动:{moduleNames} {srcIndex}->{destIndex}");
 
 
