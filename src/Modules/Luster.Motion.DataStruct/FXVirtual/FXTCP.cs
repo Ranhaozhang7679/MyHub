@@ -802,7 +802,7 @@ namespace Luster.Motion.DataStruct.FXVirtual
                         }
                         else
                         {
-                            throw new DeviceTimeoutException("F98OOOO-08", $"CalcTime超时");
+                            throw new DeviceTimeoutException("N03OOOO-01", $"CalcTime超时");
                         }
                     }
                 }

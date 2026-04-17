@@ -829,8 +829,8 @@ namespace Luster.Motion.TaskFlow.Engine
             //service.Show("HiveStartDialog2", param, null);
 
             // 0 首先运行开始工站
-            _deviceEngine.OnLog(LogType.Info, "首先执行开始工站");
-            MotionEngine.RunStartStation();
+            //_deviceEngine.OnLog(LogType.Info, "首先执行开始工站");
+            //MotionEngine.RunStartStation();
 
             AlarmInfo = null;
             RecoveryIOSetInit();
@@ -843,6 +843,8 @@ namespace Luster.Motion.TaskFlow.Engine
                 if (lockCommand > 0) { _deviceEngine.OnLog(LogType.Info, $"暂停lockcommand次数>0,:{lockCommand}，直接退出!"); return false; }
                 Interlocked.Increment(ref lockCommand);
                 _deviceEngine.OnLog(LogType.Info, $"lockCommand为{lockCommand}");
+                //_deviceEngine.OnLog(LogType.Info, "首先执行开始工站");
+                //MotionEngine.RunStartStation();
 
                 // PLC 和监控要进行复位检查
                 if (_deviceEngine.Recovery())
@@ -924,6 +926,8 @@ namespace Luster.Motion.TaskFlow.Engine
                 if (lockCommand > 0) { _deviceEngine.OnLog(LogType.Info, $"lockcommand次数>0,:{lockCommand}，直接退出!"); return false; }
                 Interlocked.Increment(ref lockCommand);
                 _deviceEngine.OnLog(LogType.Info, $"监控lockcommand次数，当前为:{lockCommand}");
+                _deviceEngine.OnLog(LogType.Info, "首先执行开始工站");
+                MotionEngine.RunStartStation();
                 _deviceEngine.OnLog(LogType.Info, $"开始检查轴状态!");
                 // 1.Plc启动
                 // 设备回零检查
@@ -1640,14 +1644,13 @@ namespace Luster.Motion.TaskFlow.Engine
                         if (!DoorIsClosed(out var errMsg))
                         {
                             MotionEngine.OnAlarm(new AlarmInfo(this, AlarmType.WarningTip, "安全门被打开", "F02SCOO-01@The security door was opened"));
-                            //MotionEngine.OnAlarm(new AlarmInfo(this, AlarmType.WarningTip, "安全门被打开", "F98OOOO-12@The security door was opened"));
                             return;
                         }
 
                         // 自动打开
                         if (!CanAutoRun(out errMsg))
                         {
-                            //MotionEngine.OnAlarm(new AlarmInfo(this, AlarmType.InfoTip, "安全门被打开", "F98OOOO-12"));
+                            //MotionEngine.OnAlarm(new AlarmInfo(this, AlarmType.InfoTip, "安全门被打开", "N03OOOO-01"));
                             return;
                         }
 
@@ -1667,7 +1670,6 @@ namespace Luster.Motion.TaskFlow.Engine
                 if (!DoorIsClosed(out var errMsg))
                 {
                     MotionEngine.OnAlarm(new AlarmInfo(this, AlarmType.WarningTip, "安全门被打开", "F02SCOO-01@The security door was opened"));
-                    //MotionEngine.OnAlarm(new AlarmInfo(this, AlarmType.WarningTip, "安全门被打开", "F98OOOO-12@The security door was opened"));
                     return;
                 }
 
@@ -1740,7 +1742,7 @@ namespace Luster.Motion.TaskFlow.Engine
                         if (SmokeAlarmNum == 3)
                         {
                             IsSmokeAlarm = true;
-                            MotionEngine.OnAlarm(new AlarmInfo(this, AlarmType.DeviceError, "烟雾报警器触发停止&Smoke alarm triggers stop", "F98OOOO-09"));
+                            MotionEngine.OnAlarm(new AlarmInfo(this, AlarmType.DeviceError, "烟雾报警器触发停止&Smoke alarm triggers stop", "N03OOOO-01"));
                         }
                     }
                     else
@@ -1785,7 +1787,6 @@ namespace Luster.Motion.TaskFlow.Engine
                         {
                             IsEmg = true;
                             MotionEngine.OnAlarm(new AlarmInfo(this, AlarmType.DeviceError, "Emergency stop error", "F01ESOO-01@Emergency stop error"));
-                            //MotionEngine.OnAlarm(new AlarmInfo(this, AlarmType.DeviceError, "急停按钮被暂停!&The emergency stop button is suspended", "F98OOOO-11"));
                         }
 
                         Thread.Sleep(10);
@@ -1863,7 +1864,7 @@ namespace Luster.Motion.TaskFlow.Engine
             // 光幕检查
             if (!CheckLightCurtain())
             {
-                var lightAlarm = new AlarmInfo(this, AlarmType.WarningTip, "光幕被遮挡&The light curtain is blocked", "F98OOOO-10");
+                var lightAlarm = new AlarmInfo(this, AlarmType.WarningTip, "光幕被遮挡&The light curtain is blocked", "N03OOOO-01");
                 MotionEngine.OnAlarm(lightAlarm);
             }
         }
@@ -1918,7 +1919,7 @@ namespace Luster.Motion.TaskFlow.Engine
                     {
                         string alarmMsg = $"PLC:{string.Join(",", alarms.Select(u => u.Desc))}";
 
-                        var plcAlarm = new AlarmInfo(this, AlarmType.PlcAlarm, "PLC报警&PLC Alarm", "F98OOOO-13", "System", "PLC");
+                        var plcAlarm = new AlarmInfo(this, AlarmType.PlcAlarm, "PLC报警&PLC Alarm", "N03PLOO-01@PLC Alarm", "System", "PLC");
 
                         //WritePlcValueInt(SysConfig.TricolorStatusAddr, 5);
                         MotionEngine.OnAlarm(plcAlarm);

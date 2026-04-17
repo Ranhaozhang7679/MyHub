@@ -169,7 +169,7 @@ namespace Luster.Module.Motion.Protocol.Functions
             if (OutString?.Trim() == "NG")
             {
                 errMsg = "通信接收超时，收到内容为空";
-                OnAlarm(AlarmType.WarningTip, $"通信接收超时，收到内容为{OutString}");
+                OnAlarm(AlarmType.WarningTip, $"通信接收超时，收到内容为{OutString}", "N03VSOO-01@Communication timeout");
             }
 
             return base.DoExcute(out errMsg);
