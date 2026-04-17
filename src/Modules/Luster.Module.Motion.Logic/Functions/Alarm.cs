@@ -531,7 +531,7 @@ namespace Luster.Module.Motion.Logic.Functions
                 File.Create(src).Close();
                 AlarmInfo alarmModel = new AlarmInfo
                 {
-                    ErrorCode = "S12ABC99-01",
+                    ErrorCode = "O99OOOO-01",
                     ErrorMessage = "Track temperature alarm",
                     ErrorDetail = "轨道温度报警",
                 };
