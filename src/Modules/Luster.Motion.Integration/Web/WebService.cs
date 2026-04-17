@@ -1,4 +1,4 @@
-﻿using Luster.Common.DataStruct.DataModels;
+using Luster.Common.DataStruct.DataModels;
 using Luster.Common.DataStruct.Extensions;
 using Luster.Common.DataStruct.Interfaces;
 using Luster.Motion.TaskFlow.Engine;
@@ -122,24 +122,26 @@ namespace Luster.Motion.Integration.Web
                     var xWeb = XElement.Load(webConfigPath);
                     WebConfig.ParserXml(xWeb);
 
-                    string versionXMLPath = AppContext.BaseDirectory + "Version.xml";
-                    //if (!File.Exists(versionXMLPath))
-                    //{
-                    //    GJNStruct initt = new GJNStruct();
-                    //    initt.ExportXml().Save(versionXMLPath);
-                    //}
-                    //var versionXML = XElement.Load(versionXMLPath);
+                    string versionXMLPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Version.xml");
 
-                    //GJNStruct ss = new GJNStruct();
-                    //ss.ParserXml(versionXML);
-                    //ss.UpdateWebConfig(WebConfig);
-                    //WebConfig.ExportXml().Save(webConfigPath);
+                    // 1. 如果 exe 同级目录下没有该文件，则自动依据默认模板生成
+                    if (!File.Exists(versionXMLPath))
+                    {
+                        GJNStruct initt = new GJNStruct();
+                        initt.ExportXml().Save(versionXMLPath);
+                    }
+
+                    // 2. 加载 xml 节点
                     XDocument doc = XDocument.Load(versionXMLPath);
                     XElement softVersionElement = doc.Root.Element("SoftVersion");
                     string softVersion = softVersionElement.Value;
+                    
+                    // 3. 切割提取前缀(如 Luster-03.15) 和后缀(如 251212)
                     var parts = softVersion.Split('-');
                     string firstTwoParts = string.Join("-", parts.Take(2));
                     string lastPart = parts.Last();
+                    
+                    // 4. 动态拼接组合：中间机器模块版本强依赖 WebConfig.xml 中的实际定义
                     WebConfig.SoftVersion = $"{firstTwoParts}-{WebConfig.VisionVersion}-{WebConfig.RobotVersion}-{WebConfig.LaserVersion}-{lastPart}";
                 }
             }
