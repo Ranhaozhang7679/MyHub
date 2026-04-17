@@ -7370,6 +7370,18 @@ namespace Luster.SimDevice.MotionCard.GG
 
         [DllImport("gts.dll")]
         public static extern short GTN_PvtTableUserData(short core, short tableId, short userDataType, double time, System.IntPtr pData);
+
+        /*-----------------------------------------------------------*/
+        /* EtherCAT SDO/PDO 读写                                     */
+        /*-----------------------------------------------------------*/
+        [DllImport("gts.dll")]
+        public static extern short GTN_EcatSDODownload(short core, ushort slave_position, ushort index, byte subindex, ref byte data, uint data_size, out uint abort_code);
+        [DllImport("gts.dll")]
+        public static extern short GTN_EcatSDOUpload(short core, ushort slave_position, ushort index, byte subindex, out byte target, uint target_size, out uint result_size, out uint abort_code);
+        [DllImport("gts.dll")]
+        public static extern short GTN_SetEcatSlavePdo(short core, ushort station, ushort index, byte subIndex, ref byte pData, uint data_size);
+        [DllImport("gts.dll")]
+        public static extern short GTN_GetEcatSlavePdo(short core, ushort station, ushort index, byte subIndex, out byte pData, uint data_size);
     }
     /*-----------------------------------------------------------*/
     //原config.cs：配置功能，包括主卡和模块                       */
