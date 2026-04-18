@@ -963,7 +963,11 @@ namespace Luster.Motion.DigitalSetup.ViewModel.Validations
                 {
                     // 如果key已经以--开头，直接使用；否则添加--前缀
                     string key = kvp.Key.StartsWith("--") ? kvp.Key : $"--{kvp.Key}";
-                    args.Append($"{key} \"{kvp.Value}\" ");
+                    // 清理值中的首尾引号（用户可能误输入），转义内部引号
+                    string value = kvp.Value?.Trim('"') ?? "";
+                    // 将内部双引号转义为 \"
+                    value = value.Replace("\"", "\\\"");
+                    args.Append($"{key} \"{value}\" ");
                 }
 
                 return args.ToString().TrimEnd();
