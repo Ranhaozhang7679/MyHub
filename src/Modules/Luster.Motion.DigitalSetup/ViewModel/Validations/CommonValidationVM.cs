@@ -543,7 +543,15 @@ namespace Luster.Motion.DigitalSetup.ViewModel.Validations
                 ConfigItems.CollectionChanged += OnConfigItemsCollectionChanged;
             }
 
-            // 加载完成后，合并默认配置项
+            // 已有本地配置时不补回默认参数，保留用户的手动修改（如删除参数）
+            // 仅在首次使用（无本地配置）时由 SwitchValidationView 调用初始化
+        }
+
+        /// <summary>
+        /// 首次使用时初始化默认配置项
+        /// </summary>
+        public void InitializeDefaultConfigItems()
+        {
             UpdateConfigItemsByValidationType(_currentValidationType);
         }
 
