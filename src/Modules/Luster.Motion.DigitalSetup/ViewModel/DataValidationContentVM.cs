@@ -727,7 +727,12 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             else
             {
                 // 首次使用，初始化默认参数
+                // 抑制 ConfigChanged 事件，防止自动保存清空其他验证项的配置
+                commonVM.SuppressConfigChanged = true;
                 commonVM.InitializeDefaultConfigItems();
+                commonVM.SuppressConfigChanged = false;
+                // 手动更新缓存（不触发全量保存）
+                _validationConfigCache[item.Name] = commonVM.ToConfigData();
             }
 
             CurrentValidationVM = commonVM;

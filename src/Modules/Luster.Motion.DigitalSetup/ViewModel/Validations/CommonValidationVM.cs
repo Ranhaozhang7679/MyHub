@@ -78,6 +78,17 @@ namespace Luster.Motion.DigitalSetup.ViewModel.Validations
 
         private const string PageName = "DataValidation";
 
+        private bool _suppressConfigChanged;
+
+        /// <summary>
+        /// 是否抑制配置变化事件（初始化期间使用，防止触发不必要的自动保存）
+        /// </summary>
+        public bool SuppressConfigChanged
+        {
+            get => _suppressConfigChanged;
+            set => _suppressConfigChanged = value;
+        }
+
         /// <summary>
         /// 已知的路径类型配置键（这些键对应的值是文件/目录路径，需要做相对路径转换）
         /// </summary>
@@ -659,6 +670,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel.Validations
         /// </summary>
         protected virtual void OnConfigChanged()
         {
+            if (_suppressConfigChanged) return;
             ConfigChanged?.Invoke(this, EventArgs.Empty);
         }
 
