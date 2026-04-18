@@ -78,6 +78,17 @@ namespace Luster.Motion.DigitalSetup.ViewModel.Validations
 
         private const string PageName = "DataValidation";
 
+        private bool _suppressConfigChanged;
+
+        /// <summary>
+        /// 是否抑制配置变化事件（初始化期间使用，防止触发不必要的自动保存）
+        /// </summary>
+        public bool SuppressConfigChanged
+        {
+            get => _suppressConfigChanged;
+            set => _suppressConfigChanged = value;
+        }
+
         /// <summary>
         /// 已知的路径类型配置键（这些键对应的值是文件/目录路径，需要做相对路径转换）
         /// </summary>
@@ -543,7 +554,15 @@ namespace Luster.Motion.DigitalSetup.ViewModel.Validations
                 ConfigItems.CollectionChanged += OnConfigItemsCollectionChanged;
             }
 
-            // 加载完成后，合并默认配置项
+            // 已有本地配置时不补回默认参数，保留用户的手动修改（如删除参数）
+            // 仅在首次使用（无本地配置）时由 SwitchValidationView 调用初始化
+        }
+
+        /// <summary>
+        /// 首次使用时初始化默认配置项
+        /// </summary>
+        public void InitializeDefaultConfigItems()
+        {
             UpdateConfigItemsByValidationType(_currentValidationType);
         }
 
@@ -651,6 +670,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel.Validations
         /// </summary>
         protected virtual void OnConfigChanged()
         {
+            if (_suppressConfigChanged) return;
             ConfigChanged?.Invoke(this, EventArgs.Empty);
         }
 
@@ -955,7 +975,11 @@ namespace Luster.Motion.DigitalSetup.ViewModel.Validations
                 {
                     // 如果key已经以--开头，直接使用；否则添加--前缀
                     string key = kvp.Key.StartsWith("--") ? kvp.Key : $"--{kvp.Key}";
-                    args.Append($"{key} \"{kvp.Value}\" ");
+                    // 清理值中的首尾引号（用户可能误输入），转义内部引号
+                    string value = kvp.Value?.Trim('"') ?? "";
+                    // 将内部双引号转义为 \"
+                    value = value.Replace("\"", "\\\"");
+                    args.Append($"{key} \"{value}\" ");
                 }
 
                 return args.ToString().TrimEnd();
