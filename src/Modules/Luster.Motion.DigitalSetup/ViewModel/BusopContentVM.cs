@@ -413,16 +413,16 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         /// 用 Excel COM 互操作打开 xlsx 文件并跳转到指定 Sheet 页
         /// 如果 COM 不可用则回退为系统默认程序打开
         /// </summary>
-        private void OnOpenBusop()
+        private async void OnOpenBusop()
         {
+            var fullPath = ExcelFilePath;
+            if (!File.Exists(fullPath))
+                return;
+
+            var sheetName = CurrentSubItemConfig?.SheetName;
+
             try
             {
-                var fullPath = ExcelFilePath;
-                if (!File.Exists(fullPath))
-                    return;
-
-                var sheetName = CurrentSubItemConfig?.SheetName;
-
                 // 如果没有配置 Sheet 页名称，直接打开文件
                 if (string.IsNullOrWhiteSpace(sheetName))
                 {
@@ -430,15 +430,18 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     return;
                 }
 
-                // 使用 Excel COM 互操作打开并激活指定 Sheet
-                OpenExcelToSheet(fullPath, sheetName);
+                // COM 操作在后台线程执行，避免阻塞 UI
+                await System.Threading.Tasks.Task.Run(() =>
+                {
+                    OpenExcelToSheet(fullPath, sheetName);
+                });
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"打开 BUSOP 文件失败: {ex.Message}，回退为默认程序打开");
                 try
                 {
-                    Process.Start(new ProcessStartInfo(ExcelFilePath) { UseShellExecute = true });
+                    Process.Start(new ProcessStartInfo(fullPath) { UseShellExecute = true });
                 }
                 catch { }
             }
