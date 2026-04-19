@@ -447,7 +447,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                         item.Position += OffsetX;
                     }
                 }
-                SaveGodLineTeachPoint();
+                //SaveGodLineTeachPoint();
                 _axisUpdatedDict[axisName] = true; // 标记当前轴已更新
             });
         }));
