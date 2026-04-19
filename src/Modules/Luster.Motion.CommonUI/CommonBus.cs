@@ -595,7 +595,7 @@ namespace Luster.Motion.CommonUI
             {
                 alarmInfo.ProcMethod = isOk ? "重试成功" : "重试失败";
                 alarmInfo.EndTime = DateTime.Now;
-                alarmInfo.Duration = (alarmInfo.EndTime - alarmInfo.StartTime).Seconds;
+                alarmInfo.Duration = (alarmInfo.EndTime - alarmInfo.StartTime).TotalSeconds;
                 var item = new TbAlarm
                 {
                     ID = alarmInfo.AlarmID,
@@ -604,6 +604,10 @@ namespace Luster.Motion.CommonUI
                     AlarmLongTime = (int)alarmInfo.Duration
                 };
                 int count = _repository.Update<TbAlarm>(item, new string[] { "ProcMethod", "EndTime", "AlarmLongTime" });
+            }
+            else if (alarmInfo != null && alarmInfo.AlarmID <= 0)
+            {
+                OnLog(LogType.Warning, $"报警EndTime更新跳过：AlarmID无效({alarmInfo.AlarmID})，AlarmCode={alarmInfo.AlarmCode}");
             }
         }
 
