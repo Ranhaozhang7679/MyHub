@@ -16,12 +16,18 @@ namespace Luster.Module.Motion.Device.Functions
     /// 大寰音圈电机 Function
     /// 品牌:大寰(DH Robotics) SAC-N2 驱动器 + DLAR-20-40 ZR 执行器
     /// 通信:EtherCAT(CIA402协议)
-    /// 力控:开环力控(CSP位置模式 + 电流限制)
+    /// 力控:两段速软着陆(快进PP → 慢速接触PT → 保压 → 返回PB)
     /// 压力反馈:0x6077h(电流反馈间接推算)
     /// 回零:非标回零(Ec6000_HomeMove)
     /// </summary>
     public class DHRoboticsVCM : MotionFunction, IPauseFunction, IStopFunction, INote
     {
+        public enum SlaveID : byte
+        {
+            NUM1 = 0,
+            NUM2 = 1,
+        }
+
         #region 参数定义
 
         // ===== 公共参数 =====
@@ -29,104 +35,119 @@ namespace Luster.Module.Motion.Device.Functions
         [Parameter("轴设备选择", 0, CN = "轴名称", EditorType = typeof(VAxis))]
         public VDevice DeviceParam { get; set; }
 
-        [Parameter("动作类型", 1, CN = "动作类型", DefaultV = VCMActionType.ServoOn)]
+        [NotEmpty]
+        [Parameter("轴ID选择", 1, CN = "轴ID", DefaultV = SlaveID.NUM1)]
+        public SlaveID SlaveNum { get; set; }
+
+        [Parameter("动作类型", 2, CN = "动作类型", DefaultV = VCMActionType.ServoOn)]
         public VCMActionType ActionType { get; set; }
 
-        // ===== 目标位置参数 =====
-        [Parameter("目标位置(mm)", 2, CN = "目标位置")]
+        // ===== 硬着陆参数 =====
+        [DependOn("ActionType", VCMActionType.HardLanding)]
+        [Parameter("目标位置(mm)", 3, CN = "目标位置")]
         public double TargetPosition { get; set; }
 
-        [Parameter("位置上限(mm)", 3, CN = "位置上限")]
+        [DependOn("ActionType", VCMActionType.HardLanding)]
+        [Parameter("位置上限(mm)", 4, CN = "位置上限")]
         public double PositionUpperLimit { get; set; }
 
-        [Parameter("位置下限(mm)", 4, CN = "位置下限")]
+        [DependOn("ActionType", VCMActionType.HardLanding)]
+        [Parameter("位置下限(mm)", 5, CN = "位置下限")]
         public double PositionLowerLimit { get; set; }
 
-        // ===== 运动参数 =====
-        [Parameter("运动速度(mm/s)", 5, CN = "运动速度", DefaultV = 50.0)]
+        [DependOn("ActionType", VCMActionType.HardLanding)]
+        [Parameter("运动速度(mm/s)", 6, CN = "运动速度", DefaultV = 50.0)]
         public double MoveSpeed { get; set; }
 
-        [Parameter("加速度(mm/s²)", 6, CN = "加速度", DefaultV = 1000.0)]
+        // 加速度/减速度: 硬着陆和软着陆共用
+        [DependOn("ActionType", VCMActionType.HardLanding)]
+        [DependOn("ActionType", VCMActionType.SoftLanding)]
+        [Parameter("加速度(mm/s²)", 7, CN = "加速度", DefaultV = 1000.0)]
         public double MoveAcc { get; set; }
 
-        [Parameter("减速度(mm/s²)", 7, CN = "减速度", DefaultV = 1000.0)]
+        [DependOn("ActionType", VCMActionType.HardLanding)]
+        [DependOn("ActionType", VCMActionType.SoftLanding)]
+        [Parameter("减速度(mm/s²)", 8, CN = "减速度", DefaultV = 1000.0)]
         public double MoveDec { get; set; }
 
-        // ===== 软着陆压力参数 =====
+        // ===== 软着陆参数(参考DH Control Demo) =====
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("目标压力设定值", 8, CN = "目标压力")]
-        public double TargetPressure { get; set; }
+        [Parameter("快进位置PP(mm)", 9, CN = "快进位置")]
+        public double PPPosition { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("压力上限(防撞保护)", 9, CN = "压力上限")]
-        public double PressureUpperLimit { get; set; }
+        [Parameter("快进速度(mm/s)", 10, CN = "快进速度", DefaultV = 50.0)]
+        public double PPVelocity { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("压力下限", 10, CN = "压力下限")]
-        public double PressureLowerLimit { get; set; }
+        [Parameter("接触位置PT(mm)", 11, CN = "接触位置")]
+        public double PTPosition { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("压入速度(mm/s)", 11, CN = "压入速度")]
-        public double PressSpeed { get; set; }
+        [Parameter("接触速度(mm/s)", 12, CN = "接触速度", DefaultV = 5.0)]
+        public double PTVelocity { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("软着陆超时(秒)", 12, CN = "软着陆超时", DefaultV = 10)]
+        [Parameter("扭矩限制(千分比)", 13, CN = "扭矩限制", DefaultV = 500)]
+        public int TorqueLimit { get; set; }
+
+        [DependOn("ActionType", VCMActionType.SoftLanding)]
+        [Parameter("保压时间(ms)", 14, CN = "保压时间", DefaultV = 100)]
+        public int InstallTime { get; set; }
+
+        [DependOn("ActionType", VCMActionType.SoftLanding)]
+        [Parameter("返回位置PB(mm)", 15, CN = "返回位置", DefaultV = 0.0)]
+        public double PBPosition { get; set; }
+
+        [DependOn("ActionType", VCMActionType.SoftLanding)]
+        [Parameter("软着陆超时(秒)", 16, CN = "软着陆超时", DefaultV = 10)]
         public int SoftLandingTimeout { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("电流匹配容差(0x6077与0x5018的偏差)", 24, CN = "电流容差", DefaultV = 10)]
-        public int SoftLandingCurrentTolerance { get; set; }
+        [Parameter("力矩到达容差(千分比)", 17, CN = "力矩容差", DefaultV = 20)]
+        public int TorqueTolerance { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("速度判定阈值(mm/s)", 25, CN = "速度阈值", DefaultV = 0.5)]
-        public double SoftLandingSpeedThreshold { get; set; }
+        [Parameter("速度判定阈值(mm/s)", 18, CN = "速度阈值", DefaultV = 1.0)]
+        public double SpeedThreshold { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("压力标定系数K(压力=K×电流+B)", 13, CN = "标定系数K", DefaultV = 1.0)]
+        [Parameter("压力标定系数K(压力=K×电流+B)", 19, CN = "标定系数K", DefaultV = 1.0)]
         public double PressureCalibrationK { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("压力标定偏移B", 14, CN = "标定偏移B", DefaultV = 0.0)]
+        [Parameter("压力标定偏移B", 20, CN = "标定偏移B", DefaultV = 0.0)]
         public double PressureCalibrationB { get; set; }
-
-        // ===== 多段运动参数 =====
-        [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("启用多段运动", 15, CN = "多段运动", DefaultV = false)]
-        public bool EnableMultiSegment { get; set; }
-
-        [DependOn("EnableMultiSegment", true)]
-        [Parameter("中间点位(mm),快速定位到此位置后再软着陆", 16, CN = "中间点位")]
-        public double MiddlePosition { get; set; }
 
         // ===== 回零参数 =====
         [DependOn("ActionType", VCMActionType.Home)]
         [DependOn("ActionType", VCMActionType.HomeNonStandard)]
-        [Parameter("回零超时(秒)", 17, CN = "回零超时", DefaultV = 60)]
+        [Parameter("回零超时(秒)", 21, CN = "回零超时", DefaultV = 60)]
         public int HomeTimeout { get; set; }
 
         // ===== 非标回零参数 =====
         [DependOn("ActionType", VCMActionType.HomeNonStandard)]
-        [Parameter("回零模式代码", 18, CN = "回零模式", DefaultV = (short)0)]
+        [Parameter("回零模式代码(不支持负数,负数请输入255+负数,如-3输入252)", 22, CN = "回零模式", DefaultV = (short)0)]
         public short HomeMode { get; set; }
 
         [DependOn("ActionType", VCMActionType.HomeNonStandard)]
-        [Parameter("回零高速(mm/s)", 19, CN = "回零高速", DefaultV = 50.0)]
+        [Parameter("回零高速(mm/s)", 23, CN = "回零高速", DefaultV = 50.0)]
         public double HomeSpeed { get; set; }
 
         [DependOn("ActionType", VCMActionType.HomeNonStandard)]
-        [Parameter("回零低速(mm/s)", 20, CN = "回零低速", DefaultV = 10.0)]
+        [Parameter("回零低速(mm/s)", 24, CN = "回零低速", DefaultV = 10.0)]
         public double HomeLowSpeed { get; set; }
 
         [DependOn("ActionType", VCMActionType.HomeNonStandard)]
-        [Parameter("回零加速度(mm/s²)", 21, CN = "回零加速度", DefaultV = 1000.0)]
+        [Parameter("回零加速度(mm/s²)", 25, CN = "回零加速度", DefaultV = 1000.0)]
         public double HomeAcc { get; set; }
 
         [DependOn("ActionType", VCMActionType.HomeNonStandard)]
-        [Parameter("碰撞回零电流阈值(千分比)", 22, CN = "碰撞电流阈值", DefaultV = 500)]
+        [Parameter("碰撞回零电流阈值(千分比)", 26, CN = "碰撞电流阈值", DefaultV = 500)]
         public int HomeCollisionCurrent { get; set; }
 
         [DependOn("ActionType", VCMActionType.HomeNonStandard)]
-        [Parameter("碰撞电流检测时间(ms)", 23, CN = "电流检测时间", DefaultV = 100)]
+        [Parameter("碰撞电流检测时间(ms)", 27, CN = "电流检测时间", DefaultV = 100)]
         public int HomeCollisionTime { get; set; }
 
         // ===== 输出参数 =====
@@ -148,6 +169,17 @@ namespace Luster.Module.Motion.Device.Functions
 
         private VAxis _axis;
         private volatile bool _isBreak;
+
+        // SAC-N2双轴控制器: 轴二地址偏移 +0x800
+        private const int AxisOffset = 0x800;
+
+        /// <summary>
+        /// 根据SlaveNum返回轴专属的SDO地址(轴二+0x800)
+        /// </summary>
+        private short Addr(short baseAddr)
+        {
+            return SlaveNum == SlaveID.NUM2 ? (short)(baseAddr + AxisOffset) : baseAddr;
+        }
 
         public DHRoboticsVCM()
         {
@@ -268,7 +300,6 @@ namespace Luster.Module.Motion.Device.Functions
 
         /// <summary>
         /// 常规回零(LCMotionCard.Home)
-        /// 使用轴卡标准回零方法
         /// </summary>
         private void ExecuteHome()
         {
@@ -286,12 +317,11 @@ namespace Luster.Module.Motion.Device.Functions
             short axis = (short)_axis.AxisNo;
             short card = 0;
 
-            // 1. 速度/加速度单位转换 (mm/s → pls/s)
             uint velHi = (uint)(HomeSpeed * _axis.PerPluse);
             uint velLo = (uint)(HomeLowSpeed * _axis.PerPluse);
             uint accUint = (uint)(HomeAcc * _axis.PerPluse);
 
-            // 2. 设定回零参数(模式暂用34占位)
+            // 1. 设置回零参数(模式暂用34占位)
             short ret = ecat_motion.M_SetHomingPrm(axis, 34, 0, velHi, velLo, accUint, 0, card);
             if (ret != 0)
             {
@@ -299,6 +329,11 @@ namespace Luster.Module.Motion.Device.Functions
                 OutFailReason = $"非标回零: 设置回零参数失败, 错误码: {ret}";
                 return;
             }
+
+            // 2. SDO写入正确的回零模式、堵转电流、堵转时间(先写参数再切模式)
+            _axis.SDOWrite(Addr(0x6098), 0, HomeMode, 1);
+            _axis.SDOWrite(Addr(0x5000), 6, HomeCollisionTime, 2);
+            _axis.SDOWrite(Addr(0x5000), 5, HomeCollisionCurrent, 2);
 
             // 3. 切换至回零模式(Mode=6)
             ret = ecat_motion.M_SetHomingMode(axis, 6, card);
@@ -310,12 +345,7 @@ namespace Luster.Module.Motion.Device.Functions
                 return;
             }
 
-            // 4. SDO写入正确的回零模式、堵转电流、堵转时间
-            _axis.SDOWrite(0x6098, 0, HomeMode, 1);
-            _axis.SDOWrite(0x5000, 5, HomeCollisionCurrent, 2);
-            _axis.SDOWrite(0x5000, 6, HomeCollisionTime, 2);
-
-            // 5. 启动回零
+            // 4. 启动回零
             ret = ecat_motion.M_HomingStart(axis, card);
             if (ret != 0)
             {
@@ -324,7 +354,6 @@ namespace Luster.Module.Motion.Device.Functions
                 return;
             }
 
-            // 等待回零完成
             short homsts = 0;
             int timeoutMs = Math.Min(HomeTimeout * 1000, short.MaxValue);
             ret = Ec6000_HomeMove.M60_WaitHoming(axis, (short)timeoutMs, ref homsts, card);
@@ -378,10 +407,36 @@ namespace Luster.Module.Motion.Device.Functions
 
         #endregion
 
-        #region 软着陆(大寰:通过电流反馈推算压力)
+        #region 软着陆(两段速, 参考DH Control Demo)
 
         /// <summary>
-        /// 读取压力反馈值(大寰:0x6077h 电流反馈间接推算)
+        /// 读取0x6077原始电流值(千分比)
+        /// </summary>
+        private int ReadRawCurrent()
+        {
+            _axis.SDORead(Addr(0x6077), 0, 2, out int currentValue, 1);
+            return currentValue;
+        }
+
+        /// <summary>
+        /// 写入扭矩限制(SDO 0x5018/0x5818)
+        /// </summary>
+        private void WriteTorqueLimit(int value)
+        {
+            _axis.SDOWrite(Addr(0x5018), 0, value, 2);
+        }
+
+        /// <summary>
+        /// 读取当前扭矩限制
+        /// </summary>
+        private int ReadTorqueLimit()
+        {
+            _axis.SDORead(Addr(0x5018), 0, 2, out int value, 1);
+            return value;
+        }
+
+        /// <summary>
+        /// 读取压力反馈值(0x6077电流 × K + B)
         /// </summary>
         private double ReadPressure()
         {
@@ -389,49 +444,37 @@ namespace Luster.Module.Motion.Device.Functions
         }
 
         /// <summary>
-        /// 读取0x6077原始电流值(千分比)
+        /// 软着陆(参考DH Control Demo的SoftLand_ServoExternal)
+        /// 流程: 力矩最大 → 快进PP → 设目标力矩 → 慢速PT → 等力矩到达 → 保压 → 返回PB → 解除力矩
         /// </summary>
-        private int ReadRawCurrent()
-        {
-            _axis.SDORead(0x6077, 0, 2, out int currentValue, 1);
-            return currentValue;
-        }
-
-        private int PressureToCurrentLimit(double pressure)
-        {
-            if (Math.Abs(PressureCalibrationK) < 0.0001)
-                return (int)pressure;
-            return (int)((pressure - PressureCalibrationB) / PressureCalibrationK);
-        }
-
-        private int ReadCurrentLimit()
-        {
-            _axis.SDORead(0x5018, 0, 2, out int value, 1);
-            return value;
-        }
-
         private void ExecuteSoftLanding()
         {
-            int defaultCurrentLimit = ReadCurrentLimit();
+            const int MaxTorque = 3000;
+            int defaultTorqueLimit = ReadTorqueLimit();
 
             try
             {
-                if (EnableMultiSegment)
-                {
-                    _axis.MoveAbs(MiddlePosition, MoveSpeed, MoveAcc, MoveDec);
-                    _axis.CheckMotionDone();
-                    if (_isBreak) return;
-                }
+                // Step 0: 设定扭矩限制为最大
+                WriteTorqueLimit(MaxTorque);
+                Thread.Sleep(20);
 
-                int currentLimit = PressureToCurrentLimit(TargetPressure);
-                _axis.SDOWrite(0x5018, 0, currentLimit, 2);
-                Thread.Sleep(50);
+                // Step 10: 快速段 - 快速接近产品上方(PP位置)
+                _axis.MoveAbs(PPPosition, PPVelocity, MoveAcc, MoveDec);
+                _axis.CheckMotionDone();
+                if (_isBreak) return;
 
-                _axis.MoveAbs(TargetPosition, PressSpeed, MoveAcc, MoveDec);
+                // Step 20: 设定扭矩限制为目标值
+                WriteTorqueLimit(TorqueLimit);
+                Thread.Sleep(20);
 
+                // Step 30: 慢速段 - 低速接触产品(PT位置)
+                _axis.MoveAbs(PTPosition, PTVelocity, MoveAcc, MoveDec);
+
+                // 等待力矩到达(接触判定)
+                double lastPos = _axis.GetCurrentPos();
                 int elapsed = 0;
                 int timeoutMs = SoftLandingTimeout * 1000;
-                double lastPos = _axis.GetCurrentPos();
+                bool torqueReached = false;
 
                 while (elapsed < timeoutMs)
                 {
@@ -440,47 +483,58 @@ namespace Luster.Module.Motion.Device.Functions
                     Thread.Sleep(10);
                     elapsed += 10;
 
-                    double position = _axis.GetCurrentPos();
                     int rawCurrent = ReadRawCurrent();
+                    double position = _axis.GetCurrentPos();
                     double speed = Math.Abs(position - lastPos) * 100; // mm/10ms → mm/s
                     lastPos = position;
 
-                    // 文档P50判定: 0x6077 ∈ (0x5018 ± tolerance) AND 速度 ≤ 阈值
-                    bool currentMatch = Math.Abs(rawCurrent - currentLimit) <= SoftLandingCurrentTolerance;
-                    bool speedLow = speed <= SoftLandingSpeedThreshold;
-
-                    if (currentMatch && speedLow)
+                    if (Math.Abs(rawCurrent - TorqueLimit) <= TorqueTolerance && speed <= SpeedThreshold)
                     {
-                        _axis.Stop();
-                        Thread.Sleep(50);
-                        OutPosition = _axis.GetCurrentPos();
-                        OutPressure = ReadPressure();
-                        OutResult = true;
-                        return;
-                    }
-
-                    if (position >= PositionUpperLimit)
-                    {
-                        _axis.Stop();
-                        Thread.Sleep(50);
-                        OutPosition = _axis.GetCurrentPos();
-                        OutPressure = ReadPressure();
-                        OutResult = false;
-                        OutFailReason = $"到达位置上限({PositionUpperLimit}mm)防撞停止, 电流:{rawCurrent}, 限制:{currentLimit}";
-                        return;
+                        torqueReached = true;
+                        break;
                     }
                 }
 
-                _axis.Stop();
-                Thread.Sleep(50);
+                if (!torqueReached)
+                {
+                    _axis.Stop();
+                    Thread.Sleep(50);
+                    OutPosition = _axis.GetCurrentPos();
+                    OutPressure = ReadPressure();
+                    OutResult = false;
+                    OutFailReason = $"软着陆力矩未到达, 超时({SoftLandingTimeout}秒)";
+                    return;
+                }
+
+                // Step 40: 保压
+                Thread.Sleep(InstallTime);
+                double installPos = _axis.GetCurrentPos();
+
+                // Step 50: 返回段 - 快速返回PB位置
+                _axis.MoveAbs(PBPosition, PPVelocity, MoveAcc, MoveDec);
+
+                // 等离开接触面后再解除力矩限制(避免突然释放导致过冲)
+                int waitElapsed = 0;
+                while (waitElapsed < 3000)
+                {
+                    if (_isBreak) return;
+                    Thread.Sleep(10);
+                    waitElapsed += 10;
+                    if (Math.Abs(_axis.GetCurrentPos() - installPos) > 0.5) break;
+                }
+
+                WriteTorqueLimit(MaxTorque);
+                _axis.CheckMotionDone();
+                if (_isBreak) return;
+
+                // Step 100: 完成
                 OutPosition = _axis.GetCurrentPos();
-                OutPressure = ReadPressure();
-                OutResult = false;
-                OutFailReason = $"软着陆超时({SoftLandingTimeout}秒), 位置:{OutPosition:F3}mm, 压力:{OutPressure:F2}";
+                OutPressure = ReadRawCurrent() * PressureCalibrationK + PressureCalibrationB;
+                OutResult = true;
             }
             finally
             {
-                _axis.SDOWrite(0x5018, 0, defaultCurrentLimit, 2);
+                WriteTorqueLimit(defaultTorqueLimit);
             }
         }
 
