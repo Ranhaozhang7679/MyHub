@@ -31,23 +31,29 @@ namespace Luster.Module.Motion.Device.Functions
         [Parameter("动作类型", 1, CN = "动作类型", DefaultV = VCMActionType.ServoOn)]
         public VCMActionType ActionType { get; set; }
 
-        // ===== 目标位置参数（硬着陆 / 软着陆共用） =====
+        // ===== 硬着陆参数 =====
+        [DependOn("ActionType", VCMActionType.HardLanding)]
         [Parameter("目标位置(mm)", 2, CN = "目标位置")]
         public double TargetPosition { get; set; }
 
+        [DependOn("ActionType", VCMActionType.HardLanding)]
         [Parameter("位置上限(mm)", 3, CN = "位置上限")]
         public double PositionUpperLimit { get; set; }
 
+        [DependOn("ActionType", VCMActionType.HardLanding)]
         [Parameter("位置下限(mm)", 4, CN = "位置下限")]
         public double PositionLowerLimit { get; set; }
 
-        // ===== 运动参数 =====
+        [DependOn("ActionType", VCMActionType.HardLanding)]
         [Parameter("运动速度(mm/s)", 5, CN = "运动速度", DefaultV = 50.0)]
         public double MoveSpeed { get; set; }
 
+        // ===== 运动参数（硬着陆 + 软着陆共用） =====
+        [DependOn("ActionType", VCMActionType.HardLanding, VCMActionType.SoftLanding)]
         [Parameter("加速度(mm/s²)", 6, CN = "加速度", DefaultV = 1000.0)]
         public double MoveAcc { get; set; }
 
+        [DependOn("ActionType", VCMActionType.HardLanding, VCMActionType.SoftLanding)]
         [Parameter("减速度(mm/s²)", 7, CN = "减速度", DefaultV = 1000.0)]
         public double MoveDec { get; set; }
 
@@ -113,24 +119,24 @@ namespace Luster.Module.Motion.Device.Functions
         [Parameter("压力标定偏移B", 28, CN = "标定偏移B", DefaultV = 0.0)]
         public double PressureCalibrationB { get; set; }
 
-        // ===== 回零参数 =====
-        [DependOn("ActionType", VCMActionType.Home)]
+        // ===== 非标回零参数 =====
+        [DependOn("ActionType", VCMActionType.HomeNonStandard)]
         [Parameter("回零模式代码", 17, CN = "回零模式", DefaultV = (short)0)]
         public short HomeMode { get; set; }
 
-        [DependOn("ActionType", VCMActionType.Home)]
+        [DependOn("ActionType", VCMActionType.HomeNonStandard)]
         [Parameter("回零高速(mm/s)", 18, CN = "回零高速", DefaultV = 50.0)]
         public double HomeSpeed { get; set; }
 
-        [DependOn("ActionType", VCMActionType.Home)]
+        [DependOn("ActionType", VCMActionType.HomeNonStandard)]
         [Parameter("回零低速(mm/s)", 19, CN = "回零低速", DefaultV = 10.0)]
         public double HomeLowSpeed { get; set; }
 
-        [DependOn("ActionType", VCMActionType.Home)]
+        [DependOn("ActionType", VCMActionType.HomeNonStandard)]
         [Parameter("回零加速度(mm/s²)", 20, CN = "回零加速度", DefaultV = 1000.0)]
         public double HomeAcc { get; set; }
 
-        [DependOn("ActionType", VCMActionType.Home)]
+        [DependOn("ActionType", VCMActionType.Home, VCMActionType.HomeNonStandard)]
         [Parameter("回零超时(秒)", 21, CN = "回零超时", DefaultV = 60)]
         public int HomeTimeout { get; set; }
 
@@ -206,6 +212,9 @@ namespace Luster.Module.Motion.Device.Functions
                         break;
                     case VCMActionType.Home:
                         ExecuteHome();
+                        break;
+                    case VCMActionType.HomeNonStandard:
+                        ExecuteHomeNonStandard();
                         break;
                     case VCMActionType.HardLanding:
                         ExecuteHardLanding();
@@ -323,10 +332,30 @@ namespace Luster.Module.Motion.Device.Functions
         #region 回零
 
         /// <summary>
-        /// 回零流程（标准CIA402）
+        /// 回零流程（标准CIA402，使用轴卡预设参数）
         /// </summary>
         private void ExecuteHome()
         {
+            _axis.Home();
+            _axis.CheckHomeDone(HomeTimeout);
+            OutResult = true;
+        }
+
+        /// <summary>
+        /// 非标回零（SDO写入回零参数后启动回零）
+        /// SDO: 0x6098(模式) → 0x6099.0(快速) → 0x6099.1(慢速) → 0x609A(加速度) → Home()
+        /// </summary>
+        private void ExecuteHomeNonStandard()
+        {
+            int pp = _axis.PerPluse;
+
+            // 1. 写入回零参数到驱动器SDO
+            _axis.SDOWrite(0x6098, 0, HomeMode, 1);
+            _axis.SDOWrite(0x6099, 0, (int)(HomeSpeed * pp), 4);
+            _axis.SDOWrite(0x6099, 1, (int)(HomeLowSpeed * pp), 4);
+            _axis.SDOWrite(0x609A, 0, (int)(HomeAcc * pp), 4);
+
+            // 2. 启动回零
             _axis.Home();
             _axis.CheckHomeDone(HomeTimeout);
             OutResult = true;
