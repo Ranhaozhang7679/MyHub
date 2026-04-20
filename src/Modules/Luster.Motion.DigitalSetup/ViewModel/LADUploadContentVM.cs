@@ -2602,6 +2602,9 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
         public override async void OnOneKeyCheck(object obj)
         {
+            if (IsChecking) return;
+            IsChecking = true;
+
             base.OnOneKeyCheck(obj);
 
             try
@@ -2653,6 +2656,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             }
             finally
             {
+                IsChecking = false;
                 ProgressValue = 100;
 
                 // 保存当前子页面的点检状态

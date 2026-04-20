@@ -258,6 +258,9 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         {
             HasSheetImage = false;
 
+            // 捕获当前页面，防止异步回调时 SelectedReportPage 已变更
+            var currentPage = SelectedReportPage;
+
             // 检查文件和 Sheet 配置
             if (string.IsNullOrWhiteSpace(ExcelFilePath) || !File.Exists(ExcelFilePath))
             {
@@ -300,6 +303,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                         {
                             StatusMessage = $"未找到 Sheet 页: {sheetName}";
                             SheetImage = null;
+
+                            UpdatePageCheckStatus(currentPage, CheckStatus.CheckedFail, $"未找到 Sheet 页: {sheetName}");
                         });
                         return;
                     }
@@ -331,6 +336,9 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                         SheetImage = bmp;
                         HasSheetImage = true;
                         StatusMessage = "";
+
+                        // Sheet 加载成功，更新点检状态为 OK
+                        UpdatePageCheckStatus(currentPage, CheckStatus.CheckedOK, "Sheet 图片加载成功");
                     });
                 }
                 catch (Exception ex)
@@ -340,9 +348,42 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     {
                         StatusMessage = $"加载失败: {ex.Message}";
                         SheetImage = null;
+
+                        UpdatePageCheckStatus(currentPage, CheckStatus.CheckedFail, $"加载失败: {ex.Message}");
                     });
                 }
             });
+        }
+
+        /// <summary>
+        /// 更新指定页面的点检状态并持久化（直接操作页面对象，避免异步时序问题）
+        /// </summary>
+        private void UpdatePageCheckStatus(CommonPageModel page, CheckStatus status, string remark)
+        {
+            if (page == null || _checkStatusService == null) return;
+
+            try
+            {
+                page.ParentRegion = "BusopContent";
+                var operatorName = _commonbus?.CurrentUser?.UserName ?? "Unknown";
+
+                _checkStatusService.UpdateStatus(
+                    page.PageKey,
+                    status,
+                    page.ParentRegion,
+                    page.Name,
+                    operatorName,
+                    remark
+                );
+                page.CheckStatus = status;
+
+                // 刷新父级 DigitalAssPageModel 聚合状态
+                RefreshParentPageModelStatus();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"更新 BUSOP 点检状态失败: {ex.Message}");
+            }
         }
 
         /// <summary>

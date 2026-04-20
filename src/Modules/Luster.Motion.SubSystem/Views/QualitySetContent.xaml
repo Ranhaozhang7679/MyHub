@@ -20,6 +20,7 @@
         <Grid Grid.Row="0" Margin="5,15">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <TextBlock
@@ -27,9 +28,19 @@
                 FontSize="20"
                 FontWeight="Bold"
                 Text="数据源" />
+
+            <!-- 搜索框 -->
+            <TextBox
+                x:Name="SearchTextBox"
+                Grid.Row="1"
+                Margin="0,0,0,10"
+                Padding="5"
+                hc:InfoElement.Placeholder="搜索数据源..."
+                Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+
             <TreeView
                 x:Name="TvwImportSource"
-                Grid.Row="1"
+                Grid.Row="2"
                 ItemsSource="{Binding SourceNodes}"
                 Style="{StaticResource TreeViewBaseStyle}">
                 <TreeView.ItemTemplate>
