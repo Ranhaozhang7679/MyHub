@@ -113,10 +113,10 @@
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="30" />
-                            <ColumnDefinition Width="0" />
-                            <ColumnDefinition Width="190" />
-                            <ColumnDefinition Width="20" />
-                        </Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0" />
+                        <ColumnDefinition Width="190" />
+                        <ColumnDefinition Width="20" />
+                    </Grid.ColumnDefinitions>
                     <Border HorizontalAlignment="Left">
                         <TextBlock
                             HorizontalAlignment="Left"
@@ -176,9 +176,12 @@
         <!--  模拟量输入模板  -->
         <DataTemplate x:Key="AnalogInTemplate" DataType="{x:Type m:IOModel}">
             <Border
+                x:Name="BorderItem"
                 Margin="2"
                 Padding="5,4"
                 BorderThickness="1"
+                MouseLeftButtonDown="BorderItem_MouseLeftButtonDown"
+                MouseRightButtonDown="BorderItem_MouseRightButtonDown_AnalogIn"
                 Style="{StaticResource BorderRegion}">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -248,14 +251,23 @@
                         Text="{Binding FinalValue}" />
                 </Grid>
             </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+            
+                    <Setter TargetName="BorderItem" Property="BorderThickness" Value="2" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
         </DataTemplate>
 
-        <!--  模拟量输入模板  -->
+        <!--  模拟量输出模板  -->
         <DataTemplate x:Key="AnalogOutTemplate" DataType="{x:Type m:IOModel}">
             <Border
+                x:Name="BorderItem"
                 Margin="2"
                 Padding="5,4"
                 BorderThickness="1"
+                MouseLeftButtonDown="BorderItem_MouseLeftButtonDown"
+                MouseRightButtonDown="BorderItem_MouseRightButtonDown_AnalogOut"
                 Style="{StaticResource BorderRegion}">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -325,12 +337,18 @@
                         Text="{Binding FinalValue}" />
                 </Grid>
             </Border>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                    <Setter TargetName="BorderItem" Property="BorderBrush" Value="Green" />
+                    <Setter TargetName="BorderItem" Property="BorderThickness" Value="2" />
+                </DataTrigger>
+            </DataTemplate.Triggers>
         </DataTemplate>
 
         <local:ValueTemplateSelector
             x:Key="IoTemplate"
             AnaInTemplate="{StaticResource AnalogInTemplate}"
-            AnaOutTemplate="{StaticResource DigitalInTemplate}"
+            AnaOutTemplate="{StaticResource AnalogOutTemplate}"
             DigInTemplate="{StaticResource DigitalInTemplate}"
             DigOutTemplate="{StaticResource DigitalOutTemplate}" />
 
@@ -516,13 +534,14 @@
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem">
                             <Setter Property="Padding" Value="0" />
-                            <Setter Property="IsSelected" Value="{Binding IsSelected}" />
+                            <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
                             <Setter Property="BorderThickness" Value="0" />
+                            <Setter Property="Background" Value="Transparent" />
                         </Style>
                     </ListBox.ItemContainerStyle>
                 </ListBox>
 
-
+                
                 <ListBox
                     Name="items"
                     Grid.Column="1"
@@ -554,12 +573,13 @@
                     <ListBox.ItemContainerStyle>
                         <Style TargetType="ListBoxItem">
                             <Setter Property="Padding" Value="0" />
-                            <Setter Property="IsSelected" Value="{Binding IsSelected}" />
+                            <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
                             <Setter Property="BorderThickness" Value="0" />
+                            <Setter Property="Background" Value="Transparent" />
                         </Style>
                     </ListBox.ItemContainerStyle>
                 </ListBox>
-
+                
             </Grid>
         </Border>
         <Grid Grid.Row="2" Margin="0,5,0,0">
@@ -628,3 +648,4 @@
         </Grid>
     </Grid>
 </Border>
+    
