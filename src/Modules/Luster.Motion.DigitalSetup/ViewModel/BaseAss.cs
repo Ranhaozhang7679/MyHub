@@ -1979,8 +1979,11 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
         public virtual async void OnEnd()
         {
-            //停止运动引擎任务
-            _flowBus?.OnStop();
+            // 仅在点检进行中时停止运动引擎任务，避免初始化/切换页面时误触发
+            if (IsChecking)
+            {
+                _flowBus?.OnStop();
+            }
             //终止耗时的点检操作
             Stop();
             await WaitForCompletionAsync();
