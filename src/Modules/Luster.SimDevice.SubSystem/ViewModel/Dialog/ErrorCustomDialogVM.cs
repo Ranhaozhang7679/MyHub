@@ -53,7 +53,6 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Dialog
         /// 报警英文
         /// </summary>
         private string _alarmEnglish;
-        [Required]
         public string AlarmEnglish
         {
             get => _alarmEnglish;
@@ -83,6 +82,16 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Dialog
         {
             get => _repairActionText;
             set => SetProperty(ref _repairActionText, value);
+        }
+
+        /// <summary>
+        /// 是否为编辑模式（编辑模式下报警代码/内容/英文只读）
+        /// </summary>
+        private bool _isEditMode;
+        public bool IsEditMode
+        {
+            get => _isEditMode;
+            set => SetProperty(ref _isEditMode, value);
         }
 
         #region 向导生成器相关属性
@@ -333,6 +342,8 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Dialog
                 RepairActionText = repairAction;
             if (parameters.TryGetValue<List<string>>("ExistingCodes", out var codes))
                 _existingCodes = codes ?? new List<string>();
+            if (parameters.TryGetValue<bool>("IsEditMode", out var isEditMode))
+                IsEditMode = isEditMode;
         }
 
         protected override void Ok(IDialogResult result)

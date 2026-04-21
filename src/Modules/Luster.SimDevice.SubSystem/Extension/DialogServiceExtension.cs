@@ -597,6 +597,24 @@ namespace Luster.SimDevice.SubSystem.Extension
             dialogParameters.Add("AlarmContent", AlarmContent);
             dialogParameters.Add("AlarmEnglish", AlarmEnglish);
             dialogParameters.Add("ExistingCodes", existingCodes);
+            dialogParameters.Add("IsEditMode", false);
+
+            _showWindow = service.Show("ErrorCustomDialog", dialogParameters, callback);
+        }
+
+        public static void ShowAlarmConfigEditDialog(this IDialogService service, string AlarmCode, string AlarmContent, string AlarmEnglish, string AlarmCategory, string RepairAction, List<string> existingCodes, Action<IDialogResult> callback = null)
+        {
+            service.CloseExistShowWindow();
+
+            DialogParameters dialogParameters = new DialogParameters();
+            dialogParameters.Add("Title", LangProvider.GetLang("AlarmConfigCustom"));
+            dialogParameters.Add("AlarmCode", AlarmCode);
+            dialogParameters.Add("AlarmContent", AlarmContent);
+            dialogParameters.Add("AlarmEnglish", AlarmEnglish);
+            dialogParameters.Add("AlarmCategory", AlarmCategory);
+            dialogParameters.Add("RepairAction", RepairAction);
+            dialogParameters.Add("ExistingCodes", existingCodes);
+            dialogParameters.Add("IsEditMode", true);
 
             _showWindow = service.Show("ErrorCustomDialog", dialogParameters, callback);
         }
