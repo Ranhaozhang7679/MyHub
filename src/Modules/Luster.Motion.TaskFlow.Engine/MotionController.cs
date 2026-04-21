@@ -1925,10 +1925,10 @@ namespace Luster.Motion.TaskFlow.Engine
                 if (status == PlcStatus.Alarm && isPlcChanged)
                 {
                     // 先设置报警状态，防止定时器重入导致重复报警
-                    MotionEngine.EngineStatus = EngineStatus.Alarm;
+                    //MotionEngine.EngineStatus = EngineStatus.Alarm;
 
                     //如果当前在报警中，则退出
-                    Thread.Sleep(100);
+                    //Thread.Sleep(100);
                     if (vPlc == null)
                     {
                         vPlc = _deviceEngine.GetVDevices<VPlc>().FirstOrDefault();
@@ -1945,6 +1945,7 @@ namespace Luster.Motion.TaskFlow.Engine
 
                         //WritePlcValueInt(SysConfig.TricolorStatusAddr, 5);
                         MotionEngine.OnAlarm(plcAlarm);
+                        MotionEngine.EngineStatus = EngineStatus.Alarm;
                     });
                 }
             });
