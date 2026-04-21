@@ -1,13 +1,16 @@
-﻿using System;
+﻿using Aspose.Cells.Charts;
+using Luster.Common.DataStruct;//to use FriendlyException
+using Luster.Motion.DataStruct.Enums;//to use Enum HomeMode
+using Luster.Motion.DataStruct.Interfaces;
+using Luster.Motion.DataStruct.Real;
+using Newtonsoft.Json.Linq;
+using Org.BouncyCastle.Asn1.X509;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
-using Luster.Common.DataStruct;//to use FriendlyException
-using Luster.Motion.DataStruct.Enums;//to use Enum HomeMode
-using Luster.Motion.DataStruct.Interfaces;
-using Luster.Motion.DataStruct.Real;
 
 namespace Luster.Motion.DataStruct.FXVirtual
 {
@@ -377,12 +380,24 @@ namespace Luster.Motion.DataStruct.FXVirtual
 
         public void SDORead(short slave, short index, short subindex, short data_size, out int value, short count)
         {
-            throw new NotImplementedException();
+            if (AspectMode != AllTcp)
+            {
+                _innerCard.SDORead(slave, index, subindex, data_size, out var v1, count);
+                value = v1;
+            }
+            else
+            {
+                value = 0;
+            }
+
         }
 
         public void SDOWrite(short slave, short index, short subindex, int data, short data_size)
         {
-            throw new NotImplementedException();
+            if (AspectMode != AllTcp)
+            {
+                _innerCard.SDOWrite(slave, index, subindex, data, data_size);
+            }
         }
 
         public void PDORead(short axis, short index, short subindex, short data_size, ref int value, short count)
