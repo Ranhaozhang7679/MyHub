@@ -38,6 +38,26 @@ namespace Luster.SimDevice.EngineUI.Models
     public class ErrorItemCustomModel : BindableBase
     {
         /// <summary>
+        /// 模块唯一标识（对应 XML 中 Module 的 ID 属性，GUID 格式）
+        /// </summary>
+        private string _moduleId;
+        public string ModuleId
+        {
+            get => _moduleId;
+            set => SetProperty(ref _moduleId, value);
+        }
+
+        /// <summary>
+        /// 模块名称
+        /// </summary>
+        private string _moduleName;
+        public string ModuleName
+        {
+            get => _moduleName;
+            set => SetProperty(ref _moduleName, value);
+        }
+
+        /// <summary>
         /// 报警代码
         /// </summary>
         private string _alarmCode;
@@ -107,8 +127,10 @@ namespace Luster.SimDevice.EngineUI.Models
             set { SetProperty(ref _repairAction, value); }
         }
 
-        public ErrorItemCustomModel(string alarmCode, string alarmContent, string alarmEnglish, string alarmCategory = "", string repairAction = "")
+        public ErrorItemCustomModel(string alarmCode, string alarmContent, string alarmEnglish, string alarmCategory = "", string repairAction = "", string moduleName = "", string moduleId = "")
         {
+            ModuleId = moduleId;
+            ModuleName = moduleName;
             AlarmCode = alarmCode;
             OldAlarmCode = alarmCode;
             AlarmContent = alarmContent;
