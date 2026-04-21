@@ -1127,7 +1127,7 @@ namespace Luster.Motion.CommonUI
                         _dbManager.WriteParameterToCSV();
                         // CGP工站SFCINFO保存
                         var sysConfig = _webService.GetConfig() as WebConfig;
-                        if (sysConfig != null && sysConfig.StationId.Contains("CGP"))
+                        if (sysConfig != null && sysConfig.StationId?.Contains("CGP") == true)
                         {
                             // webConfig.xml拷贝到Vision系统指定目录，并更名为SFCINFO.txt
                             string targetDir = @"E:\CGP\LUSTER";

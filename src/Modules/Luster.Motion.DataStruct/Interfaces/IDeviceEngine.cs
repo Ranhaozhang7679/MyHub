@@ -125,6 +125,16 @@ namespace Luster.Motion.DataStruct
         void RaiseVDeviceChangedEvent();
 
         /// <summary>
+        /// 更新运行时报警模块参数事件（由 MotionController 处理，直接定位模块并更新）
+        /// </summary>
+        event Func<string, string, string, string, bool> UpdateAlarmModuleParamsEvent;
+
+        /// <summary>
+        /// 触发更新运行时报警模块参数
+        /// </summary>
+        bool RaiseUpdateAlarmModuleParams(string moduleId, string code, string message, string detail);
+
+        /// <summary>
         /// 模式变更
         /// </summary>
         event Action<DeviceMode> ModeChangedEvent;

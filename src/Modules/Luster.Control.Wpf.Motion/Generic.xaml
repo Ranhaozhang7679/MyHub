@@ -217,28 +217,19 @@
         </Setter>
     </Style>
     
-    <!--  AlarmCtrl 选择器  -->
+    <!--  AlarmCtrl 选择器（只读显示报警代码，可复制文本）  -->
     <Style TargetType="ctrl:AlarmCtrl">
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate>
-                    <hc:ElementGroup Orientation="Horizontal">
-                        <hc:ElementGroup.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
-                                </Grid>
-                            </ItemsPanelTemplate>
-                        </hc:ElementGroup.ItemsPanel>
-                        <Button
-                        x:Name="PART_BtnConfig"
-                        Grid.Column="1"
-                        hc:IconElement.Geometry="{StaticResource SearchGeometry}"
-                        IsEnabled="{Binding Path=IsReadOnly, RelativeSource={RelativeSource AncestorType=ctrl:AlarmCtrl}, Converter={StaticResource Boolean2BooleanReConverter}}" />
-                    </hc:ElementGroup>
+                    <TextBox
+                        IsReadOnly="True"
+                        Text="{Binding Text, RelativeSource={RelativeSource AncestorType=ctrl:AlarmCtrl}, Mode=OneWay}"
+                        BorderThickness="0"
+                        Background="Transparent"
+                        VerticalContentAlignment="Center"
+                        HorizontalContentAlignment="Center"
+                        IsReadOnlyCaretVisible="True" />
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

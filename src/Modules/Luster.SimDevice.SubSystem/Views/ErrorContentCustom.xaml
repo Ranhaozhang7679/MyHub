@@ -20,6 +20,22 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <Grid Grid.Row="0">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,10,0">
+                    <TextBox
+                        Width="200"
+                        hc:InfoElement.Placeholder="搜索报警代码/内容"
+                        Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                        VerticalContentAlignment="Center">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Enter" Command="{Binding SearchCommand}" />
+                        </TextBox.InputBindings>
+                    </TextBox>
+                    <Button
+                        Margin="5,0,0,0"
+                        Content="扫描配方"
+                        Command="{Binding ScanRecipeCommand}"
+                        Style="{StaticResource ButtonPrimary}" Width="90" />
+                </StackPanel>
                 <Button
                     Margin="0,0,280,0"
                     Command="{Binding BatchImportCommand}"
@@ -44,26 +60,31 @@
                     BorderThickness="1.5"
                     ColumnHeaderStyle="{StaticResource CustomDataGridColumnHeaderStyle}"
                     HeadersVisibility="Column"
-                    IsReadOnly="False"
-                    ItemsSource="{Binding ErrorList}"
+                    IsReadOnly="True"
+                    ItemsSource="{Binding FilteredErrorList}"
                     RowStyle="{StaticResource CustomDataGridRowStyle}"
-                    SelectionMode="Single"  
+                    SelectionMode="Single"
                     SelectionUnit="FullRow">
 
                 <hc:Interaction.Triggers>
                     <hc:EventTrigger EventName="Unloaded">
                         <hc:EventToCommand Command="{Binding UnLoadedCommand}"  CommandParameter="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=DataGrid}, Path=ItemsSource}" />
                     </hc:EventTrigger>
-                    <hc:EventTrigger EventName="SelectionChanged">
-                        <hc:EventToCommand Command="{Binding SelectionChangedCommand}" 
-                              CommandParameter="{Binding SelectedItems, RelativeSource={RelativeSource AncestorType=DataGrid}}" />
-                    </hc:EventTrigger>
                 </hc:Interaction.Triggers>
                 <DataGrid.Columns>
                     <DataGridTextColumn
+                            Width="120"
+                            MinWidth="80"
+                            Binding="{Binding ModuleName}"
+                            CanUserSort="True"
+                            ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
+                            Header="模块名称"
+                            HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
+
+                    <DataGridTextColumn
                             Width="*"
                             MinWidth="200"
-                            Binding="{Binding AlarmCode, UpdateSourceTrigger=LostFocus}"
+                            Binding="{Binding AlarmCode}"
                             CanUserSort="False"
                             ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
                             Header="{lang:Lang Key={x:Static lang:LangKeys.AlarmCode}}"
@@ -72,7 +93,7 @@
                     <DataGridTextColumn
                             Width="150"
                             MinWidth="150"
-                            Binding="{Binding AlarmContent, UpdateSourceTrigger=LostFocus}"
+                            Binding="{Binding AlarmContent}"
                             CanUserSort="False"
                             ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
                             Header="报警内容"
@@ -81,41 +102,50 @@
                     <DataGridTextColumn
                             Width="150"
                             MinWidth="150"
-                            Binding="{Binding AlarmEnglish, UpdateSourceTrigger=LostFocus}"
+                            Binding="{Binding AlarmEnglish}"
                             CanUserSort="False"
                             ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
                             Header="报警英文"
                             HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
 
-                    <DataGridTemplateColumn
+                    <DataGridTextColumn
                             Width="160"
                             MinWidth="160"
+                            Binding="{Binding AlarmCategory}"
+                            CanUserSort="False"
+                            ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
                             Header="报警种类"
-                            HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
-                            CanUserSort="False">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <ComboBox
-                                    ItemsSource="{Binding Source={x:Static models:ErrorItemCustomModel.AlarmCategoryOptions}}"
-                                    SelectedItem="{Binding AlarmCategory, UpdateSourceTrigger=PropertyChanged}"
-                                    IsEditable="False"
-                                    HorizontalContentAlignment="Center"
-                                    BorderThickness="0"
-                                    Background="Transparent" />
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-
+                            HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
 
                     <DataGridTextColumn
                             Width="200"
                             MinWidth="150"
-                            Binding="{Binding RepairAction, UpdateSourceTrigger=LostFocus}"
+                            Binding="{Binding RepairAction}"
                             CanUserSort="False"
                             ElementStyle="{StaticResource DataColumnTextElementStyleCenter}"
                             Header="维修动作"
                             HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}" />
 
+                    <DataGridTemplateColumn
+                            Width="80"
+                            MinWidth="60"
+                            Header="操作"
+                            HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
+                            CanUserSort="False">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Button
+                                    Content="编辑"
+                                    Command="{Binding DataContext.EditItemCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                    CommandParameter="{Binding}"
+                                    Style="{StaticResource ButtonDefault}"
+                                    Foreground="#4a90d9"
+                                    BorderThickness="0"
+                                    Background="Transparent"
+                                    Cursor="Hand" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                 </DataGrid.Columns>
             </DataGrid>
         </Grid>

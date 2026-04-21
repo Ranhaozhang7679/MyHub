@@ -366,6 +366,8 @@ namespace Luster.Motion.TaskFlow.Engine
 
             _deviceEngine.GetModuleListEvent -= DeviceEngine_GetModuleListEvent;
             _deviceEngine.GetModuleListEvent += DeviceEngine_GetModuleListEvent;
+            _deviceEngine.UpdateAlarmModuleParamsEvent -= DeviceEngine_UpdateAlarmModuleParamsEvent;
+            _deviceEngine.UpdateAlarmModuleParamsEvent += DeviceEngine_UpdateAlarmModuleParamsEvent;
             _deviceEngine.GetPDCAModulesEvent -= DeviceEngine_GetPDCAModulesEvent;
             _deviceEngine.GetPDCAModulesEvent += DeviceEngine_GetPDCAModulesEvent;
             _deviceEngine.GetSFCModulesEvent -= DeviceEngine_GetSFCModulesEvent;
@@ -2679,6 +2681,63 @@ namespace Luster.Motion.TaskFlow.Engine
             }
 
             return stations;
+        }
+
+        /// <summary>
+        /// 更新运行时报警模块参数：通过 MotionEngine.Get(id) 直接定位模块并更新 AlarmCode/Message/Detail
+        /// </summary>
+        private bool DeviceEngine_UpdateAlarmModuleParamsEvent(string moduleId, string code, string message, string detail)
+        {
+            try
+            {
+                if (!Guid.TryParse(moduleId, out var guid) || guid == Guid.Empty)
+                    return false;
+
+                var module = MotionEngine.Get(guid);
+                if (module == null) return false;
+
+                // 更新 Parameters 字典
+                if (module.Parameters.ContainsKey("AlarmCode"))
+                {
+                    var p = module.Parameters["AlarmCode"];
+                    if (p.Value?.ToString() != code) p.Value = code;
+                }
+                if (module.Parameters.ContainsKey("Message"))
+                {
+                    var p = module.Parameters["Message"];
+                    if (p.Value?.ToString() != message) p.Value = message;
+                }
+                if (module.Parameters.ContainsKey("Detail"))
+                {
+                    var p = module.Parameters["Detail"];
+                    if (p.Value?.ToString() != detail) p.Value = detail;
+                }
+
+                // 更新 TaskFunction 属性（通过反射，避免直接引用 Luster.Module.Motion.Logic）
+                var func = module.TaskFunction;
+                if (func != null)
+                {
+                    var funcType = func.GetType();
+                    if (funcType.Name == "Alarm")
+                    {
+                        var pAlarmCode = funcType.GetProperty("AlarmCode");
+                        var pMessage = funcType.GetProperty("Message");
+                        var pDetail = funcType.GetProperty("Detail");
+                        if (pAlarmCode != null && pAlarmCode.GetValue(func)?.ToString() != code)
+                            pAlarmCode.SetValue(func, code);
+                        if (pMessage != null && pMessage.GetValue(func)?.ToString() != message)
+                            pMessage.SetValue(func, message);
+                        if (pDetail != null && pDetail.GetValue(func)?.ToString() != detail)
+                            pDetail.SetValue(func, detail);
+                    }
+                }
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         /// <summary>
