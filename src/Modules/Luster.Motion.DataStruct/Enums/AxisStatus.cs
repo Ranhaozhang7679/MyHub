@@ -66,6 +66,9 @@ namespace Luster.Motion.DataStruct.Enums
         [Description("当前原点")]
         CurrentHome = 35,
 
+        [Description("大寰音圈电机Z轴非标回原")]
+        NegativeThree = 253,
+
     }
 
     /// <summary>
