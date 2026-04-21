@@ -447,7 +447,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                         item.Position += OffsetX;
                     }
                 }
-                SaveGodLineTeachPoint();
+                //SaveGodLineTeachPoint();
                 _axisUpdatedDict[axisName] = true; // 标记当前轴已更新
             });
         }));
@@ -501,6 +501,9 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         }
         public override async void OnOneKeyCheck(object obj)
         {
+            if (IsChecking) return;
+            IsChecking = true;
+
             await base.OnOneKeyCheckAsync(obj);
             bool wasCancelled = false;
 
@@ -547,6 +550,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             }
             finally
             {
+                IsChecking = false;
                 ProgressValue = 100;
 
                 // 保存当前子页面的点检状态

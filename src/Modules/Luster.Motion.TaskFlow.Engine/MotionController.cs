@@ -1150,6 +1150,9 @@ namespace Luster.Motion.TaskFlow.Engine
 
                 action?.Invoke();
 
+                // 停止时清理活跃报警，写入EndTime
+                clearAlarm();
+
                 // 防止连续点击
                 Lock(false);
 
@@ -1241,6 +1244,7 @@ namespace Luster.Motion.TaskFlow.Engine
                     pauseReset1?.Set();
                     if (!isResult)
                     {
+                        closeOtherAlarms();
                         AlarmProcEvent?.Invoke(AlarmInfo, false);
                         OnAlarm(AlarmInfo);
                     }
@@ -1281,6 +1285,24 @@ namespace Luster.Motion.TaskFlow.Engine
             }
             AlarmInfos?.Clear();
             AlarmInfosUpEvent?.Invoke(AlarmInfos, true);
+        }
+
+        /// <summary>
+        /// 关闭除当前报警外的其他历史报警（用于复位失败场景）
+        /// </summary>
+        private void closeOtherAlarms()
+        {
+            if (AlarmInfos != null && AlarmInfos.Count > 0)
+            {
+                foreach (var item in AlarmInfos)
+                {
+                    if (item != AlarmInfo
+                        && (item.EndTime == null || item.EndTime == default(DateTime)))
+                    {
+                        AlarmProcEvent?.Invoke(item, false);
+                    }
+                }
+            }
         }
         /// <summary>
         /// 用于防止检查IO时同时触发多次命令 

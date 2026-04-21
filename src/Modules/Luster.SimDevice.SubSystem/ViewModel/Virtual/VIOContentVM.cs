@@ -587,14 +587,9 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
         /// </summary>
         public override void RemoveItem()
         {
-            //var inRemoveItems = InputDatas.Where(u => u.IsSelected).ToList();
-            //var outRemoveItems = OutputDatas.Where(u => u.IsSelected).ToList();
-            //if (inRemoveItems.Count == 0 && outRemoveItems.Count == 0)
-            //{
-            //    return;
-            //}
-
-            var selectIos = IoDatas.Where(u => u.IsSelected).ToList();
+            var outSelectIos = IoDatas.Where(u => u.IsSelected).ToList();
+            var inSelectIos = InputDatas.Where(u => u.IsSelected).ToList();
+            var selectIos = outSelectIos.Concat(inSelectIos).ToList();
             if (selectIos.Count == 0) return;
 
             string message = $"确认要删除信号:{string.Join(",", selectIos.Select(u => u.Name).ToArray())}?";
@@ -607,7 +602,11 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
                     var ids = selectIos.Select(u => u.Tag.ID).ToArray();
                     deviceEngine.ReomoveVirtual(ids);
 
+                    // 清空并重新加载数据
                     IoDatas.Clear();
+                    InputDatas.Clear();
+                    LoadDatas();
+
                     pauseReset.Set();
                 }
             });

@@ -40,42 +40,129 @@ namespace Luster.SimDevice.SubSystem.Views.Virtual
         {
             if(DataContext is VIOContentVM viewModel)
             {
-                viewModel .ShowIODialog (); 
+                viewModel.ShowIODialog();
             }
         }
 
+        // 数字量输入右键事件
         private void BorderItem_MouseRightButtonDown1(object sender, MouseButtonEventArgs e)
         {
             if (DataContext is VIOContentVM viewModel)
             {
-                viewModel.ShowInPutDialog(); 
+                viewModel.ShowInPutDialog();
             }
+        }
+
+        // 左键选中事件（用于模拟量）
+        private void BorderItem_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            var border = sender as Border;
+            if (border?.DataContext is IOModel ioModel)
+            {
+                var listBoxItem = FindParent<ListBoxItem>(border);
+                if (listBoxItem != null)
+                {
+                    listBoxItem.IsSelected = true;
+                }
+
+                ioModel.IsSelected = true;
+
+                if (e.ClickCount == 2)
+                {
+                    if (DataContext is VIOContentVM viewModel)
+                    {
+                        if (ioModel.IsIn)
+                        {
+                            viewModel.ShowInPutDialog();
+                        }
+                        else
+                        {
+                            viewModel.ShowIODialog();
+                        }
+                    }
+                }
+            }
+        }
+
+        // 模拟量输入右键事件
+        private void BorderItem_MouseRightButtonDown_AnalogIn(object sender, MouseButtonEventArgs e)
+        {
+            var border = sender as Border;
+            if (border?.DataContext is IOModel ioModel)
+            {
+                var listBoxItem = FindParent<ListBoxItem>(border);
+                if (listBoxItem != null)
+                {
+                    listBoxItem.IsSelected = true;
+                }
+                ioModel.IsSelected = true;
+
+                if (DataContext is VIOContentVM viewModel)
+                {
+                    viewModel.ShowInPutDialog();
+                }
+
+                e.Handled = true;
+            }
+        }
+
+        // 模拟量输出右键事件
+        private void BorderItem_MouseRightButtonDown_AnalogOut(object sender, MouseButtonEventArgs e)
+        {
+            var border = sender as Border;
+            if (border?.DataContext is IOModel ioModel)
+            {
+                var listBoxItem = FindParent<ListBoxItem>(border);
+                if (listBoxItem != null)
+                {
+                    listBoxItem.IsSelected = true;
+                }
+                ioModel.IsSelected = true;
+
+                if (DataContext is VIOContentVM viewModel)
+                {
+                    viewModel.ShowIODialog();
+                }
+
+                e.Handled = true;
+            }
+        }
+
+        private T FindParent<T>(DependencyObject child) where T : DependencyObject
+        {
+            DependencyObject parentObject = VisualTreeHelper.GetParent(child);
+            if (parentObject == null) return null;
+
+            T parent = parentObject as T;
+            if (parent != null)
+                return parent;
+            else
+                return FindParent<T>(parentObject);
         }
     }
 
-
     /// <summary>
-    /// IO 模板
+    /// IO 模板选择器
     /// </summary>
     public class ValueTemplateSelector : DataTemplateSelector
     {
         /// <summary>
-        /// 数字模板
+        /// 数字输入模板
         /// </summary>
         public DataTemplate DigInTemplate { get; set; }
 
         /// <summary>
-        /// 模拟量模板
+        /// 数字输出模板
         /// </summary>
         public DataTemplate DigOutTemplate { get; set; }
 
         /// <summary>
-        /// 数字模板
+        /// 模拟输入模板
         /// </summary>
         public DataTemplate AnaInTemplate { get; set; }
 
         /// <summary>
-        /// 模拟量模板
+        /// 模拟输出模板
         /// </summary>
         public DataTemplate AnaOutTemplate { get; set; }
 
