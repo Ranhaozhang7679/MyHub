@@ -25,17 +25,28 @@
         <selectors:ContentTemplateSelector x:Key="ContentTemplateSelector">
             <selectors:ContentTemplateSelector.TextTemplate>
                 <DataTemplate DataType="{x:Type models:TextContentItem}">
-                    <TextBlock Text="{Binding Text}" 
-                               TextWrapping="Wrap"
+                    <TextBlock Text="{Binding Text}"
+                               TextAlignment="{Binding TextAlignment}"
                                Margin="{Binding Margin}"
-                               FontSize="12"/>
+                               FontSize="{Binding FontSize}">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="TextWrapping" Value="NoWrap"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding TextWrapping}" Value="True">
+                                        <Setter Property="TextWrapping" Value="Wrap"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
                 </DataTemplate>
             </selectors:ContentTemplateSelector.TextTemplate>
             <selectors:ContentTemplateSelector.ImageTemplate>
                 <DataTemplate DataType="{x:Type models:ImageContentItem}">
-                    <Image Source="{Binding ImagePath}" 
-                           MaxWidth="{Binding MaxWidth}"
-                           MaxHeight="{Binding MaxHeight}"
+                    <Image Source="{Binding ImagePath}"
+                           Width="{Binding MaxWidth}"
+                           Height="{Binding MaxHeight}"
                            Margin="{Binding Margin}"
                            Stretch="Uniform"/>
                 </DataTemplate>

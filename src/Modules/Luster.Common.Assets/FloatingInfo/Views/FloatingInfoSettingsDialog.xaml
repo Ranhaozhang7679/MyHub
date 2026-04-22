@@ -99,13 +99,13 @@
                 <TextBlock Grid.Row="1" Grid.Column="0" Text="最大宽度:" VerticalAlignment="Center" Margin="0,0,5,5"/>
                 <hc:NumericUpDown Grid.Row="1" Grid.Column="1"
                                   Value="{Binding MaxWidth, Mode=TwoWay}"
-                                  Minimum="50" Maximum="800"
+                                  Minimum="50" Maximum="1200"
                                   Margin="0,0,0,5"/>
                 
                 <TextBlock Grid.Row="2" Grid.Column="0" Text="最大高度:" VerticalAlignment="Center" Margin="0,0,5,5"/>
                 <hc:NumericUpDown Grid.Row="2" Grid.Column="1"
                                   Value="{Binding MaxHeight, Mode=TwoWay}"
-                                  Minimum="50" Maximum="600"
+                                  Minimum="50" Maximum="800"
                                   Margin="0,0,0,5"/>
             </Grid>
         </DataTemplate>
@@ -153,13 +153,13 @@
                 <TextBlock Grid.Column="0" Text="宽度:" VerticalAlignment="Center" Margin="0,0,5,0"/>
                 <hc:NumericUpDown Grid.Column="1"
                                   Value="{Binding WindowWidth, Mode=TwoWay}"
-                                  Minimum="200" Maximum="800"
+                                  Minimum="200" Maximum="1200"
                                   Margin="0,0,10,0"/>
                 
                 <TextBlock Grid.Column="2" Text="高度:" VerticalAlignment="Center" Margin="0,0,5,0"/>
                 <hc:NumericUpDown Grid.Column="3"
                                   Value="{Binding WindowHeight, Mode=TwoWay}"
-                                  Minimum="150" Maximum="600"
+                                  Minimum="150" Maximum="800"
                                   Margin="0,0,10,0"/>
                 
                 <TextBlock Grid.Column="4" Text="X:" VerticalAlignment="Center" Margin="0,0,5,0"/>
