@@ -51,30 +51,26 @@ namespace Luster.Module.Motion.Device.Functions
 
         // ===== 运动参数（硬着陆 + 软着陆共用） =====
         [DependOn("ActionType", VCMActionType.HardLanding, VCMActionType.SoftLanding)]
-        [Parameter("加速度(mm/s²)", 6, CN = "加速度", DefaultV = 1000.0)]
+        [Parameter("加速度(mm/s²)", 6, CN = "加速度", DefaultV = 100.0)]
         public double MoveAcc { get; set; }
 
         [DependOn("ActionType", VCMActionType.HardLanding, VCMActionType.SoftLanding)]
-        [Parameter("减速度(mm/s²)", 7, CN = "减速度", DefaultV = 1000.0)]
+        [Parameter("减速度(mm/s²)", 7, CN = "减速度", DefaultV = 100.0)]
         public double MoveDec { get; set; }
 
         // ===== 软着陆(驱动器内置力位控制)参数 =====
         // --- 核心力控 ---
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("扭矩正向限制(峰值电流1/10000)", 8, CN = "扭矩正向限制", DefaultV = 1000)]
+        [Parameter("计算扭矩(峰值电流1/10000)", 8, CN = "计算扭矩", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
         public int TorquePositiveLimit { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("最大行程限制(mm)", 9, CN = "最大行程限制", DefaultV = 20.0)]
+        [Parameter("最大行程限制(mm)", 9, CN = "最大行程限制", DefaultV = 11.0)]
         public double MaxStrokeLimit { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
         [Parameter("停止速度阈值(mm/s)", 10, CN = "停止速度阈值", DefaultV = 0.5)]
         public double StopSpeedThreshold { get; set; }
-
-        [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("停止电流阈值(%)", 11, CN = "停止电流阈值", DefaultV = 10)]
-        public double StopCurrentThreshold { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
         [Parameter("判断停止时间(ms)", 12, CN = "判断停止时间", DefaultV = 100)]
@@ -98,15 +94,15 @@ namespace Luster.Module.Motion.Device.Functions
         public double RetractPosition { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("快进位置(mm)", 17, CN = "快进位置")]
+        [Parameter("快进位置(mm)", 17, CN = "快进位置", DefaultV = 3.0)]
         public double FastForwardPosition { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("速度切换位置(mm)", 18, CN = "速度切换位置")]
+        [Parameter("速度切换位置(mm)", 18, CN = "速度切换位置", DefaultV = 5.0)]
         public double SpeedSwitchPosition { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("力矩保持时间(ms)", 19, CN = "力矩保持时间", DefaultV = 500)]
+        [Parameter("力矩保持时间(ms)", 19, CN = "力矩保持时间", DefaultV = 2000)]
         public int TorqueHoldTime { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
@@ -114,34 +110,32 @@ namespace Luster.Module.Motion.Device.Functions
         public int SoftLandingTimeout { get; set; }
 
 
-        // --- 电流标定(0x201B电流→压力换算) ---
+        // --- 目标压力控制 ---
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("电流-压力标定系数K", 27, CN = "标定系数K", DefaultV = 1.0)]
-        public double PressureCalibrationK { get; set; }
+        [Parameter("目标压力(N)", 22, CN = "目标压力")]
+        public double TargetPressure { get; set; }
+
+        // --- 扭矩→压力标定 (用于从目标压力反算扭矩指令) ---
+        [DependOn("ActionType", VCMActionType.SoftLanding)]
+        [Parameter("扭矩-压力标定系数K", 23, CN = "扭矩标定K*1000", DefaultV = 37.576)]
+        public double TorquePressureK { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("电流-压力标定偏移B", 28, CN = "标定偏移B", DefaultV = 0.0)]
-        public double PressureCalibrationB { get; set; }
+        [Parameter("扭矩-压力标定偏移B", 24, CN = "扭矩标定B*1000", DefaultV = -49.697)]
+        public double TorquePressureB { get; set; }
+
+        // --- 电流→压力标定 (0x6077原始值 → 压力) ---
+        [DependOn("ActionType", VCMActionType.SoftLanding)]
+        [Parameter("电流-压力标定系数K", 25, CN = "电流标定K*1000", DefaultV = 1.288)]
+        public double CurrentPressureK { get; set; }
+
+        [DependOn("ActionType", VCMActionType.SoftLanding)]
+        [Parameter("电流-压力标定偏移B", 26, CN = "电流标定B*1000", DefaultV = -52.041)]
+        public double CurrentPressureB { get; set; }
 
         // ===== 非标回零参数 =====
-        [DependOn("ActionType", VCMActionType.HomeNonStandard)]
-        [Parameter("回零模式代码", 17, CN = "回零模式", DefaultV = (short)0)]
-        public short HomeMode { get; set; }
-
-        [DependOn("ActionType", VCMActionType.HomeNonStandard)]
-        [Parameter("回零高速(mm/s)", 18, CN = "回零高速", DefaultV = 50.0)]
-        public double HomeSpeed { get; set; }
-
-        [DependOn("ActionType", VCMActionType.HomeNonStandard)]
-        [Parameter("回零低速(mm/s)", 19, CN = "回零低速", DefaultV = 10.0)]
-        public double HomeLowSpeed { get; set; }
-
-        [DependOn("ActionType", VCMActionType.HomeNonStandard)]
-        [Parameter("回零加速度(mm/s²)", 20, CN = "回零加速度", DefaultV = 1000.0)]
-        public double HomeAcc { get; set; }
-
         [DependOn("ActionType", VCMActionType.Home, VCMActionType.HomeNonStandard)]
-        [Parameter("回零超时(秒)", 21, CN = "回零超时", DefaultV = 60)]
+        [Parameter("回零超时(秒)", 44, CN = "回零超时", DefaultV = 60)]
         public int HomeTimeout { get; set; }
 
         // ===== 输出参数 =====
@@ -151,8 +145,8 @@ namespace Luster.Module.Motion.Device.Functions
         [Parameter("实际位置(mm)", 31, CN = "实际位置", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
         public double OutPosition { get; set; }
 
-        [Parameter("实际压力", 32, CN = "实际压力", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
-        public double OutPressure { get; set; }
+        [Parameter("实时压力记录(N)", 32, CN = "实时压力", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
+        public double[] OutPressure { get; set; }
 
         [Parameter("失败原因", 33, CN = "失败原因", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
         public string OutFailReason { get; set; }
@@ -246,61 +240,6 @@ namespace Luster.Module.Motion.Device.Functions
         #region CIA402 辅助方法
 
         /// <summary>
-        /// 读取状态字 0x6041h
-        /// </summary>
-        private int ReadStatusWord()
-        {
-            _axis.SDORead(0x6041, 0, 2, out int status, 1);
-            return status;
-        }
-
-        /// <summary>
-        /// 写控制字 0x6040h
-        /// </summary>
-        private void WriteControlWord(int value)
-        {
-            _axis.SDOWrite(0x6040, 0, value, 2);
-        }
-
-        /// <summary>
-        /// 等待状态字达到预期值（按位掩码匹配）
-        /// </summary>
-        private bool WaitForStatus(int expectedMasked, int mask = 0x006F, int timeoutMs = 5000)
-        {
-            int elapsed = 0;
-            while (elapsed < timeoutMs)
-            {
-                int status = ReadStatusWord();
-                if ((status & mask) == expectedMasked)
-                    return true;
-                Thread.Sleep(10);
-                elapsed += 10;
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// 检查是否处于故障状态（bit3=1 或 bit2=1）
-        /// </summary>
-        private bool IsFaultState()
-        {
-            int status = ReadStatusWord();
-            return (status & 0x0008) != 0 || (status & 0x0004) != 0;
-        }
-
-        /// <summary>
-        /// 清除故障（写 0x0000 → 写 0x0080 上升沿）
-        /// </summary>
-        private bool ClearFault()
-        {
-            WriteControlWord(0x0000);
-            Thread.Sleep(50);
-            WriteControlWord(0x0080);
-            Thread.Sleep(100);
-            return !IsFaultState();
-        }
-
-        /// <summary>
         /// 确保驱动器处于位置模式(0x201A phase==9)
         /// 如果在力控模式(phase==1)，写0x2016=256(0x100)切回位置模式，等待phase==9
         /// </summary>
@@ -378,19 +317,19 @@ namespace Luster.Module.Motion.Device.Functions
         /// </summary>
         private void ExecuteHomeNonStandard()
         {
-            EnsurePositionMode();
+            //EnsurePositionMode();
 
-            int pp = _axis.PerPluse;
+            //int pp = _axis.PerPluse;
 
-            // 1. 写入回零参数到驱动器SDO
-            _axis.SDOWrite(0x6098, 0, HomeMode, 1);
-            _axis.SDOWrite(0x6099, 0, (int)(HomeSpeed * pp), 4);
-            _axis.SDOWrite(0x6099, 1, (int)(HomeLowSpeed * pp), 4);
-            _axis.SDOWrite(0x609A, 0, (int)(HomeAcc * pp), 4);
+            //// 1. 写入回零参数到驱动器SDO
+            //_axis.SDOWrite(0x6098, 0, HomeMode, 1);
+            //_axis.SDOWrite(0x6099, 0, (int)(HomeSpeed * pp), 4);
+            //_axis.SDOWrite(0x6099, 1, (int)(HomeLowSpeed * pp), 4);
+            //_axis.SDOWrite(0x609A, 0, (int)(HomeAcc * pp), 4);
 
-            // 2. 启动回零
-            _axis.Home();
-            _axis.CheckHomeDone(HomeTimeout);
+            //// 2. 启动回零
+            //_axis.Home();
+            //_axis.CheckHomeDone(HomeTimeout);
             OutResult = true;
         }
 
@@ -427,25 +366,39 @@ namespace Luster.Module.Motion.Device.Functions
         #region 软着陆(GSFDmini内置力位控制-开环力控 P96)
 
         /// <summary>
-        /// 读取电流反馈值(0x6077h CIA402标准)
-        /// 单位: 0.001×额定电流，即 rawValue × 额定电流(mA) / 1000 = 实际电流(mA)
-        /// 通过标定系数K/B换算为压力: 压力 = rawValue × K + B
+        /// 读取0x6077电流反馈，用标定系数换算为压力(N)
+        /// 界面K/B已放大1000倍，计算时除以1000还原
         /// </summary>
-        private double ReadPressure()
+        private double ReadFeedbackPressure()
         {
             _axis.SDORead(0x6077, 0, 2, out int rawValue, 1);
-            return rawValue * PressureCalibrationK + PressureCalibrationB;
+            return rawValue * (CurrentPressureK / 1000.0) + (CurrentPressureB / 1000.0);
+        }
+
+        /// <summary>
+        /// 根据目标压力(N)反算扭矩SDO值
+        /// 界面K/B已放大1000倍，计算时除以1000还原
+        /// 结果×100: 标定用扭矩8~17 → SDO值800~1700
+        /// </summary>
+        private int CalcTorqueFromPressure(double pressure)
+        {
+            double k = TorquePressureK / 1000.0;
+            double b = TorquePressureB / 1000.0;
+            return (int)Math.Round((pressure - b) / k * 100);
         }
 
         /// <summary>
         /// 软着陆(GSFDmini开环力控 P96)
-        /// 流程: 写参数 → 切力控模式 → 触发 → 等待完成 → 切回位置模式
-        /// 触发: 0x2016 bit0上升沿
-        /// 状态: 0x201A bit0~3 (0=未进入, 1=力控就绪/完成, 2=快进, 3=一段, 4=二段, 5=回退, 9=位置模式)
+        /// 流程: 计算扭矩 → 写参数 → 切力控模式 → 触发 → 等待完成 → 读反馈压力 → 判定 → 切回位置模式
         /// </summary>
         private void ExecuteSoftLanding()
         {
             int pp = _axis.PerPluse;
+
+            // 0. 从目标压力反算扭矩
+            int torque = CalcTorqueFromPressure(TargetPressure);
+            if (torque < 0) torque = 0;
+            TorquePositiveLimit = torque;
 
             // 1. 写入力控参数-位置
             _axis.SDOWrite(0x2009, 0, (int)(RetractPosition * pp), 4);
@@ -466,15 +419,14 @@ namespace Luster.Module.Motion.Device.Functions
             _axis.SDOWrite(0x2015, 0, StopJudgeTime, 2);
 
             // 4. 写入扭矩限制
-            _axis.SDOWrite(0x2017, 0, TorquePositiveLimit, 2);
-            _axis.SDOWrite(0x2018, 0, TorquePositiveLimit, 2);
+            _axis.SDOWrite(0x2017, 0, torque, 2);
+            _axis.SDOWrite(0x2018, 0, torque, 2);
 
             // 5. 确保CSP模式
-            _axis.SDOWrite(0x6060, 0, 8, 1);
+            //_axis.SDOWrite(0x6060, 0, 8, 1);
             Thread.Sleep(50);
 
-            // 6. 切换到力控模式(与客户Demo一致)
-            //    读0x201A，如果不为1(力控就绪)，写0x2016=0切到力控模式，等待0x201A==1
+            // 6. 切换到力控模式
             _axis.SDORead(0x201A, 0, 2, out int modeState, 1);
             if ((modeState & 0x0F) != 1)
             {
@@ -490,20 +442,21 @@ namespace Luster.Module.Motion.Device.Functions
                 if ((modeState & 0x0F) != 1)
                 {
                     OutResult = false;
-                    OutFailReason = $"切换力控模式超时(0x201A={modeState})";
+                    OutFailReason = $"切换力控模式超时(0x201A={modeState})，请检查是否使能";
                     return;
                 }
             }
 
-            // 7. 触发力控: 0x2016 bit0上升沿(与Demo一致: 先写0, 延时, 再写1)
+            // 7. 触发力控
             _axis.SDOWrite(0x2016, 0, 0, 2);
             Thread.Sleep(5);
             _axis.SDOWrite(0x2016, 0, 1, 2);
 
-            // 8. 等待力控完成(保压+回退完成后 phase回到1)
+            // 8. 等待力控完成，实时采集压力
             int elapsed = 0;
             int timeoutMs = SoftLandingTimeout * 1000;
             bool hadStarted = false;
+            var pressureSamples = new System.Collections.Generic.List<double>();
 
             while (elapsed < timeoutMs)
             {
@@ -512,17 +465,22 @@ namespace Luster.Module.Motion.Device.Functions
                 _axis.SDORead(0x201A, 0, 2, out int state, 1);
                 int phase = state & 0x0F;
 
-                // 检测到进入力控阶段(phase>1), 标记已启动
                 if (phase > 1) hadStarted = true;
 
-                // phase=1: 力控完成(保压结束+回退完成)
+                // 力控过程中实时采集压力
+                if (hadStarted)
+                {
+                    pressureSamples.Add(ReadFeedbackPressure());
+                }
+
                 if (hadStarted && phase == 1)
                 {
                     OutPosition = _axis.GetCurrentPos();
-                    OutPressure = ReadPressure();
+                    pressureSamples.Add(ReadFeedbackPressure());
+                    OutPressure = pressureSamples.ToArray();
                     OutResult = true;
 
-                    // 切回位置模式，确保后续动作正常
+                    // 切回位置模式
                     _axis.SDOWrite(0x2016, 0, 0x0100, 2);
                     return;
                 }
@@ -533,11 +491,11 @@ namespace Luster.Module.Motion.Device.Functions
 
             // 超时
             OutPosition = _axis.GetCurrentPos();
-            OutPressure = ReadPressure();
+            pressureSamples.Add(ReadFeedbackPressure());
+            OutPressure = pressureSamples.ToArray();
             OutResult = false;
             OutFailReason = $"软着陆超时({SoftLandingTimeout}秒)";
 
-            // 超时也要切回位置模式
             try { _axis.SDOWrite(0x2016, 0, 0x0100, 2); } catch { }
         }
 
