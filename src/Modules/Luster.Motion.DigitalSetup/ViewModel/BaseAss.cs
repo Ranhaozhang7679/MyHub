@@ -212,6 +212,16 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         }
 
         /// <summary>
+        /// 点检进行中标记，防止重复点击
+        /// </summary>
+        private bool _isChecking = false;
+        public bool IsChecking
+        {
+            get => _isChecking;
+            set => SetProperty(ref _isChecking, value);
+        }
+
+        /// <summary>
         /// 每页数量
         /// </summary>
         private int _perPageCount = 20;
@@ -1969,6 +1979,11 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
         public virtual async void OnEnd()
         {
+            // 仅在点检进行中时停止运动引擎任务，避免初始化/切换页面时误触发
+            if (IsChecking)
+            {
+                _flowBus?.OnStop();
+            }
             //终止耗时的点检操作
             Stop();
             await WaitForCompletionAsync();
