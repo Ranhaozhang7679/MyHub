@@ -45,7 +45,7 @@ namespace Luster.Module.Motion.Device.Functions
         // ===== 硬着陆参数 =====
         [DependOn("ActionType", VCMActionType.HardLanding)]
         [Parameter("目标位置(mm)", 3, CN = "目标位置")]
-        public double TargetPosition { get; set; }
+        public VAxisPos TargetPosition { get; set; }
 
         [DependOn("ActionType", VCMActionType.HardLanding)]
         [Parameter("位置上限(mm)", 4, CN = "位置上限")]
@@ -73,7 +73,7 @@ namespace Luster.Module.Motion.Device.Functions
         // ===== 软着陆参数(参考DH Control Demo) =====
         [DependOn("ActionType", VCMActionType.SoftLanding)]
         [Parameter("快进位置PP(mm)", 9, CN = "快进位置")]
-        public double PPPosition { get; set; }
+        public VAxisPos PPPosition { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
         [Parameter("快进速度(mm/s)", 10, CN = "快进速度", DefaultV = 50.0)]
@@ -81,7 +81,7 @@ namespace Luster.Module.Motion.Device.Functions
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
         [Parameter("接触位置PT(mm)", 11, CN = "接触位置")]
-        public double PTPosition { get; set; }
+        public VAxisPos PTPosition { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
         [Parameter("接触速度(mm/s)", 12, CN = "接触速度", DefaultV = 5.0)]
@@ -97,7 +97,7 @@ namespace Luster.Module.Motion.Device.Functions
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
         [Parameter("返回位置PB(mm)", 15, CN = "返回位置", DefaultV = 0.0)]
-        public double PBPosition { get; set; }
+        public VAxisPos PBPosition { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
         [Parameter("软着陆超时(秒)", 16, CN = "软着陆超时", DefaultV = 10)]
@@ -388,7 +388,7 @@ namespace Luster.Module.Motion.Device.Functions
 
         private void ExecuteHardLanding()
         {
-            _axis.MoveAbs(TargetPosition, MoveSpeed, MoveAcc, MoveDec);
+            _axis.MoveAbs(TargetPosition[0].Position, MoveSpeed, MoveAcc, MoveDec);
             _axis.CheckMotionDone();
 
             double actualPos = _axis.GetCurrentPos();
@@ -459,7 +459,7 @@ namespace Luster.Module.Motion.Device.Functions
                 Thread.Sleep(20);
 
                 // Step 10: 快速段 - 快速接近产品上方(PP位置)
-                _axis.MoveAbs(PPPosition, PPVelocity, MoveAcc, MoveDec);
+                _axis.MoveAbs(PPPosition[0].Position, PPVelocity, MoveAcc, MoveDec);
                 _axis.CheckMotionDone();
                 if (_isBreak) return;
 
@@ -468,7 +468,7 @@ namespace Luster.Module.Motion.Device.Functions
                 Thread.Sleep(20);
 
                 // Step 30: 慢速段 - 低速接触产品(PT位置)
-                _axis.MoveAbs(PTPosition, PTVelocity, MoveAcc, MoveDec);
+                _axis.MoveAbs(PTPosition[0].Position, PTVelocity, MoveAcc, MoveDec);
 
                 // 等待力矩到达(接触判定)
                 double lastPos = _axis.GetCurrentPos();
@@ -509,9 +509,11 @@ namespace Luster.Module.Motion.Device.Functions
                 // Step 40: 保压
                 Thread.Sleep(InstallTime);
                 double installPos = _axis.GetCurrentPos();
+                //在这读取压力
+                OutPressure = ReadRawCurrent() * PressureCalibrationK + PressureCalibrationB;
 
                 // Step 50: 返回段 - 快速返回PB位置
-                _axis.MoveAbs(PBPosition, PPVelocity, MoveAcc, MoveDec);
+                _axis.MoveAbs(PBPosition[0].Position, PPVelocity, MoveAcc, MoveDec);
 
                 // 等离开接触面后再解除力矩限制(避免突然释放导致过冲)
                 int waitElapsed = 0;
@@ -529,7 +531,7 @@ namespace Luster.Module.Motion.Device.Functions
 
                 // Step 100: 完成
                 OutPosition = _axis.GetCurrentPos();
-                OutPressure = ReadRawCurrent() * PressureCalibrationK + PressureCalibrationB;
+                //OutPressure = ReadRawCurrent() * PressureCalibrationK + PressureCalibrationB;
                 OutResult = true;
             }
             finally
@@ -554,5 +556,17 @@ namespace Luster.Module.Motion.Device.Functions
         public override bool IsNeedPause => true;
 
         #endregion
+
+        public override void OnNotifyPropertyUIChanged(ParameterAttribute parameter, object newV)
+        {
+            base.OnNotifyPropertyUIChanged(parameter, newV);
+
+            if (newV is VAxisPos vPos)
+            {
+                vPos.UpdateAxis(MyOwner.DeviceEngine);
+                BuildDynamicAxisPos(vPos, 5);
+                BuildDynamicAxisPos(vPos, 20, TaskFlow.Common.Enums.ParamType.OUT, false);
+            }
+        }
     }
 }

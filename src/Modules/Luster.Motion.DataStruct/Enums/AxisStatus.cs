@@ -66,6 +66,9 @@ namespace Luster.Motion.DataStruct.Enums
         [Description("当前原点")]
         CurrentHome = 35,
 
+        [Description("-3回原")]
+        NegativeThree = 253,
+
     }
 
     /// <summary>

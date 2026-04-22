@@ -451,7 +451,7 @@ namespace Luster.Motion.DataStruct.DataModels
             base.SetDevice(hardDevice, out errMsg);
 
             motionCard = hardDevice as IMotionCard;
-            motionCard = new FXVirtualMotionCardAspect(motionCard, Engine);
+           // motionCard = new FXVirtualMotionCardAspect(motionCard, Engine);
             if (motionCard == null)
             {
                 errMsg = "设备为空!";
