@@ -402,12 +402,18 @@ namespace Luster.Motion.DataStruct.FXVirtual
 
         public void PDORead(short axis, short index, short subindex, short data_size, ref int value, short count)
         {
-            throw new NotImplementedException();
+            if (AspectMode != AllTcp)
+            {
+                _innerCard.PDORead(axis, index, subindex, data_size, ref value, count);
+            }
         }
 
         public void PDOWrite(short axis, short index, short subindex, int data, short data_size)
         {
-            throw new NotImplementedException();
+            if (AspectMode != AllTcp)
+            {
+                _innerCard.PDOWrite(axis, index, subindex, data, data_size);
+            }
         }
 
         public void AxisContinuousMove(int axisNo, double acc, double dec, double perPulse, List<double> pos, List<double> vel)

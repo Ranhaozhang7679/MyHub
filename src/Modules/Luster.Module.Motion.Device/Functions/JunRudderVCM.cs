@@ -7,6 +7,7 @@ using Luster.TaskFlow.Motion;
 using Luster.TaskFlow.Motion.Enums;
 using Luster.TaskFlow.Motion.Interfaces;
 using System;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace Luster.Module.Motion.Device.Functions
@@ -61,7 +62,7 @@ namespace Luster.Module.Motion.Device.Functions
         // ===== 软着陆(驱动器内置力位控制)参数 =====
         // --- 核心力控 ---
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("计算扭矩(峰值电流1/10000)", 8, CN = "计算扭矩", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
+        [Parameter("扭矩限制(峰值电流1/10000)", 8, CN = "扭矩限制", DefaultV = 1700)]
         public int TorquePositiveLimit { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
@@ -117,20 +118,20 @@ namespace Luster.Module.Motion.Device.Functions
 
         // --- 扭矩→压力标定 (用于从目标压力反算扭矩指令) ---
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("扭矩-压力标定系数K", 23, CN = "扭矩标定K*1000", DefaultV = 37.576)]
+        [Parameter("扭矩-压力标定系数K", 23, CN = "扭矩标定K*1000", DefaultV = 1)]
         public double TorquePressureK { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("扭矩-压力标定偏移B", 24, CN = "扭矩标定B*1000", DefaultV = -49.697)]
+        [Parameter("扭矩-压力标定偏移B", 24, CN = "扭矩标定B*1000", DefaultV = 0)]
         public double TorquePressureB { get; set; }
 
         // --- 电流→压力标定 (0x6077原始值 → 压力) ---
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("电流-压力标定系数K", 25, CN = "电流标定K*1000", DefaultV = 1.288)]
+        [Parameter("电流-压力标定系数K", 25, CN = "电流标定K*1000", DefaultV = 1)]
         public double CurrentPressureK { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("电流-压力标定偏移B", 26, CN = "电流标定B*1000", DefaultV = -52.041)]
+        [Parameter("电流-压力标定偏移B", 26, CN = "电流标定B*1000", DefaultV = 0)]
         public double CurrentPressureB { get; set; }
 
         // ===== 非标回零参数 =====
@@ -145,11 +146,15 @@ namespace Luster.Module.Motion.Device.Functions
         [Parameter("实际位置(mm)", 31, CN = "实际位置", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
         public double OutPosition { get; set; }
 
-        [Parameter("实时压力记录(N)", 32, CN = "实时压力", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
-        public double[] OutPressure { get; set; }
+        [Parameter("实时压力记录(N)，逗号分割", 32, CN = "实时压力", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
+        public string OutPressure { get; set; }
 
         [Parameter("失败原因", 33, CN = "失败原因", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
         public string OutFailReason { get; set; }
+
+        [DependOn("ActionType", VCMActionType.SoftLanding)]
+        [Parameter("额定电流", 34, CN = "额定电流A", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
+        public double OutRatedCurrent { get; set; }
 
         #endregion
 
@@ -167,6 +172,11 @@ namespace Luster.Module.Motion.Device.Functions
         /// 停止标志
         /// </summary>
         private volatile bool _isBreak;
+
+        /// <summary>
+        /// 额定电流缓存（0x6075h，软着陆启动时读取一次，避免循环中重复SDO读取）
+        /// </summary>
+        private int _ratedCurrent;
 
         /// <summary>
         /// 构造函数
@@ -366,13 +376,17 @@ namespace Luster.Module.Motion.Device.Functions
         #region 软着陆(GSFDmini内置力位控制-开环力控 P96)
 
         /// <summary>
-        /// 读取0x6077电流反馈，用标定系数换算为压力(N)
+        /// 读取0x6077电流反馈(PDO)，用标定系数换算为压力(N)
+        /// 0x6077 = 千分比额定电流，反馈电流(mA) = rawValue × _ratedCurrent / 1000.0
         /// 界面K/B已放大1000倍，计算时除以1000还原
+        /// 使用PDO读取避免SDO总线拥堵
         /// </summary>
         private double ReadFeedbackPressure()
         {
-            _axis.SDORead(0x6077, 0, 2, out int rawValue, 1);
-            return rawValue * (CurrentPressureK / 1000.0) + (CurrentPressureB / 1000.0);
+            int rawValue = 0;
+            _axis.PDORead((short)_axis.AxisNo, 0x6077, 0, 2, ref rawValue, 1);
+            double currentMA = rawValue * _ratedCurrent / 1000.0;
+            return currentMA * (CurrentPressureK / 1000.0) + (CurrentPressureB / 1000.0);
         }
 
         /// <summary>
@@ -394,109 +408,130 @@ namespace Luster.Module.Motion.Device.Functions
         private void ExecuteSoftLanding()
         {
             int pp = _axis.PerPluse;
-
-            // 0. 从目标压力反算扭矩
-            int torque = CalcTorqueFromPressure(TargetPressure);
-            if (torque < 0) torque = 0;
-            TorquePositiveLimit = torque;
-
-            // 1. 写入力控参数-位置
-            _axis.SDOWrite(0x2009, 0, (int)(RetractPosition * pp), 4);
-            _axis.SDOWrite(0x200A, 0, (int)(FastForwardPosition * pp), 4);
-            _axis.SDOWrite(0x200B, 0, (int)(SpeedSwitchPosition * pp), 4);
-            _axis.SDOWrite(0x200C, 0, (int)(MaxStrokeLimit * pp), 4);
-
-            // 2. 写入力控参数-速度
-            _axis.SDOWrite(0x200E, 0, (int)(FirstSpeed * pp), 4);
-            _axis.SDOWrite(0x200F, 0, (int)(SecondSpeed * pp), 4);
-            _axis.SDOWrite(0x2010, 0, (int)(FastRetractSpeed * pp), 4);
-            _axis.SDOWrite(0x2012, 0, (int)(MoveAcc * pp), 4);
-            _axis.SDOWrite(0x2013, 0, (int)(MoveDec * pp), 4);
-
-            // 3. 写入力控参数-判定
-            _axis.SDOWrite(0x2011, 0, (int)(StopSpeedThreshold * pp), 4);
-            _axis.SDOWrite(0x2014, 0, TorqueHoldTime, 2);
-            _axis.SDOWrite(0x2015, 0, StopJudgeTime, 2);
-
-            // 4. 写入扭矩限制
-            _axis.SDOWrite(0x2017, 0, torque, 2);
-            _axis.SDOWrite(0x2018, 0, torque, 2);
-
-            // 5. 确保CSP模式
-            //_axis.SDOWrite(0x6060, 0, 8, 1);
-            Thread.Sleep(50);
-
-            // 6. 切换到力控模式
-            _axis.SDORead(0x201A, 0, 2, out int modeState, 1);
-            if ((modeState & 0x0F) != 1)
+            try
             {
-                _axis.SDOWrite(0x2016, 0, 0, 2);
-                int switchElapsed = 0;
-                while (switchElapsed < 3000)
+                // 缓存额定电流（0x6075h），循环中不再重复读取
+                _axis.SDORead(0x6075, 0, 4, out _ratedCurrent, 3);
+                OutRatedCurrent = _ratedCurrent;
+                // 0. 扭矩来源: 目标压力>0时自动反算，否则使用手动设置的值
+                int torque = TorquePositiveLimit;
+                if (TargetPressure > 0)
                 {
-                    Thread.Sleep(10);
-                    _axis.SDORead(0x201A, 0, 2, out modeState, 1);
-                    if ((modeState & 0x0F) == 1) break;
-                    switchElapsed += 10;
+                    torque = CalcTorqueFromPressure(TargetPressure);
+                    if (torque < 0) torque = 0;
+                    TorquePositiveLimit = torque;
                 }
+
+                // 1. 写入力控参数-位置
+                _axis.SDOWrite(0x2009, 0, (int)(RetractPosition * pp), 4);
+                _axis.SDOWrite(0x200A, 0, (int)(FastForwardPosition * pp), 4);
+                _axis.SDOWrite(0x200B, 0, (int)(SpeedSwitchPosition * pp), 4);
+                _axis.SDOWrite(0x200C, 0, (int)(MaxStrokeLimit * pp), 4);
+
+                // 2. 写入力控参数-速度
+                _axis.SDOWrite(0x200E, 0, (int)(FirstSpeed * pp), 4);
+                _axis.SDOWrite(0x200F, 0, (int)(SecondSpeed * pp), 4);
+                _axis.SDOWrite(0x2010, 0, (int)(FastRetractSpeed * pp), 4);
+                _axis.SDOWrite(0x2012, 0, (int)(MoveAcc * pp), 4);
+                _axis.SDOWrite(0x2013, 0, (int)(MoveDec * pp), 4);
+
+                // 3. 写入力控参数-判定
+                _axis.SDOWrite(0x2011, 0, (int)(StopSpeedThreshold * pp), 4);
+                _axis.SDOWrite(0x2014, 0, TorqueHoldTime, 2);
+                _axis.SDOWrite(0x2015, 0, StopJudgeTime, 2);
+
+                // 4. 写入扭矩限制
+                _axis.SDOWrite(0x2017, 0, torque, 2);
+                _axis.SDOWrite(0x2018, 0, torque, 2);
+
+                // 5. 确保CSP模式
+                Thread.Sleep(50);
+
+                // 6. 切换到力控模式（PDO读取状态，避免SDO拥堵）
+                int modeState = 0;
+                _axis.PDORead((short)_axis.AxisNo, 0x201A, 0, 2, ref modeState, 1);
                 if ((modeState & 0x0F) != 1)
                 {
-                    OutResult = false;
-                    OutFailReason = $"切换力控模式超时(0x201A={modeState})，请检查是否使能";
-                    return;
-                }
-            }
-
-            // 7. 触发力控
-            _axis.SDOWrite(0x2016, 0, 0, 2);
-            Thread.Sleep(5);
-            _axis.SDOWrite(0x2016, 0, 1, 2);
-
-            // 8. 等待力控完成，实时采集压力
-            int elapsed = 0;
-            int timeoutMs = SoftLandingTimeout * 1000;
-            bool hadStarted = false;
-            var pressureSamples = new System.Collections.Generic.List<double>();
-
-            while (elapsed < timeoutMs)
-            {
-                if (_isBreak) return;
-
-                _axis.SDORead(0x201A, 0, 2, out int state, 1);
-                int phase = state & 0x0F;
-
-                if (phase > 1) hadStarted = true;
-
-                // 力控过程中实时采集压力
-                if (hadStarted)
-                {
-                    pressureSamples.Add(ReadFeedbackPressure());
+                    _axis.SDOWrite(0x2016, 0, 0, 2);
+                    int switchElapsed = 0;
+                    while (switchElapsed < 3000)
+                    {
+                        Thread.Sleep(10);
+                        _axis.PDORead((short)_axis.AxisNo, 0x201A, 0, 2, ref modeState, 1);
+                        if ((modeState & 0x0F) == 1) break;
+                        switchElapsed += 10;
+                    }
+                    if ((modeState & 0x0F) != 1)
+                    {
+                        OutResult = false;
+                        OutFailReason = $"切换力控模式超时(0x201A={modeState})，请检查是否使能";
+                        return;
+                    }
                 }
 
-                if (hadStarted && phase == 1)
-                {
-                    OutPosition = _axis.GetCurrentPos();
-                    pressureSamples.Add(ReadFeedbackPressure());
-                    OutPressure = pressureSamples.ToArray();
-                    OutResult = true;
-
-                    // 切回位置模式
-                    _axis.SDOWrite(0x2016, 0, 0x0100, 2);
-                    return;
-                }
-
+                // 7. 触发力控
+                _axis.SDOWrite(0x2016, 0, 0, 2);
                 Thread.Sleep(5);
-                elapsed += 5;
+                _axis.SDOWrite(0x2016, 0, 1, 2);
+
+                // 8. 等待力控完成，实时采集压力
+                int elapsed = 0;
+                int timeoutMs = SoftLandingTimeout * 1000;
+                bool hadStarted = false;
+                var pressureSamples = new System.Collections.Generic.List<double>();
+
+                while (elapsed < timeoutMs)
+                {
+                    if (_isBreak) return;
+
+                    int state = 0;
+                    _axis.PDORead((short)_axis.AxisNo, 0x201A, 0, 2, ref state, 1);
+                    Thread.Sleep(5);
+                    int phase = state & 0x0F;
+
+                    if (phase > 1) hadStarted = true;
+
+                    // 力控过程中实时采集压力
+                    if (hadStarted)
+                    {
+                        pressureSamples.Add(ReadFeedbackPressure());
+                        Thread.Sleep(5);
+                    }
+
+                    if (hadStarted && phase == 1)
+                    {
+                        OutPosition = _axis.GetCurrentPos();
+                        pressureSamples.Add(ReadFeedbackPressure());
+                        OutPressure = string.Join(",", pressureSamples);
+                        OutResult = true;
+
+                        // 切回位置模式
+                        _axis.SDOWrite(0x2016, 0, 0x0100, 2);
+                        return;
+                    }
+
+                    Thread.Sleep(10);
+                    elapsed += 20;
+                }
+
+                // 超时
+                OutPosition = _axis.GetCurrentPos();
+                pressureSamples.Add(ReadFeedbackPressure());
+                OutPressure = string.Join(",", pressureSamples);
+                OutResult = false;
+                OutFailReason = $"软着陆超时({SoftLandingTimeout}秒)";
             }
-
-            // 超时
-            OutPosition = _axis.GetCurrentPos();
-            pressureSamples.Add(ReadFeedbackPressure());
-            OutPressure = pressureSamples.ToArray();
-            OutResult = false;
-            OutFailReason = $"软着陆超时({SoftLandingTimeout}秒)";
-
-            try { _axis.SDOWrite(0x2016, 0, 0x0100, 2); } catch { }
+            catch (Exception ex)
+            {
+                OutResult = false;
+                OutFailReason = $"软着陆通信异常: {ex.Message}";
+                try { OutPosition = _axis.GetCurrentPos(); } catch { }
+            }
+            finally
+            {
+                // 无论成功/失败/异常，确保切回位置模式
+                try { _axis.SDOWrite(0x2016, 0, 0x0100, 2); } catch { }
+            }
         }
 
         #endregion
@@ -508,9 +543,9 @@ namespace Luster.Module.Motion.Device.Functions
             _isBreak = true;
             if (_axis != null)
             {
-                // 立即结束力控(与Demo一致: 先写0复位, 再写4停止)
+                // 先复位0x2016h，再置bit8=1切回位置模式
                 try { _axis.SDOWrite(0x2016, 0, 0, 2); } catch { }
-                try { _axis.SDOWrite(0x2016, 0, 4, 2); } catch { }
+                try { _axis.SDOWrite(0x2016, 0, 0x0100, 2); } catch { }
                 _axis.Stop();
             }
         }
