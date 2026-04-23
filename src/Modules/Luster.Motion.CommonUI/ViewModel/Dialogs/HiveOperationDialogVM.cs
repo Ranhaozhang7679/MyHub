@@ -43,8 +43,21 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
         DispatcherTimer dispatcherTimer = new DispatcherTimer();
         private bool hasCardAccept = false;
 
+        // 剩余点击次数（跨对话框实例共享）
+        private static int _opRemainingClickCount = 3;
+        private static DateTime _opLastResetTime = DateTime.MinValue;
+
         public SystemOperation Operation { get; private set; }
 
+
+        /// <summary>
+        /// 剩余点击次数
+        /// </summary>
+        public int RemainingCount
+        {
+            get => _opRemainingClickCount;
+            set => SetProperty(ref _opRemainingClickCount, value);
+        }
 
         /// <summary>
         /// 刷卡背景色        /// </summary>
@@ -226,6 +239,12 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
 
                         if (ret && (auth == "L1" || auth == "L2" || auth == "L3" || auth == "L6" /*|| auth == "L7" || auth == "L8"*/ || auth == "L9"))
                         {
+                            // 刷卡成功，重置剩余次数
+                            if (RemainingCount != 3)
+                            {
+                                RemainingCount = 3;
+                                _opLastResetTime = DateTime.Now;
+                            }
                             if (hasCardAccept)
                             {
                                 return;
@@ -460,6 +479,15 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
         private DelegateCommand<object> _resumeCommand;
         public DelegateCommand<object> ResumeCommand => _resumeCommand ?? (_resumeCommand = new DelegateCommand<object>((o) =>
         {
+            // 检查剩余点击次数
+            if (RemainingCount <= 0)
+            {
+                IsButtonEnable = false;
+                return;
+            }
+            RemainingCount = _opRemainingClickCount - 1;
+            if (RemainingCount <= 0)
+                IsButtonEnable = false;
             if (!motionController.CanAutoRun(out var msg)) throw new FriendlyException(msg);
             _commonBus.OnLog(LogType.Info, "点击 恢复生产 按钮，设备即将启动");
             if (motionController.Start())
@@ -663,11 +691,21 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
 
         public override void OnDialogOpened(IDialogParameters parameters)
         {
-            beginTime = DateTime.Now.AddMinutes(5);
+            beginTime = DateTime.Now.AddMinutes(2);
             dispatcherTimer.Interval = TimeSpan.FromSeconds(1);
             dispatcherTimer.Tick += Timer_Tick;
             dispatcherTimer.Start();
             IsButtonEnable = true;
+
+            // 剩余点击次数重置逻辑（error code 固定不变，仅检查30分钟超时）
+            if (RemainingCount != 3 && (DateTime.Now - _opLastResetTime).TotalMinutes >= 30)
+            {
+                RemainingCount = 3;
+                _opLastResetTime = DateTime.Now;
+            }
+            // 剩余次数为0时，按钮置灰
+            if (RemainingCount <= 0)
+                IsButtonEnable = false;
 
             // 获取 Operation 参数
             var operation = parameters.GetValue<SystemOperation>("Operation");

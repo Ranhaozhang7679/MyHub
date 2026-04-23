@@ -274,7 +274,7 @@
             ShowGridLines="True">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
-                <RowDefinition Height="180" />
+                <RowDefinition Height="200" />
             </Grid.RowDefinitions>
             <!-- 新增：左侧状态区（按钮、倒计时继续保留原位置） -->
             <StackPanel Grid.Row="1"
@@ -323,6 +323,14 @@
                 </Grid.ColumnDefinitions>
                 <TextBlock Width="200" HorizontalAlignment="Left" Text="剩余时间 Remaining time:" Grid.ColumnSpan="2"/>
                 <TextBlock HorizontalAlignment="Left" Text="{Binding CountDown}" Grid.Column="2" />
+            </Grid>
+            <Grid HorizontalAlignment="Left" Margin="325,182,0,0" Grid.Row="1" Width="300">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Width="200" HorizontalAlignment="Left" Text="剩余次数 Remaining count:" Grid.ColumnSpan="2"/>
+                <TextBlock HorizontalAlignment="Left" Text="{Binding RemainingCount}" Grid.Column="2" />
             </Grid>
         </Grid>
     </Grid>
