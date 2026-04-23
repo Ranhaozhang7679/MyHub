@@ -2442,7 +2442,8 @@ namespace Luster.Motion.Integration.Web
             //增加客户要求的Hive日志
             if (url.Contains("softwareversio"))//记录到版本日志中
             {
-                FileLogger.Log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")} URL:{url} send: {datas}  Receive: {resultRaw?.msg}", "D:/Hive/Hive Log/SW Version/sw_version");
+                var time = DateTime.Now;
+                FileLogger.Log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")} URL:{url} send: {datas}  Receive: {resultRaw?.msg}", $"D:/Hive/Hive Log/SW Version/{time.ToString("yyyyMMdd")}");
             }
             if (url.Contains("machinedata"))//记录到版本日志中
             {
@@ -2582,7 +2583,8 @@ namespace Luster.Motion.Integration.Web
             //增加客户要求的Hive日志
             if (url.Contains("softwareversio"))//记录到版本日志中
             {
-                FileLogger.Log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")} URL:{url} send: {datas} Receive: {resultRaw?.Status}", "D:/Hive/Hive Log/SW Version/sw_version");
+                var time = DateTime.Now;
+                FileLogger.Log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")} URL:{url} send: {datas} Receive: {resultRaw?.Status}", $"D:/Hive/Hive Log/SW Version/{time.ToString("yyyyMMdd")}");
             }
             if (url.Contains("machinedata"))//记录到版本日志中
             {
