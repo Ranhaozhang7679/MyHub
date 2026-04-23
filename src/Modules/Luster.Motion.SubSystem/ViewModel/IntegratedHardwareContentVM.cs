@@ -115,6 +115,24 @@ namespace Luster.Motion.SubSystem.ViewModel
             });
         }
 
+        public override void OnNavigatedTo(NavigationContext navigationContext)
+        {
+            base.OnNavigatedTo(navigationContext);
+            // 强制刷新子视图：重置缓存以跳过去重导航判断
+            _currentConfigRegion = "";
+            _currentDebugRegion = "";
+            if (_selectedConfigItem != null)
+                NavigateConfig(_selectedConfigItem);
+            if (_selectedDebugItem != null)
+                NavigateDebug(_selectedDebugItem);
+        }
+
+        public override void OnNavigatedFrom(NavigationContext navigationContext)
+        {
+            base.OnNavigatedFrom(navigationContext);
+            commonBus.EventBus.GetEvent<ViewRefreshEvent>().Publish();
+        }
+
         /// <summary>
         /// 导航到默认页面（视图加载后调用）
         /// </summary>

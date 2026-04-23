@@ -32,6 +32,7 @@ using Luster.Motion.CommonUI.Models;
 using Luster.Motion.DataStruct.DataModels;
 using Luster.Motion.EditorUI.Events;
 using Luster.Motion.EditorUI.Models;
+using Luster.Motion.EditorUI.UndoCommands;
 using Luster.Motion.TaskFlow.Engine;
 using Luster.TaskFlow.Common.Attributes;
 using Luster.TaskFlow.Common.Enums;
@@ -74,12 +75,12 @@ namespace Luster.Motion.EditorUI
         /// <summary>
         /// 用来记录前进还原功能
         /// </summary>
-        private Stack<XElement> backStack = new Stack<XElement>();
+        private Stack<IUndoCommand> backStack = new Stack<IUndoCommand>();
 
         /// <summary>
         /// 用来记录前进
         /// </summary>
-        private Stack<XElement> forwordStack = new Stack<XElement>();
+        private Stack<IUndoCommand> forwordStack = new Stack<IUndoCommand>();
 
         /// <summary>
         /// 通用Bus总线
@@ -125,7 +126,7 @@ namespace Luster.Motion.EditorUI
         /// <summary>
         /// 对模块排序
         /// </summary>
-        private void SortModule(IMotionModule pModule)
+        internal void SortModule(IMotionModule pModule)
         {
             if (pModule.Name == "Root")
             {
@@ -248,13 +249,15 @@ namespace Luster.Motion.EditorUI
                 return newModule;
             }
 
-            // 0.工程变更
-            OnRecipeChanged();
-
+            // 0.工程变更（记录撤销命令需要在Insert之后，因为需要获取插入位置）
             // 2.添加到engine中
             _engine.Insert(newModule, index);
 
             _engine.BuildPrimModule();
+
+            // 记录撤销命令：保存添加后模块的XML快照
+            var addCommand = new ModuleAddCommand(newModule.ExportXml(), curModule.ID, newModule.Sort);
+            OnRecipeChanged(addCommand);
 
 
             // 3.排序
@@ -573,9 +576,13 @@ namespace Luster.Motion.EditorUI
                 throw new FriendlyException("要移动的模块不存在!");
             }
 
-            OnRecipeChanged();
-
             var curModule = GetCurrent();
+
+            // 记录原始排序位置
+            var moduleIDs = modules.Select(m => m.ID).ToArray();
+            var originalSorts = modules.Select(m => m.Sort).ToArray();
+
+            OnRecipeChanged(new ModuleMoveCommand(moduleIDs, originalSorts, destIndex));
 
             // 原始索引
             var srcIndex = modules[0].Sort;
@@ -695,8 +702,11 @@ namespace Luster.Motion.EditorUI
                 }
             }
 
-            // 在动作之前进行备份
-            OnRecipeChanged();
+            // 在动作之前进行备份：保存被删除模块的XML快照
+            var removeXmls = modules.Select(m => m.ExportXml()).ToArray();
+            var parentID = modules[0].Parent?.ID ?? Guid.Empty;
+            var originalSorts = modules.Select(m => m.Sort).ToArray();
+            OnRecipeChanged(new ModuleRemoveCommand(removeXmls, parentID, originalSorts));
 
 
             List<Guid> ids = new List<Guid>();
@@ -893,7 +903,8 @@ namespace Luster.Motion.EditorUI
         /// <param name="skipModules">忽略模块</param>
         public void OnSkip(params IMotionModule[] skipModules)
         {
-            OnRecipeChanged();
+            // 记录原始状态用于撤销
+            var originalStates = skipModules.Select(m => (m.ID, m.Status)).ToArray();
 
             foreach (var item in skipModules)
             {
@@ -909,7 +920,45 @@ namespace Luster.Motion.EditorUI
                 }
             }
 
+            OnRecipeChanged(new ModuleSkipCommand(originalStates));
+
             Bus.GetEvent<ModuleSkipEvent>().Publish(skipModules);
+        }
+
+        /// <summary>
+        /// 供撤销命令使用的模块解析方法
+        /// </summary>
+        internal IMotionModule ParseModule(XElement xModule, IMotionModule parent, int index)
+        {
+            var newModule = _engine.Parse(xModule, parent, index);
+            newModule.UpdateStation();
+            return newModule;
+        }
+
+        /// <summary>
+        /// 供撤销命令使用的模块内部移除方法（递归释放）
+        /// </summary>
+        internal void RemoveModuleInternal(IMotionModule removeModule)
+        {
+            RemoveRescure(removeModule);
+            removeModule.RemoveAllRefs();
+        }
+
+        /// <summary>
+        /// 供撤销命令使用，重建模块间的引用关系
+        /// </summary>
+        internal void RebuildReferences()
+        {
+            foreach (var item in _engine)
+            {
+                foreach (var pItem in item.Parameters)
+                {
+                    var pAttr = pItem.Value;
+                    if (pAttr.ParamType == ParamType.OUT || pAttr.CanRef != ParamRef.Ref) continue;
+                    pAttr.LoadFromRefXml();
+                }
+                item.UpdateReferences();
+            }
         }
         #endregion
 
@@ -1081,9 +1130,6 @@ namespace Luster.Motion.EditorUI
         /// <param name="parent">parent</param>
         public void OnPaste(XElement xCopy, IMotionModule parent, int index = -1)
         {
-            // 0.粘贴后需要记录上次的执行器内容
-            OnRecipeChanged();
-
             if (parent == null)
             {
                 parent = GetCurrent();
@@ -1100,6 +1146,7 @@ namespace Luster.Motion.EditorUI
                 List<Guid> newIDs = new List<Guid>();
 
                 List<IMotionModule> newModules = new List<IMotionModule>();
+                List<XElement> pastedXmls = new List<XElement>();
                 // 3.添加到当前基元中
                 var newXElement = XElement.Parse(strXML);
                 var maxRow = _engine.GetStations().Select(u => u.TaskFunction as IStation).Max(u => u.Row) + 1;
@@ -1119,6 +1166,10 @@ namespace Luster.Motion.EditorUI
                 }
 
                 SortModule(parent);
+
+                // 粘贴成功后记录撤销命令（保存粘贴后各模块的XML快照用于Redo）
+                pastedXmls = newModules.Select(m => m.ExportXml()).ToList();
+                OnRecipeChanged(new ModulePasteCommand(pastedXmls.ToArray(), parent.ID, newIDs.ToArray()));
 
                 Bus.GetEvent<ModulePastedEvent>().Publish(newModules.ToArray());
             }
@@ -1242,46 +1293,32 @@ namespace Luster.Motion.EditorUI
         /// </summary>
         public void OnBackForward(bool isBack)
         {
-            XElement xTask = null;
+            IUndoCommand command = null;
             if (isBack)
             {
                 if (backStack.Count == 0) return;
-                forwordStack.Push(_engine.ExportXml());
+                command = backStack.Pop();
+                forwordStack.Push(command);
                 Remain10Stack(forwordStack);
-                xTask = backStack.Pop();
+                command.Undo(this);
             }
             else
             {
                 if (forwordStack.Count == 0) return;
-
-                backStack.Push(_engine.ExportXml());
-                xTask = forwordStack.Pop();
+                command = forwordStack.Pop();
+                backStack.Push(command);
+                command.Redo(this);
             }
 
             commonBus.IsNeedSave = true;
-
-            // 1.获取最新模块的ID
-            var curID = GetCurrent().ID;
-
-            // 解析新的引擎|复原状态
-            _engine.LoadProjfile(xTask);
-
-            // 记录原来的Current
-            foreach (var item in _engine)
-            {
-                item.IsCurrent = item.ID == curID;
-            }
-
-            // 触发引擎事件
-            Bus.GetEvent<TaskChangedEvent>().Publish();
         }
         #endregion 前进和后退命令
 
-        private void Remain10Stack(Stack<XElement> xStack)
+        private void Remain10Stack(Stack<IUndoCommand> xStack)
         {
             if (xStack.Count > 10)
             {
-                List<XElement> xElements = new List<XElement>();
+                List<IUndoCommand> xElements = new List<IUndoCommand>();
                 while (xStack.Count > 0)
                 {
                     xElements.Insert(0, xStack.Pop());
@@ -1298,23 +1335,26 @@ namespace Luster.Motion.EditorUI
         }
 
         /// <summary>
-        /// 在 新增、修改、删除、移动、模块提取、复制粘贴模块后触发该事件
+        /// 在 新增、修改、删除、移动、复制粘贴模块后触发该事件，记录撤销命令
         /// </summary>
-        private void OnRecipeChanged(bool isNeedSave = true)
+        private void OnRecipeChanged(IUndoCommand command)
         {
             // 只保留10次记录,超过10次，则给最远的一次删除掉
             Remain10Stack(backStack);
 
-            if (isNeedSave)
+            if (command != null)
             {
-                backStack.Push(_engine.ExportXml());
-
-                // 通知备份
-                Bus.GetEvent<RecipeChangedEvent>().Publish(commonBus.CurrentRecipe);
+                backStack.Push(command);
             }
 
+            // 做了新操作后清空前进栈
+            forwordStack.Clear();
+
+            // 通知备份
+            Bus.GetEvent<RecipeChangedEvent>().Publish(commonBus.CurrentRecipe);
+
             // 程序是否需要保存
-            commonBus.IsNeedSave = isNeedSave;
+            commonBus.IsNeedSave = true;
         }
 
         /// <summary>

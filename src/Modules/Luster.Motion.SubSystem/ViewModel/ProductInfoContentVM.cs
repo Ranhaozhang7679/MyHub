@@ -15,6 +15,7 @@ using Luster.TaskFlow.Common.Interfaces;
 using Microsoft.VisualBasic;
 using Prism.Commands;
 using Prism.Events;
+using Prism.Regions;
 using Prism.Services.Dialogs;
 using System;
 using System.Collections.Generic;
@@ -39,7 +40,7 @@ using Luster.Motion.DataStruct.DataModels;
 
 namespace Luster.Motion.SubSystem.ViewModel
 {
-    public class ProductInfoContentVM : MotionVM
+    public class ProductInfoContentVM : MotionVM, INavigationAware
     {
         /// <summary>
         /// 对话框服务
@@ -147,6 +148,24 @@ namespace Luster.Motion.SubSystem.ViewModel
             {
                 InitData();
             });
+            bus.GetEvent<ViewRefreshEvent>().Subscribe(() =>
+            {
+                InitData();
+            });
+        }
+
+        public bool IsNavigationTarget(NavigationContext navigationContext)
+        {
+            return true;
+        }
+
+        public void OnNavigatedFrom(NavigationContext navigationContext)
+        {
+        }
+
+        public void OnNavigatedTo(NavigationContext navigationContext)
+        {
+            InitData();
         }
 
         /// <summary>
