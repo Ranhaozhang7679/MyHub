@@ -803,6 +803,11 @@ namespace Luster.Motion.Integration.Web
                     // 单独刷新下LastEventId，不改变其他字段
                     SaveHiveState();
                 }
+                // Hive3.2，周/月保养强制使用固定的 downtime_cause
+                if (_hiveState.HiveCurrentCode == "F99OOOO-05" || _hiveState.HiveCurrentCode == "F99OOOO-06")
+                {
+                    downCause = "Preventive Maintenance;设备保养";
+                }
                 var statusData = new
                 {
                     machine_state = status,
