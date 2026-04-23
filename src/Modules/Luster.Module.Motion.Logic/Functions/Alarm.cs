@@ -198,6 +198,7 @@ namespace Luster.Module.Motion.Logic.Functions
         {
             base.Added();
             UpdateFromVAlarm();
+            UpdateReadOnlyState();
             if (MyOwner?.DeviceEngine != null)
             {
                 MyOwner.DeviceEngine.VDeviceChangedEvent -= DeviceEngine_VDeviceChangedEvent;
@@ -648,9 +649,35 @@ namespace Luster.Module.Motion.Logic.Functions
 
                         if (MyOwner.Parameters.TryGetValue(nameof(Detail), out var pDetail))
                             if (pDetail.Value?.ToString() != Detail) pDetail.Value = Detail;
-                    } 
+                    }
                     catch { }
                 }
+            }
+
+            if (parameter.Name == nameof(AlarmType))
+            {
+                UpdateReadOnlyState();
+            }
+        }
+
+        /// <summary>
+        /// 根据报警类型动态更新 报警代码/报警内容/报警英文 的只读状态。
+        /// 信息提示、报警断点、人工介入提示 允许手动编辑，其他类型为只读。
+        /// </summary>
+        private void UpdateReadOnlyState()
+        {
+            bool isEditable = AlarmType == AlarmType.InfoTip ||
+                              AlarmType == AlarmType.RetryAlarm ||
+                              AlarmType == AlarmType.ManuOperationAlarm;
+
+            if (MyOwner != null)
+            {
+                if (MyOwner.Parameters.TryGetValue(nameof(AlarmCode), out var pCode))
+                    pCode.IsReadOnly = !isEditable;
+                if (MyOwner.Parameters.TryGetValue(nameof(Message), out var pMsg))
+                    pMsg.IsReadOnly = !isEditable;
+                if (MyOwner.Parameters.TryGetValue(nameof(Detail), out var pDetail))
+                    pDetail.IsReadOnly = !isEditable;
             }
         }
 

@@ -389,6 +389,16 @@ namespace Luster.Control.Wpf.Motion
             {
                 pItem.IsReadOnly = true;
             }
+            else
+            {
+                // 动态绑定 IsReadOnly，使 ParameterAttribute.IsReadOnly 变更时自动同步到 UI
+                BindingOperations.SetBinding(pItem, ParamItem.IsReadOnlyProperty,
+                    new Binding("IsReadOnly")
+                    {
+                        Source = p,
+                        Mode = BindingMode.OneWay
+                    });
+            }
 
             BuildRelyDataSource(pItem, out var isRely);
             return pItem;
