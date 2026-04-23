@@ -171,6 +171,11 @@ namespace Luster.Common.Assets.FloatingInfo.Models
                     {
                         Order = textItem.Order,
                         Text = textItem.Text,
+                        FontSize = textItem.FontSize,
+                        FontWeight = textItem.FontWeight,
+                        TextAlignment = textItem.TextAlignment,
+                        TextWrapping = textItem.TextWrapping,
+                        Foreground = textItem.Foreground,
                         Margin = textItem.Margin
                     });
                 }

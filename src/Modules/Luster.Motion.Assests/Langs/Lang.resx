@@ -3195,4 +3195,10 @@
   <data name="BUSOP" xml:space="preserve">
     <value>BUSOP</value>
   </data>
+  <data name="ReadModbus" xml:space="preserve">
+    <value>读取Modbus</value>
+  </data>
+  <data name="SetModbusEx" xml:space="preserve">
+    <value>设置Modbus</value>
+  </data>
 </root>

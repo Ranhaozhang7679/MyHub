@@ -61,6 +61,7 @@ using System.Security.Policy;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 using System.Windows.Media.Media3D;
 using System.Xml.Linq;
 using static FreeSql.Internal.GlobalFilter;
@@ -929,62 +930,87 @@ namespace Luster.Motion.TaskFlow.Engine
                 Interlocked.Increment(ref lockCommand);
                 _deviceEngine.OnLog(LogType.Info, $"监控lockcommand次数，当前为:{lockCommand}");
                 _deviceEngine.OnLog(LogType.Info, "首先执行开始工站");
-                MotionEngine.RunStartStation();
-                _deviceEngine.OnLog(LogType.Info, $"开始检查轴状态!");
-                // 1.Plc启动
-                // 设备回零检查
-                if (!_deviceEngine.IsHome(out var errMsg))
+                // 记录执行前的报警数量
+                int alarmCountBefore = AlarmInfos.Count;
+                // 开始工站可能涉及通信等待，放到后台线程避免阻塞UI
+                bool startResult = false;
+                var frame = new DispatcherFrame();
+                Task.Run(() =>
                 {
-                    _deviceEngine.OnLog(LogType.Info, "存在轴未回零完成，不允许启动!");
-                    Interlocked.Decrement(ref lockCommand);
-                    _deviceEngine.OnLog(LogType.Info, $"readylockcommand复位1：{lockCommand}!");
-                    return false;
-                }
+                    try
+                    {
+                        MotionEngine.RunStartStation();
+                        // 开始工站执行后检查是否产生了新的报警（OnAlarm 中 AlarmInfo 赋值是同步的，不受 Ready 状态限制）
+                        if (AlarmInfos.Count > alarmCountBefore)
+                        {
+                            _deviceEngine.OnLog(LogType.Info, "开始工站执行后产生报警，不允许启动!");
+                            Interlocked.Decrement(ref lockCommand);
+                            _deviceEngine.OnLog(LogType.Info, $"readylockcommand复位报警：{lockCommand}!");
+                            return;
+                        }
+                        _deviceEngine.OnLog(LogType.Info, $"开始检查轴状态!");
+                        // 1.Plc启动
+                        // 设备回零检查
+                        if (!_deviceEngine.IsHome(out var errMsg))
+                        {
+                            _deviceEngine.OnLog(LogType.Info, "存在轴未回零完成，不允许启动!");
+                            Interlocked.Decrement(ref lockCommand);
+                            _deviceEngine.OnLog(LogType.Info, $"readylockcommand复位1：{lockCommand}!");
+                            return;
+                        }
 
-                _deviceEngine.OnLog(LogType.Info, $"记录班别!");
-                // 记录当前班别信息
-                currentClass = SysConfig.GetCurrentClass(DateTime.Now);
+                        _deviceEngine.OnLog(LogType.Info, $"记录班别!");
+                        // 记录当前班别信息
+                        currentClass = SysConfig.GetCurrentClass(DateTime.Now);
 
-                _deviceEngine.OnLog(LogType.Info, $"稼动率刷新!");
+                        _deviceEngine.OnLog(LogType.Info, $"稼动率刷新!");
 
-                // 2.稼动率刷新
-                if (_firstStartFlag)
-                {
-                    _firstStartFlag = false;
+                        // 2.稼动率刷新
+                        if (_firstStartFlag)
+                        {
+                            _firstStartFlag = false;
 
-                    //ClearProductInfo();//53AE要求只能手动清零
-                    // 稼动率重新计算
-                    _impactData = new ImpactData(DateTime.Now);
+                            //ClearProductInfo();//53AE要求只能手动清零
+                            // 稼动率重新计算
+                            _impactData = new ImpactData(DateTime.Now);
 
-                }
-                else
-                {
-                    // 程序经过停止->回零->启动，需要刷新稼动率
-                    _impactData.UpdateRecoveryTime();
-                }
-                // 3.流程启动
-                _deviceEngine.OnLog(LogType.Info, $"运行工站!");
-                MotionEngine.RunStations();
+                        }
+                        else
+                        {
+                            // 程序经过停止->回零->启动，需要刷新稼动率
+                            _impactData.UpdateRecoveryTime();
+                        }
+                        // 3.流程启动
+                        _deviceEngine.OnLog(LogType.Info, $"运行工站!");
+                        MotionEngine.RunStations();
 
-                _deviceEngine.OnLog(LogType.Info, $"运行三色灯!");
-                // 4.启动灯
-                _lightManager.RunningLight();
+                        _deviceEngine.OnLog(LogType.Info, $"运行三色灯!");
+                        // 4.启动灯
+                        _lightManager.RunningLight();
 
-                _deviceEngine.OnLog(LogType.Info, $"关闭机器人信号!");
-                // 5.机器人所有信号关闭
-                SetRobotDO(false);
+                        _deviceEngine.OnLog(LogType.Info, $"关闭机器人信号!");
+                        // 5.机器人所有信号关闭
+                        SetRobotDO(false);
 
-                _deviceEngine.OnLog(LogType.Info, $"启动机器人!");
-                // 6.机器人启动
-                ProcessIO(SysConfig.RobotStart, io => io.SetDigital(true));
-                ProcessIO(SysConfig.RobotStart2, io => io.SetDigital(true));
+                        _deviceEngine.OnLog(LogType.Info, $"启动机器人!");
+                        // 6.机器人启动
+                        ProcessIO(SysConfig.RobotStart, io => io.SetDigital(true));
+                        ProcessIO(SysConfig.RobotStart2, io => io.SetDigital(true));
 
-                // 7.防止连续点击
-                Interlocked.Decrement(ref lockCommand);
-                _deviceEngine.OnLog(LogType.Info, $"readylockcommand复位2：{lockCommand}!");
-                _deviceEngine.OnLog(LogType.Info, $"关闭门锁!");
-                LockDoor(true);
-                return true;
+                        // 7.防止连续点击
+                        Interlocked.Decrement(ref lockCommand);
+                        _deviceEngine.OnLog(LogType.Info, $"readylockcommand复位2：{lockCommand}!");
+                        _deviceEngine.OnLog(LogType.Info, $"关闭门锁!");
+                        LockDoor(true);
+                        startResult = true;
+                    }
+                    finally
+                    {
+                        frame.Continue = false;
+                    }
+                });
+                Dispatcher.PushFrame(frame);
+                return startResult;
             }
             else
             {
