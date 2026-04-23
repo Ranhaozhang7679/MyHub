@@ -697,9 +697,15 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
             dispatcherTimer.Start();
             IsButtonEnable = true;
 
-            // 剩余点击次数重置逻辑（error code 固定不变，仅检查30分钟超时）
-            if (RemainingCount != 3 && (DateTime.Now - _opLastResetTime).TotalMinutes >= 30)
+            // 剩余点击次数重置逻辑
+            if (RemainingCount == 3 && _opLastResetTime == DateTime.MinValue)
             {
+                // 首次打开或刷卡重置后，记录起始时间
+                _opLastResetTime = DateTime.Now;
+            }
+            else if (RemainingCount != 3 && (DateTime.Now - _opLastResetTime).TotalMinutes >= 30)
+            {
+                // 30分钟超时，重置次数
                 RemainingCount = 3;
                 _opLastResetTime = DateTime.Now;
             }
