@@ -101,6 +101,7 @@
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
         <None Update="Config\Version.xml">
+            <TargetPath>Version.xml</TargetPath>
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
         <None Update="LOGO.ico">
