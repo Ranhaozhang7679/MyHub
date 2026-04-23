@@ -208,7 +208,7 @@ namespace Luster.Motion.SubSystem.ViewModel
             }
             catch (Exception ex)
             {
-                alarmInfo = new AlarmInfo(null, AlarmType.InfoTip, $"FFU连接失败", "F98OOOO-02");
+                alarmInfo = new AlarmInfo(null, AlarmType.InfoTip, $"FFU连接失败", "N03OOOO-01");
                 _mController.MotionEngine.OnAlarm(alarmInfo);
             }
             //}));
@@ -253,7 +253,7 @@ namespace Luster.Motion.SubSystem.ViewModel
                     {
                         _ffuFailCount = 0;
                         state = "FFU读取启停状态异常";
-                        RaiseFFUAlarm(ffu, "FFU风扇未读取到值!!!&No value was read by the FFU fan", "F98OOOO-03");
+                        RaiseFFUAlarm(ffu, "FFU风扇未读取到值!!!&No value was read by the FFU fan", "N03OOOO-01");
                         _mController?.Update_FFUCOM_ConnectStatus(netName, bIsOpen, state);
                     }
                     return;
@@ -266,7 +266,7 @@ namespace Luster.Motion.SubSystem.ViewModel
                 {
                     state = "FFU关机";
                     FFUSwitch = "关机中";
-                    RaiseFFUAlarm(ffu, "FFU风扇未开启&The FFU fan is not started", "F98OOOO-04");
+                    RaiseFFUAlarm(ffu, "FFU风扇未开启&The FFU fan is not started", "N03OOOO-01");
                     _mController?.Update_FFUCOM_ConnectStatus(netName, bIsOpen, state);
                     return;
                 }
@@ -297,7 +297,7 @@ namespace Luster.Motion.SubSystem.ViewModel
                     {
                         _ffuCurrentFailCount = 0;
                         state = "FFU读取电流异常";
-                        RaiseFFUAlarm(ffu, "FFU风扇读取电流异常!!!&The FFU fan reads abnormal current", "F98OOOO-05");
+                        RaiseFFUAlarm(ffu, "FFU风扇读取电流异常!!!&The FFU fan reads abnormal current", "N03OOOO-01");
                         _mController?.Update_FFUCOM_ConnectStatus(netName, bIsOpen, state);
                     }
                     return;
@@ -311,7 +311,7 @@ namespace Luster.Motion.SubSystem.ViewModel
             catch (Exception ex)
             {
                 state = "FFU连接异常";
-                //alarmInfo = new AlarmInfo(null, AlarmType.InfoTip, $"FFU连接失败&FFU Connected Fail: {ex.Message}", "F98OOOO-02");
+                //alarmInfo = new AlarmInfo(null, AlarmType.InfoTip, $"FFU连接失败&FFU Connected Fail: {ex.Message}", "N03OOOO-01");
                 //_mController.MotionEngine.OnAlarm(alarmInfo);
             }
             //更新界面下方的StatusContent的FFU状态

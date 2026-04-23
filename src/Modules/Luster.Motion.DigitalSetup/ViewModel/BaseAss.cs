@@ -1775,7 +1775,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         /// <summary>
         /// 将一级界面整体状态同步到 PageStatusService，并刷新 DigitalAssPageModel 的聚合状态
         /// </summary>
-        protected void SyncOverallStatusToPageStatusService()
+        protected virtual void SyncOverallStatusToPageStatusService()
         {
             // 获取当前子页面的点检结果（基于 ItemModels）
             var currentPageStatus = GetCurrentPageCheckStatus();

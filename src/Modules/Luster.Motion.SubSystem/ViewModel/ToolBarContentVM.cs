@@ -1243,16 +1243,29 @@ namespace Luster.Motion.SubSystem.ViewModel
                         break;
 
                     case DataStruct.Enums.SystemOperation.Pause:
+                        useHiveDialog = true;
+                        Commands[0].SetEnabled(false);
                         mController.Pause(false);
                         mController.CloseOperateIO(SystemOperation.Pause);
                         break;
                     case DataStruct.Enums.SystemOperation.Stop:
-                        mController.Pause(false);
+                        //if (MStatus == EngineStatus.Alarm.GetDescription() || MStatus == EngineStatus.Pause.GetDescription())
+                        if (mController.MachineStatus == EngineStatus.Alarm || mController.MachineStatus == EngineStatus.Pause) 
+                        {
+                            mController.Stop();
+                            mController.CloseOperateIO(SystemOperation.Stop);
+                            Commands[0].ChangeButton(new StatusChanged(mController.MachineStatus, mController.MachineStatus));
+                            _dbManager.AddSysOperation(command.Key, memo, commonBus.CurrentUser?.UserName);
+                            return;
+                        }
+                        useHiveDialog = true;
+                        Commands[0].SetEnabled(false);
+                        mController.Pause(false);//直接stop会有个问题，就是如果当前状态是运行中，直接stop会有个急停的感觉，先pause一下，等用户确认后再stop
                         mController.CloseOperateIO(SystemOperation.Pause);
                         break;
                 }
 
-
+                    
 
                 // 根据配置的提示来进行弹窗
                 if (command.Key == SystemOperation.Stop || command.Key == SystemOperation.Pause)

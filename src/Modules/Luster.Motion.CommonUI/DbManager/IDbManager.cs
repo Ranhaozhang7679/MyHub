@@ -234,13 +234,17 @@ namespace Luster.Motion.CommonUI
         /// </summary>
         /// <returns></returns>
         TbProductYeild GetProYield();
-        
+
         /// <summary>
         /// 获取当前UPH
         /// </summary>
         /// <returns></returns>
         long GetCurrentUPH();
         void LoadCtConfig(string configDir);
+        /// 获取CT配置中的站名称列表（listA）
+        List<string> GetCTConfigStationNames();
+        /// 获取CT配置中每个工站的完整动作列表（含CT1工站开始和CT{N+1}工站结束）
+        Dictionary<string, List<string>> GetCTConfigFullActionNames();
 
         // 关键参数写入CSV
         void WriteParameterToCSV(); // List<VAxis> vAxises

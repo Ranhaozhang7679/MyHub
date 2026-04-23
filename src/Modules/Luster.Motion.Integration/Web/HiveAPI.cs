@@ -2230,7 +2230,7 @@ namespace Luster.Motion.Integration.Web
             {
                 if (arg1.Result.IsToss && !arg1.Result.Result && !arg1.Result.IsPreviousStationUndo)
                 {
-                    AlarmEvent("retry", arg1.Result.NgCode, arg1.Result.ErrMsg);
+                    AlarmEvent("retry", arg1.Result.NgCode + "-K1", arg1.Result.ErrMsg);
                 }
             }
         }
@@ -2239,7 +2239,7 @@ namespace Luster.Motion.Integration.Web
         {
             if (!stationResult.IsPreviousStationUndo)
             {
-                AlarmEvent("tossing", stationResult.NgCode, stationResult.ErrMsg);
+                AlarmEvent("tossing", stationResult.NgCode + "-S1", stationResult.ErrMsg);
             }
 
         }
