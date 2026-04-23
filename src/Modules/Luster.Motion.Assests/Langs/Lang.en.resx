@@ -3189,4 +3189,10 @@
   <data name="BUSOP" xml:space="preserve">
     <value>BUSOP</value>
   </data>
+  <data name="ReadModbus" xml:space="preserve">
+    <value>ReadModbus</value>
+  </data>
+  <data name="SetModbusEx" xml:space="preserve">
+    <value>SetModbusEx</value>
+  </data>
 </root>

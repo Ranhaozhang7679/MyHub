@@ -6262,6 +6262,15 @@ namespace Luster.Motion.Assests.Langs {
         }
         
         /// <summary>
+        ///   查找类似 读取Modbus 的本地化字符串。
+        /// </summary>
+        public static string ReadModbus {
+            get {
+                return ResourceManager.GetString("ReadModbus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 读取PLC 的本地化字符串。
         /// </summary>
         public static string ReadPlc {
@@ -7293,6 +7302,15 @@ namespace Luster.Motion.Assests.Langs {
         public static string SetModbus {
             get {
                 return ResourceManager.GetString("SetModbus", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 设置Modbus 的本地化字符串。
+        /// </summary>
+        public static string SetModbusEx {
+            get {
+                return ResourceManager.GetString("SetModbusEx", resourceCulture);
             }
         }
         
