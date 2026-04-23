@@ -434,8 +434,9 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                         string detail = GetParamValue(funcEl, "Detail");
                         string alarmType = GetParamValue(funcEl, "AlarmType");
 
-                        // 过滤掉报警类型为“信息提示”相关的模块（通常值为 InfoTip 或 PopInfoTip）
-                        if (!string.IsNullOrEmpty(alarmType) && (alarmType == "InfoTip"))
+                        // 过滤掉报警类型为“信息提示”、“报警断点”和“人工介入提示”相关的模块
+                        if (!string.IsNullOrEmpty(alarmType) && 
+                            (alarmType == "InfoTip" || alarmType == "RetryAlarm" || alarmType == "ManuOperationAlarm"))
                         {
                             continue;
                         }

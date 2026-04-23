@@ -195,10 +195,23 @@ namespace Luster.TaskFlow.Common.Attributes
         /// </summary>
         public List<KeyValue> DependOns { get; set; }
 
+        private bool _isReadOnly;
+
         /// <summary>
         /// 是否只读
         /// </summary>
-        public bool IsReadOnly { get; set; }
+        public bool IsReadOnly
+        {
+            get => _isReadOnly;
+            set
+            {
+                if (_isReadOnly != value)
+                {
+                    _isReadOnly = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsReadOnly)));
+                }
+            }
+        }
 
         /// <summary>
         /// 对象是否可以进行展开
