@@ -380,6 +380,80 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 throw;
             }
         }
+
+        /// <summary>
+        /// 将当前轴的 AxisPositions 和 AxisPositions_GodLine 组合为 AssTbOriginLimit 写入 CSV
+        /// </summary>
+        private void SaveAxisPositionsToLatestCsv()
+        {
+            try
+            {
+                var axisName = SelectedReportPage?.Name;
+                if (string.IsNullOrEmpty(axisName)) return;
+                if (AxisPositions == null || AxisPositions.Count == 0) return;
+
+                var items = new List<AssTbOriginLimit>();
+                var godLineDict = AxisPositions_GodLine?
+                    .Where(g => g.Name != null)
+                    .ToDictionary(g => g.Name, g => g.Position.ToString(CultureInfo.InvariantCulture))
+                    ?? new Dictionary<string, string>();
+
+                int order = 0;
+                foreach (var pos in AxisPositions)
+                {
+                    if (string.IsNullOrEmpty(pos.Name)) continue;
+
+                    godLineDict.TryGetValue(pos.Name, out var godLineValue);
+                    var currentPos = pos.Position.ToString(CultureInfo.InvariantCulture);
+
+                    items.Add(new AssTbOriginLimit
+                    {
+                        项序 = order++,
+                        项次 = pos.Name,
+                        标准 = godLineValue ?? "",
+                        实测 = currentPos,
+                        状态 = "",
+                        完成时间 = DateTime.Now
+                    });
+                }
+
+                if (items.Count == 0) return;
+
+                // 写入 CSV
+                var recipeDir = _commonbus.CurrentRecipe?.GetRecipePath();
+                if (string.IsNullOrEmpty(recipeDir)) return;
+
+                var assDir = Path.Combine(recipeDir, "db", "Ass_Data");
+                Directory.CreateDirectory(assDir);
+                var csvPath = Path.Combine(assDir, $"AssTbOriginLimit_{axisName}_Latest.csv");
+
+                var type = typeof(AssTbOriginLimit);
+                var props = type.GetProperties()
+                    .Where(p => p.CanRead && p.PropertyType.IsSerializable && p.GetIndexParameters().Length == 0)
+                    .ToArray();
+
+                var headers = props.Select(p => p.Name).ToArray();
+
+                using (var writer = new StreamWriter(csvPath, false, Encoding.UTF8))
+                {
+                    writer.WriteLine(string.Join(",", headers));
+                    foreach (var item in items)
+                    {
+                        var values = props.Select(p =>
+                        {
+                            var val = p.GetValue(item, null);
+                            return val?.ToString() ?? "";
+                        });
+                        writer.WriteLine(string.Join(",", values));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"保存点位示教CSV失败: {ex.Message}" });
+            }
+        }
+
         /// <summary>
         /// 加载GodLine示教点位
         /// </summary>
@@ -457,6 +531,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         public DelegateCommand<PositionItem> UpdateGodLinePositionsCommand => _updateGodLinePositionsCommand ?? (_updateGodLinePositionsCommand = new DelegateCommand<PositionItem>((o) =>
         {
             SaveGodLineTeachPoint();
+            SaveAxisPositionsToLatestCsv();
         }));
 
         /// <summary>

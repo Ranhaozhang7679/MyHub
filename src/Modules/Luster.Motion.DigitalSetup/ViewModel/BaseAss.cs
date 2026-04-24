@@ -1178,6 +1178,33 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             }
 
             method.Invoke(_csvHelper, new object[] { convertedEnumerable });
+
+            // 工站CSV副本：多工站界面保存时，额外拷贝一份以工站命名的副本
+            try
+            {
+                if (StationConfigs != null && StationConfigs.Count > 0 && !string.IsNullOrEmpty(SelectedStationName))
+                {
+                    string categoryName = GetCategoryFromPageName(SelectedReportPage.Name);
+                    if (!string.IsNullOrEmpty(categoryName))
+                    {
+                        var recipeDir = _commonbus.CurrentRecipe?.GetRecipePath();
+                        if (!string.IsNullOrEmpty(recipeDir))
+                        {
+                            var assDir = Path.Combine(recipeDir, "db", "Ass_Data");
+                            var srcFile = Path.Combine(assDir, $"AssTb{categoryName}_Latest.csv");
+                            var dstFile = Path.Combine(assDir, $"AssTb{categoryName}_{SelectedStationName}_Latest.csv");
+                            if (File.Exists(srcFile))
+                            {
+                                File.Copy(srcFile, dstFile, overwrite: true);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"保存工站CSV副本失败: {ex.Message}" });
+            }
         }
 
         protected void InitModels()
