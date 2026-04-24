@@ -338,16 +338,13 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             return new Dictionary<string, List<string>>
             {
                 { "MainParameters", new List<string> { "SwVersion" } },
-                { "Communications", new List<string> { "ConfigComputerNet", "ConfigSoftwareCom", "ConfigSoftwareNet" } },
-                { "IOConform", new List<string> { "Others" } },
+                { "Communications", new List<string> { "ConfigSoftwareCom", "ConfigSoftwareNet" } },
+                { "IOConform", new List<string> { "DigitalInSingle", "DigitalOutSingle" } },
                 { "Horizontal", new List<string> { "AutomaticPosAndLeveling" } },
                 { "LoadCell", new List<string> { "CalibrationTable", "SuctionNozzle", "PressureRepetition" } },
                 { "Embossing", new List<string> { "AutomaticEmbossing" } },
                 { "DigitalVision", new List<string> { "AutoFocusing", "AutoFieldOfView", "AutoGrayScale" } },
                 { "AutoVisualCalibration", new List<string> { "AutoVisualCalibration" } },
-                { "DataValidation", new List<string> { "CPKTest" } },
-                { "BUSOP", new List<string> { "Cylinder", "Vacuum" } },
-                { "LADUpload", new List<string>() },
             };
         }
 
@@ -359,7 +356,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             var multiStationPages = new HashSet<string>
             {
                 "Horizontal", "LoadCell", "Embossing", "DigitalVision",
-                "PointTeaching", "AutoVisualCalibration", "LADUpload"
+                "PointTeaching", "AutoVisualCalibration"
             };
             return multiStationPages.Contains(pageName);
         }
@@ -431,11 +428,11 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 // 特殊处理：PointTeaching 按轴维度读取
                 if (page.Name == "PointTeaching")
                 {
-                    var subPages = DigitalAssPageModel.GetSubPages("PointTeachingContent");
-                    foreach (var axisPage in subPages)
+                    var axisNames = LoadAxisNamesFromGodLineJson(assDir);
+                    foreach (var axisName in axisNames)
                     {
-                        var csvPath = Path.Combine(assDir, $"AssTbOriginLimit_{axisPage.Name}_Latest.csv");
-                        var axisDisplayName = GetLocalizedPageName(axisPage.Name);
+                        var csvPath = Path.Combine(assDir, $"AssTbOriginLimit_{axisName}_Latest.csv");
+                        var axisDisplayName = GetLocalizedPageName(axisName);
                         var rows = ReadCsvRows(csvPath, $"{displayName}-{axisDisplayName}");
                         allRows.AddRange(rows);
                     }
@@ -547,6 +544,38 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"读取工站配置失败[{pageName}]: {ex.Message}" });
             }
             return stationNames;
+        }
+
+        /// <summary>
+        /// 从 AxisPositions.json 读取所有轴名称，用于不依赖 PointTeachingContentVM 加载即可获取轴列表
+        /// </summary>
+        private List<string> LoadAxisNamesFromGodLineJson(string assDir)
+        {
+            var axisNames = new List<string>();
+            try
+            {
+                var godLineDir = Path.Combine(assDir, "Ass_GodLine");
+                var jsonPath = Path.Combine(godLineDir, "AxisPositions.json");
+                if (!File.Exists(jsonPath))
+                {
+                    // 兼容带前导空格的文件名
+                    jsonPath = Path.Combine(godLineDir, " AxisPositions.json");
+                    if (!File.Exists(jsonPath)) return axisNames;
+                }
+
+                var json = File.ReadAllText(jsonPath);
+                var jObj = Newtonsoft.Json.Linq.JObject.Parse(json);
+                foreach (var prop in jObj.Properties())
+                {
+                    if (!string.IsNullOrEmpty(prop.Name))
+                        axisNames.Add(prop.Name);
+                }
+            }
+            catch (Exception ex)
+            {
+                _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"读取轴配置失败: {ex.Message}" });
+            }
+            return axisNames;
         }
 
         /// <summary>

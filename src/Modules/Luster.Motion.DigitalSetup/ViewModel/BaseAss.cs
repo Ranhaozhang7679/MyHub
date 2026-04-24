@@ -1875,10 +1875,10 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     }
                 }), System.Windows.Threading.DispatcherPriority.Background);
             }
-        }
 
-        /// <summary>
-        /// 获取当前子页面的点检结果（基于 ItemModels）
+            // 一键点检完成后保存表格数据，触发工站CSV副本
+            SaveGridItems(ItemModels);
+        }
         /// </summary>
         /// <returns>当前子页面的点检状态</returns>
         protected virtual CheckStatus GetCurrentPageCheckStatus()
