@@ -153,7 +153,7 @@ namespace Luster.Module.Motion.Device.Functions
         public string OutFailReason { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("额定电流", 34, CN = "额定电流A", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
+        [Parameter("额定电流", 34, CN = "额定电流mA", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
         public double OutRatedCurrent { get; set; }
 
         #endregion
@@ -449,7 +449,7 @@ namespace Luster.Module.Motion.Device.Functions
 
                 // 6. 切换到力控模式（PDO读取状态，避免SDO拥堵）
                 int modeState = 0;
-                _axis.PDORead((short)_axis.AxisNo, 0x201A, 0, 2, ref modeState, 1);
+                _axis.SDORead(0x201A, 0, 2, out modeState, 3);
                 if ((modeState & 0x0F) != 1)
                 {
                     _axis.SDOWrite(0x2016, 0, 0, 2);
@@ -457,7 +457,7 @@ namespace Luster.Module.Motion.Device.Functions
                     while (switchElapsed < 3000)
                     {
                         Thread.Sleep(10);
-                        _axis.PDORead((short)_axis.AxisNo, 0x201A, 0, 2, ref modeState, 1);
+                        _axis.SDORead(0x201A, 0, 2, out modeState, 1);
                         if ((modeState & 0x0F) == 1) break;
                         switchElapsed += 10;
                     }
@@ -485,7 +485,7 @@ namespace Luster.Module.Motion.Device.Functions
                     if (_isBreak) return;
 
                     int state = 0;
-                    _axis.PDORead((short)_axis.AxisNo, 0x201A, 0, 2, ref state, 1);
+                    _axis.SDORead(0x201A, 0, 2, out state, 1);
                     Thread.Sleep(5);
                     int phase = state & 0x0F;
 
