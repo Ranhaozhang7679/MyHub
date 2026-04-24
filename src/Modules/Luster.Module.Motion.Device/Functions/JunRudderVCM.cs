@@ -444,8 +444,8 @@ namespace Luster.Module.Motion.Device.Functions
                 _axis.SDOWrite(0x2017, 0, torque, 2);
                 _axis.SDOWrite(0x2018, 0, torque, 2);
 
-                // 5. 确保CSP模式
-                Thread.Sleep(50);
+                // 5. 确保CSP模式（SDOWrite同步返回，驱动器已处理，短延时即可）
+                Thread.Sleep(10);
 
                 // 6. 切换到力控模式（PDO读取状态，避免SDO拥堵）
                 int modeState = 0;
@@ -469,7 +469,7 @@ namespace Luster.Module.Motion.Device.Functions
                     }
                 }
 
-                // 7. 触发力控
+                // 7. 触发力控（上升沿：先清零再置1）
                 _axis.SDOWrite(0x2016, 0, 0, 2);
                 Thread.Sleep(5);
                 _axis.SDOWrite(0x2016, 0, 1, 2);
@@ -486,7 +486,6 @@ namespace Luster.Module.Motion.Device.Functions
 
                     int state = 0;
                     _axis.SDORead(0x201A, 0, 2, out state, 1);
-                    Thread.Sleep(5);
                     int phase = state & 0x0F;
 
                     if (phase > 1) hadStarted = true;
@@ -495,7 +494,6 @@ namespace Luster.Module.Motion.Device.Functions
                     if (hadStarted)
                     {
                         pressureSamples.Add(ReadFeedbackPressure());
-                        Thread.Sleep(5);
                     }
 
                     if (hadStarted && phase == 1)
@@ -511,7 +509,7 @@ namespace Luster.Module.Motion.Device.Functions
                     }
 
                     Thread.Sleep(10);
-                    elapsed += 20;
+                    elapsed += 10;
                 }
 
                 // 超时
