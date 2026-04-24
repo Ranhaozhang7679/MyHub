@@ -3189,4 +3189,7 @@
   <data name="BUSOP" xml:space="preserve">
     <value>BUSOP</value>
   </data>
+  <data name="TaikeAnnotatedCurve" xml:space="preserve">
+    <value>PressureCurveStackedChart</value>
+  </data>
 </root>

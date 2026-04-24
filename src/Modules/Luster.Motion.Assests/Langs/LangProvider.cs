@@ -922,6 +922,7 @@ namespace Luster.Motion.Assests.Langs
 			OnPropertyChanged(nameof(SystemOperationTips));
 			OnPropertyChanged(nameof(TableCreate));
 			OnPropertyChanged(nameof(TableInsert));
+			OnPropertyChanged(nameof(TaikeAnnotatedCurve));
 			OnPropertyChanged(nameof(TaikeContent));
 			OnPropertyChanged(nameof(TaikeCurve));
 			OnPropertyChanged(nameof(TaiKeScrewDriver));
@@ -5465,6 +5466,11 @@ namespace Luster.Motion.Assests.Langs
         ///   查找类似 表格写入 的本地化字符串。
         /// </summary>
 		public string TableInsert => Lang.TableInsert;
+
+        /// <summary>
+        ///   查找类似 压力曲线堆叠图 的本地化字符串。
+        /// </summary>
+		public string TaikeAnnotatedCurve => Lang.TaikeAnnotatedCurve;
 
         /// <summary>
         ///   查找类似 泰科统计 的本地化字符串。
@@ -10604,6 +10610,11 @@ namespace Luster.Motion.Assests.Langs
         ///   查找类似 表格写入 的本地化字符串。
         /// </summary>
 		public static string TableInsert = nameof(TableInsert);
+
+        /// <summary>
+        ///   查找类似 压力曲线堆叠图 的本地化字符串。
+        /// </summary>
+		public static string TaikeAnnotatedCurve = nameof(TaikeAnnotatedCurve);
 
         /// <summary>
         ///   查找类似 泰科统计 的本地化字符串。
