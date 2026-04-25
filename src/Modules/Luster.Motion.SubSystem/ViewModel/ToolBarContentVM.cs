@@ -1250,7 +1250,7 @@ namespace Luster.Motion.SubSystem.ViewModel
                         break;
                     case DataStruct.Enums.SystemOperation.Stop:
                         //if (MStatus == EngineStatus.Alarm.GetDescription() || MStatus == EngineStatus.Pause.GetDescription())
-                        if (mController.MachineStatus == EngineStatus.Alarm || mController.MachineStatus == EngineStatus.Pause) 
+                        if (mController.MachineStatus == EngineStatus.Alarm || mController.MachineStatus == EngineStatus.Pause || mController.MachineStatus == EngineStatus.Ready) 
                         {
                             mController.Stop();
                             mController.CloseOperateIO(SystemOperation.Stop);
