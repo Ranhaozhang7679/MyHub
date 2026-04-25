@@ -6,6 +6,7 @@ using Luster.TaskFlow.Common.Models;
 using Luster.TaskFlow.Motion;
 using System;
 using System.IO;
+using System.Linq;
 using Python.Runtime;
 
 namespace Luster.Module.Motion.Logic.Functions
@@ -103,9 +104,10 @@ namespace Luster.Module.Motion.Logic.Functions
             if (_isInitialized) return;
 
             string pythonEnvPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "PythonEnv");
-            string pythonDllPath = Path.Combine(pythonEnvPath, "python310.dll"); 
+            string pythonDllPath = Directory.GetFiles(pythonEnvPath, "python3*.dll")
+                .FirstOrDefault(f => !Path.GetFileName(f).Equals("python3.dll", StringComparison.OrdinalIgnoreCase));
 
-            if (!File.Exists(pythonDllPath))
+            if (string.IsNullOrEmpty(pythonDllPath) || !File.Exists(pythonDllPath))
             {
                 // Fallback for debug/development purposes if python is installed in system paths
                 // Just let pythonnet find the default, or warn the user.
