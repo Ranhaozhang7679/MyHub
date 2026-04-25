@@ -403,7 +403,8 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
                                     .Where(u => u.AxisType != AxisType.None)
                                     .ToList();
 
-            SpeedPercent = AxisDatas.First().SpeedPercent * 100;
+            var firstAxis = AxisDatas.FirstOrDefault();
+            SpeedPercent = firstAxis != null ? firstAxis.SpeedPercent * 100 : 100;
             if (SpeedPercent > 150)
             {
                 SpeedPercent = 150;
