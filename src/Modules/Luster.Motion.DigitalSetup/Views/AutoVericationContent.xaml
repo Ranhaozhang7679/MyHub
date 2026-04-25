@@ -146,7 +146,7 @@
                     Margin="5" 
                     Grid.Row="0" 
                     HorizontalAlignment="Left" />
-                <!-- <local:CommonButton /> -->
+                 <local:CommonButton /> 
             </DockPanel>
 
             <!-- 分页控件区域 -->

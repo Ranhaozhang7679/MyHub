@@ -1,65 +1,49 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project>
-<!-- ================================================================
-     LM2026 统一构建管理系统
-     
-     功能概述:
-     1. 模块项目的 Devices 目录和 CardErrorCode 目录管理
-     2. Shell 项目的模块收集（所有依赖 DLL 收集到 Modules/ 目录）
-     3. 增量构建支持
-     
-     可用属性:
-     - IsShellProject=true           : 标记为 Shell 项目
-     - CopyToDevicesFolder=true      : 将 DLL 拷贝到 Devices 子目录
-     - CopyToMotionsFolder=true      : 将 DLL 拷贝到 Motions 子目录
-     - CopyErrorCodeFolder=true      : 拷贝 CardErrorCode 目录
-     - CustomContentFolders=A;B      : 自定义要拷贝的目录列表
-     ================================================================ -->
+  <!-- 1. 强制覆盖所有子项目中的多语言资源设定，防止各个 csproj 里乱配 -->
+  <PropertyGroup>
+    <SatelliteResourceLanguages>en;zh-CN;zh-Hans</SatelliteResourceLanguages>
+  </PropertyGroup>
 
-<!-- ================================================================
-     第一部分：模块项目的文件拷贝 Target
-     ================================================================ -->
+  <!-- 2. 最强硬的清理手段：在解析完引用后，即将复制之前，强行剔除所有的 .xml 甚至 .pdb 文件 -->
+  <Target Name="RemoveXmlAndPdbFilesFromCopyLocal" AfterTargets="ResolveReferences">
+    <ItemGroup>
+      <!-- 把所有扩展名为 .xml 的拷贝项剔除 -->
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="'%(Extension)' == '.xml'" />
+      
+      <!-- 如果你在 Release 模式下连 PDB 文件都不想要，可以取消下面这两行的注释 -->
+      <!--
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" Condition="'%(Extension)' == '.pdb' And '$(Configuration)' == 'Release'" />
+      -->
+    </ItemGroup>
+  </Target>
 
-<!-- 1.1 拷贝 DLL 到 Devices 子目录 -->
-<Target Name="CopyDllToDevicesFolder" 
-        AfterTargets="Build" 
-        Condition="'$(CopyToDevicesFolder)' == 'true'">
-    <Message Text="[Devices] 复制 $(TargetFileName) 到 Devices 目录..." Importance="high" />
-    <MakeDir Directories="$(OutDir)Devices" Condition="!Exists('$(OutDir)Devices')" />
-    <Copy SourceFiles="$(TargetPath)" 
-          DestinationFiles="$(OutDir)Devices\$(TargetFileName)" 
-          SkipUnchangedFiles="true" />
+  <Target Name="CopyProjectAssets" AfterTargets="Build">
+    <Copy SourceFiles="$(TargetPath)"
+          DestinationFolder="$(OutputPath)Devices"
+          SkipUnchangedFiles="true"
+          Condition="'$(CopyToDevicesFolder)' == 'true'" />
+
+    <Copy SourceFiles="$(TargetPath)"
+          DestinationFolder="$(OutputPath)Motions"
+          SkipUnchangedFiles="true"
+          Condition="'$(CopyToMotionsFolder)' == 'true'" />
 </Target>
 
-<!-- 1.1 拷贝 DLL 到 Motions 子目录 -->
-<Target Name="CopyDllToMotionsFolder" 
-        AfterTargets="Build" 
-        Condition="'$(CopyToMotionsFolder)' == 'true'">
-    <Message Text="[Motions] 复制 $(TargetFileName) 到 Motions 目录..." Importance="high" />
-    <MakeDir Directories="$(OutDir)Motions" Condition="!Exists('$(OutDir)Motions')" />
-    <Copy SourceFiles="$(TargetPath)" 
-          DestinationFiles="$(OutDir)Motions\$(TargetFileName)" 
-          SkipUnchangedFiles="true" />
-</Target>
-
-<!-- 1.2 拷贝 CardErrorCode 目录 -->
 <Target Name="CopyErrorCodeFolder" 
         AfterTargets="Build" 
         Condition="'$(CopyErrorCodeFolder)' == 'true' AND Exists('$(MSBuildProjectDirectory)\CardErrorCode')">
-    <Message Text="[ErrorCode] 复制 CardErrorCode 目录..." Importance="high" />
     <ItemGroup>
         <ErrorCodeFiles Include="$(MSBuildProjectDirectory)\CardErrorCode\**\*" />
     </ItemGroup>
     <Copy SourceFiles="@(ErrorCodeFiles)" 
-          DestinationFolder="$(OutDir)CardErrorCode\%(RecursiveDir)" 
+          DestinationFolder="$(OutputPath)CardErrorCode\%(RecursiveDir)" 
           SkipUnchangedFiles="true" />
 </Target>
 
-<!-- 1.3 拷贝自定义目录列表 -->
 <Target Name="CopyCustomFolders" 
         AfterTargets="Build" 
         Condition="'$(CustomContentFolders)' != ''">
-    <Message Text="[CustomFolders] 复制自定义目录: $(CustomContentFolders)" Importance="high" />
     <ItemGroup>
         <CustomFoldersToCopy Include="$(CustomContentFolders)" />
     </ItemGroup>
@@ -69,275 +53,26 @@
 </Target>
 
 <Target Name="CopyOneFolderInternal" Condition="Exists('$(MSBuildProjectDirectory)\$(FolderToCopy)')">
-    <Message Text="  → 复制目录: $(FolderToCopy)" Importance="normal" />
     <ItemGroup>
         <FolderFiles Include="$(MSBuildProjectDirectory)\$(FolderToCopy)\**\*" />
     </ItemGroup>
     <Copy SourceFiles="@(FolderFiles)" 
-          DestinationFolder="$(OutDir)$(FolderToCopy)\%(RecursiveDir)" 
+          DestinationFolder="$(OutputPath)$(FolderToCopy)\%(RecursiveDir)" 
           SkipUnchangedFiles="true" />
 </Target>
 
-<!-- 1.4 传递 CardErrorCode 到依赖项目 -->
-<ItemGroup Condition="'$(CopyErrorCodeFolder)' == 'true' AND Exists('$(MSBuildProjectDirectory)\CardErrorCode')">
-    <Content Include="$(MSBuildProjectDirectory)\CardErrorCode\**\*">
-        <Link>CardErrorCode\%(RecursiveDir)%(Filename)%(Extension)</Link>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-</ItemGroup>
-
-<!-- ================================================================
-     第二部分：Shell 项目特殊处理
-     ================================================================ -->
-
-<!-- 2.1 Shell 构建后清理根目录中的模块 DLL（已禁用 - 还原扁平目录结构） -->
-<Target Name="CleanRootModuleDlls" 
-        AfterTargets="CollectModulesToModulesFolder"
-        Condition="false">
-    
-    <Message Text="  → 清理根目录中的模块 DLL...（已禁用）" Importance="high" />
-    
-    <!-- 收集根目录中除 Shell 本身之外的所有 DLL -->
-    <ItemGroup>
-        <RootDlls Include="$(OutDir)*.dll" Exclude="$(OutDir)$(TargetName).dll" />
-        <RootXmls Include="$(OutDir)*.xml" Exclude="$(OutDir)$(TargetName).xml" />
-    </ItemGroup>
-    
-    <!-- 删除这些文件（因为它们已经在 Modules/ 中了） -->
-    <Delete Files="@(RootDlls)" />
-    <Delete Files="@(RootXmls)" />
-    
-    <!-- 删除根目录中的 Devices、Motions 和 CardErrorCode（已经在 Modules 中了） -->
-    <RemoveDir Directories="$(OutDir)Devices" Condition="Exists('$(OutDir)Devices') AND Exists('$(OutDir)$(ModulesOutputFolder)\Devices')" />
-    <RemoveDir Directories="$(OutDir)Motions" Condition="Exists('$(OutDir)Motions') AND Exists('$(OutDir)$(ModulesOutputFolder)\Motions')" />
-    <RemoveDir Directories="$(OutDir)CardErrorCode" Condition="Exists('$(OutDir)CardErrorCode') AND Exists('$(OutDir)$(ModulesOutputFolder)\CardErrorCode')" />
-    
-    <Message Text="  → 根目录清理完成" Importance="high" />
-</Target>
-
-<!-- 2.2 Shell 构建后收集 Devices/Motions/CardErrorCode 到根目录（扁平结构） -->
-<Target Name="CollectModulesToModulesFolder" 
+<Target Name="CollectPluginAssets"
         AfterTargets="Build"
-        DependsOnTargets="ResolveProjectReferences"
         Condition="'$(IsShellProject)' == 'true'">
-    
-    <Message Text="" Importance="high" />
-    <Message Text="╔══════════════════════════════════════════════════════════════╗" Importance="high" />
-    <Message Text="║  [Shell] 收集 Devices/Motions/CardErrorCode 到根目录        ║" Importance="high" />
-    <Message Text="╚══════════════════════════════════════════════════════════════╝" Importance="high" />
-    
-    <!-- 收集所有引用项目的输出目录 -->
     <ItemGroup>
-        <ReferencedProjectOutputDirs Include="@(_ResolvedProjectReferencePaths->'%(RootDir)%(Directory)')" />
+        <DeviceDlls Include="$(OutputPath)Devices\*.dll" />
+        <MotionDlls Include="$(OutputPath)Motions\*.dll" />
     </ItemGroup>
-    
-    <!-- 收集 Devices 子目录到根目录 -->
-    <ItemGroup>
-        <DevicesFiles Include="%(ReferencedProjectOutputDirs.Identity)Devices\*.*" />
-    </ItemGroup>
-    <Message Text="  → 收集到 @(DevicesFiles->Count()) 个 Devices 文件" 
-             Importance="high" 
-             Condition="'@(DevicesFiles)' != ''" />
-    <MakeDir Directories="$(OutDir)Devices" 
-             Condition="'@(DevicesFiles)' != '' AND !Exists('$(OutDir)Devices')" />
-    <Copy SourceFiles="@(DevicesFiles)" 
-          DestinationFolder="$(OutDir)Devices" 
-          SkipUnchangedFiles="true"
-          Condition="'@(DevicesFiles)' != ''" />
-    
-    <!-- 收集 CardErrorCode 子目录到根目录 -->
-    <ItemGroup>
-        <ErrorCodeFilesFromRefs Include="%(ReferencedProjectOutputDirs.Identity)CardErrorCode\**\*.*" />
-    </ItemGroup>
-    <Message Text="  → 收集到 @(ErrorCodeFilesFromRefs->Count()) 个 CardErrorCode 文件" 
-             Importance="high" 
-             Condition="'@(ErrorCodeFilesFromRefs)' != ''" />
-    <MakeDir Directories="$(OutDir)CardErrorCode" 
-             Condition="'@(ErrorCodeFilesFromRefs)' != '' AND !Exists('$(OutDir)CardErrorCode')" />
-    <Copy SourceFiles="@(ErrorCodeFilesFromRefs)" 
-          DestinationFolder="$(OutDir)CardErrorCode\%(RecursiveDir)" 
-          SkipUnchangedFiles="true"
-          Condition="'@(ErrorCodeFilesFromRefs)' != ''" />
-    
-    <!-- 收集 Motions 子目录到根目录 -->
-    <ItemGroup>
-        <MotionsFilesFromRefs Include="%(ReferencedProjectOutputDirs.Identity)Motions\*.*" />
-    </ItemGroup>
-    <Message Text="  → 收集到 @(MotionsFilesFromRefs->Count()) 个 Motions 文件" 
-             Importance="high" 
-             Condition="'@(MotionsFilesFromRefs)' != ''" />
-    <MakeDir Directories="$(OutDir)Motions" 
-             Condition="'@(MotionsFilesFromRefs)' != '' AND !Exists('$(OutDir)Motions')" />
-    <Copy SourceFiles="@(MotionsFilesFromRefs)" 
-          DestinationFolder="$(OutDir)Motions" 
-          SkipUnchangedFiles="true"
-          Condition="'@(MotionsFilesFromRefs)' != ''" />
-    
-    <!-- 收集本地化目录 (如 zh-Hans) 到根目录 -->
-    <ItemGroup>
-        <LocalizationFiles Include="%(ReferencedProjectOutputDirs.Identity)zh-Hans\**\*.*" />
-    </ItemGroup>
-    <MakeDir Directories="$(OutDir)zh-Hans" 
-             Condition="'@(LocalizationFiles)' != '' AND !Exists('$(OutDir)zh-Hans')" />
-    <Copy SourceFiles="@(LocalizationFiles)" 
-          DestinationFolder="$(OutDir)zh-Hans\%(RecursiveDir)" 
-          SkipUnchangedFiles="true"
-          Condition="'@(LocalizationFiles)' != ''" />
-          
-    <Message Text="╔══════════════════════════════════════════════════════════════╗" Importance="high" />
-    <Message Text="║  [Shell] 收集完成！                                          ║" Importance="high" />
-    <Message Text="╚══════════════════════════════════════════════════════════════╝" Importance="high" />
-</Target>
-
-<!-- 2.4 从 artifacts 目录扫描所有项目的 Devices 子目录（支持插件模块，无需项目引用） -->
-<Target Name="CollectDevicesFromArtifacts" 
-        AfterTargets="CollectModulesToModulesFolder"
-        Condition="'$(IsShellProject)' == 'true'">
-    
-    <PropertyGroup>
-        <ArtifactsBinDir>$(MSBuildThisFileDirectory)artifacts\bin\</ArtifactsBinDir>
-    </PropertyGroup>
-    
-    <Message Text="" Importance="high" />
-    <Message Text="[Artifacts] 扫描 artifacts 目录中的 Devices 文件..." Importance="high" />
-    
-    <!-- 扫描所有项目输出目录下的 Devices 子目录 -->
-    <ItemGroup>
-        <AllDevicesFiles Include="$(ArtifactsBinDir)**\$(Configuration)\$(TargetFramework)\Devices\*.*" />
-    </ItemGroup>
-    
-    <Message Text="  → 发现 @(AllDevicesFiles->Count()) 个 Devices 文件" Importance="high" />
-    
-    <!-- 创建目标目录并复制到根目录 -->
-    <MakeDir Directories="$(OutDir)Devices" 
-             Condition="'@(AllDevicesFiles)' != '' AND !Exists('$(OutDir)Devices')" />
-    <Copy SourceFiles="@(AllDevicesFiles)" 
-          DestinationFolder="$(OutDir)Devices" 
-          SkipUnchangedFiles="true"
-          Condition="'@(AllDevicesFiles)' != ''" />
-    
-    <Message Text="  → Devices 收集完成" Importance="high" Condition="'@(AllDevicesFiles)' != ''" />
-</Target>
-
-<!-- 2.5 从 artifacts 目录扫描所有项目的 Motions 子目录（支持插件模块，无需项目引用） -->
-<Target Name="CollectMotionsFromArtifacts" 
-        AfterTargets="CollectDevicesFromArtifacts"
-        Condition="'$(IsShellProject)' == 'true'">
-    
-    <PropertyGroup>
-        <ArtifactsBinDir>$(MSBuildThisFileDirectory)artifacts\bin\</ArtifactsBinDir>
-    </PropertyGroup>
-    
-    <Message Text="[Artifacts] 扫描 artifacts 目录中的 Motions 文件..." Importance="high" />
-    
-    <!-- 扫描所有项目输出目录下的 Motions 子目录 -->
-    <ItemGroup>
-        <AllMotionsFiles Include="$(ArtifactsBinDir)**\$(Configuration)\$(TargetFramework)\Motions\*.*" />
-    </ItemGroup>
-    
-    <Message Text="  → 发现 @(AllMotionsFiles->Count()) 个 Motions 文件" Importance="high" />
-    
-    <!-- 创建目标目录并复制到根目录 -->
-    <MakeDir Directories="$(OutDir)Motions" 
-             Condition="'@(AllMotionsFiles)' != '' AND !Exists('$(OutDir)Motions')" />
-    <Copy SourceFiles="@(AllMotionsFiles)" 
-          DestinationFolder="$(OutDir)Motions" 
-          SkipUnchangedFiles="true"
-          Condition="'@(AllMotionsFiles)' != ''" />
-    
-    <Message Text="  → Motions 收集完成" Importance="high" Condition="'@(AllMotionsFiles)' != ''" />
-</Target>
-
-<!-- 2.6 从 artifacts 目录扫描所有项目的 CardErrorCode 子目录（支持插件模块，无需项目引用） -->
-<Target Name="CollectCardErrorCodeFromArtifacts" 
-        AfterTargets="CollectMotionsFromArtifacts"
-        Condition="'$(IsShellProject)' == 'true'">
-    
-    <PropertyGroup>
-        <ArtifactsBinDir>$(MSBuildThisFileDirectory)artifacts\bin\</ArtifactsBinDir>
-    </PropertyGroup>
-    
-    <Message Text="[Artifacts] 扫描 artifacts 目录中的 CardErrorCode 文件..." Importance="high" />
-    
-    <!-- 扫描所有项目输出目录下的 CardErrorCode 子目录中的文件 -->
-    <ItemGroup>
-        <AllCardErrorCodeFiles Include="$(ArtifactsBinDir)*\$(Configuration)\$(TargetFramework)\CardErrorCode\*.*" />
-    </ItemGroup>
-    
-    <Message Text="  → 发现 @(AllCardErrorCodeFiles->Count()) 个 CardErrorCode 文件" Importance="high" />
-    
-    <!-- 创建目标目录并复制到根目录 -->
-    <MakeDir Directories="$(OutDir)CardErrorCode" 
-             Condition="'@(AllCardErrorCodeFiles)' != '' AND !Exists('$(OutDir)CardErrorCode')" />
-    <Copy SourceFiles="@(AllCardErrorCodeFiles)" 
-          DestinationFolder="$(OutDir)CardErrorCode" 
-          SkipUnchangedFiles="true"
-          Condition="'@(AllCardErrorCodeFiles)' != ''" />
-    
-    <Message Text="  → CardErrorCode 收集完成" Importance="high" Condition="'@(AllCardErrorCodeFiles)' != ''" />
-</Target>
-
-<!-- 2.3 快速收集模块（不触发完整构建） -->
-<Target Name="QuickCollectModules" 
-        DependsOnTargets="ResolveProjectReferences"
-        Condition="'$(IsShellProject)' == 'true'">
-    
-    <PropertyGroup>
-        <ModulesTargetDir>$(OutDir)$(ModulesOutputFolder)\</ModulesTargetDir>
-    </PropertyGroup>
-    
-    <Message Text="[QuickCollect] 快速收集模块..." Importance="high" />
-    <MakeDir Directories="$(ModulesTargetDir)" Condition="!Exists('$(ModulesTargetDir)')" />
-    
-    <ItemGroup>
-        <ReferencedProjectOutputDirs Include="@(_ResolvedProjectReferencePaths->'%(RootDir)%(Directory)')" />
-    </ItemGroup>
-    
-    <ItemGroup>
-        <ModuleFiles Include="%(ReferencedProjectOutputDirs.Identity)*.dll" />
-        <ModuleFiles Include="%(ReferencedProjectOutputDirs.Identity)*.xml" />
-        <DevicesFiles Include="%(ReferencedProjectOutputDirs.Identity)Devices\*.*" />
-        <MotionsFilesFromRefs Include="%(ReferencedProjectOutputDirs.Identity)Motions\*.*" />
-        <ErrorCodeFilesFromRefs Include="%(ReferencedProjectOutputDirs.Identity)CardErrorCode\**\*.*" />
-    </ItemGroup>
-    
-    <Copy SourceFiles="@(ModuleFiles)" DestinationFolder="$(ModulesTargetDir)" SkipUnchangedFiles="true" />
-    
-    <MakeDir Directories="$(ModulesTargetDir)Devices" Condition="'@(DevicesFiles)' != '' AND !Exists('$(ModulesTargetDir)Devices')" />
-    <Copy SourceFiles="@(DevicesFiles)" DestinationFolder="$(ModulesTargetDir)Devices" SkipUnchangedFiles="true" Condition="'@(DevicesFiles)' != ''" />
-    
-    <MakeDir Directories="$(ModulesTargetDir)Motions" Condition="'@(MotionsFilesFromRefs)' != '' AND !Exists('$(ModulesTargetDir)Motions')" />
-    <Copy SourceFiles="@(MotionsFilesFromRefs)" DestinationFolder="$(ModulesTargetDir)Motions" SkipUnchangedFiles="true" Condition="'@(MotionsFilesFromRefs)' != ''" />
-    
-    <MakeDir Directories="$(ModulesTargetDir)CardErrorCode" Condition="'@(ErrorCodeFilesFromRefs)' != '' AND !Exists('$(ModulesTargetDir)CardErrorCode')" />
-    <Copy SourceFiles="@(ErrorCodeFilesFromRefs)" DestinationFolder="$(ModulesTargetDir)CardErrorCode\%(RecursiveDir)" SkipUnchangedFiles="true" Condition="'@(ErrorCodeFilesFromRefs)' != ''" />
-    
-    <Message Text="[QuickCollect] 完成" Importance="high" />
-</Target>
-
-<!-- ================================================================
-     第三部分：非 Shell 项目从引用收集 Devices 目录
-     ================================================================ -->
-<Target Name="CollectDevicesFromReferences" 
-        AfterTargets="Build"
-        DependsOnTargets="ResolveProjectReferences"
-        Condition="'$(IsShellProject)' != 'true'">
-    
-    <ItemGroup>
-        <ReferencedProjectOutputDirs Include="@(_ResolvedProjectReferencePaths->'%(RootDir)%(Directory)')" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <DevicesFilesFromRefs Include="%(ReferencedProjectOutputDirs.Identity)Devices\*.*" />
-    </ItemGroup>
-
-    <MakeDir Directories="$(OutDir)Devices" 
-             Condition="'@(DevicesFilesFromRefs)' != '' AND !Exists('$(OutDir)Devices')" />
-    
-    <Copy SourceFiles="@(DevicesFilesFromRefs)" 
-          DestinationFolder="$(OutDir)Devices" 
-          SkipUnchangedFiles="true"
-          Condition="'@(DevicesFilesFromRefs)' != ''" />
+    <Delete Files="@(DeviceDlls->'$(OutputPath)%(Filename)%(Extension)')"
+            Condition="Exists('$(OutputPath)%(Filename)%(Extension)')" />
+    <Delete Files="@(MotionDlls->'$(OutputPath)%(Filename)%(Extension)')"
+            Condition="Exists('$(OutputPath)%(Filename)%(Extension)')" />
+    <Message Text="[Shell] 自动汇总完成，所有组件已在 $(OutputPath) 中就绪。" Importance="high" />
 </Target>
 
 </Project>
