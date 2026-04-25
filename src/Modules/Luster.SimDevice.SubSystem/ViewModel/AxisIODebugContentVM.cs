@@ -87,6 +87,16 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
         }
 
         /// <summary>
+        /// 当前模组气缸列表
+        /// </summary>
+        private ObservableCollection<CylinderModel> _cylinderList;
+        public ObservableCollection<CylinderModel> CylinderList
+        {
+            get { return _cylinderList; }
+            set { SetProperty(ref _cylinderList, value); }
+        }
+
+        /// <summary>
         /// 速度
         /// </summary>
         private double _speedPercent;
@@ -135,6 +145,12 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
         }
 
         private string _currentModule;
+
+        /// <summary>
+        /// 记录每个模组的点位排序（key=模组名, value=点位名称有序列表）
+        /// 使用 static 以在导航重建视图时保持排序
+        /// </summary>
+        private static readonly Dictionary<string, List<string>> _modulePosOrder = new();
 
         /// <summary>
         /// 优先级
@@ -248,6 +264,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
 
             AxisDatas = new List<VAxis>();
             SubAxisList = new ObservableCollection<AxisModel>();
+            CylinderList = new ObservableCollection<CylinderModel>();
             Priorities = typeof(Priority).EnumToDataSource();
 
             IoInList = new List<VIO>();
@@ -267,6 +284,81 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
             LoadDevices();
         }
 
+        /// <summary>
+        /// 保存当前模组的点位排序
+        /// </summary>
+        public void SavePosOrder()
+        {
+            if (string.IsNullOrEmpty(_currentModule) || PosGroups == null || PosGroups.Count == 0) return;
+            _modulePosOrder[_currentModule] = PosGroups.Select(p => p.Name).ToList();
+        }
+
+        /// <summary>
+        /// PosGroups 集合变更时同步排序到 PosGroupsAll 和引擎
+        /// </summary>
+        private void PosGroups_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(_currentModule) || PosGroups == null || PosGroups.Count == 0) return;
+
+            // DragDropRowBehavior 使用 Remove + Insert 两次操作
+            // 只在 Insert/Add/Replace 时记录完整排序，避免 Remove 时记录不完整的列表
+            if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Remove)
+                return;
+
+            // 记录排序
+            _modulePosOrder[_currentModule] = PosGroups.Select(p => p.Name).ToList();
+
+            // 同步到 PosGroupsAll（重建当前模组部分）
+            PosGroupsAll.RemoveAll(u => u.Module == _currentModule);
+            PosGroupsAll.AddRange(PosGroups);
+
+            // 同步排序到引擎数据源（跨重启持久化）
+            SyncOrderToEngine();
+
+            // 标记引擎需要保存
+            deviceEngine.IsNeedSave = true;
+        }
+
+        /// <summary>
+        /// 将当前模组的点位排序同步到 deviceEngine.PosGroup
+        /// </summary>
+        private void SyncOrderToEngine()
+        {
+            if (string.IsNullOrEmpty(_currentModule) || PosGroups == null || PosGroups.Count == 0) return;
+
+            var engineList = deviceEngine.PosGroup;
+            // 先收集非当前模组的项
+            var otherItems = engineList.Where(g => g.Module != _currentModule).ToList();
+            // 当前模组按 PosGroups 的顺序提取 Tag
+            var currentItems = PosGroups.Select(p => p.Tag).ToList();
+            // 重新组合并赋值
+            engineList.Clear();
+            engineList.AddRange(otherItems);
+            engineList.AddRange(currentItems);
+        }
+
+        /// <summary>
+        /// 按记录的排序重排点位列表，未记录的保持原顺序追加到末尾
+        /// </summary>
+        private IEnumerable<PosGroupModel> ApplyPosOrder(List<PosGroupModel> items)
+        {
+            if (string.IsNullOrEmpty(_currentModule) || !_modulePosOrder.TryGetValue(_currentModule, out var order) || order.Count == 0)
+                return items;
+
+            var ordered = new List<PosGroupModel>();
+            var itemDict = items.ToDictionary(p => p.Name);
+            foreach (var name in order)
+            {
+                if (itemDict.TryGetValue(name, out var model))
+                {
+                    ordered.Add(model);
+                    itemDict.Remove(name);
+                }
+            }
+            ordered.AddRange(itemDict.Values);
+            return ordered;
+        }
+
         private void UpdatePosGruops()
         {
             PosGroupsAll.Clear();
@@ -280,7 +372,8 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
             if (!string.IsNullOrEmpty(_currentModule))
             {
                 PosGroups?.Clear();
-                PosGroups = new ObservableCollection<PosGroupModel>(PosGroupsAll.Where(u => u.Module == _currentModule));
+                var items = PosGroupsAll.Where(u => u.Module == _currentModule).ToList();
+                PosGroups = new ObservableCollection<PosGroupModel>(ApplyPosOrder(items));
             }
         }
 
@@ -347,12 +440,14 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
             PosGroups?.Clear();
             SubAxisList?.Clear();
 
-            PosGroups = new ObservableCollection<PosGroupModel>(PosGroupsAll.Where(u => u.Module == _currentModule));
+            PosGroups = new ObservableCollection<PosGroupModel>(ApplyPosOrder(PosGroupsAll.Where(u => u.Module == _currentModule).ToList()));
+            PosGroups.CollectionChanged += PosGroups_CollectionChanged;
             foreach (var item in AxisDatas.Where(u => u.Module == _currentModule).ToList())
             {
                 AddSubItem(item, double.NaN);
             }
 
+            LoadCylinderList(_currentModule);
             LoadDatas(_currentModule);
         }));
 
@@ -815,6 +910,39 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
                 }
             });
         }
+
+        /// <summary>
+        /// 加载当前模组的气缸列表
+        /// </summary>
+        private void LoadCylinderList(string module)
+        {
+            CylinderList?.Clear();
+            if (string.IsNullOrEmpty(module)) return;
+
+            var devices = deviceEngine.GetDevices(typeof(VCylinder));
+            CylinderList = new ObservableCollection<CylinderModel>(
+                devices.OfType<VCylinder>()
+                       .Where(c => c.Module == module)
+                       .Select(c => new CylinderModel(c)));
+        }
+
+        /// <summary>
+        /// 气缸伸出
+        /// </summary>
+        private DelegateCommand<CylinderModel> _cylinderExtendCommand;
+        public DelegateCommand<CylinderModel> CylinderExtendCommand => _cylinderExtendCommand ?? (_cylinderExtendCommand = new DelegateCommand<CylinderModel>((cylinder) =>
+        {
+            cylinder.Tag.Extend();
+        }));
+
+        /// <summary>
+        /// 气缸缩回
+        /// </summary>
+        private DelegateCommand<CylinderModel> _cylinderRetractCommand;
+        public DelegateCommand<CylinderModel> CylinderRetractCommand => _cylinderRetractCommand ?? (_cylinderRetractCommand = new DelegateCommand<CylinderModel>((cylinder) =>
+        {
+            cylinder.Tag.Retract();
+        }));
 
         /// <summary>
         /// 加载IO和DO数据
