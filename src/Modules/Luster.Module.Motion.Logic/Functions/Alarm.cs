@@ -666,9 +666,18 @@ namespace Luster.Module.Motion.Logic.Functions
         /// </summary>
         private void UpdateReadOnlyState()
         {
-            bool isEditable = AlarmType == AlarmType.InfoTip ||
-                              AlarmType == AlarmType.RetryAlarm ||
-                              AlarmType == AlarmType.ManuOperationAlarm;
+            // 优先从 ParameterAttribute.Value 获取 AlarmType，
+            // 因为 XML 加载时自动属性尚未同步，仍为默认值 InfoTip
+            AlarmType currentType = this.AlarmType;
+            if (MyOwner?.Parameters.TryGetValue(nameof(AlarmType), out var pType) == true
+                && pType.Value is AlarmType at)
+            {
+                currentType = at;
+            }
+
+            bool isEditable = currentType == AlarmType.InfoTip ||
+                              currentType == AlarmType.RetryAlarm ||
+                              currentType == AlarmType.ManuOperationAlarm;
 
             if (MyOwner != null)
             {
