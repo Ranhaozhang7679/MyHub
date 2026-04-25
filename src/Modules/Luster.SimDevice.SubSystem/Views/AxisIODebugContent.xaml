@@ -219,7 +219,7 @@
 
     <Grid Margin="5">
         <Grid.RowDefinitions>
-            <RowDefinition Height="310" />
+            <RowDefinition Height="340" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
@@ -414,7 +414,16 @@
                                                 Style="{StaticResource ComboBoxBaseStyle}" />
                                         </Grid>
 
+                                        <TextBlock
+                                            Margin="5,0,0,2"
+                                            FontSize="10"
+                                            Foreground="Red"
+                                            Text="*步进距离最大不能超过±5mm" />
                                         <Grid Margin="5,0,0,10">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition />
+                                                <RowDefinition />
+                                            </Grid.RowDefinitions>
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="*" />
@@ -423,14 +432,8 @@
                                                 VerticalAlignment="Center"
                                                 FontSize="14"
                                                 Text="{lang:Lang Key={x:Static lang:LangKeys.Diatance}}" />
-                                            <hc:NumericUpDown
-                                                Grid.Column="1"
-                                                DecimalPlaces="3"
-                                                Value="{Binding DstPostion}" />
-                                        </Grid>
-
-                                        <hc:ButtonGroup>
-                                            <RepeatButton Command="{Binding MoveRelCommandAdd}"
+                                            <RepeatButton Grid.Column="1"
+                                                Command="{Binding MoveRelCommandAdd}"
                                                 CommandParameter="1"
                                                 Delay="500"
                                                 Interval="200"
@@ -438,17 +441,17 @@
                                                 BorderThickness="0">
                                                 <Grid>
                                                     <Border
-                                                        BorderBrush="#CCCCCC" 
-                                                        BorderThickness="1" 
-                                                        CornerRadius="4,0,0,4" 
+                                                        BorderBrush="#CCCCCC"
+                                                        BorderThickness="1"
+                                                        CornerRadius="4,0,0,4"
                                                         Width="100"
                                                         Height="30"/>
-                                                    <Path 
-                                                        Fill="#333333" 
-                                                        Stretch="Uniform" 
+                                                    <Path
+                                                        Fill="#333333"
+                                                        Stretch="Uniform"
                                                         Width="10"
                                                         Height="12"
-                                                        HorizontalAlignment="Center" 
+                                                        HorizontalAlignment="Center"
                                                         VerticalAlignment="Center">
                                                         <Path.Data>
                                                             <MultiBinding Converter="{StaticResource AxisMoveDirectionIconConverter}">
@@ -459,25 +462,31 @@
                                                     </Path>
                                                 </Grid>
                                             </RepeatButton>
-                                            <RepeatButton Command="{Binding MoveRelCommandSub}"
+                                            <hc:NumericUpDown Grid.Row="1"
+                                                DecimalPlaces="3"
+                                                Minimum="-5"
+                                                Maximum="5"
+                                                Value="{Binding DstPostion}" />
+                                            <RepeatButton Grid.Row="1" Grid.Column="1"
+                                                Command="{Binding MoveRelCommandSub}"
                                                 CommandParameter="-1"
                                                 Delay="500"
                                                 Interval="200"
                                                 Background="Transparent"
                                                 BorderThickness="0">
                                                 <Grid>
-                                                    <Border 
-                                                        BorderBrush="#CCCCCC" 
-                                                        BorderThickness="1" 
-                                                        CornerRadius="0,4,4,0" 
+                                                    <Border
+                                                        BorderBrush="#CCCCCC"
+                                                        BorderThickness="1"
+                                                        CornerRadius="0,4,4,0"
                                                         Width="100"
                                                         Height="30"/>
-                                                    <Path 
-                                                        Fill="#333333" 
-                                                        Stretch="Uniform" 
+                                                    <Path
+                                                        Fill="#333333"
+                                                        Stretch="Uniform"
                                                         Width="10"
                                                         Height="12"
-                                                        HorizontalAlignment="Center" 
+                                                        HorizontalAlignment="Center"
                                                         VerticalAlignment="Center">
                                                         <Path.Data>
                                                             <MultiBinding Converter="{StaticResource AxisMoveDirectionIconConverter}">
@@ -488,28 +497,40 @@
                                                     </Path>
                                                 </Grid>
                                             </RepeatButton>
-                                        </hc:ButtonGroup>
+                                        </Grid>
 
-                                        <hc:ButtonGroup Margin="0,5,0,0">
+                                        <UniformGrid Margin="0,0,0,0" Columns="3" Rows="2">
                                             <Button
+                                                HorizontalAlignment="Stretch"
                                                 Command="{Binding HomeCommand}"
                                                 CommandParameter="{Binding .}"
                                                 Content="{lang:Lang Key={x:Static lang:LangKeys.HomeZero}}"
                                                 IsEnabled="{Binding ShowHome}" />
                                             <Button
+                                                HorizontalAlignment="Stretch"
                                                 Command="{Binding StopCommand}"
                                                 CommandParameter="{Binding .}"
                                                 Content="{lang:Lang Key={x:Static lang:LangKeys.Stop}}" />
                                             <Button
+                                                HorizontalAlignment="Stretch"
+                                                Command="{Binding JogCommandAdd}"
+                                                Content="+Jog" />
+                                            <Button
+                                                HorizontalAlignment="Stretch"
                                                 Command="{Binding ClearErrorCommand}"
                                                 CommandParameter="{Binding .}"
                                                 Content="{lang:Lang Key={x:Static lang:LangKeys.ClearError}}" />
                                             <Button
+                                                HorizontalAlignment="Stretch"
                                                 Command="{Binding RelativeSource={RelativeSource AncestorType=ScrollViewer}, Path=DataContext.TeachCommand}"
                                                 CommandParameter="{Binding .}"
                                                 Content="{lang:Lang Key={x:Static lang:LangKeys.Teach}}"
                                                 Foreground="{StaticResource DangerBrush}" />
-                                        </hc:ButtonGroup>
+                                            <Button
+                                                HorizontalAlignment="Stretch"
+                                                Command="{Binding JogCommandSub}"
+                                                Content="-Jog" />
+                                        </UniformGrid>
                                     </StackPanel>
                                 </Border>
                             </DataTemplate>
@@ -556,39 +577,59 @@
         <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="1.2*" />
+                <ColumnDefinition Width="auto" />
                 <ColumnDefinition Width="1*" />
             </Grid.ColumnDefinitions>
-            <DataGrid
-                Grid.Column="0"
-                Padding="0"
-                EnableRowVirtualization="False"
-                hc:DataGridAttach.ShowRowNumber="False"
-                hc:DataGridAttach.ShowSelectAllButton="False"
-                AlternationCount="{Binding PosGroups.Count}"
-                AutoGenerateColumns="False"
-                ColumnHeaderStyle="{StaticResource CustomDataGridColumnHeaderStyle}"
-                HeadersVisibility="Column"
-                IsReadOnly="False"
-                ItemsSource="{Binding PosGroups}"
-                RowStyle="{StaticResource CustomDataGridRowStyle}"
-                SelectionMode="Single">
-                <DataGrid.Columns>
-                    <DataGridTemplateColumn
+            <TabControl Grid.Column="0" Padding="0" Style="{StaticResource TabControlInLine}">
+                <TabItem Header="示教点位">
+                    <Grid>
+                        <Popup
+                            x:Name="dgPopup"
+                            AllowsTransparency="True"
+                            IsHitTestVisible="False"
+                            Placement="RelativePoint"
+                            PlacementTarget="{Binding ElementName=dgPosGroups}">
+                            <TextBlock
+                                Margin="8,0,0,0"
+                                VerticalAlignment="Center"
+                                FontSize="8"
+                                FontWeight="Normal"
+                                Text="Dragging..." />
+                        </Popup>
+                        <DataGrid
+                            x:Name="dgPosGroups"
+                            Padding="0"
+                            EnableRowVirtualization="False"
+                            extension:DragDropRowBehavior.Edit="True"
+                            extension:DragDropRowBehavior.Enabled="True"
+                            extension:DragDropRowBehavior.PopupControl="{Binding ElementName=dgPopup}"
+                            hc:DataGridAttach.ShowRowNumber="False"
+                            hc:DataGridAttach.ShowSelectAllButton="False"
+                            AlternationCount="{Binding PosGroups.Count}"
+                            AutoGenerateColumns="False"
+                            ColumnHeaderStyle="{StaticResource CustomDataGridColumnHeaderStyle}"
+                            HeadersVisibility="Column"
+                            IsReadOnly="False"
+                            ItemsSource="{Binding PosGroups}"
+                            RowStyle="{StaticResource CustomDataGridRowStyle}"
+                            SelectionMode="Single">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn
                         Width="50"
                         MinWidth="50"
                         hc:TitleElement.HorizontalAlignment="Center"
                         CanUserResize="False"
                         Header="序号"
                         HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <TextBlock
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <TextBlock
                                     Text="{Binding RelativeSource={RelativeSource AncestorType=DataGridRow}, Path=(DataGridRow.AlternationIndex), Converter={StaticResource IndexToOneBasedConverter}}"
                                     HorizontalAlignment="Center"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    <DataGridTextColumn
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn
                         Width="*"
                         MinWidth="200"
                         Binding="{Binding Name}"
@@ -597,7 +638,7 @@
                         FontWeight="Bold"
                         Foreground="Black"
                         Header="{lang:Lang Key={x:Static lang:LangKeys.Point}}" />
-                    <DataGridTextColumn
+                            <DataGridTextColumn
                         Width="80"
                         MinWidth="80"
                         Binding="{Binding X}"
@@ -607,7 +648,7 @@
                         Header="X (mm)"
                         HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
                         IsReadOnly="False" />
-                    <DataGridTextColumn
+                            <DataGridTextColumn
                         Width="80"
                         MinWidth="80"
                         Binding="{Binding Y}"
@@ -617,7 +658,7 @@
                         Header="Y (mm)"
                         HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
                         IsReadOnly="False" />
-                    <DataGridTextColumn
+                            <DataGridTextColumn
                         Width="80"
                         MinWidth="80"
                         Binding="{Binding U}"
@@ -627,7 +668,7 @@
                         Header="U (mm)"
                         HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
                         IsReadOnly="False" />
-                    <DataGridTextColumn
+                            <DataGridTextColumn
                         Width="80"
                         MinWidth="80"
                         Binding="{Binding Z}"
@@ -637,7 +678,7 @@
                         Header="Z (mm)"
                         HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
                         IsReadOnly="False" />
-                    <DataGridTextColumn
+                            <DataGridTextColumn
                         Width="80"
                         MinWidth="80"
                         Binding="{Binding U2}"
@@ -647,7 +688,7 @@
                         Header="U2 (mm)"
                         HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
                         IsReadOnly="False" />
-                    <DataGridTextColumn
+                            <DataGridTextColumn
                         Width="80"
                         MinWidth="80"
                         Binding="{Binding Z2}"
@@ -658,48 +699,136 @@
                         HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
                         IsReadOnly="False" />
 
-                    <DataGridTemplateColumn
+                            <DataGridTemplateColumn
                         Width="150"
                         MinWidth="150"
                         hc:TitleElement.HorizontalAlignment="Center"
                         CanUserResize="False"
                         Header="{lang:Lang Key={x:Static lang:LangKeys.Operation}}"
                         HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <hc:ElementGroup HorizontalContentAlignment="Center" Orientation="Horizontal">
-                                    <Button
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <hc:ElementGroup HorizontalContentAlignment="Center" Orientation="Horizontal">
+                                            <Button
                                         Margin="5,0,0,0"
                                         Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.MoveCommand}"
                                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=SelectedItem}"
                                         Content="{lang:Lang Key={x:Static lang:LangKeys.Move}}"
                                         Style="{StaticResource ButtonInfo.Small}" />
-                                    <Button
+                                            <Button
                                         Margin="5,0,0,0"
                                         Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.UpdateCommand}"
                                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=SelectedItem}"
                                         Content="{lang:Lang Key={x:Static lang:LangKeys.Update}}"
                                         Style="{StaticResource ButtonWarning.Small}" />
-                                    <Button
+                                            <Button
                                         Margin="0,0,0,0"
                                         Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.RemoveCommand}"
                                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=SelectedItem}"
                                         Content="{lang:Lang Key={x:Static lang:LangKeys.Delete}}"
                                         Style="{StaticResource ButtonDanger.Small}" />
-                                </hc:ElementGroup>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                </DataGrid.Columns>
-                <hc:Interaction.Triggers>
-                    <hc:EventTrigger EventName="SelectionChanged">
-                        <hc:EventToCommand Command="{Binding SelectedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=SelectedItem}" />
-                    </hc:EventTrigger>
-                </hc:Interaction.Triggers>
-            </DataGrid>
-
-            <!-- IO区域 - 左右两个盒子 -->
-            <Grid x:Name="GridIO" Grid.Column="1" Margin="5">
+                                        </hc:ElementGroup>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                        <hc:Interaction.Triggers>
+                            <hc:EventTrigger EventName="SelectionChanged">
+                                <hc:EventToCommand Command="{Binding SelectedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=SelectedItem}" />
+                            </hc:EventTrigger>
+                        </hc:Interaction.Triggers>
+                    </DataGrid>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="仿真气缸">
+                    <ScrollViewer>
+                        <ItemsControl ItemsSource="{Binding CylinderList}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <hc:UniformSpacingPanel
+                                        VerticalAlignment="Top"
+                                        ChildWrapping="Wrap"
+                                        Spacing="10" />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <GroupBox
+                                        Width="150"
+                                        Margin="0"
+                                        Padding="5,10"
+                                        hc:TitleElement.Background="{DynamicResource RegionBrush}"
+                                        Style="{StaticResource GroupBoxTab}">
+                                        <GroupBox.Header>
+                                            <TextBlock
+                                                Height="32"
+                                                Padding="0,4,0,0"
+                                                FontSize="14"
+                                                Text="{Binding Name}" />
+                                        </GroupBox.Header>
+                                        <hc:UniformSpacingPanel
+                                            Margin="0,15,0,0"
+                                            Orientation="Vertical"
+                                            Spacing="10">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="1*" />
+                                                    <ColumnDefinition Width="1*" />
+                                                </Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <Path
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        Data="M 0,0 A 8,8 45 1 1 0,1 Z"
+                                                        Fill="{Binding StatusExtend, Converter={StaticResource Boolean2PassColorCoverter}}" />
+                                                    <TextBlock
+                                                        Margin="0,5,0,0"
+                                                        HorizontalAlignment="Center"
+                                                        FontSize="10"
+                                                        Text="{Binding InExtendName}" />
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1">
+                                                    <Path
+                                                        HorizontalAlignment="Center"
+                                                        VerticalAlignment="Center"
+                                                        Data="M 0,0 A 8,8 45 1 1 0,1 Z"
+                                                        Fill="{Binding StatusRetract, Converter={StaticResource Boolean2PassColorCoverter}}" />
+                                                    <TextBlock
+                                                        Margin="0,5,0,0"
+                                                        HorizontalAlignment="Center"
+                                                        FontSize="10"
+                                                        Text="{Binding InRetractName}" />
+                                                </StackPanel>
+                                            </Grid>
+                                            <hc:ButtonGroup>
+                                                <Button
+                                                    HorizontalAlignment="Center"
+                                                    Command="{Binding DataContext.CylinderExtendCommand, RelativeSource={RelativeSource AncestorType=TabControl}}"
+                                                    CommandParameter="{Binding .}"
+                                                    Content="{Binding ExtendName}"
+                                                    FontSize="16" />
+                                                <Button
+                                                    HorizontalAlignment="Center"
+                                                    Command="{Binding DataContext.CylinderRetractCommand, RelativeSource={RelativeSource AncestorType=TabControl}}"
+                                                    CommandParameter="{Binding .}"
+                                                    Content="{Binding RetractName}"
+                                                    FontSize="16" />
+                                            </hc:ButtonGroup>
+                                        </hc:UniformSpacingPanel>
+                                    </GroupBox>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </TabItem>
+            </TabControl>
+            <GridSplitter
+                Grid.Column="1"
+                Width="3"
+                Margin="2"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Stretch" />
+            <Grid x:Name="GridIO" Grid.Column="2" Margin="5">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
@@ -732,14 +861,12 @@
                         </hc:ElementGroup>
                     </StackPanel>
                 </Grid>
-                
                 <Grid Grid.Row="1">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="1*" />
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="1*" />
                     </Grid.ColumnDefinitions>
-                    
                     <Border
                         Padding="0"
                         Background="{DynamicResource BorderBrush}"
