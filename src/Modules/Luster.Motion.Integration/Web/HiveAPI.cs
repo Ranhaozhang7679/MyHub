@@ -62,6 +62,8 @@ namespace Luster.Motion.Integration.Web
         public string CurrentEventId { get; set; } = "";
         // 2026-2-24 新增字段，记录上一个维修事件ID
         public string LastEventId { get; set; } = "";
+        // 记录repair start时的报警码，用于report end判断周/月保养
+        public string RepairStartAlarmCode { get; set; } = "";
     }
 
     // ==================== 新增：Hive事件链追踪 ====================
@@ -804,7 +806,7 @@ namespace Luster.Motion.Integration.Web
                     SaveHiveState();
                 }
                 // Hive3.2，周/月保养强制使用固定的 downtime_cause
-                if (_hiveState.HiveCurrentCode == "F99OOOO-05" || _hiveState.HiveCurrentCode == "F99OOOO-06")
+                if (_hiveState.RepairStartAlarmCode == "F99OOOO-05" || _hiveState.RepairStartAlarmCode == "F99OOOO-06")
                 {
                     downCause = "Preventive Maintenance;设备保养";
                 }
@@ -1033,6 +1035,7 @@ namespace Luster.Motion.Integration.Web
                                 _hiveState.HiveMachineState = 5;
                                 _hiveState.HiveRepairState = dstRepairState;
                                 _hiveState.HiveCurrentCode = alarmCode;
+                                _hiveState.RepairStartAlarmCode = alarmCode; // 记录repair start的报警码
                                 statusMessage = "repair start";
                             }
                             else
@@ -2644,7 +2647,7 @@ namespace Luster.Motion.Integration.Web
                 CommException(url, datas, (r) =>
                 {
                     // 2025-5-10 wyy
-                    isOnboarded = r.onboarding_status?.Contains("ONBOARDED") == true;
+                    isOnboarded = r?.onboarding_status?.Contains("ONBOARDED") == true;
                     resultRaw = r;
                     //if (r?.msg != null)
                     //{
