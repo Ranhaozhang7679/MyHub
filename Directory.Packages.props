@@ -68,7 +68,7 @@
         <PackageVersion Include="Microsoft.Windows.Compatibility" Version="9.0.0" />
         <PackageVersion Include="System.ServiceModel.Primitives" Version="8.0.0" />
         <PackageVersion Include="ZXing.Net" Version="0.16.11" />
-        <PackageVersion Include="pythonnet" Version="3.0.1" />
+        <PackageVersion Include="pythonnet" Version="3.0.5" />
         
         
     </ItemGroup>

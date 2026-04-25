@@ -522,7 +522,8 @@ namespace Luster.Motion.TaskFlow.Engine
                         bool isSuccess = stationModule.DoFunction();
                         if (!isSuccess)
                         {
-                            OnLog(LogType.Error, $"工站失败->停止:{stationModule.StatusMsg}");
+                            OnLog(LogType.Error, $"{stationModule.Alias}工站失败->停止:{stationModule.StatusMsg}");
+                            OnLog(LogType.Error, stationModule.AlarmInfo?.ToString() ?? "无报警信息");
                             Stop();
                             //此时非正常停止，需要报警红灯蜂鸣
                             LightManager.StopLight(true);

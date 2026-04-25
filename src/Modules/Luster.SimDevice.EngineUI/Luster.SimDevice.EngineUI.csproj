@@ -1,8 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <!-- 启用统一拷贝功能 -->
-        <CopyToDevicesFolder>true</CopyToDevicesFolder>
     </PropertyGroup>
 
     <ItemGroup>
