@@ -417,8 +417,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                     continue;
 
                 // 跳过测试工站（其内部报警工具不应纳入自定义报警配置）
-                var moduleNameAttr = moduleEl.Attribute("Name");
-                if (moduleNameAttr != null && moduleNameAttr.Value == "TestStation")
+                if (moduleEl.Elements("Function").Any(f => f.Attribute("Name")?.Value == "TestStation"))
                     continue;
 
                 // 模块唯一 ID（GUID）
