@@ -72,6 +72,12 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             get => _seletedReportPage;
             set
             {
+                // 切换页面时取消正在进行的点检
+                if (_seletedReportPage != null && value != null && _seletedReportPage.Name != value.Name)
+                {
+                    OnEnd();
+                }
+
                 SetProperty(ref _seletedReportPage, value);
                 base.SelectedReportPage = value;
 
@@ -80,7 +86,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 UpdateStationConfigs();
                 LoadStationCheckStatus();
 
-                // 切换页面时自动加载数据（不保存旧页面数据）
+                // 切换页面时自动加载数据
                 if (value != null)
                     LoadCurrentPageData();
             }
@@ -187,9 +193,19 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             base.OnEnd();
         }
 
-        public override async void OnOneKeyCheck(object obj)
+        public override void OnOneKeyCheck(object obj)
         {
-            base.OnOneKeyCheck(obj);
+            if (IsChecking) return;
+            IsChecking = true;
+
+            StartAsync();
+        }
+
+        /// <summary>
+        /// 重写基类 ExecuteAsync，实现可取消的一键点检逻辑
+        /// </summary>
+        protected override async Task ExecuteAsync(CancellationToken token)
+        {
             try
             {
                 ProgressValue = 0;
@@ -203,6 +219,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 ItemModels.Clear();
                 for (int i = 0; i < latestRows.Count; i++)
                 {
+                    token.ThrowIfCancellationRequested();
+
                     var row = latestRows[i];
                     row.完成时间 = DateTime.Now;
                     if (string.IsNullOrEmpty(row.状态) && !string.IsNullOrEmpty(row.实测))
@@ -212,8 +230,13 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     ItemModels.Add(row);
                     ProgressValue = (i + 1.0) * 100 / latestRows.Count;
                     RaisePropertyChanged(nameof(ItemModels));
-                    await Task.Delay(10);
+                    await Task.Delay(10, token);
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = "一键点检已取消" });
+                throw;
             }
             catch (Exception ex)
             {
@@ -223,6 +246,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             finally
             {
                 ProgressValue = 100;
+                IsChecking = false;
 
                 // 保存当前页面数据和状态
                 SaveCurrentPageData();
