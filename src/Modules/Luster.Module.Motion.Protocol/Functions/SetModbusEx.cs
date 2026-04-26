@@ -83,6 +83,9 @@ namespace Luster.Module.Motion.Protocol.Functions
         [Parameter("写入字符串", 10, CN = "字符串", DefaultV = "", CanRef = ParamRef.Ref)]
         public string StringVal { get; set; }
 
+        [Parameter("回读延时(ms)", 11, CN = "回读延时(ms)", DefaultV = 50)]
+        public int RetryDelay { get; set; }
+
         public SetModbusEx()
         {
             this.Tips = "通用设置线圈或者寄存器上的值";
@@ -121,12 +124,11 @@ namespace Luster.Module.Motion.Protocol.Functions
 
             lock (lockPlc)
             {
-                // FC05/FC15 线圈写入：绕过 DataType，直接解析线圈值
+                // FC05/FC15 线圈写入：响应本身就是确认，无需回读验证
                 if (FuncCode == ModbusWriteFuncCode.WriteSingleCoil || FuncCode == ModbusWriteFuncCode.WriteMultipleCoils)
                 {
                     bool coilBool = ParseCoilValue(CoilValue);
                     communcation.Write<bool>(coilBool, $"{Address} {funcCodeStr} {StartAddress} {length}");
-                    Retry<bool>(communcation, coilBool, funcCodeStr);
                 }
                 else if (DataType == DataType.Bool)
                 {
@@ -198,33 +200,37 @@ namespace Luster.Module.Motion.Protocol.Functions
 
             string readMsg = $"{Address} {readFuncCode} {StartAddress} {length}";
             bool writeSuccess = false;
-            for (int i = 0; i < 1; i++)
+            for (int i = 0; i < 3; i++)
             {
-                // 延时20ms后,再次读取确认
-                SpinWait.SpinUntil(() => false, 20);
-                var resultVals = communcation.Read<T>(readMsg);
-                if (resultVals != null && resultVals.Count > 0)
+                // 延时后再次读取确认
+                SpinWait.SpinUntil(() => false, RetryDelay);
+                try
                 {
-                    if (CompareVal<T>.Compare(OpRule.Equal, val, resultVals[0]))
+                    var resultVals = communcation.Read<T>(readMsg);
+                    if (resultVals != null && resultVals.Count > 0)
                     {
-                        writeSuccess = true;
-                        break;
+                        MyOwner.OnLog(LogType.Debug, $"模块:{MyOwner.Alias} 回读验证: 写入值={val}, 回读值={resultVals[0]}");
+                        if (CompareVal<T>.Compare(OpRule.Equal, val, resultVals[0]))
+                        {
+                            writeSuccess = true;
+                            break;
+                        }
                     }
                     else
                     {
-                        continue;
+                        MyOwner.OnLog(LogType.Debug, $"模块:{MyOwner.Alias} 回读验证: 读取返回空, readMsg={readMsg}");
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    continue;
+                    MyOwner.OnLog(LogType.Warning, $"模块:{MyOwner.Alias} 回读异常(第{i + 1}次): {ex.Message}");
                 }
             }
 
-            // 如果查询一次后，结果没有就记录下
+            // 如果查询后结果没有就记录下
             if (!writeSuccess)
             {
-                MyOwner.OnLog(LogType.Warning, $"模块:{MyOwner.Alias} 写入Modbus 失败!");
+                MyOwner.OnLog(LogType.Warning, $"模块:{MyOwner.Alias} 写入Modbus 失败! readMsg={readMsg}");
             }
         }
 
