@@ -75,7 +75,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 {
                     if (value != null && _seletedReportPage?.Name != value.Name)
                     {
-                        SaveGridItems(ItemModels);
+                        SaveCurrentPageData();
                     }
                 }
                 SetProperty(ref _seletedReportPage, value);
@@ -85,6 +85,10 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 LoadStationConfigFromJson();
                 UpdateStationConfigs();
                 LoadStationCheckStatus();
+
+                // 切换页面时自动加载数据
+                if (value != null)
+                    LoadCurrentPageData();
             }
         }
 
@@ -225,7 +229,10 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             finally
             {
                 ProgressValue = 100;
-                SaveCheckStatus(CheckStatus.CheckedOK, "自动验证页面数据读取完成");
+
+                // 保存当前页面数据和状态
+                SaveCurrentPageData();
+                SaveCurrentPageCheckStatus();
                 SyncOverallStatusToPageStatusService();
             }
         }
@@ -308,11 +315,143 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         {
             try
             {
-                OnUpdateItems();
+                LoadCurrentPageData();
             }
             catch (Exception ex)
             {
                 _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"分页更新失败: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// 加载当前页面数据：优先读取本地持久化CSV，没有则从源CSV加载
+        /// </summary>
+        private void LoadCurrentPageData()
+        {
+            if (SelectedReportPage == null) return;
+            try
+            {
+                ItemModels.Clear();
+
+                // 优先加载本地持久化CSV（有上一次点检的完整数据）
+                var persisted = ReadLocalPersistedCsv();
+                if (persisted.Count > 0)
+                {
+                    foreach (var row in persisted)
+                        ItemModels.Add(row);
+                    return;
+                }
+
+                // 没有持久化数据则从源CSV加载（只显示项序/项次/标准）
+                var rows = LoadCurrentPageLatestCsv();
+                foreach (var row in rows)
+                {
+                    row.实测 = "";
+                    row.状态 = "未点检";
+                    ItemModels.Add(row);
+                }
+            }
+            catch (Exception ex)
+            {
+                _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"加载页面数据失败: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// 保存当前页面的 ItemModels 到本地持久化 CSV
+        /// </summary>
+        private void SaveCurrentPageData()
+        {
+            try
+            {
+                if (SelectedReportPage == null || ItemModels == null || ItemModels.Count == 0) return;
+                var recipeDir = _commonbus.CurrentRecipe?.GetRecipePath();
+                if (string.IsNullOrEmpty(recipeDir)) return;
+
+                var csvPath = Path.Combine(recipeDir, "db", "Ass_Data", $"AutoVerication_{SelectedReportPage.Name}_Latest.csv");
+                var type = typeof(AssTbAutoVerication);
+                var props = type.GetProperties()
+                    .Where(p => p.CanRead && p.PropertyType.IsSerializable && p.GetIndexParameters().Length == 0)
+                    .ToArray();
+                var headers = props.Select(p => p.Name).ToArray();
+
+                using (var writer = new StreamWriter(csvPath, false, Encoding.UTF8))
+                {
+                    writer.WriteLine(string.Join(",", headers));
+                    foreach (var item in ItemModels)
+                    {
+                        var values = props.Select(p => p.GetValue(item, null)?.ToString() ?? "");
+                        writer.WriteLine(string.Join(",", values));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"保存页面数据失败: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// 读取本地持久化CSV
+        /// </summary>
+        private List<AssTbAutoVerication> ReadLocalPersistedCsv()
+        {
+            var result = new List<AssTbAutoVerication>();
+            try
+            {
+                if (SelectedReportPage == null) return result;
+                var recipeDir = _commonbus.CurrentRecipe?.GetRecipePath();
+                if (string.IsNullOrEmpty(recipeDir)) return result;
+
+                var csvPath = Path.Combine(recipeDir, "db", "Ass_Data", $"AutoVerication_{SelectedReportPage.Name}_Latest.csv");
+                if (!File.Exists(csvPath)) return result;
+
+                var rows = ReadCsvRows(csvPath, "");
+                if (rows.Count == 0) return result;
+
+                // 验证数据有效性（至少有一行有实测值）
+                bool hasValidData = rows.Any(r => !string.IsNullOrEmpty(r.实测));
+                return hasValidData ? rows : result;
+            }
+            catch { return result; }
+        }
+
+        /// <summary>
+        /// 保存当前页面的点检状态到持久化服务
+        /// </summary>
+        private void SaveCurrentPageCheckStatus()
+        {
+            try
+            {
+                if (SelectedReportPage == null) return;
+
+                // 根据表格数据计算状态
+                bool allOK = ItemModels.OfType<AssTbAutoVerication>().All(r => r.状态 == "OK");
+                bool hasNG = ItemModels.OfType<AssTbAutoVerication>().Any(r => r.状态 == "NG");
+                bool hasData = ItemModels.Count > 0;
+
+                var status = !hasData ? CheckStatus.NotChecked
+                    : hasNG ? CheckStatus.CheckedFail
+                    : allOK ? CheckStatus.CheckedOK
+                    : CheckStatus.NotChecked;
+
+                // 更新 CommonPageModel
+                SelectedReportPage.CheckStatus = status;
+                SelectedReportPage.ParentRegion = _parentRegionName;
+
+                // 持久化到服务
+                _checkStatusService?.UpdateStatus(
+                    SelectedReportPage.PageKey,
+                    status,
+                    _parentRegionName,
+                    SelectedReportPage.Name,
+                    _commonbus?.CurrentUser?.UserName ?? "Unknown",
+                    $"一键点检完成"
+                );
+            }
+            catch (Exception ex)
+            {
+                _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"保存页面状态失败: {ex.Message}" });
             }
         }
 
