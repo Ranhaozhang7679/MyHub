@@ -1176,7 +1176,7 @@ namespace Luster.Motion.Integration.SFC
             string cmd = $"c=QUERY_4_SFC&subcmd={subcmd}&sn={wip}&serialno={smallPartWip}&partname={partname}&ccdflag=2&station_id={StationID}";   
             HttpSend(cmd, $"查询Flex绑定结果", res =>
             {
-                if (res.Contains(OKChar_))
+                if (res.Contains(OKChar_)&&res.Contains("is ok"))
                 {
                     isOK = true;
                     return String.Empty;
@@ -1207,7 +1207,7 @@ namespace Luster.Motion.Integration.SFC
             string cmd = $"c=QUERY_4_SFC&subcmd={subcmd}&sn={wip}&serialno={smallPartWip}&partname={partname}&ccdflag=0&line={StationID}&mac_address={MacAddress}";
             HttpSend(cmd, $"Flex自动绑定WIP", res =>
             {
-                if (res.Contains(OKChar_))
+                if (res.Contains(OKChar_)&&res.Contains("is ok"))
                 {
                     isOK = true;
                     return String.Empty;

@@ -2653,7 +2653,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                         }
                         flowBus.OnRunOne(stat.ID);
 
-                        while (stat.Status != RunStatus.Success)
+                        // 等待流程完成（仅Running时继续等待，其他状态均视为结束）
+                        while (stat.Status == RunStatus.Running)
                         {
                             token.ThrowIfCancellationRequested();
                             await Task.Delay(200);

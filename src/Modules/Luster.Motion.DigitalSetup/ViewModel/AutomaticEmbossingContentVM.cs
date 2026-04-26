@@ -185,9 +185,10 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                             await Task.Run(async () =>
                             {
 
-                                while (stat.Status != RunStatus.Success)
+                                // 等待流程完成（仅Running时继续等待，其他状态均视为结束）
+                                while (stat.Status == RunStatus.Running)
                                 {
-                                    await Task.Delay(200); // 200ms轮询
+                                    await Task.Delay(200);
                                 }
                             }, _cts.Token);
                             //更新表格
