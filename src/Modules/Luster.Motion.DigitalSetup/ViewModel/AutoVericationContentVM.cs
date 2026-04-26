@@ -109,7 +109,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
             // 每个子界面对应一个 CommonPageModel
             Pages = new ObservableCollection<CommonPageModel>();
-            Pages.Add(new CommonPageModel() { Name = "Communications", IsSelected = true, Region = "", ViewType = typeof(AssTbAutoVerication) });
+            Pages.Add(new CommonPageModel() { Name = "MainParameters", IsSelected = true, Region = "", ViewType = typeof(AssTbAutoVerication) });
+            Pages.Add(new CommonPageModel() { Name = "Communications", IsSelected = false, Region = "", ViewType = typeof(AssTbAutoVerication) });
             Pages.Add(new CommonPageModel() { Name = "IOConform", IsSelected = false, Region = "", ViewType = typeof(AssTbAutoVerication) });
             Pages.Add(new CommonPageModel() { Name = "Horizontal", IsSelected = false, Region = "", ViewType = typeof(AssTbAutoVerication) });
             Pages.Add(new CommonPageModel() { Name = "LoadCell", IsSelected = false, Region = "", ViewType = typeof(AssTbAutoVerication) });
@@ -476,6 +477,49 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             }
         }
 
+        /// <summary>
+        /// 重写：根据各 CommonPageModel 的 CheckStatus 聚合 AutoVerification 总状态
+        /// </summary>
+        protected override void SyncOverallStatusToPageStatusService()
+        {
+            try
+            {
+                string pageStatusName = DigitalAssPageModel.GetNameByRegion(_parentRegionName);
+                if (string.IsNullOrEmpty(pageStatusName)) return;
+
+                // 从所有 CommonPageModel 的 CheckStatus 聚合
+                bool hasNG = Pages.Any(p => p.CheckStatus == CheckStatus.CheckedFail);
+                bool allOK = Pages.All(p => p.CheckStatus == CheckStatus.CheckedOK);
+                bool hasData = Pages.Any(p => p.CheckStatus != CheckStatus.NotChecked);
+
+                var overallStatus = hasNG ? CheckStatus.CheckedFail
+                    : allOK && hasData ? CheckStatus.CheckedOK
+                    : CheckStatus.NotChecked;
+
+                string statusText = overallStatus switch
+                {
+                    CheckStatus.CheckedOK => "OK",
+                    CheckStatus.CheckedFail => "NG",
+                    _ => "未点检"
+                };
+
+                PageStatusService.Instance.UpdateStatus(pageStatusName, statusText);
+
+                Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    var parentPage = DigitalAssPageModel.FindPageByRegion(_parentRegionName);
+                    if (parentPage != null)
+                    {
+                        parentPage.CheckStatus = overallStatus;
+                    }
+                }), System.Windows.Threading.DispatcherPriority.Background);
+            }
+            catch (Exception ex)
+            {
+                _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"同步总状态失败: {ex.Message}" });
+            }
+        }
+
         #region CSV 读取逻辑
 
         /// <summary>
@@ -483,6 +527,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         /// </summary>
         private static readonly Dictionary<string, List<string>> CategoryMapping = new Dictionary<string, List<string>>
         {
+            { "MainParameters", new List<string> { "SwVersion" } },
             { "Communications", new List<string> { "ConfigSoftwareCom", "ConfigSoftwareNet" } },
             { "IOConform", new List<string> { "DigitalInSingle", "DigitalOutSingle" } },
             { "Horizontal", new List<string> { "AutomaticPosAndLeveling" } },
