@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -41,11 +41,11 @@ using Prism.Services.Dialogs;
 namespace Luster.Motion.DigitalSetup.ViewModel
 {
     /// <summary>
-    /// AutoVerication
+    /// AutoVerication — 展平显示所有子界面的点检数据
+    /// 每个子界面对应一个 CommonPageModel，切换页面显示该界面的 CSV 数据
     /// </summary>
     public class AutoVericationContentVM : BaseAss
     {
-        // 进度条定义
         private double _progressValue;
         private string _paramConfirmStatus = "未点检";
 
@@ -55,15 +55,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         public ICommand QueryCommand { get; private set; }
         public ICommand PageUpdatedCommand { get; private set; }
 
-        /// <summary>
-        /// 流程Bus
-        /// </summary>
         private FlowBus flowBus;
-
         private IDeviceEngine _deviceEngine = null;
-        /// <summary>
-        /// 运控控制
-        /// </summary>
         private IMotionController _mController;
 
         public double ProgressValue
@@ -86,21 +79,11 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     }
                 }
                 SetProperty(ref _seletedReportPage, value);
-
-                //同步赋值给基类属性
                 base.SelectedReportPage = value;
 
-                // 设置配置键
-                if (_seletedReportPage.ViewType == typeof(AssTbAutoVerication))
-                {
-                    ConfigKey = "AutoVericationConfig";
-                }
-
-                // 加载界面属性
+                ConfigKey = $"{value?.Name}Config";
                 LoadStationConfigFromJson();
-                //更新界面属性
                 UpdateStationConfigs();
-                // 加载工站点检状态
                 LoadStationCheckStatus();
             }
         }
@@ -111,7 +94,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                                         IMotionController motionController,
                                         IDeviceEngine deviceEngine,
                                         FlowBus _flowBus,
-                                        CSVHelper cSVHelper,IDialogService dialogService, CheckStatusService checkStatusService)
+                                        CSVHelper cSVHelper, IDialogService dialogService, CheckStatusService checkStatusService)
                                         : base(repository, regionManager, commonBus, cSVHelper, _flowBus, dialogService, checkStatusService)
         {
             _parentRegionName = "AutoVericationContent";
@@ -120,8 +103,16 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             _deviceEngine = deviceEngine;
             _mController = motionController;
 
+            // 每个子界面对应一个 CommonPageModel
             Pages = new ObservableCollection<CommonPageModel>();
-            Pages.Add(new CommonPageModel() { Name = "AutoVerication", IsSelected = true, Region = "", ViewType = typeof(AssTbAutoVerication) });
+            Pages.Add(new CommonPageModel() { Name = "Communications", IsSelected = true, Region = "", ViewType = typeof(AssTbAutoVerication) });
+            Pages.Add(new CommonPageModel() { Name = "IOConform", IsSelected = false, Region = "", ViewType = typeof(AssTbAutoVerication) });
+            Pages.Add(new CommonPageModel() { Name = "Horizontal", IsSelected = false, Region = "", ViewType = typeof(AssTbAutoVerication) });
+            Pages.Add(new CommonPageModel() { Name = "LoadCell", IsSelected = false, Region = "", ViewType = typeof(AssTbAutoVerication) });
+            Pages.Add(new CommonPageModel() { Name = "Embossing", IsSelected = false, Region = "", ViewType = typeof(AssTbAutoVerication) });
+            Pages.Add(new CommonPageModel() { Name = "DigitalVision", IsSelected = false, Region = "", ViewType = typeof(AssTbAutoVerication) });
+            Pages.Add(new CommonPageModel() { Name = "PointTeaching", IsSelected = false, Region = "", ViewType = typeof(AssTbAutoVerication) });
+            Pages.Add(new CommonPageModel() { Name = "AutoVisualCalibration", IsSelected = false, Region = "", ViewType = typeof(AssTbAutoVerication) });
 
             SelectedReportPage = Pages.Where(x => x.IsSelected).FirstOrDefault();
             InitModels();
@@ -133,33 +124,22 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             PageUpdatedCommand = new DelegateCommand<object>(OnPageUpdated);
 
             ConfigKey = "AutoVericationConfig";
-            // 加载界面属性
             LoadStationConfigFromJson();
-            //更新界面属性
             UpdateStationConfigs();
-            // 加载工站点检状态
             LoadStationCheckStatus();
 
-            // 订阅状态服务的更新事件，实时获取状态变化
             PageStatusService.Instance.StatusChanged += OnPageStatusChanged;
-
             InitializePageStatus();
 
-            // 延迟加载点检状态，确保 UI 绑定已建立
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
                 LoadCheckStatusForAllPages();
             }), System.Windows.Threading.DispatcherPriority.Loaded);
         }
 
-        /// <summary>
-        /// 加载所有子页面的历史点检状态
-        /// </summary>
         private void LoadCheckStatusForAllPages()
         {
-            if (_checkStatusService == null || Pages == null)
-                return;
-
+            if (_checkStatusService == null || Pages == null) return;
             try
             {
                 foreach (var page in Pages)
@@ -168,14 +148,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     {
                         page.ParentRegion = "AutoVericationContent";
                         var record = _checkStatusService.GetRecord(page.PageKey);
-                        if (record != null)
-                        {
-                            page.CheckStatus = record.Status;
-                        }
-                        else
-                        {
-                            page.CheckStatus = CheckStatus.NotChecked;
-                        }
+                        page.CheckStatus = record != null ? record.Status : CheckStatus.NotChecked;
                     }
                 }
             }
@@ -185,28 +158,23 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             }
         }
 
-        /// <summary>
-        /// 刷新点检状态 - 每次页面激活时调用
-        /// </summary>
         protected override void RefreshCheckStatus()
         {
             LoadCheckStatusForAllPages();
         }
 
-        /// <summary>
-        /// 页面状态变更事件处理
-        /// </summary>
         private void OnPageStatusChanged(string pageName, string status)
         {
-            // 更新表格中对应行的状态
-            var item = ItemModels.OfType<AssTbAutoVerication>()
-                .FirstOrDefault(x => x.项次 == GetLocalizedPageName(pageName));
-
-            if (item != null)
+            // 更新侧边栏对应 CommonPageModel 的状态
+            var page = Pages.FirstOrDefault(p => p.Name == pageName);
+            if (page != null)
             {
-                item.状态 = status;
-                item.完成时间 = DateTime.Now;
-                RaisePropertyChanged(nameof(ItemModels));
+                page.CheckStatus = status switch
+                {
+                    "OK" => CheckStatus.CheckedOK,
+                    "NG" => CheckStatus.CheckedFail,
+                    _ => CheckStatus.NotChecked
+                };
             }
         }
 
@@ -217,44 +185,32 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
         public override void OnEnd()
         {
-            // 子界面的结束逻辑
-            ProgressValue = 0; 
+            ProgressValue = 0;
             base.OnEnd();
         }
 
         public override async void OnOneKeyCheck(object obj)
         {
             base.OnOneKeyCheck(obj);
-
             try
             {
                 ProgressValue = 0;
-
-                // 读取最新 CSV 数据（包含实测值）
-                var latestRows = LoadAllSubPagesLatestCsv();
-
+                var latestRows = LoadCurrentPageLatestCsv();
                 if (latestRows.Count == 0)
                 {
                     ProgressValue = 100;
                     return;
                 }
 
-                // 清空并逐行刷新，每行间隔 10ms
                 ItemModels.Clear();
-
                 for (int i = 0; i < latestRows.Count; i++)
                 {
                     var row = latestRows[i];
-
-                    // 设置完成时间
                     row.完成时间 = DateTime.Now;
-
-                    // 如果状态为空但有实测值，执行状态判断
                     if (string.IsNullOrEmpty(row.状态) && !string.IsNullOrEmpty(row.实测))
                     {
                         FillTableContent(row);
                     }
-
                     ItemModels.Add(row);
                     ProgressValue = (i + 1.0) * 100 / latestRows.Count;
                     RaisePropertyChanged(nameof(ItemModels));
@@ -269,8 +225,6 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             finally
             {
                 ProgressValue = 100;
-
-                // 保存点检状态
                 SaveCheckStatus(CheckStatus.CheckedOK, "自动验证页面数据读取完成");
                 SyncOverallStatusToPageStatusService();
             }
@@ -291,13 +245,9 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 var range = ParseColumnRange(autoVer.标准);
                 double.TryParse(autoVer.实测, NumberStyles.Float, CultureInfo.InvariantCulture, out double 实测浮点值);
                 if (实测浮点值 >= range.lower && 实测浮点值 <= range.upper)
-                {
                     autoVer.状态 = "OK";
-                }
                 else
-                {
                     autoVer.状态 = "NG";
-                }
             }
             else
             {
@@ -305,16 +255,17 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             }
         }
 
+        /// <summary>
+        /// 加载当前选中页面的 CSV 数据（初次加载只显示项序/项次/标准）
+        /// </summary>
         private void OnUpdateItems()
         {
             try
             {
                 ItemModels.Clear();
-
-                var rows = LoadAllSubPagesLatestCsv();
+                var rows = LoadCurrentPageLatestCsv();
                 foreach (var row in rows)
                 {
-                    // 初次加载只显示项序、项次、标准，实测和状态留空
                     row.实测 = "";
                     row.状态 = "未点检";
                     ItemModels.Add(row);
@@ -322,47 +273,138 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             }
             catch (Exception ex)
             {
-                _commonbus.OnLog(new LogInfo()
-                {
-                    LogType = LogType.Info,
-                    LogMessage = $"更新列表失败: {ex.Message}"
-                });
+                _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"更新列表失败: {ex.Message}" });
             }
         }
 
         /// <summary>
-        /// 获取子界面对应的 CSV 类别名列表
+        /// 查询命令 — 显示完整数据
         /// </summary>
-        private Dictionary<string, List<string>> GetSubPageCategoryMapping()
+        private void OnQuery()
         {
-            return new Dictionary<string, List<string>>
+            try
             {
-                { "MainParameters", new List<string> { "SwVersion" } },
-                { "Communications", new List<string> { "ConfigSoftwareCom", "ConfigSoftwareNet" } },
-                { "IOConform", new List<string> { "DigitalInSingle", "DigitalOutSingle" } },
-                { "Horizontal", new List<string> { "AutomaticPosAndLeveling" } },
-                { "LoadCell", new List<string> { "CalibrationTable", "SuctionNozzle", "PressureRepetition" } },
-                { "Embossing", new List<string> { "AutomaticEmbossing" } },
-                { "DigitalVision", new List<string> { "AutoFocusing", "AutoFieldOfView", "AutoGrayScale" } },
-                { "AutoVisualCalibration", new List<string> { "AutoVisualCalibration" } },
-            };
+                ItemModels.Clear();
+                var latestRows = LoadCurrentPageLatestCsv();
+                foreach (var row in latestRows)
+                {
+                    if (string.IsNullOrEmpty(row.状态) && !string.IsNullOrEmpty(row.实测))
+                    {
+                        FillTableContent(row);
+                    }
+                    ItemModels.Add(row);
+                }
+            }
+            catch (Exception ex)
+            {
+                _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"查询失败: {ex.Message}" });
+            }
         }
 
         /// <summary>
-        /// 判断一级页面是否为多工站界面
+        /// 分页更新 — 切换 CommonPageModel 时重新加载
         /// </summary>
-        private bool IsMultiStationPage(string pageName)
+        private void OnPageUpdated(object obj)
         {
-            var multiStationPages = new HashSet<string>
+            try
             {
-                "Horizontal", "LoadCell", "Embossing", "DigitalVision",
-                "PointTeaching", "AutoVisualCalibration"
-            };
-            return multiStationPages.Contains(pageName);
+                OnUpdateItems();
+            }
+            catch (Exception ex)
+            {
+                _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"分页更新失败: {ex.Message}" });
+            }
+        }
+
+        #region CSV 读取逻辑
+
+        /// <summary>
+        /// 子界面名 → CSV 类别名映射
+        /// </summary>
+        private static readonly Dictionary<string, List<string>> CategoryMapping = new Dictionary<string, List<string>>
+        {
+            { "Communications", new List<string> { "ConfigSoftwareCom", "ConfigSoftwareNet" } },
+            { "IOConform", new List<string> { "DigitalInSingle", "DigitalOutSingle" } },
+            { "Horizontal", new List<string> { "AutomaticPosAndLeveling" } },
+            { "LoadCell", new List<string> { "CalibrationTable", "SuctionNozzle", "PressureRepetition" } },
+            { "Embossing", new List<string> { "AutomaticEmbossing" } },
+            { "DigitalVision", new List<string> { "AutoFocusing", "AutoFieldOfView", "AutoGrayScale" } },
+            { "AutoVisualCalibration", new List<string> { "AutoVisualCalibration" } },
+        };
+
+        private static readonly HashSet<string> MultiStationPages = new HashSet<string>
+        {
+            "Horizontal", "LoadCell", "Embossing", "DigitalVision",
+            "PointTeaching", "AutoVisualCalibration"
+        };
+
+        /// <summary>
+        /// 加载当前选中页面的 Latest CSV
+        /// </summary>
+        private List<AssTbAutoVerication> LoadCurrentPageLatestCsv()
+        {
+            var allRows = new List<AssTbAutoVerication>();
+            if (SelectedReportPage == null) return allRows;
+
+            var recipeDir = _commonbus.CurrentRecipe?.GetRecipePath();
+            if (string.IsNullOrEmpty(recipeDir)) return allRows;
+
+            var assDir = Path.Combine(recipeDir, "db", "Ass_Data");
+            string pageName = SelectedReportPage.Name;
+
+            // PointTeaching 特殊处理：按轴读取
+            if (pageName == "PointTeaching")
+            {
+                var axisNames = LoadAxisNamesFromGodLineJson(assDir);
+                foreach (var axisName in axisNames)
+                {
+                    var csvPath = Path.Combine(assDir, $"AssTbOriginLimit_{axisName}_Latest.csv");
+                    var rows = ReadCsvRows(csvPath, axisName);
+                    allRows.AddRange(rows);
+                }
+            }
+            else if (CategoryMapping.TryGetValue(pageName, out var categories))
+            {
+                foreach (var category in categories)
+                {
+                    if (MultiStationPages.Contains(pageName))
+                    {
+                        var stations = LoadStationConfigsFromFile(pageName, recipeDir);
+                        if (stations != null && stations.Count > 0)
+                        {
+                            foreach (var station in stations)
+                            {
+                                var csvPath = Path.Combine(assDir, $"AssTb{category}_{station}_Latest.csv");
+                                var rows = ReadCsvRows(csvPath, station);
+                                allRows.AddRange(rows);
+                            }
+                        }
+                        else
+                        {
+                            var csvPath = Path.Combine(assDir, $"AssTb{category}_Latest.csv");
+                            var rows = ReadCsvRows(csvPath, "");
+                            allRows.AddRange(rows);
+                        }
+                    }
+                    else
+                    {
+                        var csvPath = Path.Combine(assDir, $"AssTb{category}_Latest.csv");
+                        var rows = ReadCsvRows(csvPath, "");
+                        allRows.AddRange(rows);
+                    }
+                }
+            }
+
+            // 统一编排项序
+            for (int i = 0; i < allRows.Count; i++)
+            {
+                allRows[i].项序 = i;
+            }
+            return allRows;
         }
 
         /// <summary>
-        /// 从单个 CSV 文件读取数据行，转换为 AssTbAutoVerication 列表
+        /// 从单个 CSV 文件读取数据行
         /// </summary>
         private List<AssTbAutoVerication> ReadCsvRows(string csvPath, string sourceLabel)
         {
@@ -388,10 +430,13 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     string xiangci = xiangciIdx >= 0 && xiangciIdx < cols.Length ? cols[xiangciIdx] : "";
                     if (string.IsNullOrEmpty(xiangci)) continue;
 
+                    // 如果有 sourceLabel（工站名/轴名），加前缀区分来源
+                    string displayName = string.IsNullOrEmpty(sourceLabel) ? xiangci : $"{sourceLabel}-{xiangci}";
+
                     result.Add(new AssTbAutoVerication
                     {
                         项序 = 0,
-                        项次 = $"{sourceLabel}-{xiangci}",
+                        项次 = displayName,
                         标准 = standardIdx >= 0 && standardIdx < cols.Length ? cols[standardIdx] : "",
                         实测 = measuredIdx >= 0 && measuredIdx < cols.Length ? cols[measuredIdx] : "",
                         状态 = statusIdx >= 0 && statusIdx < cols.Length ? cols[statusIdx] : "未完成",
@@ -407,83 +452,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         }
 
         /// <summary>
-        /// 加载所有子界面的 Latest CSV，展平合并到一张列表
-        /// </summary>
-        private List<AssTbAutoVerication> LoadAllSubPagesLatestCsv()
-        {
-            var allRows = new List<AssTbAutoVerication>();
-            var recipeDir = _commonbus.CurrentRecipe?.GetRecipePath();
-            if (string.IsNullOrEmpty(recipeDir)) return allRows;
-
-            var assDir = Path.Combine(recipeDir, "db", "Ass_Data");
-            var categoryMapping = GetSubPageCategoryMapping();
-            var pages = DigitalAssPageModel.Pages;
-
-            foreach (var page in pages)
-            {
-                if (!page.IsVisible || page.Name == "AutoVerication") continue;
-
-                string displayName = GetLocalizedPageName(page.Name);
-
-                // 特殊处理：PointTeaching 按轴维度读取
-                if (page.Name == "PointTeaching")
-                {
-                    var axisNames = LoadAxisNamesFromGodLineJson(assDir);
-                    foreach (var axisName in axisNames)
-                    {
-                        var csvPath = Path.Combine(assDir, $"AssTbOriginLimit_{axisName}_Latest.csv");
-                        var axisDisplayName = GetLocalizedPageName(axisName);
-                        var rows = ReadCsvRows(csvPath, $"{displayName}-{axisDisplayName}");
-                        allRows.AddRange(rows);
-                    }
-                    continue;
-                }
-
-                // 获取该页面的类别列表
-                if (!categoryMapping.TryGetValue(page.Name, out var categories) || categories.Count == 0)
-                    continue;
-
-                foreach (var category in categories)
-                {
-                    if (IsMultiStationPage(page.Name))
-                    {
-                        var stationConfigs = LoadStationConfigsFromFile(page.Name, recipeDir);
-                        if (stationConfigs != null && stationConfigs.Count > 0)
-                        {
-                            foreach (var station in stationConfigs)
-                            {
-                                var csvPath = Path.Combine(assDir, $"AssTb{category}_{station}_Latest.csv");
-                                var rows = ReadCsvRows(csvPath, $"{displayName}-{station}");
-                                allRows.AddRange(rows);
-                            }
-                        }
-                        else
-                        {
-                            var csvPath = Path.Combine(assDir, $"AssTb{category}_Latest.csv");
-                            var rows = ReadCsvRows(csvPath, displayName);
-                            allRows.AddRange(rows);
-                        }
-                    }
-                    else
-                    {
-                        var csvPath = Path.Combine(assDir, $"AssTb{category}_Latest.csv");
-                        var rows = ReadCsvRows(csvPath, displayName);
-                        allRows.AddRange(rows);
-                    }
-                }
-            }
-
-            // 统一编排项序
-            for (int i = 0; i < allRows.Count; i++)
-            {
-                allRows[i].项序 = i;
-            }
-
-            return allRows;
-        }
-
-        /// <summary>
-        /// 从 StationConfig.json 文件中读取指定页面的工站名称列表
+        /// 从 StationConfig.json 读取指定页面的工站名称列表
         /// </summary>
         private List<string> LoadStationConfigsFromFile(string pageName, string recipeDir)
         {
@@ -500,7 +469,6 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 var configObj = allConfigs[configKey];
                 if (configObj == null)
                 {
-                    // 遍历所有配置项查找 StationConfigs 数组
                     foreach (var child in allConfigs.Children())
                     {
                         var obj = child as Newtonsoft.Json.Linq.JProperty;
@@ -547,7 +515,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         }
 
         /// <summary>
-        /// 从 AxisPositions.json 读取所有轴名称，用于不依赖 PointTeachingContentVM 加载即可获取轴列表
+        /// 从 AxisPositions.json 读取所有轴名称
         /// </summary>
         private List<string> LoadAxisNamesFromGodLineJson(string assDir)
         {
@@ -558,7 +526,6 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 var jsonPath = Path.Combine(godLineDir, "AxisPositions.json");
                 if (!File.Exists(jsonPath))
                 {
-                    // 兼容带前导空格的文件名
                     jsonPath = Path.Combine(godLineDir, " AxisPositions.json");
                     if (!File.Exists(jsonPath)) return axisNames;
                 }
@@ -578,99 +545,40 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             return axisNames;
         }
 
-        /// <summary>
-        /// 获取页面名称的本地化中文文本
-        /// </summary>
-        /// <param name="pageName">页面英文键值</param>
-        /// <returns>本地化后的中文名称</returns>
+        #endregion
+
+        #region 本地化
+
         private string GetLocalizedPageName(string pageName)
         {
             try
             {
-                var langType = typeof(Lang);
-                var propertyInfo = langType.GetProperty(pageName);
-
+                var propertyInfo = typeof(Lang).GetProperty(pageName);
                 if (propertyInfo != null)
                 {
                     var localizedValue = propertyInfo.GetValue(null) as string;
                     if (!string.IsNullOrEmpty(localizedValue))
-                    {
                         return localizedValue;
-                    }
                 }
-
                 return pageName;
             }
-            catch
-            {
-                return pageName;
-            }
+            catch { return pageName; }
         }
 
-        /// <summary>
-        /// 将中文显示名称映射回英文键值
-        /// </summary>
         private string GetEnglishKeyFromDisplayName(string displayName)
         {
-            var langType = typeof(Lang);
-            var properties = langType.GetProperties();
-
-            foreach (var prop in properties)
+            foreach (var prop in typeof(Lang).GetProperties())
             {
-                var value = prop.GetValue(null) as string;
-                if (value == displayName)
-                {
+                if (prop.GetValue(null) as string == displayName)
                     return prop.Name;
-                }
             }
             return displayName;
         }
 
-        /// <summary>
-        /// 查询命令
-        /// </summary>
-        private void OnQuery()
-        {
-            try
-            {
-                ItemModels.Clear();
-
-                var latestRows = LoadAllSubPagesLatestCsv();
-                foreach (var row in latestRows)
-                {
-                    // 查询时显示完整数据（包含实测）
-                    if (string.IsNullOrEmpty(row.状态) && !string.IsNullOrEmpty(row.实测))
-                    {
-                        FillTableContent(row);
-                    }
-                    ItemModels.Add(row);
-                }
-            }
-            catch (Exception ex)
-            {
-                _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"查询失败: {ex.Message}" });
-            }
-        }
-
-        /// <summary>
-        /// 分页更新命令
-        /// </summary>
-        private void OnPageUpdated(object obj)
-        {
-            try
-            {
-                // 处理分页逻辑
-                UpdateItemsFromCsv();
-            }
-            catch (Exception ex)
-            {
-                _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"分页更新失败: {ex.Message}" });
-            }
-        }
+        #endregion
 
         private static (double lower, double upper) ParseColumnRange(string standardValue)
         {
-            // 1) 不含 ~ ：按单个数字处理
             if (!standardValue.Contains('~'))
             {
                 if (!double.TryParse(standardValue, NumberStyles.Float, CultureInfo.InvariantCulture, out double v))
@@ -678,16 +586,12 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 return (v, v);
             }
 
-            // 2) 含 ~ ：必须是"下限~上限"且仅出现一次 ~
             string[] tokens = standardValue.Split('~');
             if (tokens.Length != 2)
                 throw new FormatException("第一列区间只能包含一个 '~'");
 
-            string lowerStr = tokens[0].Trim();
-            string upperStr = tokens[1].Trim();
-
-            if (!double.TryParse(lowerStr, NumberStyles.Float, CultureInfo.InvariantCulture, out double lower) ||
-                !double.TryParse(upperStr, NumberStyles.Float, CultureInfo.InvariantCulture, out double upper))
+            if (!double.TryParse(tokens[0].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out double lower) ||
+                !double.TryParse(tokens[1].Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out double upper))
                 throw new FormatException("第一列区间上下限格式非法");
 
             if (lower > upper)
