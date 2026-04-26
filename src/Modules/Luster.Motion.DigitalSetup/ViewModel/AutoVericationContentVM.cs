@@ -71,13 +71,6 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             get => _seletedReportPage;
             set
             {
-                if (_seletedReportPage != null)
-                {
-                    if (value != null && _seletedReportPage?.Name != value.Name)
-                    {
-                        SaveCurrentPageData();
-                    }
-                }
                 SetProperty(ref _seletedReportPage, value);
                 base.SelectedReportPage = value;
 
@@ -86,7 +79,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 UpdateStationConfigs();
                 LoadStationCheckStatus();
 
-                // 切换页面时自动加载数据
+                // 切换页面时自动加载数据（不保存旧页面数据）
                 if (value != null)
                     LoadCurrentPageData();
             }
@@ -365,6 +358,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             try
             {
                 if (SelectedReportPage == null || ItemModels == null || ItemModels.Count == 0) return;
+                // 只有执行过一键点检（有实测值）才持久化
+                if (!ItemModels.OfType<AssTbAutoVerication>().Any(r => !string.IsNullOrEmpty(r.实测))) return;
                 var recipeDir = _commonbus.CurrentRecipe?.GetRecipePath();
                 if (string.IsNullOrEmpty(recipeDir)) return;
 
