@@ -13,7 +13,7 @@
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
 
-        <BaseIntermediateOutputPath>$(ArtifactsDir)obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+        <BaseIntermediateOutputPath>$(ArtifactsDir)obj\Debug\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
         
         <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
         <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>

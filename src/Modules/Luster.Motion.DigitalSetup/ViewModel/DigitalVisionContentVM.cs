@@ -223,9 +223,16 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                             // 异步等待stat.Status == RunStatus.Success
                             await Task.Run(async () =>
                             {
-                                // 等待流程完成（仅Running时继续等待，其他状态均视为结束）
-                                while (stat.Status == RunStatus.Running)
+                                // 阶段1：等待流程启动（离开Default）
+                                while (stat.Status == RunStatus.Default)
                                 {
+                                    _cts.Token.ThrowIfCancellationRequested();
+                                    await Task.Delay(100);
+                                }
+                                // 阶段2：等待流程完成（Running/Pause继续等待，其他状态视为结束）
+                                while (stat.Status == RunStatus.Running || stat.Status == RunStatus.Pause)
+                                {
+                                    _cts.Token.ThrowIfCancellationRequested();
                                     await Task.Delay(200);
                                 }
                             }, _cts.Token);
@@ -269,9 +276,16 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                             // 异步等待stat.Status == RunStatus.Success
                             await Task.Run(async () =>
                             {
-                                // 等待流程完成（仅Running时继续等待，其他状态均视为结束）
-                                while (stat.Status == RunStatus.Running)
+                                // 阶段1：等待流程启动（离开Default）
+                                while (stat.Status == RunStatus.Default)
                                 {
+                                    _cts.Token.ThrowIfCancellationRequested();
+                                    await Task.Delay(100);
+                                }
+                                // 阶段2：等待流程完成（Running/Pause继续等待，其他状态视为结束）
+                                while (stat.Status == RunStatus.Running || stat.Status == RunStatus.Pause)
+                                {
+                                    _cts.Token.ThrowIfCancellationRequested();
                                     await Task.Delay(200);
                                 }
                             }, _cts.Token);
@@ -317,9 +331,16 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                             // 异步等待stat.Status == RunStatus.Success
                             await Task.Run(async () =>
                             {
-                                // 等待流程完成（仅Running时继续等待，其他状态均视为结束）
-                                while (stat.Status == RunStatus.Running)
+                                // 阶段1：等待流程启动（离开Default）
+                                while (stat.Status == RunStatus.Default)
                                 {
+                                    _cts.Token.ThrowIfCancellationRequested();
+                                    await Task.Delay(100);
+                                }
+                                // 阶段2：等待流程完成（Running/Pause继续等待，其他状态视为结束）
+                                while (stat.Status == RunStatus.Running || stat.Status == RunStatus.Pause)
+                                {
+                                    _cts.Token.ThrowIfCancellationRequested();
                                     await Task.Delay(200);
                                 }
                             }, _cts.Token);
