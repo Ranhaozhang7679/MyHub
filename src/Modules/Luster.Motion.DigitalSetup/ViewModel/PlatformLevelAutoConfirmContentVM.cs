@@ -193,11 +193,10 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                             {
                                 //var timeout = TimeSpan.FromSeconds(30); // 30秒超时
                                 //var start = DateTime.Now;
-                                while (stat.Status != RunStatus.Success)
+                                // 等待流程完成（仅Running时继续等待，其他状态均视为结束）
+                                while (stat.Status == RunStatus.Running)
                                 {
-                                    //if (DateTime.Now - start > timeout)
-                                    //  throw new TimeoutException("流程运行超时，请检查设备状态或流程逻辑。");
-                                    await Task.Delay(200); // 200ms轮询
+                                    await Task.Delay(200);
                                 }
                             }, _cts.Token);
 
