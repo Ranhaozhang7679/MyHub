@@ -743,6 +743,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                             }
                         }
                         (OpenBusopCommand as DelegateCommand)?.RaiseCanExecuteChanged();
+                        // 增加：配置保存后立即去重新加载当前选中的 Sheet 页并判断点检状态
+                        LoadSheetImage();
                     }
                 }
             });

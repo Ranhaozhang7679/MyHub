@@ -783,7 +783,7 @@ namespace Luster.Motion.DataStruct.FXVirtual
             Log($"MCDInfo文件已导出到目录{folder}");
         }
 
-        protected void CalcTime(Func<bool> action, int timeout = -1, int sleep = 5, Action timeoutAction = null)
+        protected bool CalcTime(Func<bool> action, int timeout = -1, int sleep = 5, Action timeoutAction = null)
         {
             double time = 0;
 
@@ -798,7 +798,7 @@ namespace Luster.Motion.DataStruct.FXVirtual
                         if (timeoutAction != null)
                         {
                             timeoutAction?.Invoke();
-                            break;
+                            return false;
                         }
                         else
                         {
@@ -807,10 +807,10 @@ namespace Luster.Motion.DataStruct.FXVirtual
                     }
                 }
 
-                // 判断
+                // 条件满足，正常退出
                 if (action.Invoke())
                 {
-                    break;
+                    return true;
                 }
 
                 // 防止刷新太快IO检查错误

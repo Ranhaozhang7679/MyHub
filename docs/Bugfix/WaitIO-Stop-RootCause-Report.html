@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WaitIO 被 Stop 中断后 Group 异常完成 - 根因分析报告</title>
+<style>
+    :root {
+        --bg: #0f1117;
+        --surface: #1a1d27;
+        --surface2: #232734;
+        --border: #2e3348;
+        --text: #e1e4ed;
+        --text-dim: #8b90a5;
+        --accent: #6c8cff;
+        --accent2: #4a6cf7;
+        --danger: #f56c6c;
+        --danger-bg: rgba(245,108,108,0.08);
+        --warn: #e6a23c;
+        --warn-bg: rgba(230,162,60,0.08);
+        --success: #67c23a;
+        --success-bg: rgba(103,194,58,0.08);
+        --code-bg: #161922;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Segoe UI','Microsoft YaHei',sans-serif; background:var(--bg); color:var(--text); line-height:1.7; padding:2rem; }
+    .container { max-width:1100px; margin:0 auto; }
+
+    h1 { font-size:1.8rem; margin-bottom:.3rem; color:#fff; }
+    .meta { color:var(--text-dim); font-size:.9rem; margin-bottom:2rem; display:flex; gap:1.5rem; flex-wrap:wrap; }
+    .meta span { display:inline-flex; align-items:center; gap:.3rem; }
+
+    h2 { font-size:1.25rem; color:var(--accent); margin:2.5rem 0 1rem; padding-bottom:.4rem; border-bottom:1px solid var(--border); }
+    h3 { font-size:1.05rem; color:#fff; margin:1.5rem 0 .6rem; }
+
+    p { margin-bottom:.8rem; }
+    strong { color:#fff; }
+
+    /* 卡片 */
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:1.2rem 1.5rem; margin-bottom:1.2rem; }
+    .card.danger { border-left:3px solid var(--danger); background:var(--danger-bg); }
+    .card.warn   { border-left:3px solid var(--warn);   background:var(--warn-bg); }
+    .card.success { border-left:3px solid var(--success); background:var(--success-bg); }
+
+    /* 代码块 */
+    pre { background:var(--code-bg); border:1px solid var(--border); border-radius:6px; padding:1rem 1.2rem; overflow-x:auto; margin:.8rem 0 1rem; font-size:.85rem; line-height:1.6; }
+    code { font-family:'Cascadia Code','Consolas',monospace; }
+    .keyword  { color:#c678dd; }
+    .type     { color:#e5c07b; }
+    .string   { color:#98c379; }
+    .comment  { color:#5c6370; font-style:italic; }
+    .lineno   { color:var(--text-dim); user-select:none; display:inline-block; width:2.5rem; text-align:right; margin-right:1rem; }
+    .highlight-line { background:rgba(245,108,108,0.12); display:block; margin:0 -1.2rem; padding:0 1.2rem; border-left:3px solid var(--danger); }
+    .highlight-line-fix { background:rgba(103,194,58,0.1); display:block; margin:0 -1.2rem; padding:0 1.2rem; border-left:3px solid var(--success); }
+
+    /* 流程图 */
+    .flow { display:flex; flex-direction:column; gap:0; margin:1rem 0; }
+    .flow-row { display:flex; align-items:stretch; gap:0; }
+    .flow-cell { flex:1; padding:.6rem 1rem; text-align:center; font-size:.85rem; position:relative; }
+    .flow-cell.ok   { background:rgba(103,194,58,0.1);  border:1px solid rgba(103,194,58,0.3);  border-radius:6px 6px 0 0; }
+    .flow-cell.fail { background:var(--danger-bg);       border:1px solid rgba(245,108,108,0.3); border-radius:6px 6px 0 0; }
+    .flow-cell.mid  { background:rgba(108,140,255,0.08); border:1px solid rgba(108,140,255,0.2); }
+    .flow-arrow { text-align:center; color:var(--text-dim); font-size:1.1rem; padding:.15rem 0; }
+
+    /* 时序 */
+    .timeline { position:relative; padding-left:2rem; margin:1rem 0; }
+    .timeline::before { content:''; position:absolute; left:.7rem; top:0; bottom:0; width:2px; background:var(--border); }
+    .tl-item { position:relative; margin-bottom:1.2rem; }
+    .tl-item::before { content:''; position:absolute; left:-1.55rem; top:.45rem; width:12px; height:12px; border-radius:50%; border:2px solid var(--border); background:var(--surface); }
+    .tl-item.active::before { border-color:var(--accent); background:var(--accent); }
+    .tl-item.danger::before { border-color:var(--danger); background:var(--danger); }
+    .tl-item.warn::before   { border-color:var(--warn);   background:var(--warn); }
+    .tl-item.success::before { border-color:var(--success); background:var(--success); }
+    .tl-title { font-weight:600; margin-bottom:.2rem; }
+    .tl-desc  { font-size:.9rem; color:var(--text-dim); }
+    .tl-desc code { color:var(--accent); font-size:.85rem; }
+
+    /* 文件路径标签 */
+    .filepath { display:inline-block; background:var(--surface2); border:1px solid var(--border); border-radius:4px; padding:.1rem .5rem; font-family:'Cascadia Code',monospace; font-size:.78rem; color:var(--accent); margin-bottom:.3rem; }
+
+    /* 表格 */
+    table { width:100%; border-collapse:collapse; margin:1rem 0; font-size:.9rem; }
+    th { background:var(--surface2); text-align:left; padding:.5rem .8rem; border:1px solid var(--border); color:var(--text-dim); font-weight:600; }
+    td { padding:.5rem .8rem; border:1px solid var(--border); }
+    tr:hover td { background:var(--surface2); }
+
+    /* 修复建议 */
+    .fix-block { background:var(--code-bg); border:1px solid rgba(103,194,58,0.25); border-radius:6px; padding:1rem 1.2rem; margin:.8rem 0; }
+    .fix-label { color:var(--success); font-weight:600; font-size:.85rem; margin-bottom:.5rem; display:flex; align-items:center; gap:.3rem; }
+
+    /* 响应式 */
+    @media(max-width:768px) {
+        body { padding:1rem; }
+        h1 { font-size:1.4rem; }
+        .flow-row { flex-direction:column; }
+    }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>WaitIO 被 Stop 中断后 Group 异常完成 — 根因分析报告</h1>
+<div class="meta">
+    <span>&#128203; Bug 分析</span>
+    <span>&#128196; 涉及模块：WaitIO / CalcTime / MotionEngine.Stop / HomeTask</span>
+    <span>&#128197; 2026-04-23</span>
+</div>
+
+<!-- ===== 一、问题描述 ===== -->
+<h2>一、问题描述</h2>
+
+<div class="card danger">
+    <strong>现象：</strong>在回零站(HomeStation)中，有一个 Group 负责机器人回零，步骤为"设置 IO 信号 → WaitIO 等待完成信号"。第一次 Home 执行到 WaitIO 等待时，用户手动触发 MotionController.Stop；第二次再执行 Home 时，该 Group 直接完成，但机器人实际并未完成回零。
+</div>
+
+<!-- ===== 二、调用链路 ===== -->
+<h2>二、调用链路与关键代码</h2>
+
+<h3>2.1 完整执行时序</h3>
+
+<div class="timeline">
+    <div class="tl-item active">
+        <div class="tl-title">MotionEngine.Home()</div>
+        <div class="tl-desc"><code>MotionEngine_part2.cs:185</code> — 设置所有模块 <code>IsBreak = true</code>，清空缓存数据</div>
+    </div>
+    <div class="tl-item active">
+        <div class="tl-title">HomeTask() → SetModuleBreak(homeStation, false)</div>
+        <div class="tl-desc"><code>MotionEngine_part2.cs:343</code> — 递归重置 HomeStation 及其所有子模块 <code>IsBreak = false</code></div>
+    </div>
+    <div class="tl-item active">
+        <div class="tl-title">homeStation.DoFunction() → HomeStation.DoExcute()</div>
+        <div class="tl-desc"><code>HomeStation.cs:122</code> — 使用 <code>motionRunEngine.Run()</code> 递归运行子模块</div>
+    </div>
+    <div class="tl-item active">
+        <div class="tl-title">Group 子模块依次执行：SetIO → SetIO → WaitIO</div>
+        <div class="tl-desc">前几步 SetIO 正常完成（<code>Status = Success</code>），最后一步 WaitIO 进入等待</div>
+    </div>
+    <div class="tl-item danger">
+        <div class="tl-title">&#9888; 用户触发 MotionController.Stop()</div>
+        <div class="tl-desc"><code>MotionEngine_part2.cs:747</code> — 异步线程设置所有模块 <code>IsBreak = true</code>，调用 <code>_deviceEngine.Stop()</code></div>
+    </div>
+    <div class="tl-item danger">
+        <div class="tl-title">VirtualDeviceBase.IsBreak = true → CalcTime 退出循环</div>
+        <div class="tl-desc"><code>VirtualDeviceBase.cs:654</code> — CalcTime 的 while 循环检测到 <code>IsBreak</code>，<code>break</code> 退出，<strong style="color:var(--danger)">无异常抛出</strong></div>
+    </div>
+    <div class="tl-item danger">
+        <div class="tl-title">WaitIO.DoExcute() 返回 true（误报成功）</div>
+        <div class="tl-desc"><code>WaitIO.cs</code> — <code>io.WaitIO()</code> 正常返回，未进入 catch 块，<code>base.DoExcute()</code> 返回 <code>true</code></div>
+    </div>
+    <div class="tl-item warn">
+        <div class="tl-title">Group 整体返回 Success，Home 检测到 IsBreak 报告失败</div>
+        <div class="tl-desc">HomeTask 检查 <code>homeStation.IsBreak == true</code> → <code>isHomeSuccess = false</code>，但模块 Status 已被设为 Success</div>
+    </div>
+    <div class="tl-item warn">
+        <div class="tl-title">第二次 Home：Group 再次执行</div>
+        <div class="tl-desc">SetModuleBreak 重置 IsBreak，但 IO 信号残留 + WaitIO 缺乏中断检测 → Group "直接完成"</div>
+    </div>
+</div>
+
+<!-- ===== 三、根因分析 ===== -->
+<h2>三、根因分析（方案一）</h2>
+
+<h3>3.1 核心缺陷：CalcTime 无法区分"条件满足"和"被中断"</h3>
+
+<div class="filepath">VirtualDeviceBase.cs — CalcTime 方法</div>
+<pre><code><span class="lineno">654</span> <span class="keyword">protected void</span> <span class="type">CalcTime</span>(<span class="type">Func</span>&lt;<span class="keyword">bool</span>&gt; action, <span class="keyword">int</span> timeout = -1, <span class="keyword">int</span> sleep = 5, <span class="type">Action</span> timeoutAction = <span class="keyword">null</span>)
+<span class="lineno">655</span> {
+<span class="lineno">656</span>     <span class="keyword">double</span> time = 0;
+<span class="lineno">657</span>
+<span class="lineno">658</span>     <span class="comment">// 再次进来要更新IsBreak</span>
+<span class="lineno">659</span>     IsBreak = <span class="keyword">false</span>;
+<span class="lineno">660</span>     IsPause = <span class="keyword">false</span>;
+<span class="lineno">661</span>
+<span class="lineno">662</span>     <span class="keyword">while</span> (<span class="keyword">true</span>)
+<span class="lineno">663</span>     {
+<span class="lineno">664</span>         WaitRecovery();
+<span class="lineno">665</span>
+<span class="lineno"><span class="highlight-line">666</span>         <span class="keyword">if</span> (IsBreak) { <span class="keyword">break</span>; }    <span class="comment">// ← Stop 触发：IsBreak=true → 直接退出循环</span></span>
+<span class="lineno">667</span>
+<span class="lineno">668</span>         <span class="keyword">if</span> (timeout > 0) { <span class="comment">/* 超时处理 */</span> }
+<span class="lineno">669</span>
+<span class="lineno"><span class="highlight-line">670</span>         <span class="keyword">if</span> (action.Invoke()) { <span class="keyword">break</span>; } <span class="comment">// ← IO 条件满足：正常退出</span></span>
+<span class="lineno">671</span>
+<span class="lineno">672</span>         Thread.Sleep(sleep);
+<span class="lineno">673</span>         <span class="keyword">if</span> (!IsPause) { time += sleep; }
+<span class="lineno">674</span>     }
+<span class="lineno">675</span>     <span class="comment">// ← 无论是 666 行还是 670 行退出，均"正常返回"，无任何标志位区分</span>
+<span class="lineno">676</span> }
+</code></pre>
+
+<div class="card danger">
+    <strong>问题：</strong>CalcTime 有两种退出路径（IsBreak 中断 / 条件满足），但它们的行为完全相同 —— 都是 <code>break</code> 退出循环后正常返回。调用者无法区分到底是因为 IO 条件满足了，还是因为被 Stop 中断了。
+</div>
+
+<h3>3.2 缺陷传导：WaitIO.DoExcute 将中断误报为成功</h3>
+
+<div class="filepath">WaitIO.cs — DoExcute 方法</div>
+<pre><code><span class="lineno">  </span> <span class="keyword">public override bool</span> DoExcute(<span class="keyword">out string</span> errMsg)
+<span class="lineno">  </span> {
+<span class="lineno">  </span>     <span class="comment">/* ... 获取 IO 设备 ... */</span>
+<span class="lineno">  </span>
+<span class="lineno">  </span>     <span class="keyword">try</span>
+<span class="lineno">  </span>     {
+<span class="lineno">  </span>         <span class="keyword">if</span> (IOType == IOType.Digital)
+<span class="lineno">  </span>             io.WaitIO(DigitalVal, OverTime * 1000, retryAction);
+<span class="lineno">  </span>             <span class="comment">// ↑ CalcTime 被 IsBreak 中断后正常返回</span>
+<span class="lineno">  </span>             <span class="comment">// ↑ 没有抛出任何异常</span>
+<span class="lineno">  </span>     }
+<span class="lineno">  </span>     <span class="keyword">catch</span> (<span class="type">DeviceTimeoutException</span> dte)
+<span class="lineno">  </span>     {
+<span class="lineno">  </span>         <span class="comment">// 只有超时才会被捕获</span>
+<span class="lineno">  </span>         <span class="comment">// ⚠️ IsBreak 中断不经过这里！</span>
+<span class="lineno">  </span>     }
+<span class="lineno">  </span>
+<span class="lineno"><span class="highlight-line">  </span>     <span class="keyword">return base</span>.DoExcute(<span class="keyword">out</span> errMsg);  <span class="comment">// ← 始终返回 true，报告"成功"</span></span>
+<span class="lineno">  </span> }
+</code></pre>
+
+<h3>3.3 缺陷传导链路图</h3>
+
+<table>
+<tr><th>步骤</th><th>方法 / 类</th><th>文件</th><th>关键行为</th></tr>
+<tr><td>1</td><td><code>CalcTime</code></td><td><code>VirtualDeviceBase.cs:666</code></td><td><code>IsBreak → break</code>，正常返回，<strong>无异常</strong></td></tr>
+<tr><td>2</td><td><code>VIO.WaitIO</code></td><td><code>VIO.cs</code></td><td><code>CalcTime</code> 返回后正常退出</td></tr>
+<tr><td>3</td><td><code>WaitIO.DoExcute</code></td><td><code>WaitIO.cs</code></td><td>无异常 → <code>return true</code>，<strong style="color:var(--danger)">误报成功</strong></td></tr>
+<tr><td>4</td><td><code>MotionModule.DoFunction</code></td><td><code>MotionModule.cs:322</code></td><td><code>success = true</code> → <code>Status = Success</code></td></tr>
+<tr><td>5</td><td><code>MotionRunEngine.Run</code></td><td><code>MotionRunEngine.cs:254</code></td><td><code>isSuccess = Status == Success</code> → <code>true</code></td></tr>
+<tr><td>6</td><td><code>Group.DoExcute</code></td><td><code>Group.cs:91</code></td><td>所有子模块 Success → <code>return true</code></td></tr>
+<tr><td>7</td><td><code>HomeStation.DoExcute</code></td><td><code>HomeStation.cs:146</code></td><td><code>isSuccess = true</code>，Station 报告成功</td></tr>
+<tr><td>8</td><td><code>HomeTask</code></td><td><code>MotionEngine_part2.cs:366</code></td><td><code>homeStation.IsBreak == true</code> → 整体判为失败，但模块状态已污染</td></tr>
+</table>
+
+<h3>3.4 第二次 Home 异常完成的原因</h3>
+
+<div class="card warn">
+    <strong>第一次 Home 被 Stop 中断后的残留状态：</strong>
+    <ul style="margin:.5rem 0 0 1.2rem;">
+        <li>所有模块 <code>Status = Success</code>（因为 WaitIO 误报成功导致整条链路都标记为成功）</li>
+        <li>IO 信号仍为第一次设置的值（Stop 未清除 IO 输出信号）</li>
+        <li>模块 <code>IsBreak = true</code>（Stop 设置，Home 失败未重置）</li>
+    </ul>
+</div>
+
+<p>第二次 Home 执行时：</p>
+
+<ol style="margin-left:1.5rem; margin-bottom:1rem;">
+    <li><code>Home()</code> 的 <code>this.ForEach</code> 设置 <code>IsBreak = true</code>（已经是 true）</li>
+    <li><code>SetModuleBreak(homeStation, false)</code> 正确重置 IsBreak</li>
+    <li><code>homeStation.DoFunction()</code> 执行 → 各子模块 <code>DoFunction</code> 重置 <code>Status = Running</code></li>
+    <li>Group 子模块重新执行：
+        <ul style="margin-top:.3rem;">
+            <li>SetIO 步骤执行：IO 信号<strong>已经是目标值</strong>（第一次残留），相当于空操作</li>
+            <li>WaitIO 步骤执行：检查 IO 值 → <strong>IO 条件可能已经满足</strong>（残留状态）→ <code>action.Invoke()</code> 立即返回 <code>true</code></li>
+        </ul>
+    </li>
+    <li>WaitIO 立即完成 → Group 立即完成 → 但机器人<strong>实际未完成回零</strong></li>
+</ol>
+
+<div class="card danger">
+    <strong>根本原因总结：</strong><code>CalcTime</code> 无法区分"IO 条件自然满足"和"被 Stop 中断强制退出"，导致 WaitIO 将中断误报为成功。第一次的误报使 IO 信号和模块状态残留，第二次执行时 WaitIO 检测到残留的 IO 值立即返回成功，Group "直接完成"而机器人并未实际回零。
+</div>
+
+<!-- ===== 四、修复方案 ===== -->
+<h2>四、修复方案</h2>
+
+<h3>4.1 方案一（推荐）：WaitIO 检测 IsBreak 中断</h3>
+
+<p>在 <code>WaitIO.DoExcute</code> 中，<code>io.WaitIO()</code> 返回后检查设备是否被中断，而非正常完成：</p>
+
+<div class="filepath">WaitIO.cs — DoExcute 修复</div>
+<div class="fix-block">
+    <div class="fix-label">&#10003; 修复代码</div>
+    <pre><code><span class="keyword">public override bool</span> DoExcute(<span class="keyword">out string</span> errMsg)
+{
+    GetVDevice&lt;<span class="type">VIO</span>&gt;(Device, <span class="keyword">out var</span> io);
+    Result = <span class="keyword">true</span>;
+
+    <span class="comment">/* ... retryAction 设置 ... */</span>
+
+    <span class="keyword">try</span>
+    {
+        <span class="keyword">if</span> (IOType == IOType.Digital)
+            io.WaitIO(DigitalVal, OverTime * 1000, retryAction);
+        <span class="keyword">else</span>
+            io.WaitIO(AnlogVal, OverTime * 1000, retryAction);
+
+<span class="highlight-line-fix">        <span class="comment">// 检查 WaitIO 是否因 IsBreak 中断退出，而非 IO 条件满足</span></span>
+<span class="highlight-line-fix">        <span class="keyword">if</span> (io.IsBreak)</span>
+<span class="highlight-line-fix">        {</span>
+<span class="highlight-line-fix">            errMsg = $<span class="string">"{MyOwner.Alias} WaitIO 被中断"</span>;</span>
+<span class="highlight-line-fix">            Result = <span class="keyword">false</span>;</span>
+<span class="highlight-line-fix">            <span class="keyword">return false</span>;</span>
+<span class="highlight-line-fix">        }</span>
+    }
+    <span class="keyword">catch</span> (<span class="type">DeviceTimeoutException</span> dte)
+    {
+        <span class="comment">/* ... 超时处理不变 ... */</span>
+    }
+
+    <span class="keyword">return base</span>.DoExcute(<span class="keyword">out</span> errMsg);
+}</code></pre>
+</div>
+
+<p><strong>修复原理：</strong></p>
+<ul style="margin-left:1.5rem; margin-bottom:1rem;">
+    <li>CalcTime 退出后，如果 <code>IsBreak == true</code>，说明是被 Stop 强制中断，而非 IO 条件满足</li>
+    <li>此时 WaitIO 应返回 <code>false</code>（失败），而非 <code>true</code>（成功）</li>
+    <li>这会导致 Group 执行失败 → HomeStation 报告失败 → 第二次 Home 时 Group 会从头重新执行</li>
+</ul>
+
+<h3>4.2 补充方案：CalcTime 增加中断标志</h3>
+
+<p>如果希望从底层彻底解决，可让 CalcTime 区分退出原因：</p>
+
+<div class="filepath">VirtualDeviceBase.cs — CalcTime 增加返回值</div>
+<div class="fix-block">
+    <div class="fix-label">&#10003; 补充修复</div>
+    <pre><code><span class="keyword">protected bool</span> CalcTime(<span class="type">Func</span>&lt;<span class="keyword">bool</span>&gt; action, <span class="keyword">int</span> timeout = -1, <span class="keyword">int</span> sleep = 5, <span class="type">Action</span> timeoutAction = <span class="keyword">null</span>)
+{
+    <span class="keyword">double</span> time = 0;
+    IsBreak = <span class="keyword">false</span>;
+    IsPause = <span class="keyword">false</span>;
+
+    <span class="keyword">while</span> (<span class="keyword">true</span>)
+    {
+        WaitRecovery();
+        <span class="keyword">if</span> (IsBreak) <span class="keyword">return false</span>;    <span class="comment">// ← 中断退出，返回 false</span>
+        <span class="keyword">if</span> (timeout > 0 &amp;&amp; time > timeout) { <span class="comment">/* ... */</span> }
+        <span class="keyword">if</span> (action.Invoke()) <span class="keyword">return true</span>; <span class="comment">// ← 条件满足，返回 true</span>
+        Thread.Sleep(sleep);
+        <span class="keyword">if</span> (!IsPause) time += sleep;
+    }
+}</code></pre>
+</div>
+
+<p>此方案需要同步修改所有调用 CalcTime 的地方（VIO.WaitIO、VAxis 相关方法等），影响范围较大，建议作为后续优化。</p>
+
+<!-- ===== 五、影响范围 ===== -->
+<h2>五、影响范围评估</h2>
+
+<table>
+<tr><th>影响维度</th><th>说明</th></tr>
+<tr><td><strong>方案一改动文件</strong></td><td><code>WaitIO.cs</code>（仅 1 个文件）</td></tr>
+<tr><td><strong>改动行数</strong></td><td>约 6 行（增加 IsBreak 检查）</td></tr>
+<tr><td><strong>影响功能</strong></td><td>所有使用 WaitIO 的流程（回零、自动运行等），Stop 中断后的行为会更准确</td></tr>
+<tr><td><strong>回归风险</strong></td><td>低 — 仅影响 Stop 中断场景，正常流程不受影响</td></tr>
+<tr><td><strong>其他 Wait 类函数</strong></td><td>需排查 <code>WaitPlc</code>、<code>WaitAxis</code> 等是否也存在类似问题</td></tr>
+</table>
+
+<h3>需要排查的类似函数</h3>
+<table>
+<tr><th>函数</th><th>文件</th><th>是否使用 CalcTime</th><th>是否存在同样问题</th></tr>
+<tr><td><code>WaitIO</code></td><td><code>Luster.Module.Motion.Device/Functions/WaitIO.cs</code></td><td>是</td><td><strong style="color:var(--danger)">是</strong></td></tr>
+<tr><td><code>WaitPlc</code></td><td><code>Luster.Module.Motion.Protocol/Functions/WaitPlc.cs</code></td><td>需确认</td><td>需排查</td></tr>
+<tr><td><code>OverTimeFunction</code> 的其他子类</td><td>需确认</td><td>需确认</td><td>需排查</td></tr>
+</table>
+
+<!-- ===== 六、验证方案 ===== -->
+<h2>六、验证方案</h2>
+
+<div class="card success">
+    <strong>验证步骤：</strong>
+    <ol style="margin:.5rem 0 0 1.2rem;">
+        <li>创建包含 Group（SetIO → WaitIO）的回零站</li>
+        <li>执行 Home，在 WaitIO 等待过程中手动 Stop</li>
+        <li>确认 Stop 后 WaitIO 模块状态为 Error/Default（而非 Success）</li>
+        <li>再次执行 Home，确认 Group 从头完整执行</li>
+        <li>确认机器人正常完成回零</li>
+    </ol>
+</div>
+
+</div>
+</body>
+</html>

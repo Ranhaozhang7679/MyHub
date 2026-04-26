@@ -23,6 +23,7 @@
 
 using Luster.Common.DataStruct;
 using Luster.Common.DataStruct.DataModels;
+using Luster.Common.DataStruct.Enums;
 using Luster.Common.Tools;
 using Luster.TaskFlow.Common.Attributes;
 using Luster.TaskFlow.Common.Models;
@@ -93,11 +94,13 @@ namespace Luster.TaskFlow.Motion.Logic
             if (IsWaitTrue)
             {
                 WaitFunc(() => Express.GetResult(MyOwner), $"等待 {Express}", 30);
+                MyOwner.OnLog(LogType.Info, $"等待条件 [{Express}] 结果: {IsTrue}");
             }
             else
             {
                 // 表达式是否满足结果
                 IsTrue = Express.GetResult(MyOwner);
+                MyOwner.OnLog(LogType.Info, $"条件判断 [{Express}] 结果: {IsTrue}");
             }
 
             // 最终运行结果
