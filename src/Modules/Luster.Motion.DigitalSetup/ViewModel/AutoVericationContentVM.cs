@@ -281,68 +281,6 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             try
             {
                 ItemModels.Clear();
-
-                var rows = LoadAllSubPagesLatestCsv();
-                foreach (var row in rows)
-                {
-                    // 初次加载只显示项序、项次、标准，实测和状态留空
-                    row.实测 = "";
-                    row.状态 = "未点检";
-                    ItemModels.Add(row);
-                }
-            }
-            catch (Exception ex)
-            {
-                _commonbus.OnLog(new LogInfo()
-                {
-                    LogType = LogType.Info,
-                    LogMessage = $"更新列表失败: {ex.Message}"
-                });
-            }
-        }
-
-        /// <summary>
-        /// 获取子界面对应的 CSV 类别名列表
-        /// </summary>
-        private Dictionary<string, List<string>> GetSubPageCategoryMapping()
-        {
-            return new Dictionary<string, List<string>>
-            {
-                { "MainParameters", new List<string> { "SwVersion" } },
-                { "Communications", new List<string> { "ConfigSoftwareCom", "ConfigSoftwareNet" } },
-                { "IOConform", new List<string> { "DigitalInSingle", "DigitalOutSingle" } },
-                { "Horizontal", new List<string> { "AutomaticPosAndLeveling" } },
-                { "LoadCell", new List<string> { "CalibrationTable", "SuctionNozzle", "PressureRepetition" } },
-                { "Embossing", new List<string> { "AutomaticEmbossing" } },
-                { "DigitalVision", new List<string> { "AutoFocusing", "AutoFieldOfView", "AutoGrayScale" } },
-                { "AutoVisualCalibration", new List<string> { "AutoVisualCalibration" } },
-            };
-        }
-
-        /// <summary>
-        /// 判断一级页面是否为多工站界面
-        /// </summary>
-        private bool IsMultiStationPage(string pageName)
-        {
-            var multiStationPages = new HashSet<string>
-            {
-                "Horizontal", "LoadCell", "Embossing", "DigitalVision",
-                "PointTeaching", "AutoVisualCalibration"
-            };
-            return multiStationPages.Contains(pageName);
-        }
-
-        /// <summary>
-        /// 从单个 CSV 文件读取数据行，转换为 AssTbAutoVerication 列表
-        /// </summary>
-        private List<AssTbAutoVerication> ReadCsvRows(string csvPath, string sourceLabel)
-        {
-            var result = new List<AssTbAutoVerication>();
-            if (string.IsNullOrEmpty(csvPath) || !File.Exists(csvPath)) return result;
-
-            try
-            {
-                ItemModels.Clear();
                 var rows = LoadCurrentPageLatestCsv();
                 foreach (var row in rows)
                 {
@@ -537,7 +475,6 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             {
                 _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"保存页面状态失败: {ex.Message}" });
             }
-            return axisNames;
         }
 
         /// <summary>
@@ -773,7 +710,6 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                         if (!string.IsNullOrEmpty(name))
                             stationNames.Add(name);
                     }
-                    ItemModels.Add(row);
                 }
             }
             catch (Exception ex)
