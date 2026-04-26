@@ -37,6 +37,7 @@ using System.Windows.Input;
 using static System.Windows.Forms.AxHost;
 using Luster.Motion.Assests.Langs;
 using Prism.Services.Dialogs;
+using HandyControl.Data;
 
 namespace Luster.Motion.DigitalSetup.ViewModel
 {
@@ -314,6 +315,15 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             {
                 _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"分页更新失败: {ex.Message}" });
             }
+        }
+
+        /// <summary>
+        /// 重写基类 PageUpdated，阻止基类从 AssTbAutoVerication_Latest.csv 统一加载
+        /// AutoVerification 每个页面有自己的 CSV 读取逻辑
+        /// </summary>
+        public override void PageUpdated(FunctionEventArgs<int> obj)
+        {
+            LoadCurrentPageData();
         }
 
         /// <summary>
