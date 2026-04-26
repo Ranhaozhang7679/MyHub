@@ -51,15 +51,21 @@ namespace Luster.Module.Motion.Protocol.Functions
         [Parameter("功能码", 3, CN = "功能码", DefaultV = ModbusWriteFuncCode.WriteSingleRegister)]
         public ModbusWriteFuncCode FuncCode { get; set; }
 
+        [DependOn("FuncCode", ModbusWriteFuncCode.WriteSingleRegister, ModbusWriteFuncCode.WriteMultipleRegisters)]
         [Parameter("数据类型", 4, CN = "数据类型")]
         public DataType DataType { get; set; }
 
+        [DependOn("FuncCode", ModbusWriteFuncCode.WriteSingleRegister, ModbusWriteFuncCode.WriteMultipleRegisters)]
         [DependOn("DataType", DataType.Int, DataType.Float, DataType.Double)]
         [Parameter("字节顺序", 5, CN = "字节顺序")]
         public EndianType EndianType { get; set; }
 
         [Parameter("首地址,十进制值", 6, CN = "首地址")]
         public int StartAddress { get; set; }
+
+        [DependOn("FuncCode", ModbusWriteFuncCode.WriteSingleCoil, ModbusWriteFuncCode.WriteMultipleCoils)]
+        [Parameter("线圈值(1=ON/0=OFF,支持0x十六进制)", 7, CN = "线圈值", DefaultV = "1")]
+        public string CoilValue { get; set; }
 
         [DependOn("DataType", DataType.Bool)]
         [Parameter("写入布尔值", 7, CN = "布尔值")]
@@ -115,7 +121,14 @@ namespace Luster.Module.Motion.Protocol.Functions
 
             lock (lockPlc)
             {
-                if (DataType == DataType.Bool)
+                // FC05/FC15 线圈写入：绕过 DataType，直接解析线圈值
+                if (FuncCode == ModbusWriteFuncCode.WriteSingleCoil || FuncCode == ModbusWriteFuncCode.WriteMultipleCoils)
+                {
+                    bool coilBool = ParseCoilValue(CoilValue);
+                    communcation.Write<bool>(coilBool, $"{Address} {funcCodeStr} {StartAddress} {length}");
+                    Retry<bool>(communcation, coilBool, funcCodeStr);
+                }
+                else if (DataType == DataType.Bool)
                 {
                     communcation.Write<bool>(BoolVal, $"{Address} {funcCodeStr} {StartAddress} {length}");
                     Retry<bool>(communcation, BoolVal, funcCodeStr);
@@ -213,6 +226,31 @@ namespace Luster.Module.Motion.Protocol.Functions
             {
                 MyOwner.OnLog(LogType.Warning, $"模块:{MyOwner.Alias} 写入Modbus 失败!");
             }
+        }
+
+        /// <summary>
+        /// 解析线圈值，支持十进制(1/0)和十六进制(0xFF00/0x0000)格式
+        /// </summary>
+        private static bool ParseCoilValue(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return false;
+
+            value = value.Trim();
+
+            if (value.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
+                || value.StartsWith("0X", StringComparison.OrdinalIgnoreCase))
+            {
+                int hexVal = Convert.ToInt32(value, 16);
+                return hexVal != 0;
+            }
+
+            // 十进制解析
+            if (int.TryParse(value, out int decVal))
+                return decVal != 0;
+
+            // 兜底：非空非零字符串视为 ON
+            return true;
         }
     }
 }
