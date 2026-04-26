@@ -2215,6 +2215,72 @@ namespace Luster.Motion.Integration.Web
             Send(urlSim, jsonData, 5, true);
 
         }
+
+        /// <summary>
+        /// 参数变更时触发软件版本信息上传
+        /// </summary>
+        /// <param name="paramName"></param>
+        /// <param name="srcV"></param>
+        /// <param name="newV"></param>
+        public void Register(string paramName, object srcV, object newV)
+        {
+            //Register();
+            if (string.IsNullOrEmpty(URL))
+            {
+                return;
+            }
+            // 如果没有连接上，不触发通讯
+            string url = Path.Combine(URL, "capture/v6/softwareversions");
+            string urlSim = Path.Combine(URLSimulator, "capture/v6/softwareversions");
+            if (!isConnected /*|| !PDCAEnable()*/) return;
+
+            //所有版本需要一起发送
+            var motionSw = new
+            {
+                main_software = new
+                {
+                    version = ApiVision,
+                    hash_key = Sha1Signature(ApiVision),
+                },
+                sub_module = new
+                {
+                    repair_sop = new
+                    {
+                        version = repairVersion,
+                        hash_key = Sha1Signature(repairVersion),
+                    },
+                    spare_part_list = new
+                    {
+                        version = spareVersion,
+                        hash_key = Sha1Signature(spareVersion),
+                    }
+                },
+                attributes = new Dictionary<string, object>
+                {
+                    { paramName, new { old = srcV, @new = newV } }
+                },
+                station_info =
+                               new
+                               {
+                                   machine_sn = stationInfo.machine_sn,
+                                   machine_model_number = stationInfo.machine_model_number,
+                                   machine_rfid = stationInfo.machine_rifd,
+                                   vendor = stationInfo.vendor,
+                                   site = stationInfo.site,
+                                   building = stationInfo.building,
+                                   product = stationInfo.product,
+                                   station_type = stationInfo.station_type,
+                                   line = stationInfo.line,
+                                   instance = stationInfo.instance,
+                                   line_type = stationInfo.line_type,
+                                   station_name = stationInfo.station_name,
+                                   build_type = stationInfo.build_type,
+                               }
+            };
+            string jsonData = JsonTool.ToJson(motionSw);
+            Send(url, jsonData, 5, true);
+            Send(urlSim, jsonData, 5, true);
+        }
         protected override void Register(IMotionController motionController)
         {
             base.Register(motionController);
@@ -2227,6 +2293,31 @@ namespace Luster.Motion.Integration.Web
             motionController.ProductTrowEvent -= MotionControl_ThrowSmallPartEvent;
             motionController.ProductTrowEvent += MotionControl_ThrowSmallPartEvent;
 
+            // 参数变更，同步触发软件版本信息上传
+            motionController.PropertyChanged -= MotionController_PropertyChanged;
+            motionController.PropertyChanged += MotionController_PropertyChanged;
+
+        }
+
+        /// <summary>
+        /// 参数变更，同步触发软件版本信息上传
+        /// </summary>
+        /// <param name="paramName"></param>
+        /// <param name="srcV"></param>
+        /// <param name="newV"></param>
+        private void MotionController_PropertyChanged(string paramName, object srcV, object newV)
+        {
+            try
+            {
+                if (paramName != null && paramName.Contains("Z轴"))
+                {
+                    Register(paramName, srcV, newV);
+                }
+            }
+            catch (Exception ex)
+            {
+                OnLog(ex.Message);
+            }
         }
 
         private void MotionController_ProductEvent(ProductInfo arg1, bool arg2, double ct)
