@@ -92,16 +92,20 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             }
         }
 
+        private readonly PageEnableSettingsService _pageEnableSettingsService;
+
         public AutoVericationContentVM(IRepository repository,
                                         IRegionManager regionManager,
                                         ICommonBus commonBus,
                                         IMotionController motionController,
                                         IDeviceEngine deviceEngine,
                                         FlowBus _flowBus,
-                                        CSVHelper cSVHelper, IDialogService dialogService, CheckStatusService checkStatusService)
+                                        CSVHelper cSVHelper, IDialogService dialogService, CheckStatusService checkStatusService,
+                                        PageEnableSettingsService pageEnableSettingsService)
                                         : base(repository, regionManager, commonBus, cSVHelper, _flowBus, dialogService, checkStatusService)
         {
             _parentRegionName = "AutoVericationContent";
+            _pageEnableSettingsService = pageEnableSettingsService;
 
             flowBus = _flowBus;
             _deviceEngine = deviceEngine;
@@ -125,23 +129,22 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             // 注册子页面到DigitalAssPageModel，用于设置对话框和状态聚合
             DigitalAssPageModel.RegisterSubPages("AutoVericationContent", Pages);
 
+            // 恢复子页面的IsEnabled设置（父级BuildPages先于本构造函数执行，需在此补充应用）
+            _pageEnableSettingsService?.ApplySubPageSettings();
+
             EndCommand = new DelegateCommand(OnEnd);
             OneKeyCheckCommand = new DelegateCommand<object>(OnOneKeyCheck);
             UpdateItemsCommand = new DelegateCommand(OnUpdateItems);
             QueryCommand = new DelegateCommand(OnQuery);
             PageUpdatedCommand = new DelegateCommand<object>(OnPageUpdated);
 
-            ConfigKey = "AutoVericationConfig";
-            LoadStationConfigFromJson();
-            UpdateStationConfigs();
-            LoadStationCheckStatus();
-
             PageStatusService.Instance.StatusChanged += OnPageStatusChanged;
-            InitializePageStatus();
 
+            // 延迟加载：等待UI和持久化服务就绪后，统一加载状态和数据
             System.Windows.Application.Current.Dispatcher.BeginInvoke(new Action(() =>
             {
                 LoadCheckStatusForAllPages();
+                OnUpdateItems();
             }), System.Windows.Threading.DispatcherPriority.Loaded);
         }
 
@@ -159,6 +162,9 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                         page.CheckStatus = record != null ? record.Status : CheckStatus.NotChecked;
                     }
                 }
+
+                // 聚合总体状态并同步到 DigitalAssPageModel
+                SyncOverallStatusToPageStatusService();
             }
             catch (Exception ex)
             {
@@ -508,6 +514,16 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 };
 
                 PageStatusService.Instance.UpdateStatus(pageStatusName, statusText);
+
+                // 持久化聚合后的总状态，确保父级启动时能直接读取（而非重新聚合所有子记录）
+                _checkStatusService?.UpdateStatus(
+                    $"{_parentRegionName}_Overall",
+                    overallStatus,
+                    _parentRegionName,
+                    "Overall",
+                    _commonbus?.CurrentUser?.UserName ?? "Unknown",
+                    $"聚合状态({enabledPages.Count}个启用页面)"
+                );
 
                 Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
                 {
