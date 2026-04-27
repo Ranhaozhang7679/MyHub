@@ -122,6 +122,9 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             SelectedReportPage = Pages.Where(x => x.IsSelected).FirstOrDefault();
             InitModels();
 
+            // 注册子页面到DigitalAssPageModel，用于设置对话框和状态聚合
+            DigitalAssPageModel.RegisterSubPages("AutoVericationContent", Pages);
+
             EndCommand = new DelegateCommand(OnEnd);
             OneKeyCheckCommand = new DelegateCommand<object>(OnOneKeyCheck);
             UpdateItemsCommand = new DelegateCommand(OnUpdateItems);
@@ -487,10 +490,11 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 string pageStatusName = DigitalAssPageModel.GetNameByRegion(_parentRegionName);
                 if (string.IsNullOrEmpty(pageStatusName)) return;
 
-                // 从所有 CommonPageModel 的 CheckStatus 聚合
-                bool hasNG = Pages.Any(p => p.CheckStatus == CheckStatus.CheckedFail);
-                bool allOK = Pages.All(p => p.CheckStatus == CheckStatus.CheckedOK);
-                bool hasData = Pages.Any(p => p.CheckStatus != CheckStatus.NotChecked);
+                // 仅从 IsEnabled 的 CommonPageModel 聚合状态
+                var enabledPages = Pages.Where(p => p.IsEnabled).ToList();
+                bool hasNG = enabledPages.Any(p => p.CheckStatus == CheckStatus.CheckedFail);
+                bool allOK = enabledPages.All(p => p.CheckStatus == CheckStatus.CheckedOK);
+                bool hasData = enabledPages.Any(p => p.CheckStatus != CheckStatus.NotChecked);
 
                 var overallStatus = hasNG ? CheckStatus.CheckedFail
                     : allOK && hasData ? CheckStatus.CheckedOK
@@ -537,6 +541,18 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             { "AutoVisualCalibration", new List<string> { "AutoVisualCalibration" } },
         };
 
+        // Category名称 → StationConfig.json 中的键名
+        private static readonly Dictionary<string, string> CategoryToConfigKey = new Dictionary<string, string>
+        {
+            { "CalibrationTable", "CalibrationTableConfig" },
+            { "SuctionNozzle", "SuctionNozzle" },
+            { "PressureRepetition", "PressureRepetitionConfig" },
+            { "AutoFocusing", "AutoFocusingConfig" },
+            { "AutomaticEmbossing", "AutomaticEmbossingConfig" },
+            { "AutomaticPosAndLeveling", "AutomaticPosAndLevelingConfig" },
+            { "AutoVisualCalibration", "AutoVisualCalibration" },
+        };
+
         private static readonly HashSet<string> MultiStationPages = new HashSet<string>
         {
             "Horizontal", "LoadCell", "Embossing", "DigitalVision",
@@ -574,7 +590,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 {
                     if (MultiStationPages.Contains(pageName))
                     {
-                        var stations = LoadStationConfigsFromFile(pageName, recipeDir);
+                        var stations = LoadStationConfigsFromFile(category, recipeDir);
                         if (stations != null && stations.Count > 0)
                         {
                             foreach (var station in stations)
@@ -657,9 +673,9 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         }
 
         /// <summary>
-        /// 从 StationConfig.json 读取指定页面的工站名称列表
+        /// 从 StationConfig.json 读取指定 category 的工站名称列表
         /// </summary>
-        private List<string> LoadStationConfigsFromFile(string pageName, string recipeDir)
+        private List<string> LoadStationConfigsFromFile(string category, string recipeDir)
         {
             var stationNames = new List<string>();
             try
@@ -670,36 +686,20 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 var json = File.ReadAllText(configFile);
                 var allConfigs = Newtonsoft.Json.Linq.JObject.Parse(json);
 
-                var configKey = $"{pageName}Config";
+                // 通过 CategoryToConfigKey 映射查找正确的键名
+                string configKey;
+                if (!CategoryToConfigKey.TryGetValue(category, out configKey))
+                {
+                    configKey = $"{category}Config"; // 兜底
+                }
+
                 var configObj = allConfigs[configKey];
                 if (configObj == null)
                 {
-                    foreach (var child in allConfigs.Children())
-                    {
-                        var obj = child as Newtonsoft.Json.Linq.JProperty;
-                        if (obj != null)
-                        {
-                            var inner = obj.Value as Newtonsoft.Json.Linq.JObject;
-                            var stations = inner?.Property("StationConfigs");
-                            if (stations != null)
-                            {
-                                var arr = stations.Value as Newtonsoft.Json.Linq.JArray;
-                                if (arr != null)
-                                {
-                                    foreach (var item in arr)
-                                    {
-                                        var name = item["Name"]?.ToString();
-                                        if (!string.IsNullOrEmpty(name))
-                                            stationNames.Add(name);
-                                    }
-                                    if (stationNames.Count > 0) return stationNames;
-                                    stationNames.Clear();
-                                }
-                            }
-                        }
-                    }
-                    return stationNames;
+                    // 尝试不加 Config 后缀
+                    configObj = allConfigs[category];
                 }
+                if (configObj == null) return stationNames;
 
                 var stationArray = configObj["StationConfigs"] as Newtonsoft.Json.Linq.JArray;
                 if (stationArray != null)
@@ -714,7 +714,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             }
             catch (Exception ex)
             {
-                _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"读取工站配置失败[{pageName}]: {ex.Message}" });
+                _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"读取工站配置失败[{category}]: {ex.Message}" });
             }
             return stationNames;
         }
