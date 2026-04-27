@@ -2293,9 +2293,9 @@ namespace Luster.Motion.Integration.Web
             motionController.ProductTrowEvent -= MotionControl_ThrowSmallPartEvent;
             motionController.ProductTrowEvent += MotionControl_ThrowSmallPartEvent;
 
-            // 参数变更，同步触发软件版本信息上传
-            motionController.PropertyChanged -= MotionController_PropertyChanged;
-            motionController.PropertyChanged += MotionController_PropertyChanged;
+            //// 参数变更，同步触发软件版本信息上传
+            //motionController.PropertyChanged -= MotionController_PropertyChanged;
+            //motionController.PropertyChanged += MotionController_PropertyChanged;
 
         }
 
