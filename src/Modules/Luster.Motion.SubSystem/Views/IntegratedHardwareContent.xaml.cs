@@ -10,16 +10,6 @@ namespace Luster.Motion.SubSystem.Views
         public IntegratedHardwareContent()
         {
             InitializeComponent();
-            this.Loaded += IntegratedHardwareContent_Loaded;
-        }
-
-        private void IntegratedHardwareContent_Loaded(object sender, System.Windows.RoutedEventArgs e)
-        {
-            // 触发默认导航：导航到第一个配置项（驾驶舱配置）
-            if (DataContext is ViewModel.IntegratedHardwareContentVM vm)
-            {
-                vm.NavigateToDefault();
-            }
         }
     }
 }
