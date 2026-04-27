@@ -45,6 +45,11 @@ namespace Luster.Motion.DataStruct
         public string ErrorMsg { get; set; }
 
         /// <summary>
+        /// 实际发送的hex指令
+        /// </summary>
+        public string SentHex { get; set; }
+
+        /// <summary>
         /// 数据结果
         /// </summary>
         public List<T> Datas { get; set; }
