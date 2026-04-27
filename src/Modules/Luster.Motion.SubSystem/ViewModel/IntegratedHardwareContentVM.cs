@@ -26,6 +26,9 @@ namespace Luster.Motion.SubSystem.ViewModel
         private string _currentConfigRegion = "";
         private string _currentDebugRegion = "";
 
+        // 跨实例持久化标签页状态
+        private static int _lastSelectedTabIndex = 0;
+
         /// <summary>
         /// 配置导航命令
         /// </summary>
@@ -115,24 +118,6 @@ namespace Luster.Motion.SubSystem.ViewModel
             });
         }
 
-        public override void OnNavigatedTo(NavigationContext navigationContext)
-        {
-            base.OnNavigatedTo(navigationContext);
-            // 强制刷新子视图：重置缓存以跳过去重导航判断
-            _currentConfigRegion = "";
-            _currentDebugRegion = "";
-            if (_selectedConfigItem != null)
-                NavigateConfig(_selectedConfigItem);
-            if (_selectedDebugItem != null)
-                NavigateDebug(_selectedDebugItem);
-        }
-
-        public override void OnNavigatedFrom(NavigationContext navigationContext)
-        {
-            base.OnNavigatedFrom(navigationContext);
-            commonBus.EventBus.GetEvent<ViewRefreshEvent>().Publish();
-        }
-
         /// <summary>
         /// 导航到默认页面（视图加载后调用）
         /// </summary>
@@ -140,6 +125,22 @@ namespace Luster.Motion.SubSystem.ViewModel
         {
             // 切换到默认标签页（配置），会自动导航到第一个菜单项
             SelectTab(0);
+        }
+
+        public override void OnNavigatedFrom(NavigationContext navigationContext)
+        {
+            base.OnNavigatedFrom(navigationContext);
+            _lastSelectedTabIndex = SelectedTabIndex;
+        }
+
+        public override void OnNavigatedTo(NavigationContext navigationContext)
+        {
+            base.OnNavigatedTo(navigationContext);
+            _currentConfigRegion = "";
+            _currentDebugRegion = "";
+
+            // 恢复上次离开时的标签页
+            SelectTab(_lastSelectedTabIndex);
         }
 
         /// <summary>
@@ -167,7 +168,7 @@ namespace Luster.Motion.SubSystem.ViewModel
                 new NavigationItemModel { Index = 2, Name = "VCylinder", Region = "VCylinderContent", IsSelected = false },
                 new NavigationItemModel { Index = 3, Name = "VVacuum", Region = "VVacuumContent", IsSelected = false },
                 new NavigationItemModel { Index = 4, Name = "VIO", Region = "VIOContent", IsSelected = false },
-                new NavigationItemModel { Index = 5, Name = "VAxisM", Region = "VAxisMContent", IsSelected = false },
+                new NavigationItemModel { Index = 5, Name = "VAxisM", Region = "AxisIODebugContent", IsSelected = false },
                 new NavigationItemModel { Index = 6, Name = "VCommuncation", Region = "VCommuncationContent", IsSelected = false },
                 new NavigationItemModel { Index = 7, Name = "VAxis", Region = "VAxisContent", IsSelected = false }
             };
