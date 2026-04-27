@@ -1301,6 +1301,7 @@ namespace Luster.Motion.EditorUI
                 forwordStack.Push(command);
                 Remain10Stack(forwordStack);
                 command.Undo(this);
+                commonBus.OnLog(LogType.Info, $"撤销:{command.Description}");
             }
             else
             {
@@ -1308,6 +1309,7 @@ namespace Luster.Motion.EditorUI
                 command = forwordStack.Pop();
                 backStack.Push(command);
                 command.Redo(this);
+                commonBus.OnLog(LogType.Info, $"重做:{command.Description}");
             }
 
             commonBus.IsNeedSave = true;
