@@ -681,6 +681,8 @@ namespace Luster.Motion.SubSystem.ViewModel
             {
                 Title = webConfig.MachineName ?? "CGLink";
                 StationId = webConfig.StationId;
+                if (TitleVisible)
+                    ProjName = $"{commonBus.CurrentRecipe?.ProjInfo?.ProjName}-{commonBus.CurrentRecipe?.Name}  {webConfig.SoftVersion}";
             });
 
             bus.GetEvent<AlarmEvent>().Subscribe(a =>
