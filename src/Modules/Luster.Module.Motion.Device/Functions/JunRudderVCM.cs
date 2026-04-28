@@ -540,7 +540,7 @@ namespace Luster.Module.Motion.Device.Functions
                             }
                         }
                         catch { }
-                        Thread.Sleep(5);
+                        Thread.Sleep(1);
                     }
                 }, cts.Token);
 
