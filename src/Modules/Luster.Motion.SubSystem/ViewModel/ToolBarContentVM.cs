@@ -469,9 +469,14 @@ namespace Luster.Motion.SubSystem.ViewModel
 
         private void MController_MachineManualEvent(string obj)
         {
-            //如果有Hive弹窗，不再响应设备按键
+            //HiveAlarmDialog 弹窗期间：允许切换并触发暂停，但保持 Alarm 状态
             if (useHiveDialog && webConfig.HiveEnabled)
             {
+                var curStatus = mController.MachineStatus;
+                if (curStatus == EngineStatus.Running || curStatus == EngineStatus.MaterialPending)
+                {
+                    mController.Pause(true);
+                }
                 return;
             }
             if (webConfig.HiveEnabled && (mController.GetCurrentMode().Contains("生产") || mController.GetCurrentMode().Contains("空跑"))) //且生产模式
