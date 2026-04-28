@@ -7,8 +7,10 @@ using Luster.TaskFlow.Motion;
 using Luster.TaskFlow.Motion.Enums;
 using Luster.TaskFlow.Motion.Interfaces;
 using System;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Luster.Module.Motion.Device.Functions
 {
@@ -133,6 +135,11 @@ namespace Luster.Module.Motion.Device.Functions
         [DependOn("ActionType", VCMActionType.SoftLanding)]
         [Parameter("电流-压力标定偏移B", 26, CN = "电流标定B*1000", DefaultV = 0)]
         public double CurrentPressureB { get; set; }
+
+        // --- 压力CSV保存 ---
+        [DependOn("ActionType", VCMActionType.SoftLanding)]
+        [Parameter("压力CSV保存目录", 27, CN = "CSV保存目录")]
+        public string PressureCsvPath { get; set; }
 
         // ===== 非标回零参数 =====
         [DependOn("ActionType", VCMActionType.Home, VCMActionType.HomeNonStandard)]
@@ -390,6 +397,39 @@ namespace Luster.Module.Motion.Device.Functions
         }
 
         /// <summary>
+        /// 异步保存压力数据为CSV（No,Time(ms),Pressure(N)）
+        /// 文件名: yyyyMMdd-HHmmss.csv，保存到 PressureCsvPath 目录
+        /// </summary>
+        private void SavePressureCsvAsync(System.Collections.Generic.List<(int TimeMs, double Pressure)> records)
+        {
+            if (string.IsNullOrWhiteSpace(PressureCsvPath)) return;
+
+            var capturedRecords = new System.Collections.Generic.List<(int TimeMs, double Pressure)>(records);
+            string dir = PressureCsvPath;
+            string fileName = DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".csv";
+
+            Task.Run(() =>
+            {
+                try
+                {
+                    if (!Directory.Exists(dir))
+                        Directory.CreateDirectory(dir);
+
+                    string filePath = Path.Combine(dir, fileName);
+                    using (var writer = new StreamWriter(filePath, false, System.Text.Encoding.UTF8))
+                    {
+                        writer.WriteLine("No,Time,Press");
+                        for (int i = 0; i < capturedRecords.Count; i++)
+                        {
+                            writer.WriteLine($"{i + 1},{capturedRecords[i].TimeMs},{capturedRecords[i].Pressure:F4}");
+                        }
+                    }
+                }
+                catch { }
+            });
+        }
+
+        /// <summary>
         /// 根据目标压力(N)反算扭矩SDO值
         /// 界面K/B已放大1000倍，计算时除以1000还原
         /// 结果×100: 标定用扭矩8~17 → SDO值800~1700
@@ -444,8 +484,8 @@ namespace Luster.Module.Motion.Device.Functions
                 _axis.SDOWrite(0x2017, 0, torque, 2);
                 _axis.SDOWrite(0x2018, 0, torque, 2);
 
-                // 5. 确保CSP模式（SDOWrite同步返回，驱动器已处理，短延时即可）
-                Thread.Sleep(10);
+                // 5. 确保CSP模式（13次SDOWrite后总线需要稳定时间）
+                Thread.Sleep(20);
 
                 // 6. 切换到力控模式（PDO读取状态，避免SDO拥堵）
                 int modeState = 0;
@@ -471,53 +511,97 @@ namespace Luster.Module.Motion.Device.Functions
 
                 // 7. 触发力控（上升沿：先清零再置1）
                 _axis.SDOWrite(0x2016, 0, 0, 2);
-                Thread.Sleep(5);
+                Thread.Sleep(10);
                 _axis.SDOWrite(0x2016, 0, 1, 2);
 
                 // 8. 等待力控完成，实时采集压力
+                // 独立Task采集压力(PDO)，SDO状态检查与PDO互不干扰
                 int elapsed = 0;
                 int timeoutMs = SoftLandingTimeout * 1000;
                 bool hadStarted = false;
+                var pressureRecords = new System.Collections.Generic.List<(int TimeMs, double Pressure)>();
                 var pressureSamples = new System.Collections.Generic.List<double>();
+                var cts = new CancellationTokenSource();
+                var sw = System.Diagnostics.Stopwatch.StartNew();
 
-                while (elapsed < timeoutMs)
+                // 压力采集Task：独立线程高频读取PDO(0x6077)，同时记录时间戳
+                var pressureTask = Task.Run(() =>
                 {
-                    if (_isBreak) return;
-
-                    int state = 0;
-                    _axis.SDORead(0x201A, 0, 2, out state, 1);
-                    int phase = state & 0x0F;
-
-                    if (phase > 1) hadStarted = true;
-
-                    // 力控过程中实时采集压力
-                    if (hadStarted)
+                    while (!cts.Token.IsCancellationRequested)
                     {
-                        pressureSamples.Add(ReadFeedbackPressure());
+                        try
+                        {
+                            double pressure = ReadFeedbackPressure();
+                            int timeMs = (int)sw.ElapsedMilliseconds;
+                            lock (pressureRecords)
+                            {
+                                pressureRecords.Add((timeMs, pressure));
+                                pressureSamples.Add(pressure);
+                            }
+                        }
+                        catch { }
+                        Thread.Sleep(5);
+                    }
+                }, cts.Token);
+
+                try
+                {
+                    while (elapsed < timeoutMs)
+                    {
+                        if (_isBreak)
+                        {
+                            cts.Cancel();
+                            pressureTask.Wait(500);
+                            return;
+                        }
+
+                        int phase = 0;
+                        try
+                        {
+                            int state = 0;
+                            _axis.SDORead(0x201A, 0, 2, out state, 2);
+                            phase = state & 0x0F;
+                        }
+                        catch
+                        {
+                            // SDO读取失败不中断压力采集，继续下一轮
+                        }
+
+                        if (phase > 1) hadStarted = true;
+
+                        if (hadStarted && phase == 1)
+                        {
+                            cts.Cancel();
+                            pressureTask.Wait(500);
+
+                            OutPosition = _axis.GetCurrentPos();
+                            OutPressure = string.Join(",", pressureSamples);
+                            OutResult = true;
+
+                            SavePressureCsvAsync(pressureRecords);
+                            _axis.SDOWrite(0x2016, 0, 0x0100, 2);
+                            return;
+                        }
+
+                        Thread.Sleep(20);
+                        elapsed += 20;
                     }
 
-                    if (hadStarted && phase == 1)
-                    {
-                        OutPosition = _axis.GetCurrentPos();
-                        pressureSamples.Add(ReadFeedbackPressure());
-                        OutPressure = string.Join(",", pressureSamples);
-                        OutResult = true;
-
-                        // 切回位置模式
-                        _axis.SDOWrite(0x2016, 0, 0x0100, 2);
-                        return;
-                    }
-
-                    Thread.Sleep(10);
-                    elapsed += 10;
+                    // 超时
+                    cts.Cancel();
+                    pressureTask.Wait(500);
+                    OutPosition = _axis.GetCurrentPos();
+                    OutPressure = string.Join(",", pressureSamples);
+                    OutResult = false;
+                    OutFailReason = $"软着陆超时({SoftLandingTimeout}秒)";
+                    SavePressureCsvAsync(pressureRecords);
                 }
-
-                // 超时
-                OutPosition = _axis.GetCurrentPos();
-                pressureSamples.Add(ReadFeedbackPressure());
-                OutPressure = string.Join(",", pressureSamples);
-                OutResult = false;
-                OutFailReason = $"软着陆超时({SoftLandingTimeout}秒)";
+                finally
+                {
+                    cts.Cancel();
+                    try { pressureTask.Wait(500); } catch { }
+                    cts.Dispose();
+                }
             }
             catch (Exception ex)
             {
