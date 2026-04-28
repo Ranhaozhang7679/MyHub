@@ -15,6 +15,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Threading;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Luster.Common.DataAccess.Repositories;
 using Luster.Common.Tools;
 using Luster.Motion.CommonUI;
@@ -91,6 +92,16 @@ namespace Luster.Motion.ReportUI.ViewModel
             set => SetProperty(ref _yAxisMax, value);
         }
 
+        private double _yAxisMin = 0;
+        /// <summary>
+        /// Y 轴下限（kgf），设为负值可查看负数压力
+        /// </summary>
+        public double YAxisMin
+        {
+            get => _yAxisMin;
+            set => SetProperty(ref _yAxisMin, value);
+        }
+
         // 原始数据缓存
         private List<List<ObservablePoint>> _rawDataCache = new List<List<ObservablePoint>>();
         private double _cachedTimeMax = 1000;
@@ -132,6 +143,13 @@ namespace Luster.Motion.ReportUI.ViewModel
                 if (_xAxisStep <= 0) XAxisStep = 50;
                 RedrawChart();
             }));
+
+        private DelegateCommand<FrameworkElement> _saveImageCommand;
+        /// <summary>
+        /// 保存图表为 PNG 图片
+        /// </summary>
+        public DelegateCommand<FrameworkElement> SaveImageCommand =>
+            _saveImageCommand ?? (_saveImageCommand = new DelegateCommand<FrameworkElement>(SaveChartImage));
 
         #endregion
 
@@ -296,7 +314,29 @@ namespace Luster.Motion.ReportUI.ViewModel
             double xStep = XAxisStep > 0 ? XAxisStep : 50;
             double yStep = YAxisStep > 0 ? YAxisStep : 0.05;
             double yMax = YAxisMax > 0 ? YAxisMax : pressMax * 1.05;
+            double yMin = YAxisMin;
             double xMax = Math.Ceiling(timeMax / xStep) * xStep + xStep;
+
+            // 计算标注 Y 位置：用户设定上限时标注放在范围内，自动模式扩展上限
+            double annotationY;
+            if (_steps.Count > 0)
+            {
+                if (YAxisMax > 0)
+                {
+                    // 用户设置了上限，标注放在可见范围内
+                    annotationY = Math.Min(pressMax * 1.08, yMax * 0.92);
+                    annotationY = Math.Max(annotationY, pressMax * 1.02);
+                }
+                else
+                {
+                    annotationY = pressMax * 1.08;
+                    yMax = Math.Max(yMax, annotationY * 1.05);
+                }
+            }
+            else
+            {
+                annotationY = pressMax * 1.08;
+            }
 
             var axis_x = new Axis();
             axis_x.Name = "Time/ms";
@@ -315,7 +355,7 @@ namespace Luster.Motion.ReportUI.ViewModel
             axis_y.Name = "Press/kgf";
             axis_y.NameTextSize = 12;
             axis_y.TextSize = 10;
-            axis_y.MinLimit = 0;
+            axis_y.MinLimit = yMin;
             axis_y.MaxLimit = yMax;
             axis_y.MinStep = yStep;
             axis_y.ForceStepToMin = true;
@@ -325,7 +365,7 @@ namespace Luster.Motion.ReportUI.ViewModel
             axis_y.NamePadding = new Padding(4, 0, 4, 0);
 
             // 步骤标注
-            DrawStepAnnotations(chartSeries, _steps, pressMax, xMax);
+            DrawStepAnnotations(chartSeries, _steps, pressMax, xMax, yMin, annotationY);
 
             // 顶部辅助 X 轴：显示步骤名称
             Axis axis_x_labels = null;
@@ -387,11 +427,9 @@ namespace Luster.Motion.ReportUI.ViewModel
 
         #region 步骤标注
 
-        private void DrawStepAnnotations(List<ISeries> chartSeries, List<StepAnnotationConfigModel> steps, double pressMax, double xMax)
+        private void DrawStepAnnotations(List<ISeries> chartSeries, List<StepAnnotationConfigModel> steps, double pressMax, double xMax, double yMin, double annotationY)
         {
             if (steps == null || steps.Count == 0) return;
-
-            double annotationY = pressMax * 1.08;
 
             foreach (var step in steps)
             {
@@ -422,7 +460,7 @@ namespace Luster.Motion.ReportUI.ViewModel
                 };
                 chartSeries.Add(bar);
 
-                // 垂直分隔线
+                // 垂直分隔线（从 Y 轴下限到标注位置）
                 var sep = new LineSeries<ObservablePoint>();
                 sep.Stroke = new SolidColorPaint(new SKColor(stepColor.Red, stepColor.Green, stepColor.Blue, 120), 1);
                 sep.LineSmoothness = 0;
@@ -432,7 +470,7 @@ namespace Luster.Motion.ReportUI.ViewModel
                 sep.Name = null;
                 sep.Values = new List<ObservablePoint>
                 {
-                    new ObservablePoint(start, 0),
+                    new ObservablePoint(start, yMin),
                     new ObservablePoint(start, annotationY),
                 };
                 chartSeries.Add(sep);
@@ -459,7 +497,7 @@ namespace Luster.Motion.ReportUI.ViewModel
                 endLine.Name = null;
                 endLine.Values = new List<ObservablePoint>
                 {
-                    new ObservablePoint(lastStep.EndTimeMs, 0),
+                    new ObservablePoint(lastStep.EndTimeMs, yMin),
                     new ObservablePoint(lastStep.EndTimeMs, annotationY),
                 };
                 chartSeries.Add(endLine);
@@ -469,6 +507,48 @@ namespace Luster.Motion.ReportUI.ViewModel
         #endregion
 
         #region 辅助方法
+
+        private void SaveChartImage(FrameworkElement element)
+        {
+            if (element == null || element.ActualWidth <= 0 || element.ActualHeight <= 0) return;
+
+            var dialog = new Microsoft.Win32.SaveFileDialog();
+            dialog.Filter = "PNG 图片|*.png";
+            dialog.DefaultExt = ".png";
+            dialog.FileName = $"JDPressure_{DateTime.Now:yyyyMMdd_HHmmss}";
+            if (dialog.ShowDialog() != true) return;
+
+            double dpi = 2.0;
+            int w = (int)element.ActualWidth;
+            int h = (int)element.ActualHeight;
+
+            var renderBitmap = new RenderTargetBitmap(
+                (int)(w * dpi), (int)(h * dpi),
+                96 * dpi, 96 * dpi,
+                System.Windows.Media.PixelFormats.Pbgra32);
+
+            // 白底
+            var bgVisual = new System.Windows.Media.DrawingVisual();
+            using (var dc = bgVisual.RenderOpen())
+            {
+                dc.DrawRectangle(System.Windows.Media.Brushes.White, null,
+                    new Rect(0, 0, w, h));
+            }
+            renderBitmap.Render(bgVisual);
+
+            // 图表内容
+            renderBitmap.Render(element);
+
+            var encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(renderBitmap));
+            using (var stream = File.Create(dialog.FileName))
+            {
+                encoder.Save(stream);
+            }
+
+            MessageBox.Show($"图片已保存至：{dialog.FileName}", "保存成功",
+                MessageBoxButton.OK, MessageBoxImage.Information);
+        }
 
         private static double CalculateNiceStep(double range, int targetTicks)
         {
