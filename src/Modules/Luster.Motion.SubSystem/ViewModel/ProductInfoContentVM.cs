@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 using System.Management;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -1832,11 +1833,29 @@ namespace Luster.Motion.SubSystem.ViewModel
             //EditDate = tempEditDate;
 
 
-            //把vision注册按钮屏蔽
-            //if(tempSiteCode == "FXZZ")
-            //{
-            //    MachineRegisterCommand;
-            //}
+            // 重新加载 Version.xml 中的版本信息
+            try
+            {
+                string versionXMLPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Version.xml");
+                if (File.Exists(versionXMLPath))
+                {
+                    XDocument doc = XDocument.Load(versionXMLPath);
+                    XElement softVersionElement = doc.Root.Element("SoftVersion");
+                    if (softVersionElement != null)
+                    {
+                        string softVersion = softVersionElement.Value;
+                        var parts = softVersion.Split('-');
+                        string firstTwoParts = string.Join("-", parts.Take(2));
+                        string lastPart = parts.Last();
+                        SoftVersion = $"{firstTwoParts}-{webConfig.VisionVersion}-{webConfig.RobotVersion}-{webConfig.LaserVersion}-{lastPart}";
+                    }
+                }
+            }
+            catch { }
+
+            SFCHelper.SetConfig(webConfig);
+            commonBus.IsNeedSave = true;
+            commonBus.EventBus.GetEvent<SystemConfigChangeEvent>().Publish();
 
         }));
 
