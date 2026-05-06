@@ -18,69 +18,98 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- 顶部工具栏 -->
-        <Grid Grid.Row="0" Margin="4">
-            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                <Button
-                    Content="导入曲线数据"
-                    Command="{Binding ImportCommand}"
-                    Style="{StaticResource ButtonPrimary}"
-                    Width="130" Margin="0,0,8,0" />
-                <Button
-                    Content="步骤配置"
-                    Command="{Binding OpenStepConfigCommand}"
-                    Style="{StaticResource ButtonInfo}"
-                    Width="100" Margin="0,0,16,0" />
+        <!-- 顶部工具栏（两行布局，适配 1280*1024）-->
+        <StackPanel Grid.Row="0" Margin="4">
+            <!-- 第一行：公共按钮 + Time-Press 参数 + 刷新 -->
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,2">
+                <Button Content="导入曲线数据" Command="{Binding ImportCommand}"
+                        Style="{StaticResource ButtonPrimary}" Width="120" Margin="0,0,6,0" />
+                <Button Content="步骤配置" Command="{Binding OpenStepConfigCommand}"
+                        Style="{StaticResource ButtonInfo}" Width="80" Margin="0,0,10,0" />
 
-                <TextBlock Text="X轴间隔(ms):" VerticalAlignment="Center" FontSize="12" Margin="0,0,4,0" />
-                <TextBox
-                    Text="{Binding XAxisStep, UpdateSourceTrigger=PropertyChanged}"
-                    Width="60" Height="24" VerticalAlignment="Center"
-                    VerticalContentAlignment="Center" HorizontalContentAlignment="Center" />
+                <TextBlock Text="【Time-Press】" FontWeight="Bold" VerticalAlignment="Center" FontSize="11" Margin="0,0,4,0" Foreground="#57a9fd" />
+                <TextBlock Text="X间隔(ms):" VerticalAlignment="Center" FontSize="11" Margin="0,0,2,0" />
+                <TextBox Text="{Binding XAxisStep, UpdateSourceTrigger=PropertyChanged}"
+                         Width="50" Height="22" VerticalAlignment="Center"
+                         VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="11" />
+                <TextBlock Text="Y间隔(kgf):" VerticalAlignment="Center" FontSize="11" Margin="4,0,2,0" />
+                <TextBox Text="{Binding YAxisStep, UpdateSourceTrigger=PropertyChanged}"
+                         Width="50" Height="22" VerticalAlignment="Center"
+                         VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="11" />
+                <TextBlock Text="Y上限:" VerticalAlignment="Center" FontSize="11" Margin="4,0,2,0" />
+                <TextBox Text="{Binding YAxisMax, UpdateSourceTrigger=PropertyChanged}"
+                         Width="50" Height="22" VerticalAlignment="Center"
+                         VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="11" />
 
-                <TextBlock Text="Y轴间隔(kgf):" VerticalAlignment="Center" FontSize="12" Margin="0,0,4,0" />
-                <TextBox
-                    Text="{Binding YAxisStep, UpdateSourceTrigger=PropertyChanged}"
-                    Width="60" Height="24" VerticalAlignment="Center"
-                    VerticalContentAlignment="Center" HorizontalContentAlignment="Center" />
-                <TextBlock Text="Y轴上限:" VerticalAlignment="Center" FontSize="12" Margin="8,0,4,0" />
-                <TextBox
-                    Text="{Binding YAxisMax, UpdateSourceTrigger=PropertyChanged}"
-                    Width="60" Height="24" VerticalAlignment="Center"
-                    VerticalContentAlignment="Center" HorizontalContentAlignment="Center" />
-                <TextBlock Text="Y轴下限:" VerticalAlignment="Center" FontSize="12" Margin="8,0,4,0" />
-                <TextBox
-                    Text="{Binding YAxisMin, UpdateSourceTrigger=PropertyChanged}"
-                    Width="60" Height="24" VerticalAlignment="Center"
-                    VerticalContentAlignment="Center" HorizontalContentAlignment="Center" />
-                <Button
-                    Content="刷新"
-                    Command="{Binding RefreshChartCommand}"
-                    Width="50" Height="30" Margin="4,0,0,0" />
+                <Button Content="刷新" Command="{Binding RefreshChartCommand}"
+                        Width="45" Height="26" Margin="10,0,0,0" />
             </StackPanel>
 
-            <!-- 右上角保存图片按钮 -->
-            <Button
-                Content="保存图片"
-                Command="{Binding SaveImageCommand}"
-                CommandParameter="{Binding ElementName=ChartBorder}"
-                Style="{StaticResource ButtonSuccess}"
-                Width="90" Height="28"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Center" />
-        </Grid>
+            <!-- 第二行：图表2 参数 -->
+            <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                <Button Content="切换模式" Command="{Binding ToggleChart2ModeCommand}"
+                        Width="70" Height="22" Margin="0,0,6,0" FontSize="11" />
+                <TextBlock Text="{Binding Chart2Title}" FontWeight="Bold" VerticalAlignment="Center" FontSize="11" Margin="0,0,4,0" Foreground="#57a9fd" />
+                <TextBlock Text="{Binding Chart2XLabel}" VerticalAlignment="Center" FontSize="11" Margin="0,0,2,0" />
+                <TextBox Text="{Binding XAxisStep2, UpdateSourceTrigger=PropertyChanged}"
+                         Width="50" Height="22" VerticalAlignment="Center"
+                         VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="11" />
+                <TextBlock Text="{Binding Chart2YLabel}" VerticalAlignment="Center" FontSize="11" Margin="4,0,2,0" />
+                <TextBox Text="{Binding YAxisStep2, UpdateSourceTrigger=PropertyChanged}"
+                         Width="50" Height="22" VerticalAlignment="Center"
+                         VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="11" />
+                <TextBlock Text="{Binding Chart2YMaxLabel}" VerticalAlignment="Center" FontSize="11" Margin="4,0,2,0" />
+                <TextBox Text="{Binding YAxisMax2, UpdateSourceTrigger=PropertyChanged}"
+                         Width="50" Height="22" VerticalAlignment="Center"
+                         VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="11" />
+            </StackPanel>
+        </StackPanel>
 
-        <!-- 单图表 -->
-        <Border x:Name="ChartBorder" Grid.Row="1" Margin="8,4" Padding="4"
-                BorderBrush="#57a9fd" BorderThickness="1" Background="White">
-            <chart:CartesianChart
-                x:Name="MainChart"
-                Series="{Binding Series}"
-                XAxes="{Binding XAxes}"
-                YAxes="{Binding YAxes}"
-                LegendPosition="Hidden"
-                TooltipPosition="Hidden" />
-        </Border>
+        <!-- 双图表区域 -->
+        <Grid Grid.Row="1" Margin="8,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- 图表1：Time-Press -->
+            <Border Grid.Column="0" Margin="0,0,4,0" Padding="4"
+                    BorderBrush="#57a9fd" BorderThickness="1">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="Time-Press" FontWeight="Bold"
+                               HorizontalAlignment="Center" FontSize="13" Margin="0,2" />
+                    <chart:CartesianChart Grid.Row="1"
+                        Series="{Binding Series}"
+                        XAxes="{Binding XAxes}"
+                        YAxes="{Binding YAxes}"
+                        LegendPosition="Hidden"
+                        TooltipPosition="Hidden" />
+                </Grid>
+            </Border>
+
+            <!-- 图表2（可切换模式）-->
+            <Border Grid.Column="1" Margin="4,0,0,0" Padding="4"
+                    BorderBrush="#57a9fd" BorderThickness="1">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <TextBlock Grid.Row="0" Text="{Binding Chart2Title}" FontWeight="Bold"
+                               HorizontalAlignment="Center" FontSize="13" Margin="0,2" />
+                    <chart:CartesianChart Grid.Row="1"
+                        Series="{Binding Series2}"
+                        XAxes="{Binding XAxes2}"
+                        YAxes="{Binding YAxes2}"
+                        LegendPosition="Hidden"
+                        TooltipPosition="Hidden" />
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 
 </UserControl>

@@ -1168,6 +1168,110 @@ namespace TaiKeCommon
             }
         }
 
+        /// <summary>
+        /// 保存力控压力-时间曲线图（使用SkiaSharp直接渲染，无需UI线程）
+        /// </summary>
+        /// <param name="timeData">时间数据(ms)</param>
+        /// <param name="pressData">压力数据(kN)</param>
+        /// <param name="savePath">保存路径</param>
+        /// <param name="fileName">文件名(不含扩展名)</param>
+        /// <param name="title">图表标题</param>
+        public void SavePressureCurveImage(
+            double[] timeData, double[] pressData,
+            string savePath, string fileName,
+            string title = "Press-Time Curve")
+        {
+            if (timeData == null || pressData == null || timeData.Length == 0 || pressData.Length == 0)
+                return;
+
+            int width = 900, height = 600;
+            int marginLeft = 60, marginRight = 30, marginTop = 50, marginBottom = 60;
+            int plotWidth = width - marginLeft - marginRight;
+            int plotHeight = height - marginTop - marginBottom;
+
+            double timeMin = 0;
+            double timeMax = timeData.Max();
+            double pressMin = 0;
+            double pressMax = pressData.Max();
+            pressMax = Math.Ceiling(pressMax * 1.2 * 10) / 10; // 留20%余量，精确到0.1
+            if (pressMax < 0.1) pressMax = 0.1;
+
+            if (timeMax - timeMin < 1e-6) timeMax = timeMin + 1;
+
+            using (var bitmap = new SKBitmap(width, height))
+            using (var canvas = new SKCanvas(bitmap))
+            {
+                canvas.Clear(SKColors.White);
+
+                // X轴分隔线和刻度（固定50ms间隔）
+                double xStep = 50;
+                for (double x = 0; x <= timeMax; x += xStep)
+                {
+                    float px = marginLeft + (float)((x - timeMin) / (timeMax - timeMin) * plotWidth);
+                    canvas.DrawLine(px, marginTop, px, height - marginBottom,
+                        new SKPaint { Color = SKColors.LightGray, StrokeWidth = 1 });
+                    var tickPaint = new SKPaint { Color = SKColors.Black, TextSize = 16, IsAntialias = true };
+                    canvas.DrawText(x.ToString("0"), px, height - marginBottom + 20, tickPaint);
+                }
+
+                // Y轴分隔线和刻度
+                double yStep = Math.Ceiling(pressMax / 5 * 10) / 10;
+                if (yStep < 0.1) yStep = 0.1;
+                for (double y = 0; y <= pressMax; y += yStep)
+                {
+                    float py = height - marginBottom - (float)((y - pressMin) / (pressMax - pressMin) * plotHeight);
+                    canvas.DrawLine(marginLeft, py, marginLeft + plotWidth, py,
+                        new SKPaint { Color = SKColors.LightGray, StrokeWidth = 1 });
+                    var tickPaint = new SKPaint { Color = SKColors.Black, TextSize = 16, IsAntialias = true };
+                    canvas.DrawText(y.ToString("0.0"), marginLeft - 45, py + 5, tickPaint);
+                }
+
+                // 标题
+                var titlePaint = new SKPaint { Color = SKColors.Black, TextSize = 28, IsAntialias = true, TextAlign = SKTextAlign.Center };
+                canvas.DrawText(title, marginLeft + plotWidth / 2, marginTop - 15, titlePaint);
+
+                // 画曲线（蓝色）
+                if (timeData.Length > 1 && pressData.Length == timeData.Length)
+                {
+                    var paint = new SKPaint { Color = SKColors.Blue, StrokeWidth = 2, IsAntialias = true };
+                    for (int i = 1; i < timeData.Length; i++)
+                    {
+                        float x0 = marginLeft + (float)((timeData[i - 1] - timeMin) / (timeMax - timeMin) * plotWidth);
+                        float y0 = height - marginBottom - (float)((pressData[i - 1] - pressMin) / (pressMax - pressMin) * plotHeight);
+                        float x1 = marginLeft + (float)((timeData[i] - timeMin) / (timeMax - timeMin) * plotWidth);
+                        float y1 = height - marginBottom - (float)((pressData[i] - pressMin) / (pressMax - pressMin) * plotHeight);
+                        canvas.DrawLine(x0, y0, x1, y1, paint);
+                    }
+                }
+
+                // 图例
+                var legendPaint = new SKPaint { Color = SKColors.Black, TextSize = 18, IsAntialias = true };
+                int legendX = marginLeft + plotWidth - 160, legendY = marginTop + 10;
+                canvas.DrawText("Press", legendX, legendY, legendPaint);
+                canvas.DrawLine(legendX + 60, legendY - 5, legendX + 100, legendY - 5,
+                    new SKPaint { Color = SKColors.Blue, StrokeWidth = 3 });
+
+                // 坐标轴标签
+                var labelPaint = new SKPaint { Color = SKColors.Black, TextSize = 18, IsAntialias = true };
+                canvas.DrawText("Time/ms", marginLeft + plotWidth / 2, height - 20, labelPaint);
+                canvas.Save();
+                canvas.RotateDegrees(-90, marginLeft - 40, height / 2);
+                canvas.DrawText("Press/kN", marginLeft - 40, height / 2, labelPaint);
+                canvas.Restore();
+
+                // 保存PNG
+                if (!Directory.Exists(savePath))
+                    Directory.CreateDirectory(savePath);
+                using (var image = SKImage.FromBitmap(bitmap))
+                using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
+                using (var stream = File.OpenWrite(System.IO.Path.Combine(savePath, fileName + ".png")))
+                {
+                    data.SaveTo(stream);
+                }
+            }
+        }
+
+
         public void SaveToeinForceCurveImage(
              double[] ToeinXForce, double[] ToeinYForce, double[] ToeinZForce, double[] Time,
              string savePath, string fileName, string title = "Toein Force Curve")
