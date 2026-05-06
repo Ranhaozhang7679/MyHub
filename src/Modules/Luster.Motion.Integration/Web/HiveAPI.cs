@@ -62,6 +62,8 @@ namespace Luster.Motion.Integration.Web
         public string CurrentEventId { get; set; } = "";
         // 2026-2-24 新增字段，记录上一个维修事件ID
         public string LastEventId { get; set; } = "";
+        // 记录repair start时的报警码，用于report end判断周/月保养
+        public string RepairStartAlarmCode { get; set; } = "";
     }
 
     // ==================== 新增：Hive事件链追踪 ====================
@@ -803,6 +805,11 @@ namespace Luster.Motion.Integration.Web
                     // 单独刷新下LastEventId，不改变其他字段
                     SaveHiveState();
                 }
+                // Hive3.2，周/月保养强制使用固定的 downtime_cause
+                if (_hiveState.RepairStartAlarmCode == "F99OOOO-05" || _hiveState.RepairStartAlarmCode == "F99OOOO-06")
+                {
+                    downCause = "Preventive Maintenance;设备保养";
+                }
                 var statusData = new
                 {
                     machine_state = status,
@@ -1028,6 +1035,7 @@ namespace Luster.Motion.Integration.Web
                                 _hiveState.HiveMachineState = 5;
                                 _hiveState.HiveRepairState = dstRepairState;
                                 _hiveState.HiveCurrentCode = alarmCode;
+                                _hiveState.RepairStartAlarmCode = alarmCode; // 记录repair start的报警码
                                 statusMessage = "repair start";
                             }
                             else
@@ -2207,6 +2215,72 @@ namespace Luster.Motion.Integration.Web
             Send(urlSim, jsonData, 5, true);
 
         }
+
+        /// <summary>
+        /// 参数变更时触发软件版本信息上传
+        /// </summary>
+        /// <param name="paramName"></param>
+        /// <param name="srcV"></param>
+        /// <param name="newV"></param>
+        public void Register(string paramName, object srcV, object newV)
+        {
+            //Register();
+            if (string.IsNullOrEmpty(URL))
+            {
+                return;
+            }
+            // 如果没有连接上，不触发通讯
+            string url = Path.Combine(URL, "capture/v6/softwareversions");
+            string urlSim = Path.Combine(URLSimulator, "capture/v6/softwareversions");
+            if (!isConnected /*|| !PDCAEnable()*/) return;
+
+            //所有版本需要一起发送
+            var motionSw = new
+            {
+                main_software = new
+                {
+                    version = ApiVision,
+                    hash_key = Sha1Signature(ApiVision),
+                },
+                sub_module = new
+                {
+                    repair_sop = new
+                    {
+                        version = repairVersion,
+                        hash_key = Sha1Signature(repairVersion),
+                    },
+                    spare_part_list = new
+                    {
+                        version = spareVersion,
+                        hash_key = Sha1Signature(spareVersion),
+                    }
+                },
+                attributes = new Dictionary<string, object>
+                {
+                    { paramName, new { old = srcV, @new = newV } }
+                },
+                station_info =
+                               new
+                               {
+                                   machine_sn = stationInfo.machine_sn,
+                                   machine_model_number = stationInfo.machine_model_number,
+                                   machine_rfid = stationInfo.machine_rifd,
+                                   vendor = stationInfo.vendor,
+                                   site = stationInfo.site,
+                                   building = stationInfo.building,
+                                   product = stationInfo.product,
+                                   station_type = stationInfo.station_type,
+                                   line = stationInfo.line,
+                                   instance = stationInfo.instance,
+                                   line_type = stationInfo.line_type,
+                                   station_name = stationInfo.station_name,
+                                   build_type = stationInfo.build_type,
+                               }
+            };
+            string jsonData = JsonTool.ToJson(motionSw);
+            Send(url, jsonData, 5, true);
+            Send(urlSim, jsonData, 5, true);
+        }
         protected override void Register(IMotionController motionController)
         {
             base.Register(motionController);
@@ -2219,6 +2293,31 @@ namespace Luster.Motion.Integration.Web
             motionController.ProductTrowEvent -= MotionControl_ThrowSmallPartEvent;
             motionController.ProductTrowEvent += MotionControl_ThrowSmallPartEvent;
 
+            //// 参数变更，同步触发软件版本信息上传
+            //motionController.PropertyChanged -= MotionController_PropertyChanged;
+            //motionController.PropertyChanged += MotionController_PropertyChanged;
+
+        }
+
+        /// <summary>
+        /// 参数变更，同步触发软件版本信息上传
+        /// </summary>
+        /// <param name="paramName"></param>
+        /// <param name="srcV"></param>
+        /// <param name="newV"></param>
+        private void MotionController_PropertyChanged(string paramName, object srcV, object newV)
+        {
+            try
+            {
+                if (paramName != null && paramName.Contains("Z轴"))
+                {
+                    Register(paramName, srcV, newV);
+                }
+            }
+            catch (Exception ex)
+            {
+                OnLog(ex.Message);
+            }
         }
 
         private void MotionController_ProductEvent(ProductInfo arg1, bool arg2, double ct)
@@ -2437,7 +2536,8 @@ namespace Luster.Motion.Integration.Web
             //增加客户要求的Hive日志
             if (url.Contains("softwareversio"))//记录到版本日志中
             {
-                FileLogger.Log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")} URL:{url} send: {datas}  Receive: {resultRaw?.msg}", "D:/Hive/Hive Log/SW Version/sw_version");
+                var time = DateTime.Now;
+                FileLogger.Log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")} URL:{url} send: {datas}  Receive: {resultRaw?.msg}", $"D:/Hive/Hive Log/SW Version/{time.ToString("yyyyMMdd")}");
             }
             if (url.Contains("machinedata"))//记录到版本日志中
             {
@@ -2577,7 +2677,8 @@ namespace Luster.Motion.Integration.Web
             //增加客户要求的Hive日志
             if (url.Contains("softwareversio"))//记录到版本日志中
             {
-                FileLogger.Log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")} URL:{url} send: {datas} Receive: {resultRaw?.Status}", "D:/Hive/Hive Log/SW Version/sw_version");
+                var time = DateTime.Now;
+                FileLogger.Log($"{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")} URL:{url} send: {datas} Receive: {resultRaw?.Status}", $"D:/Hive/Hive Log/SW Version/{time.ToString("yyyyMMdd")}");
             }
             if (url.Contains("machinedata"))//记录到版本日志中
             {
@@ -2637,7 +2738,7 @@ namespace Luster.Motion.Integration.Web
                 CommException(url, datas, (r) =>
                 {
                     // 2025-5-10 wyy
-                    isOnboarded = r.onboarding_status?.Contains("ONBOARDED") == true;
+                    isOnboarded = r?.onboarding_status?.Contains("ONBOARDED") == true;
                     resultRaw = r;
                     //if (r?.msg != null)
                     //{
