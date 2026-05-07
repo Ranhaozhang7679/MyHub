@@ -37,118 +37,118 @@ namespace Luster.TaskFlow.Motion
     public abstract class MotionModule : AbsModule, IMotionModule
     {
         /// <summary>
-        /// �������ƶ���
+        /// 容器控制对象
         /// </summary>
         public IIocManager Ioc { get; set; }
 
         /// <summary>
-        /// ��������
+        /// 订单管理
         /// </summary>
         public IOrderManager OrderManager { get; set; }
 
 
         /// <summary>
-        /// ���Ϲ���
+        /// 卷料管理
         /// </summary>
         public IRollManager RollManager { get; set; }
 
         /// <summary>
-        /// ���������
+        /// 错误管理器
         /// </summary>
         public IErrorManager ErrorManager { get; set; }
 
         /// <summary>
-        /// ��Դ������
+        /// 光源控制器
         /// </summary>
         public ILightManager LightManager { get; set; }
 
         /// <summary>
-        /// ��������
+        /// 订单管理
         /// </summary>
         public IConfigManager ConfigManager { get; set; }
 
         /// <summary>
-        /// ���ݿ���ʽӿ�
+        /// 数据库访问接口
         /// </summary>
         public IDbHelper DbHelper { get; set; }
 
         /// <summary>
-        /// �ӽڵ�
+        /// 子节点
         /// </summary>
         public new List<IMotionModule> Children { get; set; }
 
         /// <summary>
-        /// �������ڵ�
+        /// 所属父节点
         /// </summary>
         public new IMotionModule Parent { get; set; }
 
         /// <summary>
-        /// ����ģʽ
+        /// 运行模式
         /// </summary>
         public RunMode RunMode { get; set; }
 
         /// <summary>
-        /// �������
+        /// 报警类别
         /// </summary>
         public AlarmInfo AlarmInfo { get; set; }
 
         /// <summary>
-        /// ��׼CT
+        /// 标准CT
         /// </summary>
         public int CT { get; set; } = 0;
 
         /// <summary>
-        /// ������վ
+        /// 隶属工站
         /// </summary>
         public IMotionModule Station { get; set; }
 
         /// <summary>
-        /// ��ʼ�¼�
+        /// 开始事件
         /// </summary>
         public DateTime StartTime { get; set; }
 
         /// <summary>
-        /// ����ʱ��
+        /// 结束时间
         /// </summary>
         public DateTime EndTime { get; set; }
 
         /// <summary>
-        /// ��ͣʱ��
+        /// 暂停时间
         /// </summary>
         public float PauseTime { get; set; } = 0;
 
         /// <summary>
-        /// ǰһģ��
+        /// 前一模块
         /// </summary>
         public IMotionModule PrevModule { get; set; }
 
         /// <summary>
-        /// ��һ��ģ��
+        /// 下一步模块
         /// </summary>
         public IMotionModule NextModule { get; set; }
 
         /// <summary>
-        /// �豸
+        /// 设备
         /// </summary>
         public IDeviceEngine DeviceEngine { get; set; }
 
 
         /// <summary>
-        /// �����¼�
+        /// 触发事件
         /// </summary>
         public event Action<string, string> MachineStatusComplete;
 
         /// <summary>
-        /// ��ֹ����
+        /// 终止流程
         /// </summary>
         public bool IsBreak { get; set; }
 
         /// <summary>
-        /// �Ƿ�����������
+        /// 是否包含输出数据
         /// </summary>
         public bool IsOutData { get; set; }
         /// <summary>
-        /// ��ǰ���д���
+        /// 当前运行次数
         /// </summary>
         private int _runNum = 0;
         public int RunNum
@@ -165,26 +165,26 @@ namespace Luster.TaskFlow.Motion
         }
 
         /// <summary>
-        /// �߳�ID
+        /// 线程ID
         /// </summary>
         public int ThreadID { get; set; }
 
         /// <summary>
-        /// �汾
+        /// 版本
         /// </summary>
         public string Version { get; set; }
 
         /// <summary>
-        /// �������� Ĭ�ϱ�������Ϊ -1��δ���ã�����Ҫ�ϴ�������Ϣ
+        /// 报警代码 默认报警代码为 -1：未配置，不需要上传报警信息
         /// </summary>
         public virtual string ErrorCode { get; set; }
         /// <summary>
-        /// ��������
+        /// 报警内容
         /// </summary>
         public virtual string ErrorContent { get; set; }
 
         /// <summary>
-        /// �Ƿ�ʹ��Log
+        /// 是否使用Log
         /// </summary>
         /// <returns></returns>
         public bool IsUseLog()
@@ -198,7 +198,7 @@ namespace Luster.TaskFlow.Motion
         }
 
         /// <summary>
-        /// ģ��ڵ�����
+        /// 模块节点类型
         /// </summary>
         public ModuleType ModuleType
         {
@@ -211,28 +211,28 @@ namespace Luster.TaskFlow.Motion
         }
 
         /// <summary>
-        /// ����
+        /// 函数
         /// </summary>
         //public new IMotionFunction TaskFunction { get; set; }
 
         /// <summary>
-        /// �����߳��ж�
+        /// 用于线程中断
         /// </summary>
         public ManualResetEventSlim BrokenOff { get; set; }
 
 
         /// <summary>
-        /// �����¼�
+        /// 报警事件
         /// </summary>
         public event Action<AlarmInfo> AlarmEvent_module;
 
         /// <summary>
-        /// ������ģ��
+        /// 被引用模块
         /// </summary>
         private Dictionary<Guid, string> OtherRefModules = new Dictionary<Guid, string>();
 
         /// <summary>
-        /// ���캯��
+        /// 构造函数
         /// </summary>
         public MotionModule() : base()
         {
@@ -245,30 +245,30 @@ namespace Luster.TaskFlow.Motion
             base.SetFunction(funcName);
             //var func = Activator.CreateInstance(FuncTypes[funcName]) as IMotionFunction;
 
-            //// ����ģ���Function
+            //// 设置模块的Function
             //TaskFunction = func;
             //Alias = L(func.Name) ?? func.Name;
             TaskFunction.Owner = this;
 
-            // Ĭ������ʱ
+            // 默认运行时
             //Mode = DesignMode.Runtime;
         }
 
         /// <summary>
-        /// ģ������
+        /// 模块名称
         /// </summary>
         private string moduleAlias = "";
 
         /// <summary>
-        /// ģ��������վ
+        /// 模块隶属工站
         /// </summary>
         private IStation mStation = null;
 
         /// <summary>
-        /// ��������
+        /// 函数运行
         /// </summary>
-        /// <param name="errMsg">������Ϣ</param>
-        /// <returns>�����Ƿ�ɹ�</returns>
+        /// <param name="errMsg">错误消息</param>
+        /// <returns>运行是否成功</returns>
         public override bool DoFunction()
         {
             // 忽略状态不执行
@@ -281,7 +281,7 @@ namespace Luster.TaskFlow.Motion
 
             if (IsBreak)
             {
-                OnLog(LogType.Debug, $"ģ��:{Alias} ��ֹͣ,��Ҫ�����������!");
+                OnLog(LogType.Debug, $"模块:{Alias} 被停止,需要回零才能运行!");
                 return true;
             }
 
@@ -289,15 +289,15 @@ namespace Luster.TaskFlow.Motion
             {
                 UpdateStation();
             }
-            if (moduleAlias.Contains("�����¼�"))
+            if (moduleAlias.Contains("出料事件"))
             {
-                OnLog(LogType.Debug, $"ģ��:{moduleAlias}��ʼ");
+                OnLog(LogType.Debug, $"模块:{moduleAlias}开始");
             }
-            // ����״̬��ʼ��
-            // ģ�����п�ʼʱ��
+            // 运行状态初始化
+            // 模块运行开始时间
             StartTime = DateTime.Now;
 
-            // 1.��ʼ��ʶ״̬
+            // 1.初始标识状态
             statusMsg = string.Empty;
             AlarmInfo = null;
             bool success = false;
@@ -305,61 +305,61 @@ namespace Luster.TaskFlow.Motion
             TaskFunction.Status.SetDefault();
             Status = Common.Enums.RunStatus.Running;
 
-            // ��ʾ��ǰ���е�ģ��
+            // 显示当前运行的模块
             if (Station != null && Station.TaskFunction is IFreeStation f)
             {
                 f.AddRunningModule(this);
             }
 
-            // 2.��ʼ����ʱ��
+            // 2.开始计算时间
             StartTimer();
 
-            // 3.���Output���
+            // 3.清空Output结果
             ResetParameters();
 
             try
             {
-                // 4.������֤����ֵ
+                // 4.参数验证及赋值
                 var isValid = ValidateHelper.ValidateAllIn(TaskFunction, out statusMsg);
                 timeconsumingValid = (float)Math.Round(_sw.Elapsed.TotalMilliseconds, 3);
-                // 5.��������
+                // 5.函数运行
                 if (isValid)
                 {
-                    // ��ʱ����
+                    // 超时报警
                     success = TaskFunction.DoExcute(out statusMsg);
                     timeconsumingDoexcute = (float)Math.Round(_sw.Elapsed.TotalMilliseconds, 3);
 
-                    if (moduleAlias == "���칤վ")
+                    if (moduleAlias == "复检工站")
                     {
-                        OnLog(LogType.Debug, $"ģ��:{moduleAlias}�ɹ�");
+                        OnLog(LogType.Debug, $"模块:{moduleAlias}成功");
                     }
                 }
 
-                // ��������� Value ������и�ֵ�������øò���������ʹ��
+                // 对输出参数 Value 结果进行赋值，供引用该参数的类型使用
                 if (success)
                 {
                     SetOutput();
                     timeconsumingSetOutput = (float)Math.Round(_sw.Elapsed.TotalMilliseconds, 3);
-                    if (moduleAlias == "���칤վ")
+                    if (moduleAlias == "复检工站")
                     {
-                        OnLog(LogType.Debug, $"ģ��:{moduleAlias}SetOutput()");
+                        OnLog(LogType.Debug, $"模块:{moduleAlias}SetOutput()");
                     }
                 }
             }
             catch (DeviceTimeoutException tx)
             {
-                //bool isEmpty = string.IsNullOrEmpty(ErrorCode) || ErrorCode == "��������";
+                //bool isEmpty = string.IsNullOrEmpty(ErrorCode) || ErrorCode == "报警代码";
 
                 string eCode = tx.AlarmCode;
                 string eMessage = tx.Message;
-                // ״̬������
+                // 状态更报警
                 Status = Common.Enums.RunStatus.Alarmed;
                 AlarmInfo = new AlarmInfo(this, AlarmType.Timeout, $"{eMessage}", $"{eCode}") { DeviceID = tx.DeviceID, Module = tx.Module, Name = tx.DeviceName };
                 statusMsg = tx.Message;
             }
             catch (DeviceException dx)
             {
-                //bool isEmpty = string.IsNullOrEmpty(ErrorCode) || ErrorCode == "��������";
+                //bool isEmpty = string.IsNullOrEmpty(ErrorCode) || ErrorCode == "报警代码";
                 string eCode = dx.AlarmCode;
                 string eMessage = dx.Message;
                 AlarmInfo = new AlarmInfo(this, AlarmType.DeviceError, $" {eMessage}", eCode) { DeviceID = dx.DeviceID };
@@ -369,17 +369,17 @@ namespace Luster.TaskFlow.Motion
             {
                 statusMsg = ex.Message;
 
-                // ������쳣
-                OnLog(LogType.Error, $"ģ��:{Alias},{statusMsg},{ex.StackTrace}");
+                // 给结果异常
+                OnLog(LogType.Error, $"模块:{Alias},{statusMsg},{ex.StackTrace}");
             }
 
-            // ��ֹ��ʱ��
+            // 终止计时器
             StopTimer();
-            if (moduleAlias == "���칤վ")
+            if (moduleAlias == "复检工站")
             {
-                OnLog(LogType.Debug, $"ģ��:{moduleAlias}StopTimer()");
+                OnLog(LogType.Debug, $"模块:{moduleAlias}StopTimer()");
             }
-            // 6.����
+            // 6.后处理
             if (success)
             {
                 Status = Common.Enums.RunStatus.Success;
@@ -388,8 +388,8 @@ namespace Luster.TaskFlow.Motion
             {
                 Status = Common.Enums.RunStatus.Error;
 
-                // ���״̬��Ϣ
-                string errMsg = $"ģ��:{moduleAlias} ����ʧ��:{statusMsg}";
+                // 变更状态信息
+                string errMsg = $"模块:{moduleAlias} 运行失败:{statusMsg}";
                 OnLog(LogType.Error, errMsg);
             }
             if (mStation != null && mStation.UseLog &&
@@ -398,21 +398,21 @@ namespace Luster.TaskFlow.Motion
                 this.CT = Convert.ToInt32(timeconsuming);
             }
 
-            // 6.��Ⱦ
+            // 6.渲染
             if (Mode == DesignMode.Design && success)
             {
                 Render();
-                if (moduleAlias == "���칤վ")
+                if (moduleAlias == "复检工站")
                 {
-                    OnLog(LogType.Debug, $"ģ��:{moduleAlias}Render()");
+                    OnLog(LogType.Debug, $"模块:{moduleAlias}Render()");
                 }
             }
             try
             {
-                // ��ӡLog��Ϣ
+                // 打印Log信息
                 if (success)
                 {
-                    // ��¼������վ����ʱ��� �����CT�Ǵ���0������ģ��֧����ͣ
+                    // 记录隶属工站及耗时情况 ，如果CT是大于0，并且模块支持暂停
                     if (mStation != null && mStation.UseLog && (CT > 0 || (TaskFunction is IPauseFunction)))
                     {
                         string sn = Station?.DataID;
@@ -437,18 +437,18 @@ namespace Luster.TaskFlow.Motion
                         mStation.StationTimes.Add(new StationTime(mStation.Station, Alias, TimeConsuming, CT, StartTime, sn, extParams));
                     }
 
-                    // �����ݽ����ϴ�  
+                    // 对数据进行上传  
                     OnDataUpload();
-                    if (moduleAlias == "���칤վ")
+                    if (moduleAlias == "复检工站")
                     {
-                        OnLog(LogType.Debug, $"ģ��:{moduleAlias}OnDataUpload()");
+                        OnLog(LogType.Debug, $"模块:{moduleAlias}OnDataUpload()");
                     }
-                    // ��¼���еĴ���
+                    // 记录运行的次数
                     RunNum++;
 
-                    // ֻ������LOG�Ž��м�¼
+                    // 只有启用LOG才进行记录
                     if (mStation != null && mStation.UseLog)
-                        OnLog(LogType.Info, string.Format("ģ��:{0} ��ʱ:{1} ms ��ͣ��ʱ:{2} ���������ʱ:{3} ִ�к�ʱ:{4} ���������ʱ:{5}",
+                        OnLog(LogType.Info, string.Format("模块:{0} 耗时:{1} ms 暂停耗时:{2} 输入参数耗时:{3} 执行耗时:{4} 输出参数耗时:{5}",
                                                           moduleAlias,
                                                           TimeConsuming,
                                                           PauseTime,
@@ -456,31 +456,31 @@ namespace Luster.TaskFlow.Motion
                                                           timeconsumingDoexcute,
                                                           timeconsumingSetOutput));
 
-                    // ����״̬���
+                    // 运行状态完成
                     TaskFunction.Status.SetEnd();
                 }
             }
             catch (Exception ex)
             {
-                // ������飬�����ٴγ��֣��������������������
-                // ���ڱ���̻߳�ģ�����ڱ���List��ֱ�� Clear()����ʱ��������ʹ���У�����Խ�硣
-                // ������ȷ�� mStation.StationTimes �ķ������̰߳�ȫ�ġ�
+                // 清空数组，避免再次出现：索引超出数组界限问题
+                // 能在别的线程或模块正在遍历List，直接 Clear()，此时集合正在使用中，导致越界。
+                // 加锁，确保 mStation.StationTimes 的访问是线程安全的。
                 lock (mStation.StationTimes)
                 {
                     mStation.StationTimes.Clear();
                 }
-                OnLog(LogType.Info, string.Format("ģ��:{0} ����:{1} ", moduleAlias, ex.ToString()));
+                OnLog(LogType.Info, string.Format("模块:{0} 报警:{1} ", moduleAlias, ex.ToString()));
             }
 
 
-            // ����ʱ��
+            // 结束时间
             EndTime = DateTime.Now;
 
             return Status == Common.Enums.RunStatus.Success;
         }
 
         /// <summary>
-        /// �ܺ�ʱ��ȥ��ͣʱ��
+        /// 总耗时减去暂停时间
         /// </summary>
         public override void StopTimer()
         {
@@ -493,7 +493,7 @@ namespace Luster.TaskFlow.Motion
         }
 
         /// <summary>
-        /// ����У��
+        /// 参数校验
         /// </summary>
         /// <param name="errMsg"></param>
         /// <returns></returns>
@@ -513,7 +513,7 @@ namespace Luster.TaskFlow.Motion
         }
 
         /// <summary>
-        /// ���¹�վ��Ϣ
+        /// 更新工站信息
         /// </summary>
         public void UpdateStation()
         {
@@ -525,7 +525,7 @@ namespace Luster.TaskFlow.Motion
         }
 
         /// <summary>
-        /// �ݹ����
+        /// 递归查找
         /// </summary>
         /// <param name="motion"></param>
         /// <param name="alias"></param>
@@ -560,11 +560,11 @@ namespace Luster.TaskFlow.Motion
             }
         }
 
-        #region ��������
+        #region 报警处理
         /// <summary>
-        /// �����ж�
+        /// 报警中断
         /// </summary>
-        /// <param name="alarmMsg">������Ϣ</param>
+        /// <param name="alarmMsg">报警信息</param>
         public void OnAlarm(AlarmType alarmType, string alarmMsg, string code = "", string ModuleName = "")
         {
             switch (alarmType)
@@ -597,20 +597,20 @@ namespace Luster.TaskFlow.Motion
                     UpdateStation();
                 }
 
-                // ��ģ�鱨�������¸�ģ�鱨��
+                // 子模块报警，更新父模块报警
                 Station.Status = Status;
                 Station.AlarmInfo = AlarmInfo;
 
-                // ��Ϊ��ģ�鱨�����Ὣ������Ϣ���ݵ���ģ�飬���Ա����¼������Ǳ�ģ���Լ�����
+                // 因为子模块报警，会将报警信息传递到父模块，所以报警事件必须是本模块自己触发
                 if (AlarmInfo.Sender == this)
                 {
-                    AlarmEvent_module?.Invoke(AlarmInfo); //������MotionEngion
+                    AlarmEvent_module?.Invoke(AlarmInfo); //传递至MotionEngion
                 }
             }
         }
 
         /// <summary>
-        /// �������
+        /// 清除报警
         /// </summary>
         public void ClearAlarm()
         {
@@ -624,7 +624,7 @@ namespace Luster.TaskFlow.Motion
 
             var cloneModule = Activator.CreateInstance(GetType()) as IMotionModule;
 
-            // ����Ҫ��������
+            // 必须要配置名称
             cloneModule.Name = this.Name;
             cloneModule.Icon = this.Icon;
             cloneModule.Tips = this.Tips;
@@ -637,7 +637,7 @@ namespace Luster.TaskFlow.Motion
             cloneModule.LanguageEvent += (s) => L(s);
             cloneModule.ParserXml(xClone);
 
-            // ��Ҫ��ס��ǰ��ģʽ�������޷���Ⱦ
+            // 需要记住当前的模式，否则无法渲染
             cloneModule.Mode = this.Mode;
 
             if (Children.Count > 0)
@@ -676,12 +676,12 @@ namespace Luster.TaskFlow.Motion
 
         public string GetInParameters()
         {
-            // ʹ�� StringBuilder �����ַ���ƴ�ӵ��ڴ����
+            // 使用 StringBuilder 避免字符串拼接的内存分配
             var sb = new StringBuilder();
 
             foreach (var item in Parameters)
             {
-                // ��ǰ���ˣ�����Ƕ��
+                // 提前过滤，减少嵌套
                 if (item.Value?.ParamType != ParamType.IN)
                     continue;
 
@@ -689,16 +689,16 @@ namespace Luster.TaskFlow.Motion
                 if (v == null)
                     continue;
 
-                // ʹ�� StringBuilder.Append��������ʱ�ַ���
+                // 使用 StringBuilder.Append，避免临时字符串
                 sb.Append(item.Value.Name)
                   .Append('#')
                   .Append(JsonTool.ToJson(v))
                   .Append(';');
             }
 
-            // �Ƴ�ĩβ�ֺţ��� Trim ����Ч��ֻ�����ض��ַ���
+            // 移除末尾分号（比 Trim 更高效，只处理特定字符）
             if (sb.Length > 0)
-                sb.Length--; // ֱ���޸ĳ��ȣ����ⴴ�����ַ���
+                sb.Length--; // 直接修改长度，避免创建新字符串
 
             return sb.ToString();
         }
@@ -810,7 +810,7 @@ namespace Luster.TaskFlow.Motion
                         }
                     }
 
-                    // ѭ��֧�ִ�ʱ����
+                    // 循环支持此时引用
                     if (TaskFunction is ILoop loop)
                     {
                         var pItem = Parameters[nameof(loop.LoopNum)];
@@ -947,7 +947,7 @@ namespace Luster.TaskFlow.Motion
                         }
                     }
 
-                    // ѭ��֧�ִ�ʱ����
+                    // 循环支持此时引用
                     if (TaskFunction is ILoop loop)
                     {
                         var pItem = Parameters[nameof(loop.LoopNum)];
@@ -977,7 +977,7 @@ namespace Luster.TaskFlow.Motion
         }
         
 
-        #region ����͵���
+        #region 导入和导出
         public override XElement ExportXml()
         {
             var xml = base.ExportXml();
@@ -999,7 +999,7 @@ namespace Luster.TaskFlow.Motion
             xElement.GetAttribute("ErrorCode", item => ErrorCode = item);
             xElement.GetAttribute("ErrorContent", item => ErrorContent = item);
 
-            // �����ǰģ���ǹ�վ
+            // 如果当前模块是工站
             if (TaskFunction is IStation)
             {
                 Station = this;
@@ -1007,14 +1007,14 @@ namespace Luster.TaskFlow.Motion
         }
         #endregion
 
-        #region ��Ʒ����¼�
+        #region 产品相关事件
         /// <summary>
-        /// ��Ʒ����
+        /// 产品入料
         /// </summary>
         public event Action<IMotionModule, StationResult, List<LColumn>> ProLoadedEvent;
 
         /// <summary>
-        /// ��Ʒ�����¼�
+        /// 产品入料事件
         /// </summary>
         /// <param name="jigCode"></param>
         public void OnProLoaded(string jigCode, string barCode, bool prevResult, DateTime dateTime)
@@ -1026,7 +1026,7 @@ namespace Luster.TaskFlow.Motion
 
             if (Station != null && Station.TaskFunction is IStation curStation)
             {
-                // ��������ID
+                // 更新数据ID
                 Station.DataID = barCode;
 
                 var sResult = new StationResult()
@@ -1049,15 +1049,15 @@ namespace Luster.TaskFlow.Motion
                 }
 
                 curStation.Enqueue(barCode);
-                OnLog(LogType.Info, $"����ж�ά��{sResult.ProCode}");
-                // ֪ͨ��Ʒ�����¼�
+                OnLog(LogType.Info, $"入队列二维码{sResult.ProCode}");
+                // 通知产品入料事件
                 ProLoadedEvent?.Invoke(this, sResult, curStation.Datas);
 
             }
         }
 
         /// <summary>
-        /// ���õ�ǰ��վģ��
+        /// 设置当前工站模块
         /// </summary>
         /// <param name="module"></param>
         private void SetCurStation(IMotionModule module)
@@ -1092,16 +1092,16 @@ namespace Luster.TaskFlow.Motion
         }
 
         /// <summary>
-        /// ��Ʒ����
+        /// 产品出料
         /// </summary>
         public event Action<IMotionModule, StationResult> ProUnloadedEvent;
 
         /// <summary>
-        /// ��Ʒ����
+        /// 产品出料
         /// </summary>
-        /// <param name="barCode">��Ʒ���</param>
-        /// <param name="sResult">��Ʒ���</param>
-        /// <param name="datas">��������</param>
+        /// <param name="barCode">产品编号</param>
+        /// <param name="sResult">产品结果</param>
+        /// <param name="datas">所有数据</param>
         public void OnProUnloaded(StationResult sResult)
         {
             if (Station == null)
@@ -1112,36 +1112,36 @@ namespace Luster.TaskFlow.Motion
             if (Station != null && Station.TaskFunction is IStation station)
             {
 
-                //1.������Ҫ�ж��䷽���Ƿ����ά��
-                //2.��������ά�룬��ʹ���䷽�еĴ����ά��
-                //3.���δ���룬��ʹ�ó����еĶ�ά��
+                //1.首先需要判断配方中是否传入二维码
+                //2.如果传入二维码，则使用配方中的传入二维码
+                //3.如果未传入，则使用出队列的二维码
 
-                //δ����SN
+                //未传入SN
                 if (sResult.ProCode == "NG")
                 {
                     if (station.TryDequeue(out string dataID))
                     {
-                        OnLog(LogType.Info, $"�����ж�ά���ά��{sResult.ProCode}");
+                        OnLog(LogType.Info, $"出队列二维码二维码{sResult.ProCode}");
                         sResult.ProCode = dataID;
                         Station.DataID = dataID;
                     }
-                    //���SNΪ��
+                    //如果SN为空
                     else if (string.IsNullOrEmpty(Station.DataID))
                     {
                         Station.DataID = sResult.ProCode;
                     }
                 }
-                //������SN
+                //传入了SN
                 else
                 {
 
                     Station.DataID = sResult.ProCode;
                 }
 
-                //// ������ID�ŵ�������
+                //// 将数据ID放到队列中
                 //if (station.TryDequeue(out string dataID))
                 //{
-                //    OnLog(LogType.Info, $"�����ж�ά���ά��{sResult.ProCode}");
+                //    OnLog(LogType.Info, $"出队列二维码二维码{sResult.ProCode}");
                 //    sResult.ProCode = dataID;
                 //    Station.DataID = dataID;
                 //}
@@ -1153,30 +1153,30 @@ namespace Luster.TaskFlow.Motion
                 //{
                 //    Station.DataID = sResult.ProCode;
                 //}
-                OnLog(LogType.Info, $"�����¼���ά��{sResult.ProCode}");
-                // ֪ͨ��Ʒ�����¼�
+                OnLog(LogType.Info, $"出料事件二维码{sResult.ProCode}");
+                // 通知产品出料事件
                 ProUnloadedEvent?.Invoke(Station, sResult);
             }
         }
 
         /// <summary>
-        /// ��Ʒ����
+        /// 产品抛料
         /// </summary>
         public event Action<StationResult, string, string> ProThrowEvent;
 
 
 
         /// <summary>
-        /// ��վ��ʱͳ���¼�
+        /// 工站耗时统计事件
         /// WIP 
-        /// ��վʱ��
-        /// ��վʱ��
-        /// ���Ͻ��
+        /// 入站时间
+        /// 出站时间
+        /// 做料结果
         /// </summary>
         public event Action<string, string, string, bool> StationTimeEvent;
 
         /// <summary>
-        /// ��Ʒ����
+        /// 产品抛料
         /// </summary>
         public void OnProThrow(StationResult sResult, string material = "")
         {
@@ -1194,7 +1194,7 @@ namespace Luster.TaskFlow.Motion
 
 
         /// <summary>
-        /// ��վ����
+        /// 工站结束
         /// </summary>
         public void OnStationTime(string WIP, string InputTime, string OutputTime, bool Result)
         {
@@ -1203,7 +1203,7 @@ namespace Luster.TaskFlow.Motion
 
 
         /// <summary>
-        /// ��ȡ��Ӧ��DataID
+        /// 获取对应的DataID
         /// </summary>
         /// <returns></returns>
         protected override string GetDataID()
@@ -1224,13 +1224,13 @@ namespace Luster.TaskFlow.Motion
         }
 
         /// <summary>
-        /// ����������ͬ�Ľڵ㣬�Ͳ��ӻ����л�ȡ����
+        /// 检测如果是相同的节点，就不从缓存中获取数据
         /// </summary>
         /// <param name="module"></param>
         /// <returns></returns>
         public override bool IsSameRoot(IModule module)
         {
-            // �����ǰģʽ��ȫ�ֱ�����Ĭ�ϻ�ȡ��ǰֵ
+            // 如果当前模式是全局变量，默认获取当前值
             if (this is IGlobal) return true;
 
             if (module is IMotionModule m)
@@ -1254,7 +1254,7 @@ namespace Luster.TaskFlow.Motion
         }
 
         /// <summary>
-        /// �����ϴ�
+        /// 数据上传
         /// </summary>
         /// <param name="code"></param>
         /// <param name="datas"></param>
@@ -1264,7 +1264,7 @@ namespace Luster.TaskFlow.Motion
         }
 
         /// <summary>
-        /// ������ɺ�Ĭ��ִ���ϴ��¼�
+        /// 运行完成后，默认执行上传事件
         /// </summary>
         private void OnDataUpload()
         {
@@ -1294,14 +1294,14 @@ namespace Luster.TaskFlow.Motion
                 }
                 else
                 {
-                    // �����ʱ��û�д��������¼�����ô�ͽ�����ͬ���ı���վ��
+                    // 如果此时还没有触发入料事件，那么就将数据同步的本工站中
                     var station = Station.TaskFunction as IStation;
                     foreach (var item in tempDatas)
                     {
-                        // ɾ����ʷ���ڼ�¼
+                        // 删除历史存在记录
                         station.Datas.RemoveAll(u => u == item);
 
-                        // ������ǰ��¼
+                        // 新增当前记录
                         station.Datas.Add(item);
                     }
                 }
@@ -1309,10 +1309,10 @@ namespace Luster.TaskFlow.Motion
             else if (Station != null && !string.IsNullOrEmpty(Station.DataID) &&
                         Station.TaskFunction is IStation s)
             {
-                // ���ɹ�վ����������ݾͽ����ϴ�
+                // 自由工站如果存在数据就进行上传
                 if (s.Datas.Count > 0)
                 {
-                    // ���ɹ�վ������ڻ�û���ϴ�������,��ô���ϴ��������У��ϴ���ɺ���������
+                    // 自由工站如果存在还没有上传的数据,那么就上传到缓存中，上传完成后，清理集合
                     OnDataUpload(Station.DataID, s.Datas);
                     s.Datas.Clear();
                 }
@@ -1320,21 +1320,21 @@ namespace Luster.TaskFlow.Motion
         }
 
         /// <summary>
-        /// ��Ʒ����
+        /// 产品抛料
         /// </summary>
         public event Action<Guid, string, List<LColumn>> DataUploadEvent;
 
         /// <summary>
-        /// ��Ʒ�����¼�
+        /// 产品阻塞事件
         /// </summary>
         public event Action<IMotionModule, double, string, string> ProBlockEvent;
 
         /// <summary>
-        /// ��Ʒ����
+        /// 产品阻塞
         /// </summary>
-        /// <param name="blockCt">����ʱ��</param>
-        /// <param name="errCode">������� block/</param>
-        /// <param name="reason">����ԭ��</param>
+        /// <param name="blockCt">阻塞时间</param>
+        /// <param name="errCode">错误编码 block/</param>
+        /// <param name="reason">阻塞原因</param>
         public void OnProBlock(double blockCt, string errCode, string reason) => ProBlockEvent?.Invoke(this, blockCt, errCode, reason);
         #endregion
 
@@ -1342,14 +1342,14 @@ namespace Luster.TaskFlow.Motion
         {
             base.OnPropertyChanged(propertyName, srcVal, newV);
 
-            // ���Ա��������ģ�����
+            // 属性变更，更新模块别名
             if (propertyName == "Alias")
             {
                 moduleAlias = "";
             }
         }
 
-        #region ������ģ�����ù�ϵ
+        #region 和其他模块引用关系
         /// <summary>
         /// 
         /// </summary>
@@ -1382,7 +1382,7 @@ namespace Luster.TaskFlow.Motion
 
         #endregion
 
-        // ̫�Ƶ���ע���¼�
+        // 太科电批注册事件
         public event Action<object, string> TaiKeScrewRegisterEvent;
         public void TaiKeScrewRegister(object obj, string name)
         {
@@ -1390,7 +1390,7 @@ namespace Luster.TaskFlow.Motion
         }
 
 
-        // Toeinע���¼�
+        // Toein注册事件
         public event Action<object, string> ToeinForceRegisterEvent;
         public void ToeinForceRegister(object obj, string name)
         {
@@ -1401,14 +1401,14 @@ namespace Luster.TaskFlow.Motion
 
 
 
-        // ѹ��ע���¼�
+        // 压力注册事件
         public event Action<object, string> PressRegisterEvent;
         public void PressRegister(object obj, string name)
         {
             PressRegisterEvent?.Invoke(obj, name);
         }
 
-        // ѹ��ע���¼�
+        // 压力注册事件
         public event Action<object, string> ForceRegisterEvent;
 
 
