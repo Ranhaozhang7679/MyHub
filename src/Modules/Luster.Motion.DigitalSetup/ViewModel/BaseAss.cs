@@ -212,6 +212,16 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         }
 
         /// <summary>
+        /// 点检进行中标记，防止重复点击
+        /// </summary>
+        private bool _isChecking = false;
+        public bool IsChecking
+        {
+            get => _isChecking;
+            set => SetProperty(ref _isChecking, value);
+        }
+
+        /// <summary>
         /// 每页数量
         /// </summary>
         private int _perPageCount = 20;
@@ -1168,6 +1178,33 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             }
 
             method.Invoke(_csvHelper, new object[] { convertedEnumerable });
+
+            // 工站CSV副本：多工站界面保存时，额外拷贝一份以工站命名的副本
+            try
+            {
+                if (StationConfigs != null && StationConfigs.Count > 0 && !string.IsNullOrEmpty(SelectedStationName))
+                {
+                    string categoryName = GetCategoryFromPageName(SelectedReportPage.Name);
+                    if (!string.IsNullOrEmpty(categoryName))
+                    {
+                        var recipeDir = _commonbus.CurrentRecipe?.GetRecipePath();
+                        if (!string.IsNullOrEmpty(recipeDir))
+                        {
+                            var assDir = Path.Combine(recipeDir, "db", "Ass_Data");
+                            var srcFile = Path.Combine(assDir, $"AssTb{categoryName}_Latest.csv");
+                            var dstFile = Path.Combine(assDir, $"AssTb{categoryName}_{SelectedStationName}_Latest.csv");
+                            if (File.Exists(srcFile))
+                            {
+                                File.Copy(srcFile, dstFile, overwrite: true);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = $"保存工站CSV副本失败: {ex.Message}" });
+            }
         }
 
         protected void InitModels()
@@ -1838,10 +1875,10 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     }
                 }), System.Windows.Threading.DispatcherPriority.Background);
             }
-        }
 
-        /// <summary>
-        /// 获取当前子页面的点检结果（基于 ItemModels）
+            // 一键点检完成后保存表格数据，触发工站CSV副本
+            SaveGridItems(ItemModels);
+        }
         /// </summary>
         /// <returns>当前子页面的点检状态</returns>
         protected virtual CheckStatus GetCurrentPageCheckStatus()
@@ -1969,6 +2006,11 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
         public virtual async void OnEnd()
         {
+            // 仅在点检进行中时停止运动引擎任务，避免初始化/切换页面时误触发
+            if (IsChecking)
+            {
+                _flowBus?.OnStop();
+            }
             //终止耗时的点检操作
             Stop();
             await WaitForCompletionAsync();

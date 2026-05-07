@@ -30,7 +30,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel
 {
     public class ErrorContentCustomVM : PageVM
     {
-        public override bool IsShowAdd => true;
+        public override bool IsShowAdd => false;
 
         private IDialogService _dialogService;
         private readonly IDeviceEngine deviceEngine;
@@ -40,14 +40,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel
         /// </summary>
         private string _boundRecipePath;
 
-        public override bool IsShowRemove => true;
-
-        private ObservableCollection<ErrorItemCustomModel> selectedList;
-        public ObservableCollection<ErrorItemCustomModel> SelectedList
-        {
-            get { return selectedList; }
-            set { SetProperty(ref selectedList, value); }
-        }
+        public override bool IsShowRemove => false;
 
         private ObservableCollection<ErrorItemCustomModel> errorList;
         public ObservableCollection<ErrorItemCustomModel> ErrorList
@@ -56,9 +49,52 @@ namespace Luster.SimDevice.SubSystem.ViewModel
             set { SetProperty(ref errorList, value); }
         }
 
+        /// <summary>
+        /// 搜索关键字
+        /// </summary>
+        private string _searchText;
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                if (SetProperty(ref _searchText, value))
+                {
+                    // 只在清空时自动刷新，正常输入字符不触发以免卡顿
+                    if (string.IsNullOrWhiteSpace(value))
+                    {
+                        RaisePropertyChanged(nameof(FilteredErrorList));
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 根据搜索文本过滤后的列表
+        /// </summary>
+        public ObservableCollection<ErrorItemCustomModel> FilteredErrorList
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(SearchText))
+                    return ErrorList;
+
+                var filtered = ErrorList.Where(item =>
+                    (item.AlarmCode?.Contains(SearchText) == true) ||
+                    (item.AlarmContent?.Contains(SearchText) == true) ||
+                    (item.AlarmEnglish?.Contains(SearchText) == true) ||
+                    (item.ModuleName?.Contains(SearchText) == true)
+                ).ToList();
+                return new ObservableCollection<ErrorItemCustomModel>(filtered);
+            }
+        }
+
+        public DelegateCommand SearchCommand { get; set; }
         public DelegateCommand BatchExportCommand { get; set; }
         public DelegateCommand BatchImportCommand { get; set; }
         public DelegateCommand GenerateErrorCodeListCommand { get; set; }
+        public DelegateCommand ScanRecipeCommand { get; set; }
+        public DelegateCommand<ErrorItemCustomModel> EditItemCommand { get; set; }
 
         bool isDeleteFinish = true;
 
@@ -67,11 +103,15 @@ namespace Luster.SimDevice.SubSystem.ViewModel
             _dialogService = dialogService;
             this.deviceEngine = deviceEngine;
             ErrorList = new ObservableCollection<ErrorItemCustomModel>();
-            SelectedList = new ObservableCollection<ErrorItemCustomModel>();
 
+            SearchCommand = new DelegateCommand(() => RaisePropertyChanged(nameof(FilteredErrorList)));
             BatchExportCommand = new DelegateCommand(ExportTotalCommand);
             BatchImportCommand = new DelegateCommand(ImportTotalCommand);
             GenerateErrorCodeListCommand = new DelegateCommand(GenerateErrorCodeList);
+            ScanRecipeCommand = new DelegateCommand(ScanRecipe);
+            EditItemCommand = new DelegateCommand<ErrorItemCustomModel>(EditItem);
+
+            ErrorList.CollectionChanged += (s, e) => RaisePropertyChanged(nameof(FilteredErrorList));
 
             _boundRecipePath = deviceEngine.RecipeConfigPath;
             LoadFromCsvFile();
@@ -92,6 +132,8 @@ namespace Luster.SimDevice.SubSystem.ViewModel
             if (_boundRecipePath == deviceEngine.RecipeConfigPath)
             {
                 SaveToCsvFile(ErrorList);
+                // 引擎保存后，后处理 .recipe XML：更新 Alarm 参数并移除可能的 Global 引用
+                UpdateRecipeXmlForAlarms();
             }
         }
 
@@ -117,8 +159,20 @@ namespace Luster.SimDevice.SubSystem.ViewModel
             if (sender is ErrorItemCustomModel item && deviceEngine != null)
             {
                 string searchKey = (e.PropertyName == nameof(item.AlarmCode)) ? item.OldAlarmCode : item.AlarmCode;
-                var alarm = deviceEngine.GetVDevices<VAlarm>()
-                    .FirstOrDefault(a => a.AlarmKey == searchKey);
+                var allAlarms = deviceEngine.GetVDevices<VAlarm>()?.ToList() ?? new List<VAlarm>();
+
+                // 按 ModuleId (DeviceID) 查找 VAlarm，有 ModuleId 时严格匹配，不回退到 AlarmKey
+                // 排除 ProEvent VAlarm，避免跨页面交叉污染
+                VAlarm alarm = null;
+                if (!string.IsNullOrEmpty(item.ModuleId) && Guid.TryParse(item.ModuleId, out var moduleIdGuid) && moduleIdGuid != Guid.Empty)
+                {
+                    alarm = allAlarms.FirstOrDefault(a => a.DeviceID == moduleIdGuid && a.Name != "ProEvent");
+                }
+                else
+                {
+                    alarm = allAlarms.FirstOrDefault(a => a.AlarmKey == searchKey && a.Name != "ProEvent");
+                }
+
                 if (alarm != null)
                 {
                     if (e.PropertyName == nameof(item.AlarmContent))
@@ -136,97 +190,572 @@ namespace Luster.SimDevice.SubSystem.ViewModel
             }
         }
 
-        public override void AddNewItem()
+        /// <summary>
+        /// 扫描配方：从工作流 XML 中提取报警工具，忽略标记为 Skip 的模块。
+        /// 使用 ModuleId (GUID) 作为唯一标识，支持同名模块、模块重命名和新模块添加。
+        /// </summary>
+        private void ScanRecipe()
         {
-            string alarmCode = "";
-            string alarmContent = "";
-            string alarmEnglish = "";
-
-            // 收集已有的所有报警代码，传给向导用于序号自增
-            var existingCodes = ErrorList.Select(e => e.AlarmCode).Where(c => !string.IsNullOrEmpty(c)).ToList();
-
-            dialogService.ShowAlarmConfigCustomDialog(alarmCode, alarmContent, alarmEnglish, existingCodes, r =>
+            _dialogService.ShowConfirm("扫描配方前，请确认当前配方已保存至最新？", r =>
             {
-                if (r.Result == ButtonResult.OK)
-                {
-                    r.Parameters.TryGetValue<string>("AlarmCode", out var alarmCode);
-                    r.Parameters.TryGetValue<string>("AlarmContent", out var alarmContent);
-                    r.Parameters.TryGetValue<string>("AlarmEnglish", out var alarmEnglish);
-                    r.Parameters.TryGetValue<string>("AlarmCategory", out var alarmCategory);
-                    r.Parameters.TryGetValue<string>("RepairAction", out var repairAction);
+                if (r.Result != ButtonResult.OK)
+                    return;
 
-                    // 判断报警代码是否已存在
-                    if (!string.IsNullOrEmpty(alarmCode) && ErrorList.Any(e => e.AlarmCode == alarmCode))
-                    {
-                        dialogService.ShowConfirm($"报警代码 \"{alarmCode}\" 已存在，请勿重复添加！", _ => { });
-                        return;
-                    }
-
-                    var newModel = new ErrorItemCustomModel(alarmCode, alarmContent, alarmEnglish, alarmCategory ?? "", repairAction ?? "")
-                    {
-                        AlarmCode = alarmCode,
-                        AlarmContent = alarmContent,
-                        AlarmEnglish = alarmEnglish,
-                        AlarmCategory = alarmCategory ?? "",
-                        RepairAction = repairAction ?? "",
-                    };
-                    newModel.PropertyChanged += Item_PropertyChanged;
-                    ErrorList.Add(newModel);
-                    deviceEngine?.AddVirtual(new VAlarm()
-                    {
-                        AlarmKey = alarmCode,
-                        AlarmCN = alarmContent,
-                        AlarmEn = alarmEnglish,
-                        ID = Guid.NewGuid()
-                    });
-                }
-
-
+                DoScanRecipe();
             });
         }
 
-        public override void RemoveItem()
+        private void DoScanRecipe()
         {
-            if (SelectedList.Count == 0)
+            try
             {
-                SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Error, "请先选择要进行删除的项");
-            }
+                // 先保存配方，确保 .recipe 文件与内存中的最新状态同步
+                // 用户在工作流编辑器中的修改（重命名模块、新增报警工具等）
+                // 只有保存后才会写入 .recipe 文件
+                try { deviceEngine.Save(); }
+                catch { /* 新配方可能尚未完全初始化，忽略保存失败 */ }
 
-            // 删除确认
-            dialogService.ShowConfirm($"确认删除{SelectedList.Count}项?", (r) =>
-            {
-                if (r.Result == ButtonResult.OK)
+                // 尝试从配方路径找到工作流 XML 文件
+                string recipePath = deviceEngine.RecipeConfigPath;
+                if (string.IsNullOrEmpty(recipePath) || !Directory.Exists(recipePath))
                 {
-                    foreach (var item in SelectedList)
+                    SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Warning, "配方路径不存在，无法扫描");
+                    return;
+                }
+
+                // 查找工作流文件：RecipeDataPath 对应的 XML 文件
+                string recipeDataPath = deviceEngine.RecipeDataPath;
+                string workflowFile = FindWorkflowFile(recipePath, recipeDataPath);
+                if (string.IsNullOrEmpty(workflowFile) || !File.Exists(workflowFile))
+                {
+                    SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Warning, $"未找到工作流文件: {workflowFile}");
+                    return;
+                }
+
+                var xRoot = XElement.Load(workflowFile);
+                var scannedAlarms = new List<(string moduleId, string moduleName, string alarmCode, string message, string detail)>();
+
+                // 递归扫描 Module 节点
+                ScanModules(xRoot, scannedAlarms);
+
+                if (scannedAlarms.Count == 0)
+                {
+                    SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Info, "未在工作流中找到报警工具");
+                    return;
+                }
+
+                // 扫描结果集合：ModuleId 作为唯一标识
+                var scanIds = new HashSet<string>(
+                    scannedAlarms.Select(a => a.moduleId).Where(id => !string.IsNullOrEmpty(id)));
+
+                // 保存被移除条目的用户编辑字段（用于模块重命名后恢复 AlarmCategory、RepairAction）
+                var preservedEdits = new Dictionary<string, (string category, string repair)>();
+                var preservedEditsByCode = new Dictionary<string, (string category, string repair)>();
+
+                // 移除不再匹配的旧条目：ModuleId 不再存在于扫描结果中，或者根本没有 ModuleId（历史遗留数据/重复项）
+                var toRemove = ErrorList.Where(e =>
+                    (!string.IsNullOrEmpty(e.ModuleId) && !scanIds.Contains(e.ModuleId)) ||
+                    string.IsNullOrEmpty(e.ModuleId)).ToList();
+
+                foreach (var item in toRemove)
+                {
+                    if (!string.IsNullOrEmpty(item.ModuleId))
                     {
-                        if (deviceEngine != null)
+                        preservedEdits[item.ModuleId] = (item.AlarmCategory ?? "", item.RepairAction ?? "");
+                    }
+                    if (!string.IsNullOrEmpty(item.AlarmCode))
+                    {
+                        preservedEditsByCode[item.AlarmCode] = (item.AlarmCategory ?? "", item.RepairAction ?? "");
+                    }
+                    item.PropertyChanged -= Item_PropertyChanged;
+                    ErrorList.Remove(item);
+                }
+
+                // 当前 ErrorList 中的 ModuleId 集合
+                var currentIds = new HashSet<string>(
+                    ErrorList.Select(e => e.ModuleId).Where(id => !string.IsNullOrEmpty(id)));
+
+                int addedCount = 0;
+                int updatedCount = toRemove.Count; // 重命名或升级条目算更新
+
+                foreach (var (moduleId, moduleName, alarmCode, message, detail) in scannedAlarms)
+                {
+                    if (string.IsNullOrEmpty(alarmCode)) continue;
+
+                    if (!string.IsNullOrEmpty(moduleId) && currentIds.Contains(moduleId))
+                    {
+                        // 已存在相同 ModuleId，更新 moduleName/alarmCode/message/detail
+                        var existing = ErrorList.FirstOrDefault(e => e.ModuleId == moduleId);
+                        if (existing != null)
                         {
-                            // 获取所有 VAlarm 类型的虚拟设备
-                            var virtualAlarms = deviceEngine.GetVDevices<VAlarm>();
-
-                            // 查找并删除对应的 VAlarm 设备
-                            var alarmToRemove = virtualAlarms
-                                .FirstOrDefault(alarm => alarm.AlarmKey == item.AlarmCode);
-
-                            if (alarmToRemove != null)
-                            {
-                                try
-                                {
-                                    deviceEngine.ReomoveVirtual(alarmToRemove.ID);
-                                }
-                                catch (Exception ex)
-                                {
-                                    SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Warning, $"删除底层虚拟设备时遇到异常（可能被其它模块引用），但将从界面列表中移除: {ex.Message}");
-                                }
-                            }
+                            existing.ModuleName = moduleName ?? existing.ModuleName;
+                            existing.AlarmCode = alarmCode;
+                            existing.AlarmContent = message ?? existing.AlarmContent;
+                            existing.AlarmEnglish = detail ?? existing.AlarmEnglish;
+                            updatedCount++;
+                        }
+                    }
+                    else
+                    {
+                        // 新条目（可能是重命名后的模块，也可能是全新添加的报警工具，或是从旧版无ID数据升级而来）
+                        string category = "";
+                        string repair = "";
+                        if (!string.IsNullOrEmpty(moduleId) && preservedEdits.TryGetValue(moduleId, out var edits))
+                        {
+                            category = edits.category;
+                            repair = edits.repair;
+                        }
+                        else if (!string.IsNullOrEmpty(alarmCode) && preservedEditsByCode.TryGetValue(alarmCode, out var codeEdits))
+                        {
+                            category = codeEdits.category;
+                            repair = codeEdits.repair;
                         }
 
-                        ErrorList.Remove(item);
+                        var newModel = new ErrorItemCustomModel(
+                            alarmCode, message ?? "", detail ?? "", category, repair, moduleName, moduleId);
+                        newModel.PropertyChanged += Item_PropertyChanged;
+                        ErrorList.Add(newModel);
+                        if (!string.IsNullOrEmpty(moduleId))
+                            currentIds.Add(moduleId);
+                        addedCount++;
+
+                        // 同步到设备引擎
+                        if (deviceEngine != null)
+                        {
+                            // 按 ModuleId 查找是否已有对应的 VAlarm（排除 ProEvent VAlarm）
+                            // 仅按 DeviceID 匹配，不按 AlarmKey 回退，确保每个模块都有独立的 VAlarm
+                            var moduleIdGuid = Guid.TryParse(moduleId, out var midGuid) ? midGuid : Guid.Empty;
+                            var existingAlarm = deviceEngine.GetVDevices<VAlarm>()
+                                ?.FirstOrDefault(a => a.DeviceID == moduleIdGuid && moduleIdGuid != Guid.Empty && a.Name != "ProEvent");
+                            if (existingAlarm == null)
+                            {
+                                deviceEngine.AddVirtual(new VAlarm()
+                                {
+                                    AlarmKey = alarmCode,
+                                    AlarmCN = message ?? "",
+                                    AlarmEn = detail ?? "",
+                                    ID = Guid.NewGuid(),
+                                    DeviceID = moduleIdGuid
+                                });
+                            }
+                        }
+                    }
+                }
+
+                RaisePropertyChanged(nameof(FilteredErrorList));
+                SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Info,
+                    $"扫描配方完成：新增 {addedCount} 条，更新 {updatedCount} 条");
+            }
+            catch (Exception ex)
+            {
+                SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Error, $"扫描配方失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 查找工作流 XML 文件（.recipe 文件）
+        /// RecipeDataPath 指向 .data 文件（参数配置），同名的 .recipe 文件才是工作流 XML
+        /// </summary>
+        private string FindWorkflowFile(string recipeConfigPath, string recipeDataPath)
+        {
+            // 优先从 RecipeDataPath（.data）推导出 .recipe 文件路径
+            if (!string.IsNullOrEmpty(recipeDataPath))
+            {
+                string recipeFile = Path.ChangeExtension(recipeDataPath, ".recipe");
+                if (File.Exists(recipeFile))
+                    return recipeFile;
+            }
+
+            // 备用：在 .data 文件同级目录查找同名 .recipe 文件
+            if (!string.IsNullOrEmpty(recipeDataPath))
+            {
+                string dataDir = Path.GetDirectoryName(recipeDataPath);
+                if (!string.IsNullOrEmpty(dataDir) && Directory.Exists(dataDir))
+                {
+                    foreach (var file in Directory.GetFiles(dataDir, "*.recipe"))
+                    {
+                        return file;
+                    }
+                }
+            }
+
+            // 最后尝试搜索配方目录下的 .recipe 文件
+            if (!string.IsNullOrEmpty(recipeConfigPath) && Directory.Exists(recipeConfigPath))
+            {
+                var parentDir = Directory.GetParent(recipeConfigPath);
+                if (parentDir != null)
+                {
+                    foreach (var file in Directory.GetFiles(parentDir.FullName, "*.recipe"))
+                    {
+                        return file;
                     }
 
-                    SelectedList.Clear();
+                    // 检查子目录中的 .recipe 文件
+                    foreach (var dir in Directory.GetDirectories(parentDir.FullName))
+                    {
+                        foreach (var file in Directory.GetFiles(dir, "*.recipe"))
+                        {
+                            return file;
+                        }
+                    }
                 }
-            });
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 递归扫描 Module 节点，提取报警函数信息
+        /// </summary>
+        private void ScanModules(XElement parent, List<(string moduleId, string moduleName, string alarmCode, string message, string detail)> results)
+        {
+            foreach (var moduleEl in parent.Elements("Module"))
+            {
+                // 检查是否被标记为忽略 (IsSkip)
+                var isSkipAttr = moduleEl.Attribute("IsSkip");
+                if (isSkipAttr != null && bool.TryParse(isSkipAttr.Value, out bool isSkip) && isSkip)
+                    continue;
+
+                // 跳过测试工站（其内部报警工具不应纳入自定义报警配置）
+                if (moduleEl.Elements("Function").Any(f => f.Attribute("Name")?.Value == "TestStation"))
+                    continue;
+
+                // 模块唯一 ID（GUID）
+                string moduleId = moduleEl.Attribute("ID")?.Value ?? "";
+
+                // 优先使用 Alias（用户显示名称，如"报警1"），其次使用 Name（内部名称）
+                string moduleName = moduleEl.Attribute("Alias")?.Value
+                    ?? moduleEl.Attribute("Name")?.Value ?? "";
+
+                // 查找 Alarm 函数
+                foreach (var funcEl in moduleEl.Elements("Function"))
+                {
+                    var funcNameAttr = funcEl.Attribute("Name");
+                    if (funcNameAttr != null && funcNameAttr.Value == "Alarm")
+                    {
+                        string alarmCode = GetParamValue(funcEl, "AlarmCode");
+                        string message = GetParamValue(funcEl, "Message");
+                        string detail = GetParamValue(funcEl, "Detail");
+                        string alarmType = GetParamValue(funcEl, "AlarmType");
+
+                        // 过滤掉报警类型为“信息提示”、“报警断点”和“人工介入提示”相关的模块
+                        if (!string.IsNullOrEmpty(alarmType) && 
+                            (alarmType == "InfoTip" || alarmType == "RetryAlarm" || alarmType == "ManuOperationAlarm"))
+                        {
+                            continue;
+                        }
+
+                        if (!string.IsNullOrEmpty(alarmCode))
+                        {
+                            results.Add((moduleId, moduleName, alarmCode, message, detail));
+                        }
+                    }
+                }
+
+                // 递归扫描子模块
+                var childrenEl = moduleEl.Element("Children");
+                if (childrenEl != null)
+                {
+                    ScanModules(childrenEl, results);
+                }
+
+                // 也检查 Modules 容器
+                var modulesEl = moduleEl.Element("Modules");
+                if (modulesEl != null)
+                {
+                    ScanModules(modulesEl, results);
+                }
+            }
+
+            // 检查 Modules 容器
+            var topModules = parent.Element("Modules");
+            if (topModules != null && parent.Name != "Modules")
+            {
+                ScanModules(topModules, results);
+            }
+        }
+
+        /// <summary>
+        /// 从 Function 元素中提取参数值
+        /// </summary>
+        private string GetParamValue(XElement funcEl, string paramName)
+        {
+            var paramEl = funcEl.Element(paramName);
+            if (paramEl != null)
+            {
+                var valAttr = paramEl.Attribute("Value");
+                if (valAttr != null)
+                    return valAttr.Value;
+            }
+            return "";
+        }
+
+        /// <summary>
+        /// 后处理 .recipe 和 .data XML 文件：将 Alarm 函数的 AlarmCode/Message/Detail 参数更新为配置页面的值，
+        /// 移除可能存在的 Global 引用（RefID/RefName 属性），并同步更新内嵌的 AlarmC/VDevice 数据。
+        /// </summary>
+        private void UpdateRecipeXmlForAlarms()
+        {
+            try
+            {
+                string recipePath = deviceEngine.RecipeConfigPath;
+                if (string.IsNullOrEmpty(recipePath) || !Directory.Exists(recipePath))
+                    return;
+
+                string recipeDataPath = deviceEngine.RecipeDataPath;
+                string workflowFile = FindWorkflowFile(recipePath, recipeDataPath);
+                if (string.IsNullOrEmpty(workflowFile) || !File.Exists(workflowFile))
+                    return;
+
+                // === 1. 后处理 .recipe 文件 ===
+                var xRoot = XElement.Load(workflowFile);
+                bool recipeModified = false;
+
+                foreach (var item in ErrorList)
+                {
+                    if (string.IsNullOrEmpty(item.ModuleId)) continue;
+
+                    var moduleEl = FindModuleById(xRoot, item.ModuleId);
+                    if (moduleEl == null) continue;
+
+                    foreach (var funcEl in moduleEl.Elements("Function"))
+                    {
+                        var funcNameAttr = funcEl.Attribute("Name");
+                        if (funcNameAttr == null || funcNameAttr.Value != "Alarm")
+                            continue;
+
+                        recipeModified |= UpdateAlarmFunctionParams(funcEl, item);
+                    }
+                }
+
+                if (recipeModified)
+                {
+                    xRoot.Save(workflowFile);
+                    SimEngineUI?.OnLog(Common.DataStruct.Enums.LogType.Info,
+                        "已更新 .recipe 文件：Alarm 参数已同步至配置页面的值");
+                }
+
+                // === 2. 后处理 .data 文件 ===
+                // .data 文件中 Alarm 函数为扁平结构：<Function Name="Alarm" ID="moduleId" ...>
+                // 其中 ID 属性对应 .recipe 中 Module 的 ID
+                string dataFile = recipeDataPath;
+                if (!string.IsNullOrEmpty(dataFile) && File.Exists(dataFile))
+                {
+                    var xData = XElement.Load(dataFile);
+                    bool dataModified = false;
+
+                    foreach (var item in ErrorList)
+                    {
+                        if (string.IsNullOrEmpty(item.ModuleId)) continue;
+
+                        // 在 .data 中按 Function Name="Alarm" + ID=ModuleId 查找
+                        var alarmFuncs = xData.Descendants("Function")
+                            .Where(f => f.Attribute("Name")?.Value == "Alarm"
+                                     && f.Attribute("ID")?.Value == item.ModuleId)
+                            .ToList();
+
+                        foreach (var funcEl in alarmFuncs)
+                        {
+                            dataModified |= UpdateAlarmFunctionParams(funcEl, item);
+                        }
+                    }
+
+                    if (dataModified)
+                    {
+                        xData.Save(dataFile);
+                        SimEngineUI?.OnLog(Common.DataStruct.Enums.LogType.Info,
+                            "已更新 .data 文件：Alarm 参数已同步至配置页面的值");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                SimEngineUI?.OnLog(Common.DataStruct.Enums.LogType.Warning, $"更新配方XML失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 更新单个 Alarm Function 元素中的 AlarmCode/Message/Detail 参数及 AlarmC VDevice 子数据。
+        /// 同时适用于 .recipe 和 .data 两种 XML 结构。
+        /// </summary>
+        private bool UpdateAlarmFunctionParams(XElement funcEl, ErrorItemCustomModel item)
+        {
+            bool changed = false;
+
+            // 更新 AlarmCode/Message/Detail 参数：设置 Value，移除可能的 RefID/RefName
+            changed |= UpdateAlarmParamInXml(funcEl, "AlarmCode", item.AlarmCode);
+            changed |= UpdateAlarmParamInXml(funcEl, "Message", item.AlarmContent);
+            changed |= UpdateAlarmParamInXml(funcEl, "Detail", item.AlarmEnglish);
+
+            // 同步更新 AlarmC 内嵌的 VDevice 数据
+            var alarmCEl = funcEl.Element("AlarmC");
+            if (alarmCEl != null)
+            {
+                var vDeviceEl = alarmCEl.Element("VDevice");
+                if (vDeviceEl != null)
+                {
+                    var alarmKeyEl = vDeviceEl.Element("AlarmKey");
+                    if (alarmKeyEl != null && alarmKeyEl.Value != (item.AlarmCode ?? ""))
+                    {
+                        alarmKeyEl.Value = item.AlarmCode ?? "";
+                        changed = true;
+                    }
+                    var alarmCNEl = vDeviceEl.Element("AlarmCN");
+                    if (alarmCNEl != null && alarmCNEl.Value != (item.AlarmContent ?? ""))
+                    {
+                        alarmCNEl.Value = item.AlarmContent ?? "";
+                        changed = true;
+                    }
+                    var alarmEnEl = vDeviceEl.Element("AlarmEn");
+                    if (alarmEnEl != null && alarmEnEl.Value != (item.AlarmEnglish ?? ""))
+                    {
+                        alarmEnEl.Value = item.AlarmEnglish ?? "";
+                        changed = true;
+                    }
+                }
+            }
+
+            return changed;
+        }
+
+        /// <summary>
+        /// 更新 Function 元素中指定参数：设置 Value 属性，移除 RefID/RefName 引用属性
+        /// </summary>
+        private bool UpdateAlarmParamInXml(XElement funcEl, string paramName, string newValue)
+        {
+            var paramEl = funcEl.Element(paramName);
+            if (paramEl == null) return false;
+
+            bool changed = false;
+
+            // 移除 Global 引用属性
+            var refIdAttr = paramEl.Attribute("RefID");
+            var refNameAttr = paramEl.Attribute("RefName");
+            if (refIdAttr != null) { refIdAttr.Remove(); changed = true; }
+            if (refNameAttr != null) { refNameAttr.Remove(); changed = true; }
+
+            // 移除可能存在的 <Ref> 子元素
+            foreach (var r in paramEl.Elements("Ref").ToList()) { r.Remove(); changed = true; }
+
+            // 设置/更新 Value 属性
+            var valAttr = paramEl.Attribute("Value");
+            if (valAttr != null)
+            {
+                if (valAttr.Value != (newValue ?? "")) { valAttr.Value = newValue ?? ""; changed = true; }
+            }
+            else
+            {
+                paramEl.SetAttributeValue("Value", newValue ?? "");
+                changed = true;
+            }
+
+            return changed;
+        }
+
+        /// <summary>
+        /// 递归在 XML 中查找指定 ID 的 Module 元素
+        /// </summary>
+        private XElement FindModuleById(XElement parent, string targetId)
+        {
+            foreach (var moduleEl in parent.Elements("Module"))
+            {
+                string id = moduleEl.Attribute("ID")?.Value ?? "";
+                if (id == targetId) return moduleEl;
+
+                var childrenEl = moduleEl.Element("Children");
+                if (childrenEl != null)
+                {
+                    var found = FindModuleById(childrenEl, targetId);
+                    if (found != null) return found;
+                }
+
+                var modulesEl = moduleEl.Element("Modules");
+                if (modulesEl != null)
+                {
+                    var found = FindModuleById(modulesEl, targetId);
+                    if (found != null) return found;
+                }
+            }
+
+            var topModules = parent.Element("Modules");
+            if (topModules != null && parent.Name != "Modules")
+            {
+                var found = FindModuleById(topModules, targetId);
+                if (found != null) return found;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 编辑条目：打开编辑对话框
+        /// </summary>
+        private void EditItem(ErrorItemCustomModel item)
+        {
+            if (item == null) return;
+
+            var existingCodes = ErrorList.Select(e => e.AlarmCode).ToList();
+
+            dialogService.ShowAlarmConfigEditDialog(
+                item.AlarmCode,
+                item.AlarmContent,
+                item.AlarmEnglish,
+                item.AlarmCategory,
+                item.RepairAction,
+                existingCodes,
+                r =>
+                {
+                    if (r.Result == ButtonResult.OK)
+                    {
+                        r.Parameters.TryGetValue<string>("AlarmCode", out var alarmCode);
+                        r.Parameters.TryGetValue<string>("AlarmContent", out var alarmContent);
+                        r.Parameters.TryGetValue<string>("AlarmEnglish", out var alarmEnglish);
+                        r.Parameters.TryGetValue<string>("AlarmCategory", out var alarmCategory);
+                        r.Parameters.TryGetValue<string>("RepairAction", out var repairAction);
+
+                        string oldCode = item.AlarmCode;
+                        item.AlarmCode = alarmCode ?? item.AlarmCode;
+                        item.AlarmContent = alarmContent ?? item.AlarmContent;
+                        item.AlarmEnglish = alarmEnglish ?? item.AlarmEnglish;
+                        item.AlarmCategory = alarmCategory ?? "";
+                        item.RepairAction = repairAction ?? "";
+
+                        // 同步更新 VAlarm
+                        if (deviceEngine != null)
+                        {
+                            var allAlarms = deviceEngine.GetVDevices<VAlarm>()?.ToList() ?? new List<VAlarm>();
+
+                            // 按 ModuleId (DeviceID) 查找 VAlarm，有 ModuleId 时严格匹配
+                            // 排除 ProEvent VAlarm，避免跨页面交叉污染
+                            VAlarm alarm = null;
+                            if (!string.IsNullOrEmpty(item.ModuleId) && Guid.TryParse(item.ModuleId, out var moduleIdGuid) && moduleIdGuid != Guid.Empty)
+                            {
+                                alarm = allAlarms.FirstOrDefault(a => a.DeviceID == moduleIdGuid && a.Name != "ProEvent");
+                            }
+                            else
+                            {
+                                alarm = allAlarms.FirstOrDefault(a => a.AlarmKey == oldCode && a.Name != "ProEvent");
+                            }
+
+                            if (alarm != null)
+                            {
+                                alarm.AlarmKey = item.AlarmCode;
+                                alarm.AlarmCN = item.AlarmContent;
+                                alarm.AlarmEn = item.AlarmEnglish;
+                                if (oldCode != item.AlarmCode)
+                                    deviceEngine.RaiseAlarmCodeChangedEvent(oldCode, item.AlarmCode);
+                            }
+                            deviceEngine.RaiseVDeviceChangedEvent();
+                        }
+
+                        // 立即保存引擎并后处理 XML，将配置页面的值写入配方文件
+                        try { deviceEngine.Save(); } catch { }
+                        UpdateRecipeXmlForAlarms();
+                        UpdateRuntimeAlarmModule(item.ModuleId, item.AlarmCode, item.AlarmContent, item.AlarmEnglish);
+
+                        RaisePropertyChanged(nameof(FilteredErrorList));
+                    }
+                });
         }
 
         /// <summary>
@@ -235,24 +764,8 @@ namespace Luster.SimDevice.SubSystem.ViewModel
         private DelegateCommand<ObservableCollection<ErrorItemCustomModel>> _unLoadedCommand;
         public DelegateCommand<ObservableCollection<ErrorItemCustomModel>> UnLoadedCommand => _unLoadedCommand ?? (_unLoadedCommand = new DelegateCommand<ObservableCollection<ErrorItemCustomModel>>((items) =>
         {
-            SaveToCsvFile(items);
+            SaveToCsvFile(ErrorList);
         }));
-
-        public ICommand SelectionChangedCommand => new DelegateCommand<IList>(selectedItems =>
-        {
-            if (selectedItems.Count == 0) return;
-            if (selectedItems is IList items)
-            {
-                SelectedList.Clear();
-                foreach (var item in items)
-                {
-                    if (item is ErrorItemCustomModel errorItem)
-                    {
-                        SelectedList.Add(errorItem);
-                    }
-                }
-            }
-        });
 
         private void SaveToCsvFile(ObservableCollection<ErrorItemCustomModel> items)
         {
@@ -264,7 +777,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                 var csvLines = new List<string>();
 
                 // 添加CSV表头
-                csvLines.Add("AlarmCode,AlarmContent,AlarmEnglish,AlarmCategory,RepairAction");
+                csvLines.Add("AlarmCode,AlarmContent,AlarmEnglish,AlarmCategory,RepairAction,ModuleName,ModuleId");
 
                 // 添加数据行
                 foreach (var item in items)
@@ -273,8 +786,10 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                     var english = EscapeCsvField(item.AlarmEnglish ?? "");
                     var category = EscapeCsvField(item.AlarmCategory ?? "");
                     var repairAction = EscapeCsvField(item.RepairAction ?? "");
+                    var moduleName = EscapeCsvField(item.ModuleName ?? "");
+                    var moduleId = EscapeCsvField(item.ModuleId ?? "");
 
-                    csvLines.Add($"{item.AlarmCode},{content},{english},{category},{repairAction}");
+                    csvLines.Add($"{item.AlarmCode},{content},{english},{category},{repairAction},{moduleName},{moduleId}");
                 }
 
                 File.WriteAllLines(csvPath, csvLines, Encoding.UTF8);
@@ -303,13 +818,20 @@ namespace Luster.SimDevice.SubSystem.ViewModel
 
         private void LoadFromCsvFile()
         {
+            if (string.IsNullOrEmpty(deviceEngine.RecipeConfigPath))
+            {
+                ErrorList.Clear();
+                RaisePropertyChanged(nameof(FilteredErrorList));
+                return;
+            }
+
             string csvPath = Path.Combine(deviceEngine.RecipeConfigPath, "CustomErrors.csv");
 
             // 清空现有 UI 数据
             ErrorList.Clear();
 
             // 1. 读取 CSV 数据（CSV 是唯一真相源）
-            var csvEntries = new List<(string code, string content, string english, string category, string repair)>();
+            var csvEntries = new List<(string code, string content, string english, string category, string repair, string module, string moduleId)>();
 
             if (File.Exists(csvPath))
             {
@@ -329,7 +851,9 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                                 content: UnescapeCsvField(fields[1]),
                                 english: UnescapeCsvField(fields[2]),
                                 category: fields.Length > 3 ? UnescapeCsvField(fields[3]) : "",
-                                repair: fields.Length > 4 ? UnescapeCsvField(fields[4]) : ""
+                                repair: fields.Length > 4 ? UnescapeCsvField(fields[4]) : "",
+                                module: fields.Length > 5 ? UnescapeCsvField(fields[5]) : "",
+                                moduleId: fields.Length > 6 ? UnescapeCsvField(fields[6]) : ""
                             ));
                         }
                     }
@@ -348,63 +872,108 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                     alarmContent: entry.content,
                     alarmEnglish: entry.english,
                     alarmCategory: entry.category,
-                    repairAction: entry.repair
+                    repairAction: entry.repair,
+                    moduleName: entry.module,
+                    moduleId: entry.moduleId
                 );
                 newModel.PropertyChanged += Item_PropertyChanged;
                 ErrorList.Add(newModel);
             }
 
             // 3. 以 CSV 为唯一真相源，同步引擎中的 VAlarm
-            SyncEngineVAlarms(csvEntries);
+            SyncEngineVAlarms(csvEntries.Select(e => (e.code, e.content, e.english, e.category, e.repair, e.moduleId)).ToList());
+
+            RaisePropertyChanged(nameof(FilteredErrorList));
         }
 
         /// <summary>
         /// 以 CSV 数据为唯一真相源，同步引擎中的 VAlarm：
+        /// - 按 ModuleId (DeviceID) 独立管理每个报警模块的 VAlarm
         /// - 删除不在 CSV 中的孤立 VAlarm
-        /// - 去重（同 AlarmKey 只保留一个）
         /// - 补建 CSV 中有但引擎中缺失的 VAlarm
         /// </summary>
-        private void SyncEngineVAlarms(List<(string code, string content, string english, string category, string repair)> csvEntries)
+        private void SyncEngineVAlarms(List<(string code, string content, string english, string category, string repair, string moduleId)> csvEntries)
         {
             if (deviceEngine == null) return;
 
+            // 构建查找集合
+            var csvModuleIds = new HashSet<Guid>(
+                csvEntries.Select(e => e.moduleId)
+                          .Where(id => !string.IsNullOrEmpty(id))
+                          .Select(id => Guid.TryParse(id, out var g) ? g : Guid.Empty)
+                          .Where(g => g != Guid.Empty));
             var csvCodes = new HashSet<string>(csvEntries.Select(e => e.code).Where(c => !string.IsNullOrEmpty(c)));
-            var allVAlarms = deviceEngine.GetVDevices<VAlarm>().ToList();
 
-            // 删除不在 CSV 中的孤立 VAlarm
+            var allVAlarms = deviceEngine.GetVDevices<VAlarm>()?.ToList() ?? new List<VAlarm>();
+
+            // 删除不在 CSV 中的孤立 VAlarm（跳过产品事件报警页面创建的 VAlarm）
             foreach (var alarm in allVAlarms)
             {
-                if (!csvCodes.Contains(alarm.AlarmKey))
+                // 跳过由产品事件报警配置页面创建的 VAlarm
+                if (alarm.Name == "ProEvent") continue;
+
+                bool shouldRemove = false;
+                if (alarm.DeviceID != Guid.Empty)
+                {
+                    // 有 ModuleId 的 VAlarm：仅当 ModuleId 不在 CSV 中时移除
+                    if (!csvModuleIds.Contains(alarm.DeviceID))
+                        shouldRemove = true;
+                }
+                else
+                {
+                    // 无 ModuleId 的旧 VAlarm：仅当 AlarmKey 不在 CSV 中时移除
+                    if (!csvCodes.Contains(alarm.AlarmKey))
+                        shouldRemove = true;
+                }
+
+                if (shouldRemove)
                 {
                     try { deviceEngine.ReomoveVirtual(alarm.ID); }
                     catch { }
                 }
             }
 
-            // 去重（同 AlarmKey 保留第一个）
-            var remaining = deviceEngine.GetVDevices<VAlarm>().ToList();
-            foreach (var group in remaining.GroupBy(a => a.AlarmKey).Where(g => g.Count() > 1))
-            {
-                foreach (var dup in group.Skip(1))
-                {
-                    try { deviceEngine.ReomoveVirtual(dup.ID); }
-                    catch { }
-                }
-            }
+            // 补建 CSV 中有但引擎中缺失的 VAlarm（按 ModuleId 或 AlarmKey 判断）
+            var remaining = deviceEngine.GetVDevices<VAlarm>()?.ToList() ?? new List<VAlarm>();
+            var existingModuleIds = new HashSet<Guid>(remaining.Where(a => a.DeviceID != Guid.Empty && a.Name != "ProEvent").Select(a => a.DeviceID));
+            var existingKeys = new HashSet<string>(remaining.Where(a => a.DeviceID == Guid.Empty && a.Name != "ProEvent").Select(a => a.AlarmKey));
 
-            // 补建 CSV 中有但引擎中缺失的 VAlarm
-            var currentKeys = new HashSet<string>(deviceEngine.GetVDevices<VAlarm>().Select(a => a.AlarmKey));
             foreach (var entry in csvEntries)
             {
-                if (!string.IsNullOrEmpty(entry.code) && !currentKeys.Contains(entry.code))
+                if (string.IsNullOrEmpty(entry.code)) continue;
+
+                var moduleIdGuid = Guid.TryParse(entry.moduleId, out var g) ? g : Guid.Empty;
+
+                if (moduleIdGuid != Guid.Empty)
                 {
-                    deviceEngine.AddVirtual(new VAlarm()
+                    // 有 ModuleId 的条目：按 DeviceID 判断是否需要新建
+                    if (!existingModuleIds.Contains(moduleIdGuid))
                     {
-                        AlarmKey = entry.code,
-                        AlarmCN = entry.content,
-                        AlarmEn = entry.english,
-                        ID = Guid.NewGuid()
-                    });
+                        deviceEngine.AddVirtual(new VAlarm()
+                        {
+                            AlarmKey = entry.code,
+                            AlarmCN = entry.content,
+                            AlarmEn = entry.english,
+                            ID = Guid.NewGuid(),
+                            DeviceID = moduleIdGuid
+                        });
+                        existingModuleIds.Add(moduleIdGuid);
+                    }
+                }
+                else
+                {
+                    // 无 ModuleId 的旧条目：按 AlarmKey 判断
+                    if (!existingKeys.Contains(entry.code))
+                    {
+                        deviceEngine.AddVirtual(new VAlarm()
+                        {
+                            AlarmKey = entry.code,
+                            AlarmCN = entry.content,
+                            AlarmEn = entry.english,
+                            ID = Guid.NewGuid()
+                        });
+                        existingKeys.Add(entry.code);
+                    }
                 }
             }
         }
@@ -460,7 +1029,6 @@ namespace Luster.SimDevice.SubSystem.ViewModel
         /// <summary>
         /// 批量导出选中项
         /// </summary>
-        /// <param name="items">要导出的项列表</param>
         private void BatchExport(List<ErrorItemCustomModel> items)
         {
             if (items == null || items.Count == 0)
@@ -483,7 +1051,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                     var csvLines = new List<string>();
 
                     // 添加CSV表头
-                    csvLines.Add("AlarmCode,AlarmContent,AlarmEnglish,AlarmCategory,RepairAction");
+                    csvLines.Add("AlarmCode,AlarmContent,AlarmEnglish,AlarmCategory,RepairAction,ModuleName,ModuleId");
 
                     // 添加数据行
                     foreach (var item in items)
@@ -492,8 +1060,10 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                         var english = EscapeCsvField(item.AlarmEnglish ?? "");
                         var category = EscapeCsvField(item.AlarmCategory ?? "");
                         var repairAction = EscapeCsvField(item.RepairAction ?? "");
+                        var moduleName = EscapeCsvField(item.ModuleName ?? "");
+                        var moduleId = EscapeCsvField(item.ModuleId ?? "");
 
-                        csvLines.Add($"{item.AlarmCode},{content},{english},{category},{repairAction}");
+                        csvLines.Add($"{item.AlarmCode},{content},{english},{category},{repairAction},{moduleName},{moduleId}");
                     }
 
                     // 写入文件
@@ -520,7 +1090,6 @@ namespace Luster.SimDevice.SubSystem.ViewModel
         /// <summary>
         /// 批量导入信息
         /// </summary>
-        /// <param name="items">要导入的项列表</param>
         private void BatchImport(List<ErrorItemCustomModel> items)
         {
             if (items == null || items.Count == 0)
@@ -537,8 +1106,16 @@ namespace Luster.SimDevice.SubSystem.ViewModel
 
                 foreach (var importedItem in items)
                 {
-                    // 检查是否已存在相同的AlarmCode
-                    var existingItem = ErrorList.FirstOrDefault(e => e.AlarmCode == importedItem.AlarmCode);
+                    // 按 ModuleId 判断重复；有 ModuleId 时严格按 ModuleId 匹配，不回退到 AlarmCode
+                    ErrorItemCustomModel existingItem = null;
+                    if (!string.IsNullOrEmpty(importedItem.ModuleId))
+                    {
+                        existingItem = ErrorList.FirstOrDefault(e => e.ModuleId == importedItem.ModuleId);
+                    }
+                    else
+                    {
+                        existingItem = ErrorList.FirstOrDefault(e => e.AlarmCode == importedItem.AlarmCode);
+                    }
 
                     if (existingItem == null)
                     {
@@ -548,7 +1125,9 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                             importedItem.AlarmContent,
                             importedItem.AlarmEnglish,
                             importedItem.AlarmCategory,
-                            importedItem.RepairAction
+                            importedItem.RepairAction,
+                            importedItem.ModuleName,
+                            importedItem.ModuleId
                         );
                         newModel.PropertyChanged += Item_PropertyChanged;
                         ErrorList.Add(newModel);
@@ -561,6 +1140,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                         existingItem.AlarmEnglish = importedItem.AlarmEnglish;
                         existingItem.AlarmCategory = importedItem.AlarmCategory;
                         existingItem.RepairAction = importedItem.RepairAction;
+                        existingItem.ModuleName = importedItem.ModuleName;
                         updatedCount++;
                     }
                 }
@@ -570,8 +1150,21 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                 {
                     if (deviceEngine == null || string.IsNullOrEmpty(item.AlarmCode)) continue;
 
-                    var existing = deviceEngine.GetVDevices<VAlarm>()
-                        ?.FirstOrDefault(a => a.AlarmKey == item.AlarmCode);
+                    var moduleIdGuid = Guid.TryParse(item.ModuleId, out var midGuid) ? midGuid : Guid.Empty;
+
+                    // 有 ModuleId 时严格按 DeviceID 查找，避免误匹配同 AlarmCode 的其他模块
+                    VAlarm existing = null;
+                    if (moduleIdGuid != Guid.Empty)
+                    {
+                        existing = deviceEngine.GetVDevices<VAlarm>()
+                            ?.FirstOrDefault(a => a.DeviceID == moduleIdGuid);
+                    }
+                    else
+                    {
+                        // 无 ModuleId 的旧条目：按 AlarmKey 查找
+                        existing = deviceEngine.GetVDevices<VAlarm>()
+                            ?.FirstOrDefault(a => a.AlarmKey == item.AlarmCode);
+                    }
 
                     if (existing != null)
                     {
@@ -585,10 +1178,14 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                             AlarmKey = item.AlarmCode,
                             AlarmCN = item.AlarmContent,
                             AlarmEn = item.AlarmEnglish,
-                            ID = Guid.NewGuid()
+                            ID = Guid.NewGuid(),
+                            DeviceID = moduleIdGuid
                         });
                     }
                 }
+
+                // 通知所有 Alarm 实例更新 VAlarm 数据
+                deviceEngine.RaiseVDeviceChangedEvent();
 
                 SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Info, $"导入完成：新增 {addedCount} 条，更新 {updatedCount} 条");
             }
@@ -638,7 +1235,9 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                                 alarmContent: UnescapeCsvField(fields[1]),
                                 alarmEnglish: UnescapeCsvField(fields[2]),
                                 alarmCategory: fields.Length > 3 ? UnescapeCsvField(fields[3]) : "",
-                                repairAction: fields.Length > 4 ? UnescapeCsvField(fields[4]) : ""
+                                repairAction: fields.Length > 4 ? UnescapeCsvField(fields[4]) : "",
+                                moduleName: fields.Length > 5 ? UnescapeCsvField(fields[5]) : "",
+                                moduleId: fields.Length > 6 ? UnescapeCsvField(fields[6]) : ""
                             ));
                         }
                         else
@@ -649,14 +1248,10 @@ namespace Luster.SimDevice.SubSystem.ViewModel
 
                     if (importedItems.Count > 0)
                     {
-                        // 移除无差别删除全部报警的逻辑 (会导致 TaskFlow 中的报警工具断开连接并清空配置)
                         CleanupUnusedVAlarms(importedItems);
-                        
-                        // 先清空绑定的列表
                         ErrorList.Clear();
-                        
-                        // 执行导入（自动更新底层的对应报警，而不删除有效的）
                         BatchImport(importedItems);
+                        RaisePropertyChanged(nameof(FilteredErrorList));
                     }
                     else
                     {
@@ -671,47 +1266,34 @@ namespace Luster.SimDevice.SubSystem.ViewModel
         }
 
         /// <summary>
-        /// 删除设备引擎中所有 VAlarm 设备
-        /// </summary>
-        private void RemoveAllVAlarms()
-        {
-            if (deviceEngine == null) return;
-
-            try
-            {
-                // 获取所有 VAlarm 类型的虚拟设备
-                var allVAlarms = deviceEngine.GetVDevices<VAlarm>();
-                int totalCount = allVAlarms.Count;
-
-                if (totalCount > 0)
-                {
-                    // 记录要删除的所有设备
-                    var alarmCodes = allVAlarms.Select(a => a.AlarmKey).ToList();
-
-                    // 删除所有 VAlarm 设备
-                    deviceEngine.ReomoveVirtual(typeof(VAlarm));
-                }
-            }
-            catch (Exception ex)
-            {
-                SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Error,
-                    $"删除所有 VAlarm 设备失败: {ex.Message}");
-                throw;
-            }
-        }
-        
-        /// <summary>
         /// 同步清理设备引擎中未使用的 VAlarm 设备 (按需调用)
         /// </summary>
         private void CleanupUnusedVAlarms(List<ErrorItemCustomModel> validItems)
         {
             if (deviceEngine == null) return;
-            var importedCodes = validItems.Select(x => x.AlarmCode).ToHashSet();
-            var allVAlarms = deviceEngine.GetVDevices<VAlarm>().ToList();
-            
+
+            var importedModuleIds = new HashSet<Guid>(
+                validItems.Where(x => !string.IsNullOrEmpty(x.ModuleId))
+                          .Select(x => Guid.TryParse(x.ModuleId, out var g) ? g : Guid.Empty)
+                          .Where(g => g != Guid.Empty));
+            var importedCodes = validItems.Where(x => string.IsNullOrEmpty(x.ModuleId))
+                                          .Select(x => x.AlarmCode).ToHashSet();
+            var allVAlarms = deviceEngine.GetVDevices<VAlarm>()?.ToList() ?? new List<VAlarm>();
+
             foreach (var alarm in allVAlarms)
             {
-                if (!importedCodes.Contains(alarm.AlarmKey))
+                bool shouldKeep = false;
+                if (alarm.DeviceID != Guid.Empty)
+                {
+                    // 有 ModuleId 的 VAlarm：按 DeviceID 判断
+                    shouldKeep = importedModuleIds.Contains(alarm.DeviceID);
+                }
+                else
+                {
+                    // 无 ModuleId 的旧 VAlarm：按 AlarmKey 判断
+                    shouldKeep = importedCodes.Contains(alarm.AlarmKey);
+                }
+                if (!shouldKeep)
                 {
                     deviceEngine.ReomoveVirtual(alarm.ID);
                 }
@@ -771,15 +1353,10 @@ namespace Luster.SimDevice.SubSystem.ViewModel
 
         /// <summary>
         /// 生成 ErrorCodeList CSV 文件
-        /// 数据来源：
-        ///   1. 预定义默认行
-        ///   2. 当前配方目录下的 CustomErrors.csv
-        ///   3. 当前配方目录下的 Hardware.dproj
-        /// 输出：D:/Hive/xxx LUSTER ERROR LIST.csv
         /// </summary>
         private void GenerateErrorCodeList()
         {
-            dialogService.ShowConfirm("请确保已保存当前配方，否则生成的 ErrorCodeList 可能不包含最新修改。\n\n是否继续生成？", (r) =>
+            _dialogService.ShowConfirm("生成ErrorCodeList前，请确认当前配方已保存至最新？", r =>
             {
                 if (r.Result == ButtonResult.OK)
                 {
@@ -860,26 +1437,30 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                 var defaultRows = GetOrUpdateDefaultErrorCodeRows(defaultXmlPath);
                 rows.AddRange(defaultRows);
 
-                // 2. 读取并添加 CustomErrors.csv
+                // 2. 读取并添加 CustomErrors.csv（自定义报警配置）
+                // CSV 列顺序：AlarmCode, AlarmContent, AlarmEnglish, AlarmCategory, RepairAction, ModuleName, ModuleId
+                // 输出列映射：AlarmCode→Code+LocalAlarmCode, AlarmContent→ErrorDescription(Chinese),
+                //            AlarmEnglish→ErrorDescription, AlarmCategory→Category, RepairAction→RepairActions
                 if (File.Exists(customErrorsPath))
                 {
                     try
                     {
-                        var customLines = File.ReadAllLines(customErrorsPath, System.Text.Encoding.UTF8);
+                        var customLines = File.ReadAllLines(customErrorsPath, Encoding.UTF8);
                         bool isFirstLine = true;
                         foreach (var line in customLines)
                         {
-                            if (isFirstLine)
-                            {
-                                isFirstLine = false;
-                                continue;
-                            }
+                            if (isFirstLine) { isFirstLine = false; continue; }
                             if (string.IsNullOrWhiteSpace(line)) continue;
 
-                            var parts = line.Split(',');
+                            var parts = ParseCsvLine(line);
                             if (parts.Length >= 5)
                             {
-                                rows.Add(new string[] { parts[0], parts[1], parts[2], parts[3], parts[4], parts[1] });
+                                string alarmCode = parts[0];
+                                string alarmContent = UnescapeCsvField(parts[1]);
+                                string alarmEnglish = UnescapeCsvField(parts[2]);
+                                string alarmCategory = parts.Length > 3 ? UnescapeCsvField(parts[3]) : "";
+                                string repairAction = parts.Length > 4 ? UnescapeCsvField(parts[4]) : "";
+                                rows.Add(new[] { alarmEnglish, alarmCode, alarmCategory, alarmContent, repairAction, alarmCode });
                             }
                         }
                     }
@@ -889,7 +1470,38 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                     }
                 }
 
-                // 3. 读取 Hardware.dproj
+                // 3. 读取并添加 ProductEventAlarms.csv（产品事件报警配置）
+                string productEventAlarmsPath = Path.Combine(configPath, "ProductEventAlarms.csv");
+                if (File.Exists(productEventAlarmsPath))
+                {
+                    try
+                    {
+                        var peLines = File.ReadAllLines(productEventAlarmsPath, Encoding.UTF8);
+                        bool isFirstLine = true;
+                        foreach (var line in peLines)
+                        {
+                            if (isFirstLine) { isFirstLine = false; continue; }
+                            if (string.IsNullOrWhiteSpace(line)) continue;
+
+                            var parts = ParseCsvLine(line);
+                            if (parts.Length >= 5)
+                            {
+                                string alarmCode = parts[0];
+                                string alarmContent = UnescapeCsvField(parts[1]);
+                                string alarmEnglish = UnescapeCsvField(parts[2]);
+                                string alarmCategory = parts.Length > 3 ? UnescapeCsvField(parts[3]) : "";
+                                string repairAction = parts.Length > 4 ? UnescapeCsvField(parts[4]) : "";
+                                rows.Add(new[] { alarmEnglish, alarmCode, alarmCategory, alarmContent, repairAction, alarmCode });
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Warning, $"读取 ProductEventAlarms.csv 失败: {ex.Message}");
+                    }
+                }
+
+                // 4. 读取 Hardware.dproj
                 if (File.Exists(dprojPath))
                 {
                     try
@@ -900,7 +1512,6 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                             var nameNode = vDevice.Element("Name");
                             string deviceName = nameNode?.Value ?? "";
 
-                            // 获取设备级的 AlarmCategory 和 RepairAction
                             var catNode = vDevice.Element("AlarmCategory");
                             string alarmCategory = catNode?.Value ?? "";
 
@@ -915,26 +1526,21 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                                     string tagName = errorEl.Name.LocalName;
                                     string content = errorEl.Value ?? "";
 
-                                    // 翻译
                                     string translatedSuffix = ErrorTransMap.ContainsKey(tagName) ? ErrorTransMap[tagName] : tagName;
                                     string errDescCn = $"{deviceName}{translatedSuffix}";
 
-                                    // 按 '@' 切分
                                     string codePart, descPart;
                                     if (content.Contains("@"))
                                     {
-                                        var parts = content.Split(new[] { '@' }, 2);
-                                        codePart = parts[0];
-                                        descPart = parts[1];
+                                        var parts2 = content.Split(new[] { '@' }, 2);
+                                        codePart = parts2[0];
+                                        descPart = parts2[1];
                                     }
                                     else
                                     {
                                         codePart = content;
                                         descPart = "";
                                     }
-
-                                    //// 过滤 10000
-                                    //if (codePart == "10000") continue;
 
                                     rows.Add(new[] { descPart, codePart, alarmCategory, errDescCn, repairAction, codePart });
                                 }
@@ -947,15 +1553,12 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                     }
                 }
 
-                // 4. 生成目标 CSV
+                // 5. 生成目标 CSV
                 using (var sw = new StreamWriter(outputPath, false, new System.Text.UTF8Encoding(true)))
                 {
                     sw.WriteLine(string.Join(",", headers));
                     foreach (var row in rows)
                     {
-                        //if (row[1] == "TBD") continue; // 过滤 TBD 错误
-
-                        // 简单的 CSV 格式化, 处理包含逗号的字段
                         for (int i = 0; i < row.Length; i++)
                         {
                             if (row[i].Contains(","))
@@ -970,7 +1573,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                 SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Info, $"ErrorCodeList 已生成: {outputPath}");
 
                 // 弹窗提示
-                dialogService.ShowConfirm($"ErrorCodeList 生成成功！\n输出路径: {outputPath}", _ => { });
+                _dialogService.ShowInfoTip($"ErrorCodeList 已生成: {outputPath}");
             }
             catch (Exception ex)
             {
@@ -981,8 +1584,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel
         private List<string[]> GetOrUpdateDefaultErrorCodeRows(string xmlPath)
         {
             var rows = new List<string[]>();
-            
-            // 如果不存在，使用代码内置默认行先生成一个配置并保存
+
             if (!File.Exists(xmlPath))
             {
                 try
@@ -1010,12 +1612,10 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                 {
                     SimEngineUI?.OnLog(Common.DataStruct.Enums.LogType.Warning, $"生成默认配置 XML 失败: {ex.Message}");
                 }
-                
-                // 返回默认行
+
                 return DefaultErrorCodeRows.ToList();
             }
 
-            // 如果存在，从 XML 解析
             try
             {
                 var xDoc = System.Xml.Linq.XDocument.Load(xmlPath);
@@ -1033,13 +1633,29 @@ namespace Luster.SimDevice.SubSystem.ViewModel
             catch (Exception ex)
             {
                 SimEngineUI?.OnLog(Common.DataStruct.Enums.LogType.Warning, $"解析 DefaultErrorCodes.xml 失败, 请检查文件格式是否正确。错误: {ex.Message}");
-                // 解析失败时，回退到默认
                 rows = DefaultErrorCodeRows.ToList();
             }
             return rows;
         }
 
+        /// <summary>
+        /// 同步更新运行时 Alarm 模块参数，确保流程图中的模块信息即时更新。
+        /// 通过 MotionEngine.Get(id) 直接定位模块，替代原有的基于匿名投影对象的 BFS 遍历。
+        /// </summary>
+        private void UpdateRuntimeAlarmModule(string moduleId, string code, string message, string detail)
+        {
+            if (string.IsNullOrEmpty(moduleId) || deviceEngine == null) return;
+
+            try
+            {
+                deviceEngine.RaiseUpdateAlarmModuleParams(moduleId, code, message, detail);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"UpdateRuntimeAlarmModule Error: {ex.Message}");
+            }
+        }
+
         #endregion
     }
 }
-

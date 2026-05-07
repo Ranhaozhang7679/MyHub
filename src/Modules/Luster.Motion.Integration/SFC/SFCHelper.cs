@@ -163,7 +163,7 @@ namespace Luster.Motion.Integration.SFC
                 // 连续重试三次后，依然通讯异常，则报警
                 if (isBreakConnect)
                 {
-                    throw new DeviceTimeoutException("F98OOOO-05", $"SFC Connected Fail");
+                    throw new DeviceTimeoutException("N03OOOO-01", $"SFC Connected Fail");
                 }
             }
             else
@@ -229,7 +229,7 @@ namespace Luster.Motion.Integration.SFC
                 // 连续重试三次后，依然通讯异常，则报警
                 if (isBreakConnect)
                 {
-                    throw new DeviceTimeoutException("F98OOOO-05", $"SFC Connected Fail");
+                    throw new DeviceTimeoutException("N03OOOO-01", $"SFC Connected Fail");
                 }
             }
             else
@@ -288,7 +288,7 @@ namespace Luster.Motion.Integration.SFC
             // 连续重试三次后，依然通讯异常，则报警
             if (isBreakConnect)
             {
-                throw new DeviceTimeoutException("F98OOOO-05", $"SFC Connected Fail");
+                throw new DeviceTimeoutException("N03OOOO-01", $"SFC Connected Fail");
             }
 
         }
@@ -341,7 +341,7 @@ namespace Luster.Motion.Integration.SFC
                     if (string.IsNullOrEmpty(result))
                     {
                         errMsg = "SFC通讯异常，结果返回为空！";
-                        throw new DeviceTimeoutException("F98OOOO-06", errMsg);
+                        throw new DeviceTimeoutException("N03OOOO-01", errMsg);
                     }
                     // 2.1 针对PDCA 返回结果进行处理
                     if (!string.IsNullOrEmpty(result))
@@ -364,14 +364,14 @@ namespace Luster.Motion.Integration.SFC
                 // 如果结束index<=开始Index，则报警，可恢复
                 if ((endIndex - startIndex) <= 0)
                 {
-                    throw new DeviceTimeoutException("F98OOOO-07", $"Receive empty message");
+                    throw new DeviceTimeoutException("N03OOOO-01", $"Receive empty message");
                 }
                 string sfcResult = result.Substring(startIndex + 1, endIndex - startIndex);
 
                 // 如果包含err信息，并通讯失败支持重连机制
                 if (sfcResult.Contains("SFC Link may be disconnected"))
                 {
-                    throw new DeviceTimeoutException("F98OOOO-06", $"Link may be disconnected");
+                    throw new DeviceTimeoutException("N03OOOO-01", $"Link may be disconnected");
                 }
 
                 // 3.通讯后处理
@@ -508,7 +508,7 @@ namespace Luster.Motion.Integration.SFC
             // 连续重试三次后，依然通讯异常，则报警
             if (isBreakConnect)
             {
-                throw new DeviceTimeoutException("F98OOOO-05", $"SFC Connected Fail");
+                throw new DeviceTimeoutException("N03OOOO-01", $"SFC Connected Fail");
             }
         }
 
@@ -623,7 +623,7 @@ namespace Luster.Motion.Integration.SFC
             // 连续重试三次后，依然通讯异常，则报警
             if (isBreakConnect)
             {
-                throw new DeviceTimeoutException("F98OOOO-05", $"SFC Connected Fail");
+                throw new DeviceTimeoutException("N03OOOO-01", $"SFC Connected Fail");
             }
         }
 
@@ -1176,7 +1176,7 @@ namespace Luster.Motion.Integration.SFC
             string cmd = $"c=QUERY_4_SFC&subcmd={subcmd}&sn={wip}&serialno={smallPartWip}&partname={partname}&ccdflag=2&station_id={StationID}";   
             HttpSend(cmd, $"查询Flex绑定结果", res =>
             {
-                if (res.Contains(OKChar_))
+                if (res.Contains(OKChar_)&&res.Contains("is ok"))
                 {
                     isOK = true;
                     return String.Empty;
@@ -1207,7 +1207,7 @@ namespace Luster.Motion.Integration.SFC
             string cmd = $"c=QUERY_4_SFC&subcmd={subcmd}&sn={wip}&serialno={smallPartWip}&partname={partname}&ccdflag=0&line={StationID}&mac_address={MacAddress}";
             HttpSend(cmd, $"Flex自动绑定WIP", res =>
             {
-                if (res.Contains(OKChar_))
+                if (res.Contains(OKChar_)&&res.Contains("is ok"))
                 {
                     isOK = true;
                     return String.Empty;
@@ -2037,7 +2037,7 @@ namespace Luster.Motion.Integration.SFC
             }
             if (strRecv == null)
             {
-                exception = exception ?? new DeviceTimeoutException("F98OOOO-05", $"SFC Connected Fail");
+                exception = exception ?? new DeviceTimeoutException("N03OOOO-01", $"SFC Connected Fail");
             }
 
             return new SFCRecvEventArgs

@@ -113,14 +113,23 @@ namespace Luster.Module.Motion.Device.Functions
             /////////
             try
             {
+                bool completed;
 
                 if (IOType == IOType.Digital)
                 {
-                    io.WaitIO(DigitalVal, OverTime * 1000, retryAction);
+                    completed = io.WaitIO(DigitalVal, OverTime * 1000, retryAction);
                 }
                 else
                 {
-                    io.WaitIO(AnlogVal, OverTime * 1000, retryAction);
+                    completed = io.WaitIO(AnlogVal, OverTime * 1000, retryAction);
+                }
+
+                // CalcTime 返回 false 表示被 Stop 中断或超时重试，IO 条件实际未满足
+                if (!completed)
+                {
+                    errMsg = $"{MyOwner.Alias} 等待IO被中断";
+                    Result = false;
+                    return false;
                 }
 
             }

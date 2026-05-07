@@ -61,6 +61,7 @@ using System.Windows.Documents;
 using System.Text.RegularExpressions;
 using System.Runtime.Remoting.Metadata.W3cXsd2001;
 using HandyControl.Controls;
+using Prism.Events;
 
 namespace Luster.Motion.CommonUI
 {
@@ -87,7 +88,7 @@ namespace Luster.Motion.CommonUI
         //private readonly IConfigManager _configManager;
         // 2025-4-24
         public WebConfig sysConfig = null;
-      
+
         private AlarmTimeCache _alarmTimeCache;
         // 数据写入频率
         private const int DbFrequency = 50;
@@ -108,13 +109,15 @@ namespace Luster.Motion.CommonUI
         private IMotionEngine _motionEngine;
         private WhileTool whileTool = null;
         private ICacheManager _cacheManager;
+        private IEventAggregator _eventAggregator;
 
-        public DbManager(IRepository repository, IMotionController motionController, IMotionEngine motionEngine, ICacheManager cacheManager)
+        public DbManager(IRepository repository, IMotionController motionController, IMotionEngine motionEngine, ICacheManager cacheManager, IEventAggregator eventAggregator)
         {
             _repository = repository;
             _motionController = motionController;
             _cacheManager = cacheManager;
             _motionEngine = motionEngine;
+            _eventAggregator = eventAggregator;
             // 监听出料事件写入数据库
             motionEngine.ProUnloadedDBEvent -= MotionEngine_ProUnloadedEvent;
             motionEngine.ProUnloadedDBEvent += MotionEngine_ProUnloadedEvent;
@@ -142,7 +145,7 @@ namespace Luster.Motion.CommonUI
             System.Threading.Tasks.Task.Run(() =>
             {
                 WriteProductInfoToDB();
-            });   
+            });
         }
         string oldHeader = "";
         // 选择一个可用的磁盘作为日志存储路径的根目录
@@ -344,12 +347,58 @@ namespace Luster.Motion.CommonUI
                             timeSlotByModule[stationName] = DateTime.MinValue;
                         }
                     }
-                }               
+                }
             }
             catch (Exception ex)
             {
                 //OnLog($"CtConfig.csv,读取异常。ex={ex.StackTrace}", "machineParameter");
             }
+        }
+
+        public List<string> GetCTConfigStationNames()
+        {
+            return new List<string>(listA);
+        }
+
+        public Dictionary<string, List<string>> GetCTConfigFullActionNames()
+        {
+            var result = new Dictionary<string, List<string>>(); var kvList = ctConfigs.ToList();
+            for (int i = 0; i + 1 < kvList.Count; i += 2)
+            {
+                var firstValue = kvList[i].Value;
+                string[] parts = firstValue.Split('_');
+                if (parts.Length < 2) continue;
+
+                string stationName = parts[1];
+
+                if (!result.ContainsKey(stationName))
+                {
+                    result[stationName] = new List<string>();
+                    result[stationName].Add($"CT1_{stationName}_工站开始");
+                }
+
+                result[stationName].Add(firstValue);
+
+                bool isLastForStation = true;
+                if (i + 2 < kvList.Count)
+                {
+                    var nextValue = kvList[i + 2].Value;
+                    string[] nextParts = nextValue.Split('_');
+                    if (nextParts.Length > 1 && parts[1] == nextParts[1] && nextParts[0] !=
+        "CT2")
+                    {
+                        isLastForStation = false;
+                    }
+                }
+
+                if (isLastForStation)
+                {
+                    string nextCtNumber = IncrementCtNumber(parts[0]);
+                    result[stationName].Add($"{nextCtNumber}_{stationName}_工站结束");
+                }
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -974,7 +1023,7 @@ namespace Luster.Motion.CommonUI
             fileName = tbCTInfos2[0].模块;
             // 移除Start和End
             // fileName = fileName.Replace("-Start", "").Replace("-Middle", "").Replace("-End", "");
-            string timeTag = DateTime.Now.ToString("yyyyMMddHH"); 
+            string timeTag = DateTime.Now.ToString("yyyyMMddHH");
             var fullName2 = Path.Combine(folderName2, $"STEPCT_{fileName}_{timeTag}.csv");
             try
             {
@@ -1213,7 +1262,7 @@ namespace Luster.Motion.CommonUI
                             结束时间 = second.结束时间,
                             Actual_CT = Math.Round((second.结束时间 - first.开始时间).TotalMilliseconds / 1000.0, 3),
                             Target_CT = first.Target_CT,
-                            Gap = Math.Round((second.结束时间 - first.开始时间).TotalMilliseconds / 1000.0 - first.Target_CT, 3), 
+                            Gap = Math.Round((second.结束时间 - first.开始时间).TotalMilliseconds / 1000.0 - first.Target_CT, 3),
                             Time_Slot = timeSlotByModule[parts[1]] //tbStartPerUnit.开始时间
                         };
                         ctInfoSelected.Add(infoSelect);
@@ -1255,7 +1304,10 @@ namespace Luster.Motion.CommonUI
                         ctInfoSelected.Add(tbEnd);
                     }
                 }
-            } 
+            }
+
+            // 2026-3-21 发布CT统计实时事件
+            _eventAggregator?.GetEvent<CTStatRealTimeEvent>().Publish(ctInfoSelected);
 
             //// 2025-7-1 根据配置文件筛选并生成最终存入CTLog的数据
             ////  Process ctInfos
@@ -1553,7 +1605,7 @@ namespace Luster.Motion.CommonUI
         /// <param name="count"></param>
         /// <returns></returns>
         public IEnumerable<TbAlarm> GetAlarmPageData(DateTime startTime, DateTime endTime, string searchContent,
-            string sort, int pageIndex, int perPageCount, out long count, List<string> filterTypes = null, bool excludeTypes = false)
+    string sort, int pageIndex, int perPageCount, out long count, List<string> filterTypes = null, bool excludeTypes = false)
         {
             //orm 拼接条件 查询  
             Expression<Func<TbAlarm, bool>> where = null;
@@ -1564,16 +1616,21 @@ namespace Luster.Motion.CommonUI
                 {
                     if (excludeTypes)
                     {
-                        where = x => x.CreateTime > startTime && x.CreateTime < endTime && x.Module.Contains(searchContent) && !filterTypes.Contains(x.AlarmType);
+                        where = x => x.CreateTime > startTime && x.CreateTime < endTime
+                            && (x.Module.Contains(searchContent) || (x.AlarmType != null && x.AlarmType.Contains(searchContent)))
+                            && !filterTypes.Contains(x.AlarmType);
                     }
                     else
                     {
-                        where = x => x.CreateTime > startTime && x.CreateTime < endTime && x.Module.Contains(searchContent) && filterTypes.Contains(x.AlarmType);
+                        where = x => x.CreateTime > startTime && x.CreateTime < endTime
+                            && (x.Module.Contains(searchContent) || (x.AlarmType != null && x.AlarmType.Contains(searchContent)))
+                            && filterTypes.Contains(x.AlarmType);
                     }
                 }
                 else
                 {
-                    where = x => x.CreateTime > startTime && x.CreateTime < endTime && x.Module.Contains(searchContent);
+                    where = x => x.CreateTime > startTime && x.CreateTime < endTime
+                        && (x.Module.Contains(searchContent) || (x.AlarmType != null && x.AlarmType.Contains(searchContent)));
                 }
             }
             else

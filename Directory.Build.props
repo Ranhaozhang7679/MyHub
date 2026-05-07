@@ -1,58 +1,77 @@
 <Project>
     <PropertyGroup>
-        <!-- 启用中央包管理 -->
         <ManagePackageVersionsCentrally>True</ManagePackageVersionsCentrally>
         <TargetFramework>net472</TargetFramework>
         <LangVersion>9.0</LangVersion>
         <Nullable>enable</Nullable>
         <ImplicitUsings>disable</ImplicitUsings>
-        <!-- 输出根目录：解决方案/artifacts/bin/{ProjectName}/ -->
-        <BaseOutputPath>$(MSBuildThisFileDirectory)artifacts\bin\$(MSBuildProjectName)\</BaseOutputPath>
-        <!-- ✅ 关键：让 bin/Debug 直接落在 {ProjectName} 下，不再套第二层 bin -->
-        <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
-        <!-- 把 obj 也统一迁到 artifacts/obj/{ProjectName}/ -->
-        <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)artifacts\obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
-        <!-- 构建加速 (VS2022 Build Acceleration) -->
+        <IsPackable>false</IsPackable>
+        <CleanSQLiteInteropFiles>false</CleanSQLiteInteropFiles>
+        
+        <ArtifactsDir>$(MSBuildThisFileDirectory)artifacts\</ArtifactsDir>
+        
+        <OutputPath>$(ArtifactsDir)bin\net472\</OutputPath>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+
+        <BaseIntermediateOutputPath>$(ArtifactsDir)obj\Debug\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+        
         <AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
-        <!-- 构建时强制检查代码风格 -->
-        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-        <!-- 默认项目配置为 Debug，用于未明确指定的情况 -->
         <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     </PropertyGroup>
-    <!-- 启用确定性构建和 CI 构建标志 -->
+
     <PropertyGroup>
         <Deterministic>true</Deterministic>
         <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
     </PropertyGroup>
-    <!-- XML 文档强制生成 -->
-    <PropertyGroup>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <NoWarn>$(NoWarn);1591</NoWarn>
+
+    <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+        <DebugType>portable</DebugType>
+        <GenerateDocumentationFile>false</GenerateDocumentationFile>
+        <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+        <MinVerSkip>true</MinVerSkip>
     </PropertyGroup>
-    <!-- 嵌入式资源与 PDB 优化，会让 DLL 变大，但管理起来极其方便 -->
-    <PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)' != 'Debug'">
         <DebugType>embedded</DebugType>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
     </PropertyGroup>
-    <!-- 深度清理缓存 -->
+
     <Target Name="DeepClean">
-        <Message Text="Deep cleaning project: $(MSBuildProjectName)..." Importance="high" />
-        <RemoveDir Directories="$(BaseOutputPath)" />
-        <RemoveDir Directories="$(BaseIntermediateOutputPath)" />
-        <RemoveDir Directories="$(SolutionDir)artifacts" Condition="Exists('$(SolutionDir)artifacts')" />
+        <Message Text="Deep cleaning artifacts..." Importance="high" />
+        <RemoveDir Directories="$(ArtifactsDir)" />
     </Target>
-    <!-- 根据git tag 前缀，自动识别多项目版本 -->
+
     <PropertyGroup>
         <MinVerTagPrefix>$(MSBuildProjectName)-v</MinVerTagPrefix>
     </PropertyGroup>
 
-    <!-- 自动部署 Modules：仅在 Module 项目构建后执行 -->
     <PropertyGroup>
-        <!-- 项目类型标识（默认为 false） -->
         <IsShellProject Condition="'$(IsShellProject)' == ''">false</IsShellProject>
-
-        <!-- 模块输出子目录名称 -->
-        <ModulesOutputFolder>Modules</ModulesOutputFolder>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <!-- 1. 清除引用库生成的多余文件 -->
+        <!-- 默认是 .pdb;.xml，修改为只包含 .pdb，这将阻止复制数百个冗余的 .xml 注释文件 -->
+        <AllowedReferenceRelatedFileExtensions>.pdb</AllowedReferenceRelatedFileExtensions>
+        
+        <!-- 如果在 Release 模式下连第三方包的 PDB 都不想要，可以设置为空: -->
+        <!-- <AllowedReferenceRelatedFileExtensions Condition="'$(Configuration)' == 'Release'"></AllowedReferenceRelatedFileExtensions> -->
+
+        <!-- 2. 过滤掉无用的多语言资源文件夹 (例如 fr, es, ru 等子文件夹) -->
+        <!-- 只保留英语和简体中文 -->
+        <SatelliteResourceLanguages>en;zh-CN;zh-Hans</SatelliteResourceLanguages>
+
+        <!-- 3. 如果你自己项目也不需要生成 XML 文档说明 -->
+        <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <!-- 4. 可选：禁止 NuGet 包本身将不想关的内容（如 content files）复制到输出目录 -->
+    <ItemDefinitionGroup>
+      <PackageReference>
+        <ExcludeAssets>contentFiles</ExcludeAssets>
+      </PackageReference>
+    </ItemDefinitionGroup>
 </Project>

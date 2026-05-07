@@ -317,10 +317,10 @@ namespace Luster.Motion.SubSystem.ViewModel
             LogsSavePath= _mController.FileConfig.LogsSavePath ?? "";
             DumpDBPath = _mController.FileConfig.DumpDBPath ?? "";
             PicSaveDays = _mController.FileConfig.PicSaveDays == 0 ? 0 : _mController.FileConfig.PicSaveDays;
-            DBSaveDays = _mController.FileConfig.DBSaveDays == 0 ? 10 : _mController.FileConfig.DBSaveDays;
+            DBSaveDays = _mController.FileConfig.DBSaveDays == 0 ? 90 : _mController.FileConfig.DBSaveDays;
             LogBackUpDays = _mController.FileConfig.LogBackUpDays == 0 ? 10 : _mController.FileConfig.LogBackUpDays;
             RecipeBackUpDays = _mController.FileConfig.RecipeBackUpDays == 0 ? 10 : _mController.FileConfig.RecipeBackUpDays;
-            DBBackUpDays = _mController.FileConfig.DBBackUpDays == 0 ? 0 : _mController.FileConfig.DBBackUpDays;
+            DBBackUpDays = _mController.FileConfig.DBBackUpDays == 0 ? 90 : _mController.FileConfig.DBBackUpDays;
             LastWeekMaintenanceDate=_mController.FileConfig.LastWeekMaintenanceDate;
             LastMonthMaintenanceDate = _mController.FileConfig.LastMonthMaintenanceDate;
             DownTimeCauses= _mController.FileConfig.DownTimeCauses;

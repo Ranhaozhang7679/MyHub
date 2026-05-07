@@ -168,6 +168,16 @@ namespace Luster.SimDevice.Engine
         }
 
         /// <summary>
+        /// 更新运行时报警模块参数事件
+        /// </summary>
+        public event Func<string, string, string, string, bool> UpdateAlarmModuleParamsEvent;
+
+        public bool RaiseUpdateAlarmModuleParams(string moduleId, string code, string message, string detail)
+        {
+            return UpdateAlarmModuleParamsEvent?.Invoke(moduleId, code, message, detail) ?? false;
+        }
+
+        /// <summary>
         /// 初始化完成
         /// </summary>
         public event Action<IDeviceEngine, string> InitializedEvent;

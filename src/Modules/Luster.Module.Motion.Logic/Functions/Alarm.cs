@@ -141,7 +141,7 @@ namespace Luster.Module.Motion.Logic.Functions
         /// 报警内容
         /// </summary>
         private string _alarmCode;
-        [Parameter("报警代码", 5, CN = "报警代码", DefaultV = "TBD", IsReadOnly = false)]
+        [Parameter("报警代码", 5, CN = "报警代码", DefaultV = "TBD", IsReadOnly = true)]
         public string AlarmCode 
         { 
             get => _alarmCode; 
@@ -159,7 +159,7 @@ namespace Luster.Module.Motion.Logic.Functions
         /// 报警内容
         /// </summary>
         private string _message;
-        [Parameter("报警内容", 6, CN = "报警内容", IsReadOnly = false)]
+        [Parameter("报警内容", 6, CN = "报警内容", IsReadOnly = true)]
         public string Message 
         { 
             get => _message; 
@@ -174,7 +174,7 @@ namespace Luster.Module.Motion.Logic.Functions
         }
 
         private string _detail;
-        [Parameter("报警英文", 7, CN = "报警英文", IsReadOnly = false)]
+        [Parameter("报警英文", 7, CN = "报警英文", IsReadOnly = true)]
         public string Detail 
         { 
             get => _detail; 
@@ -198,6 +198,7 @@ namespace Luster.Module.Motion.Logic.Functions
         {
             base.Added();
             UpdateFromVAlarm();
+            UpdateReadOnlyState();
             if (MyOwner?.DeviceEngine != null)
             {
                 MyOwner.DeviceEngine.VDeviceChangedEvent -= DeviceEngine_VDeviceChangedEvent;
@@ -221,6 +222,16 @@ namespace Luster.Module.Motion.Logic.Functions
         {
             if (AlarmCode == oldCode)
             {
+                // 检查是否存在按模块 ID 匹配的 VAlarm（同名报警工具独立配置场景）
+                var allAlarms = MyOwner?.DeviceEngine?.GetVDevices<VAlarm>();
+                if (allAlarms != null && allAlarms.Any(a => a.DeviceID != Guid.Empty))
+                {
+                    // 有按模块绑定的 VAlarm：仅当本模块的 VAlarm 被修改时才响应
+                    var myAlarm = allAlarms.FirstOrDefault(a => a.AlarmKey == newCode && a.DeviceID == MyOwner.ID);
+                    if (myAlarm == null)
+                        return; // 不是本模块的 VAlarm 变更，跳过
+                }
+
                 AlarmCode = newCode;
                 if (MyOwner != null && MyOwner.Parameters.ContainsKey(nameof(AlarmCode)))
                 {
@@ -240,9 +251,31 @@ namespace Luster.Module.Motion.Logic.Functions
         {
             if (MyOwner != null && MyOwner.DeviceEngine != null && !string.IsNullOrEmpty(AlarmCode))
             {
-                var alarm = MyOwner.DeviceEngine.GetVDevices<VAlarm>()?.FirstOrDefault(a => a.AlarmKey == AlarmCode);
+                var allAlarms = MyOwner.DeviceEngine.GetVDevices<VAlarm>();
+                // 优先按 AlarmKey + DeviceID 匹配（支持同名报警工具独立配置）
+                var alarm = allAlarms?.FirstOrDefault(a => a.AlarmKey == AlarmCode && a.DeviceID == MyOwner.ID);
+                // 回退到仅按 DeviceID 匹配（处理 AlarmKey 不一致的情况）
+                if (alarm == null && MyOwner.ID != Guid.Empty)
+                    alarm = allAlarms?.FirstOrDefault(a => a.DeviceID == MyOwner.ID && a.Name != "ProEvent");
+                // 回退到仅按 AlarmKey 匹配（兼容旧数据）
+                if (alarm == null)
+                    alarm = allAlarms?.FirstOrDefault(a => a.AlarmKey == AlarmCode && a.DeviceID == Guid.Empty);
+                if (alarm == null)
+                    alarm = allAlarms?.FirstOrDefault(a => a.AlarmKey == AlarmCode);
+
                 if (alarm != null)
                 {
+                    // 当通过 DeviceID 回退找到 VAlarm 时，同步修正 AlarmCode
+                    if (AlarmCode != alarm.AlarmKey)
+                    {
+                        AlarmCode = alarm.AlarmKey;
+                        if (MyOwner.Parameters.ContainsKey(nameof(AlarmCode)))
+                        {
+                            var pCode = MyOwner.Parameters[nameof(AlarmCode)];
+                            if (pCode.Value?.ToString() != AlarmCode) pCode.Value = AlarmCode;
+                        }
+                    }
+
                     Message = alarm.AlarmCN;
                     Detail = alarm.AlarmEn;
 
@@ -531,7 +564,7 @@ namespace Luster.Module.Motion.Logic.Functions
                 File.Create(src).Close();
                 AlarmInfo alarmModel = new AlarmInfo
                 {
-                    ErrorCode = "S12ABC99-01",
+                    ErrorCode = "O99OOOO-01",
                     ErrorMessage = "Track temperature alarm",
                     ErrorDetail = "轨道温度报警",
                 };
@@ -616,9 +649,44 @@ namespace Luster.Module.Motion.Logic.Functions
 
                         if (MyOwner.Parameters.TryGetValue(nameof(Detail), out var pDetail))
                             if (pDetail.Value?.ToString() != Detail) pDetail.Value = Detail;
-                    } 
+                    }
                     catch { }
                 }
+            }
+
+            if (parameter.Name == nameof(AlarmType))
+            {
+                UpdateReadOnlyState();
+            }
+        }
+
+        /// <summary>
+        /// 根据报警类型动态更新 报警代码/报警内容/报警英文 的只读状态。
+        /// 信息提示、报警断点、人工介入提示 允许手动编辑，其他类型为只读。
+        /// </summary>
+        private void UpdateReadOnlyState()
+        {
+            // 优先从 ParameterAttribute.Value 获取 AlarmType，
+            // 因为 XML 加载时自动属性尚未同步，仍为默认值 InfoTip
+            AlarmType currentType = this.AlarmType;
+            if (MyOwner?.Parameters.TryGetValue(nameof(AlarmType), out var pType) == true
+                && pType.Value is AlarmType at)
+            {
+                currentType = at;
+            }
+
+            bool isEditable = currentType == AlarmType.InfoTip ||
+                              currentType == AlarmType.RetryAlarm ||
+                              currentType == AlarmType.ManuOperationAlarm;
+
+            if (MyOwner != null)
+            {
+                if (MyOwner.Parameters.TryGetValue(nameof(AlarmCode), out var pCode))
+                    pCode.IsReadOnly = !isEditable;
+                if (MyOwner.Parameters.TryGetValue(nameof(Message), out var pMsg))
+                    pMsg.IsReadOnly = !isEditable;
+                if (MyOwner.Parameters.TryGetValue(nameof(Detail), out var pDetail))
+                    pDetail.IsReadOnly = !isEditable;
             }
         }
 

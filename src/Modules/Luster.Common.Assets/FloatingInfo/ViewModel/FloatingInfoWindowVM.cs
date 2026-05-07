@@ -189,11 +189,11 @@ namespace Luster.Common.Assets.FloatingInfo.ViewModel
         {
             _config = config;
             Title = config.PageName;
-            _windowWidth = config.WindowWidth;
-            _windowHeight = config.WindowHeight;
-            _windowLeft = config.WindowLeft;
-            _windowTop = config.WindowTop;
-            _showSettingsButton = config.ShowSettingsButton;
+            WindowWidth = config.WindowWidth;
+            WindowHeight = config.WindowHeight;
+            WindowLeft = config.WindowLeft;
+            WindowTop = config.WindowTop;
+            ShowSettingsButton = config.ShowSettingsButton;
 
             // 加载内容项
             ContentItems.Clear();

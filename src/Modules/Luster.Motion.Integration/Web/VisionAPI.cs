@@ -91,6 +91,10 @@ namespace Luster.Motion.Integration.Web
 
         static bool IsShieldDoorMem = false;
         static bool IsProductModeMem = false;
+        static bool IsDryRunModeMem = false;
+        static bool IsFirstPieceModeMem = false;
+        static bool IsPressureMonitorMem = false;
+        static bool IsRobotEnabledMem = false;
         /// <summary>
         /// 软件关机xx->Down,软件开机Idle->xx,中间缺少Down->Idle的切换
         /// 因此在首次开机传Idle->xx前不上Down->Idle的流程
@@ -1608,6 +1612,77 @@ namespace Luster.Motion.Integration.Web
                     changeReason = "NoRepair"
                 };
                 ctList.Add(addContent);
+            }
+
+            //空跑模式启用
+            if (true)
+            {
+                var addContent = new
+                {
+                    parameter = $"空跑模式启用",
+                    preValue = IsDryRunModeMem ? 1 : 0,
+                    aftValue = mController.GetCurrentMode().Contains("空跑") ? 1 : 0,
+                    changeReason = "NoRepair"
+                };
+                ctList.Add(addContent);
+            }
+            IsDryRunModeMem = mController.GetCurrentMode().Contains("空跑");
+
+            //首件模式启用
+            if (true)
+            {
+                bool firstPieceEnabled = false;
+                var globalModule = mController.MotionEngine.Get(GlobalModule.GlobalID);
+                if (globalModule != null)
+                {
+                    foreach (var p in globalModule.Parameters)
+                    {
+                        if (p.Key == "Extend_首件启用" && p.Value != null)
+                        {
+                            firstPieceEnabled = (bool)p.Value.Value;
+                            break;
+                        }
+                    }
+                }
+                var addContent = new
+                {
+                    parameter = $"首件模式启用",
+                    preValue = IsFirstPieceModeMem ? 1 : 0,
+                    aftValue = firstPieceEnabled ? 1 : 0,
+                    changeReason = "NoRepair"
+                };
+                ctList.Add(addContent);
+                IsFirstPieceModeMem = firstPieceEnabled;
+            }
+
+            //压力监控启用
+            if (true)
+            {
+                bool pressureEnabled = MapDatas?.Any(m => m.PositivestandardDeviation != 0 || m.NegativestandardDeviation != 0) ?? false;
+                var addContent = new
+                {
+                    parameter = $"压力监控启用",
+                    preValue = IsPressureMonitorMem ? 1 : 0,
+                    aftValue = pressureEnabled ? 1 : 0,
+                    changeReason = "NoRepair"
+                };
+                ctList.Add(addContent);
+                IsPressureMonitorMem = pressureEnabled;
+            }
+
+            //机器人启用
+            if (true)
+            {
+                bool robotEnabled = !(mController.SysConfig.RobotStart?.IsEmpty() ?? true);
+                var addContent = new
+                {
+                    parameter = $"机器人启用",
+                    preValue = IsRobotEnabledMem ? 1 : 0,
+                    aftValue = robotEnabled ? 1 : 0,
+                    changeReason = "NoRepair"
+                };
+                ctList.Add(addContent);
+                IsRobotEnabledMem = robotEnabled;
             }
 
 

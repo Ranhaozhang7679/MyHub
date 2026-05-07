@@ -453,6 +453,36 @@ namespace Luster.Motion.DataStruct.Network
         /// <returns></returns>
         protected List<byte> GetWriteCoilCommand<T>(List<T> datas, byte addr, byte func, ushort startAddr)
         {
+            // FC05: 写单个线圈，PDU格式 = [addr][05][startAddr Hi][startAddr Lo][FF00/0000]
+            if (func == 5)
+            {
+                return GetWriteSingleCoilCommand<T>(datas, addr, startAddr);
+            }
+            // FC15: 写多个线圈
+            return GetWriteMultipleCoilCommand<T>(datas, addr, func, startAddr);
+        }
+
+        /// <summary>
+        /// 构建FC05写单个线圈命令
+        /// </summary>
+        private List<byte> GetWriteSingleCoilCommand<T>(List<T> datas, byte addr, ushort startAddr)
+        {
+            bool value = Convert.ToBoolean(datas[0]);
+            List<byte> command = new List<byte>();
+            command.Add(addr);
+            command.Add(0x05);
+            command.Add(BitConverter.GetBytes(startAddr)[1]);
+            command.Add(BitConverter.GetBytes(startAddr)[0]);
+            command.Add(value ? (byte)0xFF : (byte)0x00);
+            command.Add(0x00);
+            return command;
+        }
+
+        /// <summary>
+        /// 构建FC15写多个线圈命令
+        /// </summary>
+        private List<byte> GetWriteMultipleCoilCommand<T>(List<T> datas, byte addr, byte func, ushort startAddr)
+        {
             ushort dataCount = (ushort)datas.Count;
             byte byteCount = (byte)Math.Ceiling(dataCount * 1.0 / 8);
 
@@ -490,6 +520,39 @@ namespace Luster.Motion.DataStruct.Network
         /// <param name="startAddr"></param>
         /// <returns></returns>
         protected List<byte> GetWriteRegisterCommand<T>(List<T> datas, byte addr, byte func, ushort startAddr)
+        {
+            // FC06: 写单个寄存器，PDU格式 = [addr][06][startAddr Hi][startAddr Lo][value Hi][value Lo]
+            if (func == 6)
+            {
+                return GetWriteSingleRegisterCommand<T>(datas, addr, startAddr);
+            }
+            // FC16: 写多个寄存器
+            return GetWriteMultipleRegisterCommand<T>(datas, addr, func, startAddr);
+        }
+
+        /// <summary>
+        /// 构建FC06写单个寄存器命令
+        /// </summary>
+        private List<byte> GetWriteSingleRegisterCommand<T>(List<T> datas, byte addr, ushort startAddr)
+        {
+            List<byte> command = new List<byte>();
+            command.Add(addr);
+            command.Add(0x06);
+            command.Add(BitConverter.GetBytes(startAddr)[1]);
+            command.Add(BitConverter.GetBytes(startAddr)[0]);
+
+            dynamic v = datas[0];
+            byte[] valueByte = BitConverter.GetBytes(v);
+            valueByte = this.SwitchEndian(valueByte, EndianType);
+            command.AddRange(valueByte);
+
+            return command;
+        }
+
+        /// <summary>
+        /// 构建FC16写多个寄存器命令
+        /// </summary>
+        private List<byte> GetWriteMultipleRegisterCommand<T>(List<T> datas, byte addr, byte func, ushort startAddr)
         {
             bool isStr = typeof(T) == typeof(string);
             int len = 0;
@@ -552,6 +615,14 @@ namespace Luster.Motion.DataStruct.Network
         /// <param name="timeout"></param>
         /// <returns></returns>
         public abstract CommResult<T> Read<T>(ICommunication communication, string readMsg, int timeout);
+
+        /// <summary>
+        /// 将字节数组转换为hex字符串
+        /// </summary>
+        protected static string ToHexString(List<byte> bytes)
+        {
+            return BitConverter.ToString(bytes.ToArray()).Replace("-", " ");
+        }
 
         /// <summary>
         /// 写入寄存器
@@ -706,12 +777,11 @@ namespace Luster.Motion.DataStruct.Network
                 List<byte> commands = new List<byte>();
                 if (isCoil)
                 {
-                    // 功能码通过类型可以自动计算，所以功能码固定值即可
-                    commands = GetWriteCoilCommand(datas, addr, 15, startAddr);
+                    commands = GetWriteCoilCommand(datas, addr, func, startAddr);
                 }
                 else
                 {
-                    commands = GetWriteRegisterCommand<T>(datas, addr, 0x10, startAddr);
+                    commands = GetWriteRegisterCommand<T>(datas, addr, func, startAddr);
                 }
 
                 List<byte> byteList = new List<byte>();
@@ -723,6 +793,8 @@ namespace Luster.Motion.DataStruct.Network
                 byteList.Add((byte)(commands.Count / 256));
                 byteList.Add((byte)(commands.Count % 256));
                 byteList.AddRange(commands);
+
+                result.SentHex = ToHexString(byteList);
 
                 List<byte> respBytes = new List<byte>();
                 var msg = "";
@@ -1125,15 +1197,14 @@ namespace Luster.Motion.DataStruct.Network
                     List<byte> commands = new List<byte>();
                     if (isCoil)
                     {
-                        commands = GetWriteCoilCommand(datas, addr, 15, startAddr);
+                        commands = GetWriteCoilCommand(datas, addr, func, startAddr);
                     }
                     else
                     {
-                        //FFU 写入功能码必须是06 
+                        //FFU 写入功能码必须是06
                         if (writeMsg == "211 06 261 1" || writeMsg == "211 06 260 1")
                         {
                             commands = GetWriteRegisterCommand<T>(datas, addr, 06, startAddr);
-                            commands.RemoveRange(4, commands.Count - 6);
                         }
                         else if (writeMsg.Contains("17924"))
                         {
@@ -1156,12 +1227,14 @@ namespace Luster.Motion.DataStruct.Network
                         }
                         else
                         {
-                            commands = GetWriteRegisterCommand<T>(datas, addr, 16, startAddr);
+                            commands = GetWriteRegisterCommand<T>(datas, addr, func, startAddr);
                         }
                     }
 
                     // CRC校验
                     commands.AddRange(CRC16(commands));
+
+                    result.SentHex = ToHexString(commands);
 
                     // 进行通信
                     if (communication.IsConnected)
@@ -1364,15 +1437,17 @@ namespace Luster.Motion.DataStruct.Network
                 List<byte> commands = new List<byte>();
                 if (isCoil)
                 {
-                    commands = GetWriteCoilCommand(datas, addr, 15, startAddr);
+                    commands = GetWriteCoilCommand(datas, addr, func, startAddr);
                 }
                 else
                 {
-                    commands = GetWriteRegisterCommand<T>(datas, addr, 16, startAddr);
+                    commands = GetWriteRegisterCommand<T>(datas, addr, func, startAddr);
                 }
 
                 // CRC校验
                 commands.AddRange(LRC(commands));
+
+                result.SentHex = ToHexString(commands);
 
                 // 需要进行Ascii码的转换
                 // 转换成Ascii码字符16进制

@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <CopyToMotionsFolder>true</CopyToMotionsFolder>
+        <CustomContentFolders>PythonEnv</CustomContentFolders>
     </PropertyGroup>
 
     <ItemGroup>

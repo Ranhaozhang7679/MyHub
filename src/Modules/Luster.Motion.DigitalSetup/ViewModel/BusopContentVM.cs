@@ -258,6 +258,9 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         {
             HasSheetImage = false;
 
+            // 捕获当前页面，防止异步回调时 SelectedReportPage 已变更
+            var currentPage = SelectedReportPage;
+
             // 检查文件和 Sheet 配置
             if (string.IsNullOrWhiteSpace(ExcelFilePath) || !File.Exists(ExcelFilePath))
             {
@@ -300,6 +303,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                         {
                             StatusMessage = $"未找到 Sheet 页: {sheetName}";
                             SheetImage = null;
+
+                            UpdatePageCheckStatus(currentPage, CheckStatus.CheckedFail, $"未找到 Sheet 页: {sheetName}");
                         });
                         return;
                     }
@@ -331,6 +336,9 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                         SheetImage = bmp;
                         HasSheetImage = true;
                         StatusMessage = "";
+
+                        // Sheet 加载成功，更新点检状态为 OK
+                        UpdatePageCheckStatus(currentPage, CheckStatus.CheckedOK, "Sheet 图片加载成功");
                     });
                 }
                 catch (Exception ex)
@@ -340,9 +348,42 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     {
                         StatusMessage = $"加载失败: {ex.Message}";
                         SheetImage = null;
+
+                        UpdatePageCheckStatus(currentPage, CheckStatus.CheckedFail, $"加载失败: {ex.Message}");
                     });
                 }
             });
+        }
+
+        /// <summary>
+        /// 更新指定页面的点检状态并持久化（直接操作页面对象，避免异步时序问题）
+        /// </summary>
+        private void UpdatePageCheckStatus(CommonPageModel page, CheckStatus status, string remark)
+        {
+            if (page == null || _checkStatusService == null) return;
+
+            try
+            {
+                page.ParentRegion = "BusopContent";
+                var operatorName = _commonbus?.CurrentUser?.UserName ?? "Unknown";
+
+                _checkStatusService.UpdateStatus(
+                    page.PageKey,
+                    status,
+                    page.ParentRegion,
+                    page.Name,
+                    operatorName,
+                    remark
+                );
+                page.CheckStatus = status;
+
+                // 刷新父级 DigitalAssPageModel 聚合状态
+                RefreshParentPageModelStatus();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"更新 BUSOP 点检状态失败: {ex.Message}");
+            }
         }
 
         /// <summary>
@@ -413,16 +454,16 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         /// 用 Excel COM 互操作打开 xlsx 文件并跳转到指定 Sheet 页
         /// 如果 COM 不可用则回退为系统默认程序打开
         /// </summary>
-        private void OnOpenBusop()
+        private async void OnOpenBusop()
         {
+            var fullPath = ExcelFilePath;
+            if (!File.Exists(fullPath))
+                return;
+
+            var sheetName = CurrentSubItemConfig?.SheetName;
+
             try
             {
-                var fullPath = ExcelFilePath;
-                if (!File.Exists(fullPath))
-                    return;
-
-                var sheetName = CurrentSubItemConfig?.SheetName;
-
                 // 如果没有配置 Sheet 页名称，直接打开文件
                 if (string.IsNullOrWhiteSpace(sheetName))
                 {
@@ -430,15 +471,18 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     return;
                 }
 
-                // 使用 Excel COM 互操作打开并激活指定 Sheet
-                OpenExcelToSheet(fullPath, sheetName);
+                // COM 操作在后台线程执行，避免阻塞 UI
+                await System.Threading.Tasks.Task.Run(() =>
+                {
+                    OpenExcelToSheet(fullPath, sheetName);
+                });
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"打开 BUSOP 文件失败: {ex.Message}，回退为默认程序打开");
                 try
                 {
-                    Process.Start(new ProcessStartInfo(ExcelFilePath) { UseShellExecute = true });
+                    Process.Start(new ProcessStartInfo(fullPath) { UseShellExecute = true });
                 }
                 catch { }
             }
@@ -699,6 +743,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                             }
                         }
                         (OpenBusopCommand as DelegateCommand)?.RaiseCanExecuteChanged();
+                        // 增加：配置保存后立即去重新加载当前选中的 Sheet 页并判断点检状态
+                        LoadSheetImage();
                     }
                 }
             });

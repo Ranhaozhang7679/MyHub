@@ -732,6 +732,7 @@ namespace Luster.Motion.Assests.Langs
 			OnPropertyChanged(nameof(ReadFins));
 			OnPropertyChanged(nameof(ReadMatrix));
 			OnPropertyChanged(nameof(ReadMC));
+			OnPropertyChanged(nameof(ReadModbus));
 			OnPropertyChanged(nameof(ReadPlc));
 			OnPropertyChanged(nameof(ReadSTL));
 			OnPropertyChanged(nameof(RealTime));
@@ -847,6 +848,7 @@ namespace Luster.Motion.Assests.Langs
 			OnPropertyChanged(nameof(SetMachineMode));
 			OnPropertyChanged(nameof(SetMeasure));
 			OnPropertyChanged(nameof(SetModbus));
+			OnPropertyChanged(nameof(SetModbusEx));
 			OnPropertyChanged(nameof(SetRobotStatus));
 			OnPropertyChanged(nameof(SetStation));
 			OnPropertyChanged(nameof(SetVariable));
@@ -4518,6 +4520,11 @@ namespace Luster.Motion.Assests.Langs
 		public string ReadMC => Lang.ReadMC;
 
         /// <summary>
+        ///   查找类似 读取Modbus 的本地化字符串。
+        /// </summary>
+		public string ReadModbus => Lang.ReadModbus;
+
+        /// <summary>
         ///   查找类似 读取PLC 的本地化字符串。
         /// </summary>
 		public string ReadPlc => Lang.ReadPlc;
@@ -5091,6 +5098,11 @@ namespace Luster.Motion.Assests.Langs
         ///   查找类似 设置MBus 的本地化字符串。
         /// </summary>
 		public string SetModbus => Lang.SetModbus;
+
+        /// <summary>
+        ///   查找类似 设置Modbus 的本地化字符串。
+        /// </summary>
+		public string SetModbusEx => Lang.SetModbusEx;
 
         /// <summary>
         ///   查找类似 设置机器人状态 的本地化字符串。
@@ -9662,6 +9674,11 @@ namespace Luster.Motion.Assests.Langs
 		public static string ReadMC = nameof(ReadMC);
 
         /// <summary>
+        ///   查找类似 读取Modbus 的本地化字符串。
+        /// </summary>
+		public static string ReadModbus = nameof(ReadModbus);
+
+        /// <summary>
         ///   查找类似 读取PLC 的本地化字符串。
         /// </summary>
 		public static string ReadPlc = nameof(ReadPlc);
@@ -10235,6 +10252,11 @@ namespace Luster.Motion.Assests.Langs
         ///   查找类似 设置MBus 的本地化字符串。
         /// </summary>
 		public static string SetModbus = nameof(SetModbus);
+
+        /// <summary>
+        ///   查找类似 设置Modbus 的本地化字符串。
+        /// </summary>
+		public static string SetModbusEx = nameof(SetModbusEx);
 
         /// <summary>
         ///   查找类似 设置机器人状态 的本地化字符串。

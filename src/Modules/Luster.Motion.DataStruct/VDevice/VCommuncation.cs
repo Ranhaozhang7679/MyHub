@@ -329,17 +329,23 @@ namespace Luster.Motion.DataStruct.VDevice
 
             if (GetIsShield()) return;
             //增加写入的虚拟方法
+            CommResult commResult = null;
             ProcessAction(() =>
             {
                 if (!Communication.IsConnected) return;
 
-                var commResult = Protocol.Write<T>(Communication, new List<T>() { value }, writeMsg);
+                commResult = Protocol.Write<T>(Communication, new List<T>() { value }, writeMsg);
                 if (!commResult.IsSuccess)
                 {
                     Communication.Close();
                     throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, commResult.ErrorMsg);
                 }
             }, () => { Thread.Sleep(TargetValue); });
+
+            if (commResult != null && !string.IsNullOrEmpty(commResult.SentHex))
+            {
+                OnLog(LogType.Debug, $"发送指令: {commResult.SentHex}");
+            }
         }
         /// <summary>
         /// 写入值,判断是否成功，不阻塞

@@ -595,15 +595,15 @@ namespace Luster.Motion.AlarmUI.ViewModel
                 // 统计Tab：刷新统计表
                 if (SelectedAlarmTab == AlarmSubTab.Statistics)
                 {
-                    BuildStatistics(startTime, endTime);
+                    BuildStatistics(startTime, endTime, SearchParas);
                 }
                 else if (SelectedAlarmTab == AlarmSubTab.DownTime)
                 {
-                    BuildDownTimeChart(startTime, endTime);
+                    BuildDownTimeChart(startTime, endTime, SearchParas);
                 }
                 else if (SelectedAlarmTab == AlarmSubTab.DownTimeBom)
                 {
-                    BuildDownTimeChart(startTime, endTime);
+                    BuildDownTimeChart(startTime, endTime, SearchParas);
                 }
                 else
                 {
@@ -622,11 +622,21 @@ namespace Luster.Motion.AlarmUI.ViewModel
         }
 
         #region DownTime图表构建
-        private void BuildDownTimeChart(DateTime startTime, DateTime endTime)
+        private void BuildDownTimeChart(DateTime startTime, DateTime endTime, string searchParas = "")
         {
             try
             {
                 var list = _dbManager.GetAnalyzeModels(startTime, endTime)?.ToList() ?? new List<TbAlarm>();
+
+                // 应用搜索过滤（模糊匹配 Module 和 AlarmType）
+                if (!string.IsNullOrWhiteSpace(searchParas))
+                {
+                    list = list
+                        .Where(a =>
+                            (a.Module?.IndexOf(searchParas, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                            (a.AlarmType?.IndexOf(searchParas, StringComparison.OrdinalIgnoreCase) >= 0))
+                        .ToList();
+                }
 
                 bool IsDownTimeType(TbAlarm a)
                 {
@@ -814,7 +824,24 @@ namespace Luster.Motion.AlarmUI.ViewModel
                 DownTimeSeries = seriesCollection;
                 DownTimePageIndex = 1;
                 UpdatePagedDownTimeSegments();
-                // legend 同原逻辑（略）
+
+                // 构建图例（按报警类型分组）
+                var legend = new List<AlarmGroupModel>();
+                int colorIndexLegend = 0;
+                foreach (var group in groupedSegments)
+                {
+                    var brush = (_localBrushes != null && _localBrushes.Count > 0)
+                        ? _localBrushes[colorIndexLegend % _localBrushes.Count]
+                        : new SolidColorBrush(Color.FromRgb(40, 150, 221));
+
+                    legend.Add(new AlarmGroupModel
+                    {
+                        AlarmType = group.Key,
+                        Color = brush
+                    });
+                    colorIndexLegend++;
+                }
+                AlarmGroupList = new ObservableCollection<AlarmGroupModel>(legend);
             }
             catch (Exception ex)
             {
@@ -828,6 +855,7 @@ namespace Luster.Motion.AlarmUI.ViewModel
                 DownTimeMinValue = 0;
                 DownTimeMaxValue = 1440;
                 DownTimeFormatter = v => TimeSpan.FromMinutes(v).ToString(@"hh\:mm");
+                AlarmGroupList = new ObservableCollection<AlarmGroupModel>();
             }
         }
         private void BuildDownTimeChart1(DateTime startTime, DateTime endTime)
@@ -1989,22 +2017,21 @@ namespace Luster.Motion.AlarmUI.ViewModel
 
                         if (SelectedAlarmTab == AlarmSubTab.Statistics)
                         {
-                            BuildStatistics(startTime, endTime);
+                            BuildStatistics(startTime, endTime, SearchParas);
                             AlarmItemVMs = new ObservableCollection<AlarmItemModel>();
                             AlarmPageCount = 1;
                             AlarmPageIndex = 1;
                         }
                         else if (SelectedAlarmTab == AlarmSubTab.DownTime)
                         {
-                            BuildDownTimeChart(startTime, endTime);
+                            BuildDownTimeChart(startTime, endTime, SearchParas);
                             AlarmItemVMs = new ObservableCollection<AlarmItemModel>();
                             AlarmPageCount = 1;
                             AlarmPageIndex = 1;
                         }
                         else if (SelectedAlarmTab == AlarmSubTab.DownTimeBom)
                         {
-                            // TowntimeBom 依赖 DownTimeSegments
-                            BuildDownTimeChart(startTime, endTime);
+                            BuildDownTimeChart(startTime, endTime, SearchParas);
                             AlarmItemVMs = new ObservableCollection<AlarmItemModel>();
                             AlarmPageCount = 1;
                             AlarmPageIndex = 1;
@@ -2169,11 +2196,21 @@ namespace Luster.Motion.AlarmUI.ViewModel
             }
         }
 
-        private void BuildStatistics(DateTime startTime, DateTime endTime)
+        private void BuildStatistics(DateTime startTime, DateTime endTime, string searchParas = "")
         {
             try
             {
                 var alarms = _dbManager.GetAnalyzeModels(startTime, endTime)?.ToList() ?? new List<TbAlarm>();
+
+                // 应用搜索过滤（模糊匹配 Module 和 AlarmType）
+                if (!string.IsNullOrWhiteSpace(searchParas))
+                {
+                    alarms = alarms
+                        .Where(a =>
+                            (a.Module?.IndexOf(searchParas, StringComparison.OrdinalIgnoreCase) >= 0) ||
+                            (a.AlarmType?.IndexOf(searchParas, StringComparison.OrdinalIgnoreCase) >= 0))
+                        .ToList();
+                }
 
                 var valid = alarms
                     .Where(a => !string.IsNullOrWhiteSpace(a.AlarmType))

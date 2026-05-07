@@ -29,6 +29,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -755,41 +756,45 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                     return;
                 }
 
-                // 保存当前选中的参数
-                var currentSelectedParams = SelectedParameters?.ToList() ?? new List<string>();
-
-                // 清除现有的图表数据
-                AllChartItems?.Clear();
-                AllCPKData?.Clear();
-                CurrentDisplayData?.Clear();
-                ParameterList?.Clear();
-
-                if (SeriesCollection != null)
+                // 在UI线程执行集合操作
+                Application.Current?.Dispatcher.Invoke(() =>
                 {
-                    SeriesCollection.Clear();
-                }
+                    // 保存当前选中的参数
+                    var currentSelectedParams = SelectedParameters?.ToList() ?? new List<string>();
 
-                // 重新解析CPK文件（这会创建新的数据）
-                ParseCPKFile(_currentMonitoredFilePath);
+                    // 清除现有的图表数据
+                    AllChartItems?.Clear();
+                    AllCPKData?.Clear();
+                    CurrentDisplayData?.Clear();
+                    ParameterList?.Clear();
 
-                // 恢复选中的参数过滤
-                if (currentSelectedParams.Count > 0 && AllChartItems != null && AllChartItems.Count > 0)
-                {
-                    var filteredItems = AllChartItems.Where(x => currentSelectedParams.Contains(x.PositionName)).ToList();
-                    AllChartItems = new ObservableCollection<ChartItemModel>(filteredItems);
-                }
+                    if (SeriesCollection != null)
+                    {
+                        SeriesCollection.Clear();
+                    }
 
-                // 刷新当前显示的CPK数据
-                if (AllCPKData != null && AllCPKData.Count > 0)
-                {
-                    CurrentDisplayData = new ObservableCollection<CPKDataModel>(AllCPKData);
-                }
+                    // 重新解析CPK文件（这会创建新的数据）
+                    ParseCPKFile(_currentMonitoredFilePath);
 
-                // 强制刷新UI
-                RaisePropertyChanged(nameof(AllChartItems));
-                RaisePropertyChanged(nameof(AllCPKData));
-                RaisePropertyChanged(nameof(CurrentDisplayData));
-                RaisePropertyChanged(nameof(ParameterList));
+                    // 恢复选中的参数过滤
+                    if (currentSelectedParams.Count > 0 && AllChartItems != null && AllChartItems.Count > 0)
+                    {
+                        var filteredItems = AllChartItems.Where(x => currentSelectedParams.Contains(x.PositionName)).ToList();
+                        AllChartItems = new ObservableCollection<ChartItemModel>(filteredItems);
+                    }
+
+                    // 刷新当前显示的CPK数据
+                    if (AllCPKData != null && AllCPKData.Count > 0)
+                    {
+                        CurrentDisplayData = new ObservableCollection<CPKDataModel>(AllCPKData);
+                    }
+
+                    // 强制刷新UI
+                    RaisePropertyChanged(nameof(AllChartItems));
+                    RaisePropertyChanged(nameof(AllCPKData));
+                    RaisePropertyChanged(nameof(CurrentDisplayData));
+                    RaisePropertyChanged(nameof(ParameterList));
+                });
             }
             catch (Exception ex)
             {
@@ -2577,6 +2582,13 @@ namespace Luster.Motion.DigitalSetup.ViewModel
         {
             try
             {
+                // 如果一键点检正在进行，先停止工站
+                if (IsChecking)
+                {
+                    _flowBus?.OnStop();
+                    OnEnd();
+                }
+
                 ProgressValue = 0;
 
                 ((DelegateCommand)StopCommand).RaiseCanExecuteChanged();
@@ -2592,18 +2604,38 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             }
         }
 
-        private bool CanStop() => ProgressValue > 0 && ProgressValue < 100;
+        private bool CanStop() => IsChecking || (ProgressValue > 0 && ProgressValue < 100);
 
         public override void OnEnd()
         {
             ProgressValue = 0;
             base.OnEnd();
+            if (IsMonitoring)
+            {
+                StopMonitoring();
+            }
         }
 
         public override async void OnOneKeyCheck(object obj)
         {
+            if (IsChecking) return;
+
+            IsChecking = true;
+            ((DelegateCommand)StopCommand).RaiseCanExecuteChanged();
+
             base.OnOneKeyCheck(obj);
 
+            StartAsync();
+            await WaitForCompletionAsync();
+
+            IsChecking = false;
+            ProgressValue = 100;
+            ((DelegateCommand)StopCommand)?.RaiseCanExecuteChanged();
+        }
+
+        protected override async Task ExecuteAsync(CancellationToken token)
+        {
+            bool success = false;
             try
             {
                 ProgressValue = 0;
@@ -2615,17 +2647,26 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
                     if (stat != null)
                     {
+                        if (!IsMonitoring)
+                        {
+                            StartMonitoring();
+                        }
                         flowBus.OnRunOne(stat.ID);
 
-                        await Task.Run(async () =>
+                        // 阶段1：等待流程启动（离开Default）
+                        while (stat.Status == RunStatus.Default)
                         {
-                            while (stat.Status != RunStatus.Success)
-                            {
-                                await Task.Delay(200);
-                            }
-                        }, _cts.Token);
+                            token.ThrowIfCancellationRequested();
+                            await Task.Delay(100);
+                        }
+                        // 阶段2：等待流程完成（Running/Pause继续等待，其他状态视为结束）
+                        while (stat.Status == RunStatus.Running || stat.Status == RunStatus.Pause)
+                        {
+                            token.ThrowIfCancellationRequested();
+                            await Task.Delay(200);
+                        }
 
-                        ProgressValue = 100;
+                        success = true;
                     }
                     else
                     {
@@ -2639,50 +2680,37 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             }
             catch (OperationCanceledException)
             {
+                success = false;
                 _commonbus.OnLog(new LogInfo() { LogType = LogType.Info, LogMessage = "CPK测试被用户中止" });
-                throw;
             }
             catch (Exception ex)
             {
                 _commonbus.OnLog(new LogInfo()
                 {
-                    LogType = LogType.Info,
+                    LogType = LogType.Error,
                     LogMessage = $"获取CPK测试数据失败：{ex.Message}"
                 });
-                throw;
             }
             finally
             {
-                ProgressValue = 100;
-
-                // 保存当前子页面的点检状态
-                var checkStatus = CheckStatus.NotChecked;
-                string remark = "";
-
-                // 检查是否被中止
-                bool wasCancelled = _cts.IsCancellationRequested;
-
-                if (wasCancelled)
+                // 被取消时强制标记为未完成
+                if (token.IsCancellationRequested)
                 {
-                    // 用户中止 - CPK测试不支持继续，需从头开始
-                    checkStatus = CheckStatus.CheckedFail;
-                    remark = "执行中止，需从头开始";
-                }
-                else
-                {
-                    checkStatus = CheckStatus.CheckedOK;
-                    remark = "CPK测试完成";
+                    success = false;
                 }
 
-                // 保存当前工站的点检状态
+                // 根据实际执行结果保存状态
+                var checkStatus = success ? CheckStatus.CheckedOK : CheckStatus.NotChecked;
+                string remark = success ? "CPK测试完成" : "CPK测试未完成";
+
                 SaveCurrentStationCheckStatus(checkStatus, remark);
-
-                // 保存页面级别点检状态（使用聚合状态）
                 var aggregatedStatus = GetAggregatedStationStatus();
                 SaveCheckStatus(aggregatedStatus, remark);
-
-                // 刷新 LAD 页面的状态（CommonPageModel 和 DigitalAssPageModel）
                 RefreshLADPageStatus();
+                if (IsMonitoring)
+                {
+                    StopMonitoring();
+                }            
             }
         }
 

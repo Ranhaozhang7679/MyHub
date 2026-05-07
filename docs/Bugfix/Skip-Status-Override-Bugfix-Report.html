@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BugFix Report - 忽略模块状态被意外覆盖</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap');
+        :root {
+            --bg-primary: #0a0e17;
+            --bg-secondary: #111827;
+            --bg-card: #1a2236;
+            --border: #2a3654;
+            --border-accent: #3b82f6;
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-red: #ef4444;
+            --accent-red-dim: rgba(239, 68, 68, 0.12);
+            --accent-green: #22c55e;
+            --accent-green-dim: rgba(34, 197, 94, 0.12);
+            --accent-blue: #3b82f6;
+            --accent-blue-dim: rgba(59, 130, 246, 0.12);
+            --accent-amber: #f59e0b;
+            --accent-amber-dim: rgba(245, 158, 11, 0.12);
+            --accent-purple: #a855f7;
+            --accent-purple-dim: rgba(168, 85, 247, 0.12);
+            --code-bg: #0d1117;
+            --radius: 8px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Noto Sans SC', sans-serif; background: var(--bg-primary); color: var(--text-primary); line-height: 1.7; min-height: 100vh; }
+        .bg-pattern { position: fixed; inset: 0; background-image: radial-gradient(circle at 15% 25%, rgba(239,68,68,0.04) 0%, transparent 50%), radial-gradient(circle at 85% 75%, rgba(34,197,94,0.04) 0%, transparent 50%), linear-gradient(rgba(59,130,246,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.02) 1px, transparent 1px); background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px; pointer-events: none; z-index: 0; }
+        .container { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 40px 32px 80px; }
+        .report-header { text-align: center; margin-bottom: 56px; padding: 48px 0 40px; border-bottom: 1px solid var(--border); }
+        .badge-severity { display: inline-flex; align-items: center; gap: 8px; padding: 6px 18px; background: var(--accent-amber-dim); border: 1px solid rgba(245,158,11,0.3); border-radius: 100px; font-size: 13px; font-weight: 500; color: var(--accent-amber); margin-bottom: 24px; }
+        .badge-severity .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-amber); animation: pulse-dot 2s ease-in-out infinite; }
+        @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+        .report-header h1 { font-size: 36px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 12px; background: linear-gradient(135deg,#e2e8f0,#94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .report-header .subtitle { font-size: 16px; color: var(--text-muted); font-weight: 300; }
+        .meta-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap: 16px; margin-bottom: 48px; }
+        .meta-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+        .meta-card .label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 6px; }
+        .meta-card .value { font-size: 14px; font-weight: 500; color: var(--text-primary); font-family: 'JetBrains Mono', monospace; }
+        .section { margin-bottom: 48px; }
+        .section-title { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 700; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+        .section-title .icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+        .icon-red { background: var(--accent-red-dim); color: var(--accent-red); }
+        .icon-blue { background: var(--accent-blue-dim); color: var(--accent-blue); }
+        .icon-green { background: var(--accent-green-dim); color: var(--accent-green); }
+        .icon-amber { background: var(--accent-amber-dim); color: var(--accent-amber); }
+        .icon-purple { background: var(--accent-purple-dim); color: var(--accent-purple); }
+        .callout { padding: 20px 24px; border-radius: var(--radius); border-left: 4px solid; margin-bottom: 20px; }
+        .callout-red { background: var(--accent-red-dim); border-left-color: var(--accent-red); }
+        .callout-green { background: var(--accent-green-dim); border-left-color: var(--accent-green); }
+        .callout-blue { background: var(--accent-blue-dim); border-left-color: var(--accent-blue); }
+        .callout p { font-size: 14px; line-height: 1.8; }
+        .callout strong { color: var(--text-primary); }
+        .code-block { background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; }
+        .code-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--border); }
+        .code-header .file-path { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-muted); }
+        .code-header .line-info { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-muted); }
+        .code-content pre { font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.7; padding: 16px; margin: 0; overflow-x: auto; }
+        .kw { color: #c678dd; } .fn { color: #61afef; } .tp { color: #e5c07b; } .str { color: #98c379; } .cm { color: #5c6370; font-style: italic; } .pr { color: #e06c75; } .op { color: #56b6c2; } .num { color: #d19a66; }
+        .code-line { display: block; padding: 0 12px; border-left: 3px solid transparent; }
+        .code-line.highlight-red { background: rgba(239,68,68,0.1); border-left-color: var(--accent-red); }
+        .code-line.highlight-green { background: rgba(34,197,94,0.1); border-left-color: var(--accent-green); }
+        .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .comparison-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+        .comparison-card .card-title { padding: 12px 16px; font-size: 13px; font-weight: 600; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+        .comparison-card.bug .card-title { background: var(--accent-red-dim); color: var(--accent-red); }
+        .comparison-card.fix .card-title { background: var(--accent-green-dim); color: var(--accent-green); }
+        .comparison-card pre { font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.7; padding: 16px; margin: 0; }
+        .summary-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .summary-table th, .summary-table td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        .summary-table th { background: var(--bg-card); color: var(--text-muted); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .summary-table td { color: var(--text-secondary); }
+        .summary-table code { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; }
+        .tag { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+        .tag-red { background: var(--accent-red-dim); color: var(--accent-red); }
+        .tag-green { background: var(--accent-green-dim); color: var(--accent-green); }
+        .tag-blue { background: var(--accent-blue-dim); color: var(--accent-blue); }
+        .report-footer { margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--border); text-align: center; color: var(--text-muted); font-size: 13px; }
+        .fix-number { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; font-size: 14px; font-weight: 700; margin-right: 8px; }
+        .fix-number-1 { background: var(--accent-red-dim); color: var(--accent-red); border: 2px solid var(--accent-red); }
+        .fix-number-2 { background: var(--accent-amber-dim); color: var(--accent-amber); border: 2px solid var(--accent-amber); }
+        @media (max-width: 768px) { .container { padding: 24px 16px 60px; } .report-header h1 { font-size: 26px; } .comparison { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="bg-pattern"></div>
+    <div class="container">
+
+        <header class="report-header">
+            <div class="badge-severity"><span class="dot"></span> MEDIUM</div>
+            <h1>忽略模块状态被意外覆盖导致运行报错</h1>
+            <p class="subtitle">两处 Skip 保护缺失 &mdash; MotionModule.cs / MotionEngine_part2.cs</p>
+        </header>
+
+        <div class="meta-grid">
+            <div class="meta-card"><div class="label">修复日期</div><div class="value">2026-05-07</div></div>
+            <div class="meta-card"><div class="label">修改文件</div><div class="value" style="font-size:11px;">MotionModule.cs<br>MotionEngine_part2.cs</div></div>
+            <div class="meta-card"><div class="label">影响范围</div><div class="value">运行时模块状态管理</div></div>
+            <div class="meta-card"><div class="label">修复状态</div><div class="value"><span class="tag tag-green">已修复</span></div></div>
+        </div>
+
+        <!-- 问题 -->
+        <section class="section">
+            <h2 class="section-title"><span class="icon icon-red">&#9888;</span> 问题描述</h2>
+            <div class="callout callout-red">
+                <p>
+                    用户将工站内的子模块（如"设置变量"模块）设为<strong>忽略（Skip）</strong>后，设备在 <strong>Running</strong> 自动运行状态下，<strong>左键单击该忽略模块</strong>后，忽略状态被意外取消，模块直接执行并<strong>报错变红</strong>。
+                </p>
+            </div>
+            <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px;">
+                正常自动运行时 Skip 状态不会被取消，只有在流程图界面<strong>左键单击</strong>或<strong>拖动</strong>忽略模块后才出现。拖动动作比单击耗时更长，增大了与引擎自动运行循环的竞态窗口，因此触发概率更高。
+            </p>
+        </section>
+
+        <!-- 根因 -->
+        <section class="section">
+            <h2 class="section-title"><span class="icon icon-red">&#128270;</span> 根因分析</h2>
+            <p style="color:var(--text-secondary);font-size:14px;margin-bottom:20px;">
+                发现两处 Skip 保护缺失，在竞态时序下共同导致忽略状态被取消：
+            </p>
+
+            <h3 style="font-size:16px;margin-bottom:12px;"><span class="fix-number fix-number-1">1</span> MotionModule.DoFunction() 缺少 Skip 检查</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="file-path">MotionModule.cs : 272</span>
+                    <span class="line-info">修复前</span>
+                </div>
+                <div class="code-content">
+                    <pre><span class="kw">public override bool</span> <span class="fn">DoFunction</span>()
+{
+<span class="code-line highlight-red">    <span class="cm">// 没有 Skip 检查！直接进入执行流程</span></span>
+    ThreadID = Thread.CurrentThread.ManagedThreadId;
+    <span class="kw">if</span> (IsBreak) { ... <span class="kw">return true</span>; }
+    ...
+<span class="code-line highlight-red">    Status = <span class="tp">RunStatus</span>.Running;  <span class="cm">// Skip 状态被覆盖为 Running</span></span>
+    ...
+}</pre>
+                </div>
+            </div>
+            <div class="callout callout-red">
+                <p>
+                    <strong>基类 <code>AbsModule.DoFunction()</code> 有 <code>if (Status == RunStatus.Skip) return true;</code> 保护</strong>，
+                    但 <code>MotionModule</code> 重写后丢失了这个检查。一旦 <code>DoFunction</code> 被调用，Skip 状态就被强制覆盖为 <code>Running</code>。
+                </p>
+            </div>
+
+            <h3 style="font-size:16px;margin:24px 0 12px;"><span class="fix-number fix-number-2">2</span> SetModuleStatus 缺少顶层 Skip 保护</h3>
+            <div class="code-block">
+                <div class="code-header">
+                    <span class="file-path">MotionEngine_part2.cs : 834</span>
+                    <span class="line-info">修复前</span>
+                </div>
+                <div class="code-content">
+                    <pre><span class="kw">private void</span> <span class="fn">SetModuleStatus</span>(<span class="tp">IMotionModule</span> motionModule, <span class="tp">RunStatus</span> status)
+{
+<span class="code-line highlight-red">    motionModule.Status = status;  <span class="cm">// 顶层模块没有 Skip 检查</span></span>
+    <span class="kw">if</span> (motionModule.Children.Count > <span class="num">0</span>)
+    {
+        <span class="kw">foreach</span> (<span class="kw">var</span> item <span class="kw">in</span> motionModule.Children)
+        {
+<span class="code-line highlight-green">            <span class="kw">if</span> (item.Status == <span class="tp">RunStatus</span>.Skip) <span class="kw">continue</span>;  <span class="cm">// 子模块有保护</span></span>
+            ...
+        }
+    }
+}</pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- 触发时序 -->
+        <section class="section">
+            <h2 class="section-title"><span class="icon icon-amber">&#9654;</span> 触发时序</h2>
+            <div style="color:var(--text-secondary);font-size:14px;">
+                <ol style="padding-left:20px;line-height:2.2;">
+                    <li>用户将子模块设为忽略（<code>Status = Skip</code>）</li>
+                    <li>设备进入 <strong>Running</strong>，引擎循环执行工站</li>
+                    <li>用户在流程图界面<strong>左键单击</strong>或<strong>拖动</strong>该忽略模块（仅选中/移动操作，不涉及状态变更）</li>
+                    <li>拖动操作比单击耗时更长，正好增大了与引擎自动循环的<strong>竞态窗口</strong></li>
+                    <li>引擎循环恰好运行到该工站，调用 <code>SetModuleStatus(station, Default)</code></li>
+                    <li>若存在竞态窗口，模块的 Skip 状态未能被 <code>MotionRunEngine.Run</code> 的检查拦截</li>
+                    <li><code>MotionModule.DoFunction()</code> 被调用 &mdash; <strong>没有 Skip 检查</strong> &rarr; 状态变为 <code>Running</code> &rarr; 执行失败 &rarr; 变红报错</li>
+                </ol>
+            </div>
+            <div class="callout callout-blue" style="margin-top:16px;">
+                <p>
+                    <strong>为什么拖动更容易触发？</strong>单击操作瞬间完成（MouseDown &rarr; MouseUp），竞态窗口极小。而拖动操作（MouseDown &rarr; MouseMove &rarr; ... &rarr; MouseUp）持续时间更长，与引擎后台线程的 <code>SetModuleStatus</code> 调用产生时间重叠的概率显著增加。
+                </p>
+            </div>
+        </section>
+
+        <!-- 修复 -->
+        <section class="section">
+            <h2 class="section-title"><span class="icon icon-green">&#128295;</span> 修复方案</h2>
+
+            <h3 style="font-size:16px;margin-bottom:12px;"><span class="fix-number fix-number-1">1</span> MotionModule.DoFunction() 添加 Skip 检查</h3>
+            <div class="comparison">
+                <div class="comparison-card bug">
+                    <div class="card-title">&#10007; 修复前</div>
+                    <pre><span class="kw">public override bool</span> <span class="fn">DoFunction</span>()
+{
+    ThreadID = Thread.CurrentThread
+        .ManagedThreadId;
+    <span class="kw">if</span> (IsBreak) ...
+    ...
+    Status = <span class="tp">RunStatus</span>.Running;
+}</pre>
+                </div>
+                <div class="comparison-card fix">
+                    <div class="card-title">&#10003; 修复后</div>
+                    <pre><span class="kw">public override bool</span> <span class="fn">DoFunction</span>()
+{
+<span style="background:rgba(34,197,94,0.12)">    <span class="cm">// 忽略状态不执行</span>
+    <span class="kw">if</span> (Status == RunStatus.Skip)
+        <span class="kw">return true</span>;</span>
+    ThreadID = Thread.CurrentThread
+        .ManagedThreadId;
+    <span class="kw">if</span> (IsBreak) ...
+    ...
+    Status = <span class="tp">RunStatus</span>.Running;
+}</pre>
+                </div>
+            </div>
+
+            <h3 style="font-size:16px;margin:24px 0 12px;"><span class="fix-number fix-number-2">2</span> SetModuleStatus 添加顶层 Skip 保护</h3>
+            <div class="comparison">
+                <div class="comparison-card bug">
+                    <div class="card-title">&#10007; 修复前</div>
+                    <pre><span class="kw">private void</span> <span class="fn">SetModuleStatus</span>(...)
+{
+<span style="background:rgba(239,68,68,0.12)">    motionModule.Status = status;</span>
+    <span class="kw">if</span> (motionModule.Children.Count > 0)
+    {
+        <span class="kw">foreach</span> (<span class="kw">var</span> item <span class="kw">in</span> ...)
+        {
+            <span class="kw">if</span> (item.Status == Skip)
+                <span class="kw">continue</span>;
+            ...
+        }
+    }
+}</pre>
+                </div>
+                <div class="comparison-card fix">
+                    <div class="card-title">&#10003; 修复后</div>
+                    <pre><span class="kw">private void</span> <span class="fn">SetModuleStatus</span>(...)
+{
+<span style="background:rgba(34,197,94,0.12)">    <span class="cm">// 忽略状态的模块不重置</span>
+    <span class="kw">if</span> (motionModule.Status == Skip)
+        <span class="kw">return</span>;</span>
+    motionModule.Status = status;
+    <span class="kw">if</span> (motionModule.Children.Count > 0)
+    {
+        <span class="kw">foreach</span> (<span class="kw">var</span> item <span class="kw">in</span> ...)
+        {
+            <span class="kw">if</span> (item.Status == Skip)
+                <span class="kw">continue</span>;
+            ...
+        }
+    }
+}</pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- 一致性 -->
+        <section class="section">
+            <h2 class="section-title"><span class="icon icon-blue">&#128203;</span> 一致性对照</h2>
+            <table class="summary-table">
+                <thead><tr><th>方法</th><th>所在文件</th><th>Skip 保护</th></tr></thead>
+                <tbody>
+                    <tr><td><code>AbsModule.DoFunction</code></td><td>AbsModule.cs:434</td><td><span class="tag tag-green">有保护</span></td></tr>
+                    <tr><td><code>MotionRunEngine.Run</code></td><td>MotionRunEngine.cs:238</td><td><span class="tag tag-green">有保护</span></td></tr>
+                    <tr><td><code>SetDefaultStatus</code></td><td>MotionEngine_part2.cs:812</td><td><span class="tag tag-green">有保护</span></td></tr>
+                    <tr><td><code>FlowBus.SetStatusDefault</code></td><td>FlowBus.cs:975</td><td><span class="tag tag-green">有保护</span></td></tr>
+                    <tr><td><code>MotionModule.DoFunction</code> <span class="tag tag-red">本次修复</span></td><td>MotionModule.cs:272</td><td><span class="tag tag-blue">新增保护</span></td></tr>
+                    <tr><td><code>SetModuleStatus</code> <span class="tag tag-red">本次修复</span></td><td>MotionEngine_part2.cs:834</td><td><span class="tag tag-blue">新增保护</span></td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 影响 -->
+        <section class="section">
+            <h2 class="section-title"><span class="icon icon-purple">&#128736;</span> 修复影响</h2>
+            <div class="callout callout-green">
+                <p>
+                    <strong>双重保护：</strong>
+                    即使 <code>SetModuleStatus</code> 在竞态时序下未能拦截，<code>MotionModule.DoFunction()</code> 入口处的 Skip 检查也能作为最后防线，
+                    确保 Skip 状态的模块永远不会被执行。两层保护互为兜底。
+                </p>
+            </div>
+        </section>
+
+        <footer class="report-footer">
+            <p>LMV-2026 Bugfix Report &middot; Generated on 2026-05-07</p>
+        </footer>
+    </div>
+</body>
+</html>

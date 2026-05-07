@@ -3192,4 +3192,10 @@
   <data name="TaikeAnnotatedCurve" xml:space="preserve">
     <value>PressureCurveStackedChart</value>
   </data>
+  <data name="ReadModbus" xml:space="preserve">
+    <value>ReadModbus</value>
+  </data>
+  <data name="SetModbusEx" xml:space="preserve">
+    <value>SetModbusEx</value>
+  </data>
 </root>

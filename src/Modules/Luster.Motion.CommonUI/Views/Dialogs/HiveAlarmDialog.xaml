@@ -92,6 +92,14 @@
                     <TextBlock Width="200" HorizontalAlignment="Left" Text="剩余时间 Remaining time:" />
                     <TextBlock HorizontalAlignment="Left" Text="{Binding CountDown}" Grid.Column="1" />
                 </Grid>
+                <Grid HorizontalAlignment="Center">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Width="200" HorizontalAlignment="Left" Text="剩余次数 Remaining count:" />
+                    <TextBlock HorizontalAlignment="Left" Text="{Binding RemainingCount}" Grid.Column="1" />
+                </Grid>
 
             </StackPanel>
         </Grid>
