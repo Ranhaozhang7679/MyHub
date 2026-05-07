@@ -381,6 +381,12 @@ namespace Luster.Motion.SubSystem.ViewModel
             {
                 return;
             }
+            // 独立安全检查：确认设备处于自动模式
+            if (!mController.CanAutoRun(out var errMsg))
+            {
+                commonBus.OnLog(Common.DataStruct.Enums.LogType.Info, $"IO触发启动被拦截: {errMsg}");
+                return;
+            }
             tryStart();
 
         }

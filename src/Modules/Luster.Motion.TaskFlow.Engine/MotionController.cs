@@ -1078,12 +1078,14 @@ namespace Luster.Motion.TaskFlow.Engine
         /// <returns></returns>
         public bool CanAutoRun(out string mesage)
         {
-            bool isAuto = true;
+            bool isAuto = false;
+            bool ioChecked = false;
             string error = "";
             mesage = "";
             // 如果有配置自动/手动,检查按钮
             ProcessIO(SysConfig.ManualSwitchButton, (r) =>
             {
+                ioChecked = true;
                 isAuto = r.GetDigitalIn();
 
                 if (!isAuto)
@@ -1091,6 +1093,12 @@ namespace Luster.Motion.TaskFlow.Engine
                     error = "机台处于手动状态,不允许自动运行!";
                 }
             });
+
+            // 未配置手动/自动切换按钮时，默认允许自动运行
+            if (!ioChecked)
+            {
+                isAuto = true;
+            }
 
             mesage = error;
             return isAuto;
