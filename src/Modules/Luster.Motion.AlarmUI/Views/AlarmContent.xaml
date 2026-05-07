@@ -268,7 +268,7 @@
                             <RadioButton
                                 Margin="5,0,0,0"
                                 VerticalAlignment="Center"
-                                Content="Towntime"
+                                Content="Downtime"
                                 IsChecked="{Binding IsDownTimeBomTab}"
                                 Style="{StaticResource ReportRadioButtonStyle}" />
                             <RadioButton

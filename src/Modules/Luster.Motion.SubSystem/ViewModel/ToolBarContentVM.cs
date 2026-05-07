@@ -381,6 +381,12 @@ namespace Luster.Motion.SubSystem.ViewModel
             {
                 return;
             }
+            // 独立安全检查：确认设备处于自动模式
+            if (!mController.CanAutoRun(out var errMsg))
+            {
+                commonBus.OnLog(Common.DataStruct.Enums.LogType.Info, $"IO触发启动被拦截: {errMsg}");
+                return;
+            }
             tryStart();
 
         }
@@ -469,9 +475,14 @@ namespace Luster.Motion.SubSystem.ViewModel
 
         private void MController_MachineManualEvent(string obj)
         {
-            //如果有Hive弹窗，不再响应设备按键
+            //HiveAlarmDialog 弹窗期间：允许切换并触发暂停，但保持 Alarm 状态
             if (useHiveDialog && webConfig.HiveEnabled)
             {
+                var curStatus = mController.MachineStatus;
+                if (curStatus == EngineStatus.Running || curStatus == EngineStatus.MaterialPending)
+                {
+                    mController.Pause(true);
+                }
                 return;
             }
             if (webConfig.HiveEnabled && (mController.GetCurrentMode().Contains("生产") || mController.GetCurrentMode().Contains("空跑"))) //且生产模式
@@ -681,6 +692,8 @@ namespace Luster.Motion.SubSystem.ViewModel
             {
                 Title = webConfig.MachineName ?? "CGLink";
                 StationId = webConfig.StationId;
+                if (TitleVisible)
+                    ProjName = $"{commonBus.CurrentRecipe?.ProjInfo?.ProjName}-{commonBus.CurrentRecipe?.Name}  {webConfig.SoftVersion}";
             });
 
             bus.GetEvent<AlarmEvent>().Subscribe(a =>
@@ -1243,16 +1256,29 @@ namespace Luster.Motion.SubSystem.ViewModel
                         break;
 
                     case DataStruct.Enums.SystemOperation.Pause:
+                        useHiveDialog = true;
+                        Commands[0].SetEnabled(false);
                         mController.Pause(false);
                         mController.CloseOperateIO(SystemOperation.Pause);
                         break;
                     case DataStruct.Enums.SystemOperation.Stop:
-                        mController.Pause(false);
+                        //if (MStatus == EngineStatus.Alarm.GetDescription() || MStatus == EngineStatus.Pause.GetDescription())
+                        if (mController.MachineStatus == EngineStatus.Alarm || mController.MachineStatus == EngineStatus.Pause || mController.MachineStatus == EngineStatus.Ready) 
+                        {
+                            mController.Stop();
+                            mController.CloseOperateIO(SystemOperation.Stop);
+                            Commands[0].ChangeButton(new StatusChanged(mController.MachineStatus, mController.MachineStatus));
+                            _dbManager.AddSysOperation(command.Key, memo, commonBus.CurrentUser?.UserName);
+                            return;
+                        }
+                        useHiveDialog = true;
+                        Commands[0].SetEnabled(false);
+                        mController.Pause(false);//直接stop会有个问题，就是如果当前状态是运行中，直接stop会有个急停的感觉，先pause一下，等用户确认后再stop
                         mController.CloseOperateIO(SystemOperation.Pause);
                         break;
                 }
 
-
+                    
 
                 // 根据配置的提示来进行弹窗
                 if (command.Key == SystemOperation.Stop || command.Key == SystemOperation.Pause)

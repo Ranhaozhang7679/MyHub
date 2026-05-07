@@ -266,7 +266,7 @@ namespace Luster.Motion.CommonUI.Models
                 // 3.回零完成
                 GetCommand(SystemOperation.Home).cmd_IsEnabled = true;
                 GetCommand(SystemOperation.Start).cmd_IsEnabled = true;
-                //GetCommand(SystemOperation.Stop).cmd_IsEnabled = true;
+                GetCommand(SystemOperation.Stop).cmd_IsEnabled = true;
             }
             else if (sChagned.Dst == EngineStatus.Running)
             {

@@ -1,4 +1,4 @@
-﻿using HandyControl.Controls;
+using HandyControl.Controls;
 using Luster.Common.Assets;
 using Luster.Controls.Wpf.Commands;
 using Luster.Motion.CommonUI;
@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 using System.Management;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
@@ -1744,7 +1745,9 @@ namespace Luster.Motion.SubSystem.ViewModel
                 {
                     while (!reader.EndOfStream)
                     {
-                        var values = reader.ReadLine().Split(',');
+                        var line = reader.ReadLine();
+                        if (string.IsNullOrWhiteSpace(line)) continue;
+                        var values = line.Split(',');
                         csvList.Add(values);
                     }
                 }
@@ -1757,13 +1760,20 @@ namespace Luster.Motion.SubSystem.ViewModel
 
             //获取CSV数组行数和列数
             int csvFileRow = csvList.Count;
+            if (csvFileRow == 0) return;
             int csvFileColum = csvList[0].Count();
 
             //将CSV数组中需要的元素放到字典中
             for (int i = 1; i < csvFileRow; i++)
             {
-                //将CSV的索引枚舉名稱和Value放到字典中               
-                csvDictionary.Add(csvList[i][1], csvList[i][4]);
+                if (csvList[i].Length >= 5)
+                {
+                    //将CSV的索引枚舉名稱和Value放到字典中               
+                    if (!csvDictionary.ContainsKey(csvList[i][1]))
+                    {
+                        csvDictionary.Add(csvList[i][1], csvList[i][4]);
+                    }
+                }
             }
 
             //3、根据CSV文件更新驾驶舱Vision的配置内容           
@@ -1823,11 +1833,29 @@ namespace Luster.Motion.SubSystem.ViewModel
             //EditDate = tempEditDate;
 
 
-            //把vision注册按钮屏蔽
-            //if(tempSiteCode == "FXZZ")
-            //{
-            //    MachineRegisterCommand;
-            //}
+            // 重新加载 Version.xml 中的版本信息
+            try
+            {
+                string versionXMLPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Version.xml");
+                if (File.Exists(versionXMLPath))
+                {
+                    XDocument doc = XDocument.Load(versionXMLPath);
+                    XElement softVersionElement = doc.Root.Element("SoftVersion");
+                    if (softVersionElement != null)
+                    {
+                        string softVersion = softVersionElement.Value;
+                        var parts = softVersion.Split('-');
+                        string firstTwoParts = string.Join("-", parts.Take(2));
+                        string lastPart = parts.Last();
+                        SoftVersion = $"{firstTwoParts}-{webConfig.VisionVersion}-{webConfig.RobotVersion}-{webConfig.LaserVersion}-{lastPart}";
+                    }
+                }
+            }
+            catch { }
+
+            SFCHelper.SetConfig(webConfig);
+            commonBus.IsNeedSave = true;
+            commonBus.EventBus.GetEvent<SystemConfigChangeEvent>().Publish();
 
         }));
 

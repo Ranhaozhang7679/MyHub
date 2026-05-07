@@ -706,7 +706,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             commonVM.BasePath = _commonbus?.CurrentRecipe?.GetRecipePath() ?? "";
             commonVM.Initialize(item.Name, item.ValidationType);
 
-            // 监听配置变化（必须在LoadFromConfigData之前订阅，因为LoadFromConfigData内部会调用UpdateConfigItemsByValidationType触发ConfigChanged）
+            // 监听配置变化（必须在配置加载之前订阅）
             commonVM.ConfigChanged += (s, e) =>
             {
                 var updatedData = commonVM.ToConfigData();
@@ -723,6 +723,16 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             if (configData != null)
             {
                 commonVM.LoadFromConfigData(configData);
+            }
+            else
+            {
+                // 首次使用，初始化默认参数
+                // 抑制 ConfigChanged 事件，防止自动保存清空其他验证项的配置
+                commonVM.SuppressConfigChanged = true;
+                commonVM.InitializeDefaultConfigItems();
+                commonVM.SuppressConfigChanged = false;
+                // 手动更新缓存（不触发全量保存）
+                _validationConfigCache[item.Name] = commonVM.ToConfigData();
             }
 
             CurrentValidationVM = commonVM;

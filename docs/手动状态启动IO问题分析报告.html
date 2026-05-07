@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手动状态下启动IO仍能运行 — 问题分析报告</title>
+    <style>
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface2: #222633;
+            --border: #2e3348;
+            --text: #c9d1d9;
+            --text-dim: #8b949e;
+            --accent: #58a6ff;
+            --red: #f85149;
+            --orange: #d29922;
+            --green: #3fb950;
+            --purple: #bc8cff;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            padding: 2rem;
+        }
+        .container { max-width: 960px; margin: 0 auto; }
+
+        h1 {
+            font-size: 1.6rem;
+            color: #fff;
+            border-bottom: 2px solid var(--red);
+            padding-bottom: .6rem;
+            margin-bottom: .4rem;
+        }
+        .meta {
+            color: var(--text-dim);
+            font-size: .85rem;
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            font-size: 1.15rem;
+            color: var(--accent);
+            margin: 2.2rem 0 .8rem;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+        h2::before { content: "▎"; color: var(--accent); }
+
+        h3 {
+            font-size: 1rem;
+            color: var(--purple);
+            margin: 1.4rem 0 .5rem;
+        }
+
+        p, li { margin-bottom: .45rem; }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.2rem 1.5rem;
+            margin: 1rem 0;
+        }
+
+        /* 日志区域 */
+        .log {
+            background: #0d0f14;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1rem 1.2rem;
+            font-family: "Cascadia Code", "Consolas", monospace;
+            font-size: .82rem;
+            line-height: 1.9;
+            overflow-x: auto;
+        }
+        .log .ts { color: var(--text-dim); }
+        .log .info { color: var(--accent); }
+        .log .error { color: var(--red); }
+
+        /* 代码引用 */
+        code {
+            background: var(--surface2);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: "Cascadia Code", "Consolas", monospace;
+            font-size: .88em;
+            color: var(--orange);
+        }
+
+        pre {
+            background: #0d0f14;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1rem 1.2rem;
+            font-family: "Cascadia Code", "Consolas", monospace;
+            font-size: .82rem;
+            line-height: 1.7;
+            overflow-x: auto;
+            margin: .8rem 0;
+        }
+        pre .kw { color: var(--purple); }
+        pre .str { color: var(--green); }
+        pre .cm { color: var(--text-dim); }
+        pre .fn { color: var(--accent); }
+        pre .em { color: var(--red); font-weight: bold; }
+
+        /* 表格 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: .8rem 0;
+            font-size: .9rem;
+        }
+        th, td {
+            text-align: left;
+            padding: .55rem .9rem;
+            border-bottom: 1px solid var(--border);
+        }
+        th { color: var(--accent); font-weight: 600; }
+
+        /* 风险标签 */
+        .tag {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 3px;
+            font-size: .78rem;
+            font-weight: 600;
+        }
+        .tag-critical { background: rgba(248,81,73,.15); color: var(--red); border: 1px solid rgba(248,81,73,.3); }
+        .tag-high     { background: rgba(210,153,34,.15); color: var(--orange); border: 1px solid rgba(210,153,34,.3); }
+        .tag-medium   { background: rgba(88,166,255,.15); color: var(--accent); border: 1px solid rgba(88,166,255,.3); }
+
+        /* 流程图 */
+        .flow {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            align-items: center;
+            margin: 1rem 0;
+        }
+        .flow-row {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+        }
+        .flow-box {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: .4rem 1rem;
+            font-size: .85rem;
+            white-space: nowrap;
+        }
+        .flow-box.pass { border-color: var(--green); color: var(--green); }
+        .flow-box.fail { border-color: var(--red); color: var(--red); }
+        .flow-box.warn { border-color: var(--orange); color: var(--orange); }
+        .flow-arrow { color: var(--text-dim); font-size: 1rem; }
+
+        /* 结论框 */
+        .verdict {
+            background: linear-gradient(135deg, rgba(248,81,73,.08), rgba(210,153,34,.08));
+            border: 1px solid rgba(248,81,73,.25);
+            border-radius: 8px;
+            padding: 1.2rem 1.5rem;
+            margin: 1.2rem 0;
+        }
+        .verdict strong { color: var(--red); }
+
+        ul { padding-left: 1.4rem; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+<h1>手动状态下启动 IO 仍能运行 — 问题分析报告</h1>
+<div class="meta">
+    报告日期：2026-04-26 &nbsp;|&nbsp; 分析对象：Luster Motion 2026 &nbsp;|&nbsp; 分析人：Claude Code
+</div>
+
+<!-- ============================================================ -->
+<h2>1. 问题描述</h2>
+
+<div class="card">
+    <p><strong>现象：</strong>设备已切换到手动状态，按下启动 IO 按钮后，设备竟然正常启动运行。</p>
+    <p><strong>预期：</strong>手动状态下，启动 IO 应被拦截，不允许自动运行。</p>
+    <p><strong>风险等级：</strong> <span class="tag tag-critical">CRITICAL — 安全事故隐患</span></p>
+</div>
+
+<!-- ============================================================ -->
+<h2>2. 现场日志还原</h2>
+
+<div class="log">
+<span class="ts">[1]|2026-04-25 16:14:40.6197|</span><span class="info">INFO|软件点击动作:Start</span>
+<span class="ts">[1]|2026-04-25 16:14:40.6197|</span><span class="info">INFO|当前未切换至自动按钮下,不满足启动条件</span>
+<span class="ts">[1]|2026-04-25 16:14:40.6316|</span><span class="error">ERROR|机台处于手动状态,不允许自动运行!</span>
+<br>
+<span class="ts">[1]|2026-04-25 16:14:44.3956|</span><span class="info">INFO|软件点击动作:Start</span>
+<span class="ts">[1]|2026-04-25 16:14:44.3956|</span><span class="info">INFO|首先执行开始工站</span>
+<span class="ts">[1]|2026-04-25 16:14:44.3956|</span><span class="info">INFO|恢复稼动IO为未设置状态</span>
+<span class="ts">[1]|2026-04-25 16:14:44.3956|</span><span class="info">INFO|当前lockcommand值2：0!</span>
+</div>
+
+<p style="margin-top:.6rem; color:var(--text-dim); font-size:.88rem;">
+    → 第一次（16:14:40）软件按钮启动被正确拦截；第二次（16:14:44）启动成功进入运行。
+</p>
+
+<!-- ============================================================ -->
+<h2>3. 启动调用链路分析</h2>
+
+<p>系统中存在 <strong>两条独立的启动路径</strong>，均经过 <code>CanAutoRun</code> 检查：</p>
+
+<h3>路径 A — 软件界面按钮</h3>
+<div class="flow">
+    <div class="flow-row"><div class="flow-box">界面 Start 按钮</div></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-row"><div class="flow-box">OperateCommand (ToolBarContentVM.cs:1209)</div></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-row"><div class="flow-box pass">CanAutoRun() 检查</div></div>
+    <div class="flow-arrow">↓ 通过</div>
+    <div class="flow-row"><div class="flow-box">tryStart() → mController.Start()</div></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-row"><div class="flow-box pass">Start() 内再次 CanAutoRun() (MotionController.cs:826)</div></div>
+</div>
+
+<h3>路径 B — 硬件 IO 启动按钮</h3>
+<div class="flow">
+    <div class="flow-row"><div class="flow-box">硬件启动按钮 IO 信号</div></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-row"><div class="flow-box">MachineMonitor() (MotionController.cs:1684)</div></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-row"><div class="flow-box pass">CanAutoRun() 检查 (第1701行)</div></div>
+    <div class="flow-arrow">↓ 通过</div>
+    <div class="flow-row"><div class="flow-box">MachineStartEvent?.Invoke("Start")</div></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-row"><div class="flow-box">MController_MachineStartEvent() (ToolBarContentVM.cs:370)</div></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-row"><div class="flow-box warn">tryStart() <strong>无 CanAutoRun 检查</strong></div></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-row"><div class="flow-box">mController.Start() → 内含 CanAutoRun() (第826行)</div></div>
+</div>
+
+<!-- ============================================================ -->
+<h2>4. CanAutoRun 核心逻辑分析</h2>
+
+<pre><span class="cm">// MotionController.cs:1055-1073</span>
+<span class="kw">public bool</span> <span class="fn">CanAutoRun</span>(<span class="kw">out string</span> mesage)
+{
+    <span class="kw">bool</span> isAuto = <span class="em">true</span>;           <span class="cm">// ← 默认值 true</span>
+    <span class="kw">string</span> error = <span class="str">""</span>;
+    mesage = <span class="str">""</span>;
+
+    <span class="fn">ProcessIO</span>(SysConfig.ManualSwitchButton, (r) =>
+    {
+        isAuto = r.<span class="fn">GetDigitalIn</span>();
+
+        <span class="kw">if</span> (!isAuto)
+        {
+            error = <span class="str">"机台处于手动状态,不允许自动运行!"</span>;
+        }
+    });
+
+    mesage = error;
+    <span class="kw">return</span> isAuto;
+}</pre>
+
+<pre><span class="cm">// ProcessIO 实现 — MotionController.cs:1593-1607</span>
+<span class="kw">private void</span> <span class="fn">ProcessIO</span>(VDevice vDevice, Action&lt;VIO&gt; ioAction)
+{
+    <span class="kw">if</span> (vDevice != <span class="kw">null</span> && !vDevice.<span class="fn">IsEmpty</span>())  <span class="cm">// ← 条件不满足时回调不执行</span>
+    {
+        <span class="kw">var</span> io = vDevice.<span class="fn">GetVDevice</span>&lt;VIO&gt;(_deviceEngine);
+        ioAction(io);
+    }
+}</pre>
+
+<!-- ============================================================ -->
+<h2>5. 可能原因分析（按可能性排序）</h2>
+
+<!-- 原因 1 -->
+<div class="card" style="border-left: 3px solid var(--red);">
+    <h3 style="margin-top:0;">原因 1：<code>CanAutoRun</code> 默认值 <code>true</code> 导致安全检查被静默绕过</h3>
+    <p><span class="tag tag-critical">可能性：高</span></p>
+    <p><code>isAuto</code> 初始值为 <code>true</code>。当 <code>ProcessIO</code> 回调未执行时（<code>ManualSwitchButton</code> 为 null 或 <code>IsEmpty()</code>），<code>isAuto</code> 保持 <code>true</code> 不变，方法直接返回允许运行。</p>
+    <p><strong>触发条件：</strong></p>
+    <ul>
+        <li><code>SysConfig.ManualSwitchButton</code> 未正确配置（为 null）</li>
+        <li>IO 设备对象已创建但 <code>IsEmpty()</code> 返回 true</li>
+        <li>IO 设备初始化时序问题：配置尚未加载时 <code>MachineMonitor</code> 已开始轮询</li>
+    </ul>
+    <p><strong>与日志的吻合度：</strong>第一次软件按钮触发时 <code>CanAutoRun</code> 正确拦截（说明当时回调执行了），第二次却通过——暗示 IO 状态读取存在时序不一致。</p>
+</div>
+
+<!-- 原因 2 -->
+<div class="card" style="border-left: 3px solid var(--orange);">
+    <h3 style="margin-top:0;">原因 2：硬件按钮切换存在信号抖动 / 短暂回弹</h3>
+    <p><span class="tag tag-high">可能性：中高</span></p>
+    <p>手动/自动切换为物理旋钮或拨动开关。开关切换过程中可能产生短暂的信号回弹（bounce），导致 <code>GetDigitalIn()</code> 在某个轮询周期读到 <code>true</code>（自动）。</p>
+    <p><strong>关键时间窗口：</strong></p>
+    <ul>
+        <li>第一次启动尝试：16:14:40 — IO 读到手动，正确拦截</li>
+        <li>第二次启动尝试：16:14:44 — 仅 4 秒后，IO 读到自动，通过检查</li>
+    </ul>
+    <p>如果操作人员在 4 秒内操作了切换按钮又拨回自动，或者开关触点产生抖动，就有可能在这段时间窗口内被 <code>MachineMonitor</code> 轮询到自动信号。</p>
+</div>
+
+<!-- 原因 3 -->
+<div class="card" style="border-left: 3px solid var(--orange);">
+    <h3 style="margin-top:0;">原因 3：<code>MachineMonitor</code> 与手动/自动状态监控的竞态条件</h3>
+    <p><span class="tag tag-high">可能性：中</span></p>
+    <p><code>MachineMonitor</code> 内部依次执行三段 <code>ProcessIO</code>（启动按钮、暂停按钮、手动/自动切换）。在同一轮询周期中：</p>
+    <pre><span class="cm">// MachineMonitor 同一轮询周期内的顺序：</span>
+1. 检查 StartButton IO → 调用 <span class="fn">CanAutoRun</span>()
+2. 检查 PauseButton IO
+3. 检查 ManualSwitchButton IO → 更新 isAutoMode</pre>
+    <p>如果在第 1 步执行 <code>CanAutoRun</code> 时，<code>ManualSwitchButton</code> 的 IO 信号恰好处在切换瞬间的过渡态（或之前轮询周期中残留的高电平），则检查通过。而第 3 步才真正更新状态变量。</p>
+</div>
+
+<!-- 原因 4 -->
+<div class="card" style="border-left: 3px solid var(--accent);">
+    <h3 style="margin-top:0;">原因 4：IO 读取缓存 / 通信延迟</h3>
+    <p><span class="tag tag-medium">可能性：中低</span></p>
+    <p><code>GetDigitalIn()</code> 依赖底层设备通信（如 Modbus、EtherCAT 等）。可能存在：</p>
+    <ul>
+        <li>IO 驱动层缓存了上一次读取结果，未及时刷新</li>
+        <li>通信延迟导致读到的状态与实际不一致</li>
+        <li>多线程并发读取时，状态更新和读取之间存在竞争</li>
+    </ul>
+</div>
+
+<!-- 原因 5 -->
+<div class="card" style="border-left: 3px solid var(--accent);">
+    <h3 style="margin-top:0;">原因 5：<code>MachineStartEvent</code> 事件路径缺少独立的手动状态检查</h3>
+    <p><span class="tag tag-medium">可能性：中低</span></p>
+    <p>IO 路径触发 <code>MachineStartEvent</code> 后，<code>MController_MachineStartEvent</code>（ToolBarContentVM.cs:370）直接调用 <code>tryStart()</code>，虽然 <code>tryStart → Start()</code> 内部有 <code>CanAutoRun</code> 检查（第826行），但 <code>tryStart</code> 本身未做检查。如果 <code>Start()</code> 内的检查也存在上述问题，则形成双重缺陷。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>6. 时间线还原推测</h2>
+
+<table>
+    <tr><th>时间</th><th>事件</th><th>说明</th></tr>
+    <tr>
+        <td style="white-space:nowrap;">16:14:40.619</td>
+        <td>界面按钮 Start → <code style="color:var(--red)">被拦截</code></td>
+        <td><code>CanAutoRun</code> 回调执行，读到手动状态，正确阻止</td>
+    </tr>
+    <tr>
+        <td>16:14:40 ~ 16:14:44</td>
+        <td>切换按钮操作 / IO 信号变化</td>
+        <td>操作人员可能操作了切换按钮，或信号抖动</td>
+    </tr>
+    <tr>
+        <td>16:14:44.395</td>
+        <td>界面按钮 Start → <code style="color:var(--green)">启动成功</code></td>
+        <td><code>CanAutoRun</code> 通过，进入 <code>tryStart → Start()</code></td>
+    </tr>
+</table>
+
+<p style="color:var(--text-dim); font-size:.85rem; margin-top:.5rem;">
+    注：日志中第二次显示"软件点击动作:Start"，说明是通过界面按钮而非硬件IO触发的第二次启动。如果是硬件IO触发，日志中应出现"IO信号:xxx触发启动"。
+</p>
+
+<!-- ============================================================ -->
+<h2>7. 所有启动入口安全检查汇总</h2>
+
+<table>
+    <tr>
+        <th>调用位置</th>
+        <th>文件</th>
+        <th>CanAutoRun 检查</th>
+        <th>状态</th>
+    </tr>
+    <tr>
+        <td><code>OperateCommand</code></td>
+        <td>ToolBarContentVM.cs:1209</td>
+        <td>有（调用前检查）</td>
+        <td><span class="tag tag-high">依赖 CanAutoRun 正确性</span></td>
+    </tr>
+    <tr>
+        <td><code>MachineMonitor</code> IO触发</td>
+        <td>MotionController.cs:1701</td>
+        <td>有（触发事件前检查）</td>
+        <td><span class="tag tag-high">依赖 CanAutoRun 正确性</span></td>
+    </tr>
+    <tr>
+        <td><code>MachineStartEvent</code> → <code>tryStart</code></td>
+        <td>ToolBarContentVM.cs:384</td>
+        <td>无独立检查</td>
+        <td><span class="tag tag-critical">缺失独立检查</span></td>
+    </tr>
+    <tr>
+        <td><code>Start()</code> 方法入口</td>
+        <td>MotionController.cs:826</td>
+        <td>有</td>
+        <td><span class="tag tag-high">依赖 CanAutoRun 正确性</span></td>
+    </tr>
+    <tr>
+        <td><code>HiveStartDialog2VM</code></td>
+        <td>HiveStartDialog2VM.cs:256</td>
+        <td>有</td>
+        <td><span class="tag tag-medium">正常</span></td>
+    </tr>
+    <tr>
+        <td><code>HiveOperationDialogVM</code></td>
+        <td>HiveOperationDialogVM.cs:463</td>
+        <td>有</td>
+        <td><span class="tag tag-medium">正常</span></td>
+    </tr>
+    <tr>
+        <td><code>HiveAlarmDialogVM</code></td>
+        <td>HiveAlarmDialogVM.cs:484</td>
+        <td>有</td>
+        <td><span class="tag tag-medium">正常</span></td>
+    </tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>8. 核心缺陷总结</h2>
+
+<div class="verdict">
+    <p><strong>根因：<code>CanAutoRun</code> 方法中 <code>isAuto</code> 默认值为 <code>true</code></strong></p>
+    <p style="margin-top:.5rem;">当 <code>ProcessIO</code> 回调因任何原因未执行时（配置缺失、IO设备未连接、初始化时序问题），安全检查被静默绕过，返回"允许自动运行"。</p>
+    <p style="margin-top:.5rem;">这违反了 <strong>安全优先（Fail-Safe）</strong> 原则：安全检查的默认值应当是"禁止"，而非"允许"。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>9. 建议修复方案</h2>
+
+<h3>方案 A：修复 CanAutoRun 默认值（推荐）</h3>
+<pre><span class="kw">public bool</span> <span class="fn">CanAutoRun</span>(<span class="kw">out string</span> mesage)
+{
+    <span class="kw">bool</span> isAuto = <span class="em">false</span>;           <span class="cm">// ← 安全默认值：禁止</span>
+    <span class="kw">bool</span> ioChecked = <span class="kw">false</span>;       <span class="cm">// ← 追踪回调是否执行</span>
+    <span class="kw">string</span> error = <span class="str">""</span>;
+    mesage = <span class="str">""</span>;
+
+    <span class="fn">ProcessIO</span>(SysConfig.ManualSwitchButton, (r) =>
+    {
+        ioChecked = <span class="kw">true</span>;
+        isAuto = r.<span class="fn">GetDigitalIn</span>();
+        <span class="kw">if</span> (!isAuto)
+            error = <span class="str">"机台处于手动状态,不允许自动运行!"</span>;
+    });
+
+    <span class="cm">// 未配置手动/自动按钮时，默认允许（兼容无机台型）</span>
+    <span class="kw">if</span> (!ioChecked)
+        isAuto = <span class="kw">true</span>;
+
+    mesage = error;
+    <span class="kw">return</span> isAuto;
+}</pre>
+
+<h3>方案 B：增加 IO 信号防抖</h3>
+<p>在 <code>MachineMonitor</code> 中对手动/自动切换信号增加消抖逻辑，要求连续 N 次读取一致才认为状态变更有效：</p>
+<pre><span class="cm">// 连续3次读到同一状态才确认切换</span>
+<span class="kw">private int</span> _autoModeDebounce = 0;
+<span class="kw">private const int</span> DebounceThreshold = 3;</pre>
+
+<h3>方案 C：MController_MachineStartEvent 增加独立检查</h3>
+<pre><span class="kw">private void</span> <span class="fn">MController_MachineStartEvent</span>(<span class="kw">string</span> obj)
+{
+    <span class="cm">// 独立安全检查（不依赖 MachineMonitor 中的检查）</span>
+    <span class="kw">if</span> (!mController.<span class="fn">CanAutoRun</span>(<span class="kw">out var</span> err))
+    {
+        commonBus.<span class="fn">OnLog</span>(LogType.Warning, $<span class="str">"IO触发启动被拦截: {err}"</span>);
+        <span class="kw">return</span>;
+    }
+    <span class="cm">// ... 原有逻辑</span>
+}</pre>
+
+<p><strong>建议同时实施方案 A + C，并视硬件情况考虑方案 B。</strong></p>
+
+<!-- ============================================================ -->
+<h2>10. 排查建议</h2>
+
+<div class="card">
+    <p><strong>立即行动：</strong></p>
+    <ol>
+        <li>在 <code>CanAutoRun</code> 中增加详细日志，记录每次调用时 <code>ProcessIO</code> 回调是否执行、<code>GetDigitalIn()</code> 返回值</li>
+        <li>确认 <code>SysConfig.ManualSwitchButton</code> 配置是否正确加载（是否为 null）</li>
+        <li>用示波器或 IO 监控工具观察切换按钮在操作瞬间的信号波形</li>
+    </ol>
+    <p style="margin-top:.8rem;"><strong>验证步骤：</strong></p>
+    <ol>
+        <li>复现场景：切换到手动 → 按启动 IO → 检查是否仍能启动</li>
+        <li>添加日志后重复操作，确认 <code>CanAutoRun</code> 每次调用的实际返回值和回调执行情况</li>
+        <li>检查 <code>MachineMonitor</code> 轮询周期与 IO 信号刷新频率是否匹配</li>
+    </ol>
+</div>
+
+</div>
+</body>
+</html>

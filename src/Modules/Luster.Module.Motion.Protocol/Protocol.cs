@@ -33,6 +33,8 @@ namespace Luster.Module.Motion.IO
             AddFunction<WaitFins>();
 
             AddFunction<SFTPUpload>();
+            AddFunction<SetModbusEx>();
+            AddFunction<ReadModbus>();
 
         }
     }

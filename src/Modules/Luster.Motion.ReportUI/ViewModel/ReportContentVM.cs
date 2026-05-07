@@ -49,7 +49,7 @@ namespace Luster.Control.Wpf.Motion
             SelectedCommand = new DelegateCommand<ReportPageModel>(Selected);
             Pages = new ObservableCollection<ReportPageModel>();
             Pages.Add(new ReportPageModel() { Name = "ProductStatistics", IsSelected = true, Region = "ProductReportContent" });
-            //Pages.Add(new ReportPageModel() { Name = "CTStatistics", IsSelected = false, Region = "CTReportContent" });
+            Pages.Add(new ReportPageModel() { Name = "CTStatistics", IsSelected = false, Region = "CTLogStatRTContent" });
             Pages.Add(new ReportPageModel() { Name = "FlingMaterialStatistics", IsSelected = false, Region = "FlingMaterialContent" });
             Pages.Add(new ReportPageModel() { Name = "ChangeRecord", IsSelected = false, Region = "ChangeContent" });
             Pages.Add(new ReportPageModel() { Name = "TaikeCurve", IsSelected = false, Region = "TaikeContent" });

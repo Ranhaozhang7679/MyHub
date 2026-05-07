@@ -651,7 +651,7 @@ namespace Luster.Motion.DataStruct.Virtual
         /// </summary>
         /// <param name="action"></param>
         /// <param name="timeout">等待事件</param>
-        protected void CalcTime(Func<bool> action, int timeout = -1, int sleep = 5, Action timeoutAction = null)
+        protected bool CalcTime(Func<bool> action, int timeout = -1, int sleep = 5, Action timeoutAction = null)
         {
             double time = 0;
 
@@ -664,10 +664,10 @@ namespace Luster.Motion.DataStruct.Virtual
             {
                 WaitRecovery();
 
-                //// 主动中断循环
+                // 主动中断循环（Stop 触发）
                 if (IsBreak)
                 {
-                    break;
+                    return false;
                 }
 
                 // 超时检查
@@ -678,19 +678,19 @@ namespace Luster.Motion.DataStruct.Virtual
                         if (timeoutAction != null)
                         {
                             timeoutAction?.Invoke();
-                            break;
+                            return false;
                         }
                         else
                         {
-                            throw new DeviceTimeoutException("F98OOOO-08", $"CalcTime超时");
+                            throw new DeviceTimeoutException("N03OOOO-01", $"CalcTime超时");
                         }
                     }
                 }
 
-                // 判断
+                // 条件满足，正常退出
                 if (action.Invoke())
                 {
-                    break;
+                    return true;
                 }
 
                 // 防止刷新太快IO检查错误

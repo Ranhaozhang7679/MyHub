@@ -3198,4 +3198,10 @@
   <data name="TaikeAnnotatedCurve" xml:space="preserve">
     <value>压力曲线堆叠图</value>
   </data>
+  <data name="ReadModbus" xml:space="preserve">
+    <value>读取Modbus</value>
+  </data>
+  <data name="SetModbusEx" xml:space="preserve">
+    <value>设置Modbus</value>
+  </data>
 </root>

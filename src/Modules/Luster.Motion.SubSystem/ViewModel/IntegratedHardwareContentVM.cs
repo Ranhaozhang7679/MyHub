@@ -26,6 +26,9 @@ namespace Luster.Motion.SubSystem.ViewModel
         private string _currentConfigRegion = "";
         private string _currentDebugRegion = "";
 
+        // 跨实例持久化标签页状态
+        private static int _lastSelectedTabIndex = 0;
+
         /// <summary>
         /// 配置导航命令
         /// </summary>
@@ -124,6 +127,22 @@ namespace Luster.Motion.SubSystem.ViewModel
             SelectTab(0);
         }
 
+        public override void OnNavigatedFrom(NavigationContext navigationContext)
+        {
+            base.OnNavigatedFrom(navigationContext);
+            _lastSelectedTabIndex = SelectedTabIndex;
+        }
+
+        public override void OnNavigatedTo(NavigationContext navigationContext)
+        {
+            base.OnNavigatedTo(navigationContext);
+            _currentConfigRegion = "";
+            _currentDebugRegion = "";
+
+            // 恢复上次离开时的标签页
+            SelectTab(_lastSelectedTabIndex);
+        }
+
         /// <summary>
         /// 构建配置导航页面列表
         /// </summary>
@@ -149,7 +168,7 @@ namespace Luster.Motion.SubSystem.ViewModel
                 new NavigationItemModel { Index = 2, Name = "VCylinder", Region = "VCylinderContent", IsSelected = false },
                 new NavigationItemModel { Index = 3, Name = "VVacuum", Region = "VVacuumContent", IsSelected = false },
                 new NavigationItemModel { Index = 4, Name = "VIO", Region = "VIOContent", IsSelected = false },
-                new NavigationItemModel { Index = 5, Name = "VAxisM", Region = "VAxisMContent", IsSelected = false },
+                new NavigationItemModel { Index = 5, Name = "VAxisM", Region = "AxisIODebugContent", IsSelected = false },
                 new NavigationItemModel { Index = 6, Name = "VCommuncation", Region = "VCommuncationContent", IsSelected = false },
                 new NavigationItemModel { Index = 7, Name = "VAxis", Region = "VAxisContent", IsSelected = false }
             };

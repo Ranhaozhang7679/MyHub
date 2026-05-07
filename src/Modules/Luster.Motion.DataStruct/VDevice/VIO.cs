@@ -305,15 +305,16 @@ DeviceError.SensorFail
         /// <param name="isOn"></param>
         /// <param name="timeout">如果值为-1，代表持续的等待信号</param>
         /// <returns></returns>
-        public void WaitIO<T>(T val, int timeout, Action timeAction = null)
+        public bool WaitIO<T>(T val, int timeout, Action timeAction = null)
         {
+            bool completed = false;
             ProcessAction(() =>
             {
                 Type type = typeof(T);
 
                 if (type == typeof(bool))
                 {
-                    CalcTime(() =>
+                    completed = CalcTime(() =>
                      {
                          bool getVal = false;
                          if (Behavior == IOBehavior.Input)
@@ -331,7 +332,7 @@ DeviceError.SensorFail
                 }
                 else
                 {
-                    CalcTime(() =>
+                    completed = CalcTime(() =>
                     {
                         double getVal = 0;
                         if (Behavior == IOBehavior.Input)
@@ -353,7 +354,7 @@ DeviceError.SensorFail
                 Type type = typeof(T);
                 if (type == typeof(bool))
                 {
-                    CalcTime(() =>
+                    completed = CalcTime(() =>
                     {
                         bool getVal = Value >= 1;
                         // 如果值返回和判断值相同,那么就中断
@@ -362,7 +363,7 @@ DeviceError.SensorFail
                 }
                 else
                 {
-                    CalcTime(() =>
+                    completed = CalcTime(() =>
                     {
                         double getVal = Value;
                         // 如果值返回和判断值相同,那么就中断
@@ -370,6 +371,7 @@ DeviceError.SensorFail
                     }, timeout, 5, timeAction);
                 }
             });
+            return completed;
         }
 
         public override XElement ExportXml()

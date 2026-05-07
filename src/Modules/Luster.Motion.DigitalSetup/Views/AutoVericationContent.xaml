@@ -83,6 +83,9 @@
                         <Setter Property="Background" Value="#DEE0E7" />
                         <Setter Property="hc:BorderElement.CornerRadius" Value="0,5,5,0" />
                         <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsEnabled}" Value="False">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
                             <Trigger Property="IsMouseOver" Value="true">
                                 <Setter Property="Background" Value="{DynamicResource SecondaryRegionBrush}" />
                             </Trigger>
@@ -146,7 +149,7 @@
                     Margin="5" 
                     Grid.Row="0" 
                     HorizontalAlignment="Left" />
-                <!-- <local:CommonButton /> -->
+                 <local:CommonButton /> 
             </DockPanel>
 
             <!-- 分页控件区域 -->

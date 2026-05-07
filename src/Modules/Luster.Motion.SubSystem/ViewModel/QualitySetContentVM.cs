@@ -42,6 +42,8 @@ using Luster.Common.Assets;
 using Luster.Common.DataAccess.Tables;
 using Luster.Motion.CommonUI.Models;
 using Luster.SimDevice.SubSystem.Events;
+using System.ComponentModel;
+using System.Windows.Data;
 
 namespace Luster.Motion.SubSystem.ViewModel
 {
@@ -51,10 +53,34 @@ namespace Luster.Motion.SubSystem.ViewModel
         private bool _itemChanged = false;
         private ICommonBus _commonBus;
         private IDbManager _dbManager;
+
+        private string _searchText;
+        private List<LNode> _originalSourceNodes;
+
+        /// <summary>
+        /// 搜索文本
+        /// </summary>
+        public string SearchText
+        {
+            get => _searchText;
+            set
+            {
+                if (SetProperty(ref _searchText, value))
+                {
+                    FilterTree();
+                }
+            }
+        }
+
         /// <summary>
         /// 输出来源
         /// </summary>
-        public List<LNode> SourceNodes { get; set; }
+        private List<LNode> _sourceNodes;
+        public List<LNode> SourceNodes
+        {
+            get => _sourceNodes;
+            set => SetProperty(ref _sourceNodes, value);
+        }
 
         // 输出项列表
         private List<MapData> _mapDatas;
@@ -95,7 +121,7 @@ namespace Luster.Motion.SubSystem.ViewModel
         /// <summary>
         /// 接收鼠标拖拽
         /// </summary>
-        public DelegateCommand<object> RecieveDrogCommand { get; set; }     
+        public DelegateCommand<object> RecieveDrogCommand { get; set; }
 
         public DelegateCommand CancelQualitySetCommand { get; set; }
 
@@ -111,7 +137,8 @@ namespace Luster.Motion.SubSystem.ViewModel
         {
             _commonBus = commonBus;
             _dbManager = dbManager;
-            SourceNodes = _commonBus.GetOutDataTree();
+            _originalSourceNodes = _commonBus.GetOutDataTree();
+            SourceNodes = _originalSourceNodes;
             _mapDatas = new List<MapData>(_commonBus.GetMapDatas());
             _newMapDatas = new List<MapData>();
             _removeDatas = new List<MapData>();
@@ -120,8 +147,65 @@ namespace Luster.Motion.SubSystem.ViewModel
             MatchQuality();
             DeleteCommand = new DelegateCommand<OutputItemModel>(Delete);
             RecieveDrogCommand = new DelegateCommand<object>(RecieveDrog);
-            SaveQualitySetCommand = new DelegateCommand<object>(SaveQualitySet);       
+            SaveQualitySetCommand = new DelegateCommand<object>(SaveQualitySet);
             CancelQualitySetCommand = new DelegateCommand(CancelQualitySet);
+        }
+
+        /// <summary>
+        /// 过滤树节点
+        /// </summary>
+        private void FilterTree()
+        {
+            if (string.IsNullOrWhiteSpace(_searchText))
+            {
+                SourceNodes = _originalSourceNodes;
+                return;
+            }
+
+            var filteredNodes = new List<LNode>();
+            foreach (var node in _originalSourceNodes)
+            {
+                var filteredNode = FilterNode(node, _searchText);
+                if (filteredNode != null)
+                {
+                    filteredNodes.Add(filteredNode);
+                }
+            }
+            SourceNodes = filteredNodes;
+        }
+
+        /// <summary>
+        /// 递归过滤节点
+        /// </summary>
+        private LNode FilterNode(LNode node, string searchText)
+        {
+            // 检查当前节点是否匹配
+            bool isMatch = node.Text?.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0;
+
+            // 过滤子节点
+            var filteredChildren = new List<LNode>();
+            foreach (var child in node.Children)
+            {
+                var filteredChild = FilterNode(child, searchText);
+                if (filteredChild != null)
+                {
+                    filteredChildren.Add(filteredChild);
+                }
+            }
+
+            // 如果当前节点匹配或者有匹配的子节点，则保留该节点
+            if (isMatch || filteredChildren.Count > 0)
+            {
+                var newNode = new LNode
+                {
+                    Text = node.Text,
+                    Tag = node.Tag,
+                    Children = filteredChildren
+                };
+                return newNode;
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -193,10 +277,10 @@ namespace Luster.Motion.SubSystem.ViewModel
                 var mapdata = _mapDatas.FirstOrDefault(x => x.ID == model.Id && x.DataSource == model.Source);
                 if (mapdata != null)
                 {
-                    mapdata.StandardValue=model.StandardValue;
+                    mapdata.StandardValue = model.StandardValue;
                     mapdata.PositivestandardDeviation = model.PositiveStandardDeviation;
                     mapdata.NegativestandardDeviation = model.NegativeStandardDeviation;
-                    mapdata.CompensationValue=model.CompensationValue;
+                    mapdata.CompensationValue = model.CompensationValue;
                     mapdata.NgReason = model.NgReason;
                 }
             }
@@ -207,7 +291,7 @@ namespace Luster.Motion.SubSystem.ViewModel
             _commonBus.UpdayeMapDataSource(_mapDatas, _newMapDatas, _removeDatas);
             _commonBus.OnSaveRecipe();
             if (needNavigate.ToUpper() == "TRUE")
-                _commonBus.OnNavigate(PageModel.Pages.FirstOrDefault(x=>x.Name == "Home"));
+                _commonBus.OnNavigate(PageModel.Pages.FirstOrDefault(x => x.Name == "Home"));
         }
 
         /// <summary>
@@ -279,7 +363,7 @@ namespace Luster.Motion.SubSystem.ViewModel
                     _mapDatas.Add(mapData);
                     _newMapDatas.Add(mapData);
                     var outModel = new OutputItemModel(mapData);
-                    
+
                     outModel.CheckedChange += OutModel_CheckedChange;
 
                     OutputItemModels.Add(outModel);
@@ -345,7 +429,7 @@ namespace Luster.Motion.SubSystem.ViewModel
                     _mapDatas.Remove(map);
                     _removeDatas.Add(map);
                     _itemChanged = true;
-                }               
+                }
 
                 if (model.SourceType != (typeof(LTolerance))) return;
                 var qualityModel = QualityItemModels.FirstOrDefault(x => x.MapId == model.Id && x.AliasName == model.AliasName);
@@ -415,7 +499,7 @@ namespace Luster.Motion.SubSystem.ViewModel
                 foreach (var map in mapDatas)
                 {
                     var outModel = new OutputItemModel(map);
-                    
+
                     outModel.CheckedChange += OutModel_CheckedChange;
 
                     OutputItemModels.Add(outModel);

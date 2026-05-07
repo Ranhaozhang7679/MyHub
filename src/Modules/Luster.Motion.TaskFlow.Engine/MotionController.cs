@@ -61,6 +61,7 @@ using System.Security.Policy;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Threading;
 using System.Windows.Media.Media3D;
 using System.Xml.Linq;
 using static FreeSql.Internal.GlobalFilter;
@@ -366,6 +367,8 @@ namespace Luster.Motion.TaskFlow.Engine
 
             _deviceEngine.GetModuleListEvent -= DeviceEngine_GetModuleListEvent;
             _deviceEngine.GetModuleListEvent += DeviceEngine_GetModuleListEvent;
+            _deviceEngine.UpdateAlarmModuleParamsEvent -= DeviceEngine_UpdateAlarmModuleParamsEvent;
+            _deviceEngine.UpdateAlarmModuleParamsEvent += DeviceEngine_UpdateAlarmModuleParamsEvent;
             _deviceEngine.GetPDCAModulesEvent -= DeviceEngine_GetPDCAModulesEvent;
             _deviceEngine.GetPDCAModulesEvent += DeviceEngine_GetPDCAModulesEvent;
             _deviceEngine.GetSFCModulesEvent -= DeviceEngine_GetSFCModulesEvent;
@@ -526,7 +529,8 @@ namespace Luster.Motion.TaskFlow.Engine
             if (alarmInfo.AlarmType == AlarmType.WarningTip ||
                 alarmInfo.AlarmType == AlarmType.FailError ||
                 alarmInfo.AlarmType == AlarmType.Timeout ||
-                alarmInfo.AlarmType == AlarmType.PopInfoTip)
+                 alarmInfo.AlarmType == AlarmType.PopInfoTip ||
+                alarmInfo.AlarmType == AlarmType.DeviceError)
             {
                 // 流程暂停
                 Pause(true, () =>
@@ -548,6 +552,9 @@ namespace Luster.Motion.TaskFlow.Engine
             // PLC 报警，需要红灯亮，蜂鸣器响
             if (alarmInfo.AlarmType == AlarmType.PlcAlarm)
             {
+                // PlcAlarm不走Pause流程，但也需要标记待处理
+                if (lockCommand > 0)
+                    _pendingAlarm = true;
                 _lightManager.StopLight(true);
                 //_lightManager.SetBuzzer(true, 400, 400);
             }
@@ -829,8 +836,8 @@ namespace Luster.Motion.TaskFlow.Engine
             //service.Show("HiveStartDialog2", param, null);
 
             // 0 首先运行开始工站
-            _deviceEngine.OnLog(LogType.Info, "首先执行开始工站");
-            MotionEngine.RunStartStation();
+            //_deviceEngine.OnLog(LogType.Info, "首先执行开始工站");
+            //MotionEngine.RunStartStation();
 
             AlarmInfo = null;
             RecoveryIOSetInit();
@@ -843,6 +850,8 @@ namespace Luster.Motion.TaskFlow.Engine
                 if (lockCommand > 0) { _deviceEngine.OnLog(LogType.Info, $"暂停lockcommand次数>0,:{lockCommand}，直接退出!"); return false; }
                 Interlocked.Increment(ref lockCommand);
                 _deviceEngine.OnLog(LogType.Info, $"lockCommand为{lockCommand}");
+                //_deviceEngine.OnLog(LogType.Info, "首先执行开始工站");
+                //MotionEngine.RunStartStation();
 
                 // PLC 和监控要进行复位检查
                 if (_deviceEngine.Recovery())
@@ -865,8 +874,17 @@ namespace Luster.Motion.TaskFlow.Engine
                             Interlocked.Decrement(ref lockCommand);
                             _deviceEngine.OnLog(LogType.Info, $"暂停lockcommand复位：{lockCommand}!");
 
-                            // 2.启动灯
-                            _lightManager.RunningLight();
+                            // 如果Start()期间发生了报警，延迟执行Pause
+                            if (_pendingAlarm)
+                            {
+                                _pendingAlarm = false;
+                                Pause(true, () => { _lightManager.SetBuzzer(true); });
+                            }
+                            else
+                            {
+                                // 2.启动灯
+                                _lightManager.RunningLight();
+                            }
                         });
 
                         // 程序经过暂停->恢复，需要刷新稼动率
@@ -905,6 +923,7 @@ namespace Luster.Motion.TaskFlow.Engine
                 {
                     _deviceEngine.OnLog(LogType.Info, "MotionEngine.Recovery失败");
                     // 防止连续点击
+                    _pendingAlarm = false;
                     Interlocked.Decrement(ref lockCommand);
                     _deviceEngine.OnLog(LogType.Info, $"暂停lockcommand复位：{lockCommand}!");
                     return false;
@@ -924,61 +943,98 @@ namespace Luster.Motion.TaskFlow.Engine
                 if (lockCommand > 0) { _deviceEngine.OnLog(LogType.Info, $"lockcommand次数>0,:{lockCommand}，直接退出!"); return false; }
                 Interlocked.Increment(ref lockCommand);
                 _deviceEngine.OnLog(LogType.Info, $"监控lockcommand次数，当前为:{lockCommand}");
-                _deviceEngine.OnLog(LogType.Info, $"开始检查轴状态!");
-                // 1.Plc启动
-                // 设备回零检查
-                if (!_deviceEngine.IsHome(out var errMsg))
+                _deviceEngine.OnLog(LogType.Info, "首先执行开始工站");
+                // 记录执行前的报警数量
+                int alarmCountBefore = AlarmInfos.Count;
+                // 开始工站可能涉及通信等待，放到后台线程避免阻塞UI
+                bool startResult = false;
+                var frame = new DispatcherFrame();
+                Task.Run(() =>
                 {
-                    _deviceEngine.OnLog(LogType.Info, "存在轴未回零完成，不允许启动!");
-                    Interlocked.Decrement(ref lockCommand);
-                    _deviceEngine.OnLog(LogType.Info, $"readylockcommand复位1：{lockCommand}!");
-                    return false;
-                }
+                    try
+                    {
+                        MotionEngine.RunStartStation();
+                        // 开始工站执行后检查是否产生了新的报警（OnAlarm 中 AlarmInfo 赋值是同步的，不受 Ready 状态限制）
+                        if (AlarmInfos.Count > alarmCountBefore)
+                        {
+                            _deviceEngine.OnLog(LogType.Info, "开始工站执行后产生报警，不允许启动!");
+                            _pendingAlarm = false;
+                            Interlocked.Decrement(ref lockCommand);
+                            _deviceEngine.OnLog(LogType.Info, $"readylockcommand复位报警：{lockCommand}!");
+                            return;
+                        }
+                        _deviceEngine.OnLog(LogType.Info, $"开始检查轴状态!");
+                        // 1.Plc启动
+                        // 设备回零检查
+                        if (!_deviceEngine.IsHome(out var errMsg))
+                        {
+                            _deviceEngine.OnLog(LogType.Info, "存在轴未回零完成，不允许启动!");
+                            _pendingAlarm = false;
+                            Interlocked.Decrement(ref lockCommand);
+                            _deviceEngine.OnLog(LogType.Info, $"readylockcommand复位1：{lockCommand}!");
+                            return;
+                        }
 
-                _deviceEngine.OnLog(LogType.Info, $"记录班别!");
-                // 记录当前班别信息
-                currentClass = SysConfig.GetCurrentClass(DateTime.Now);
+                        _deviceEngine.OnLog(LogType.Info, $"记录班别!");
+                        // 记录当前班别信息
+                        currentClass = SysConfig.GetCurrentClass(DateTime.Now);
 
-                _deviceEngine.OnLog(LogType.Info, $"稼动率刷新!");
+                        _deviceEngine.OnLog(LogType.Info, $"稼动率刷新!");
 
-                // 2.稼动率刷新
-                if (_firstStartFlag)
-                {
-                    _firstStartFlag = false;
+                        // 2.稼动率刷新
+                        if (_firstStartFlag)
+                        {
+                            _firstStartFlag = false;
 
-                    //ClearProductInfo();//53AE要求只能手动清零
-                    // 稼动率重新计算
-                    _impactData = new ImpactData(DateTime.Now);
+                            //ClearProductInfo();//53AE要求只能手动清零
+                            // 稼动率重新计算
+                            _impactData = new ImpactData(DateTime.Now);
 
-                }
-                else
-                {
-                    // 程序经过停止->回零->启动，需要刷新稼动率
-                    _impactData.UpdateRecoveryTime();
-                }
-                // 3.流程启动
-                _deviceEngine.OnLog(LogType.Info, $"运行工站!");
-                MotionEngine.RunStations();
+                        }
+                        else
+                        {
+                            // 程序经过停止->回零->启动，需要刷新稼动率
+                            _impactData.UpdateRecoveryTime();
+                        }
+                        // 3.流程启动
+                        _deviceEngine.OnLog(LogType.Info, $"运行工站!");
+                        MotionEngine.RunStations();
 
-                _deviceEngine.OnLog(LogType.Info, $"运行三色灯!");
-                // 4.启动灯
-                _lightManager.RunningLight();
+                        _deviceEngine.OnLog(LogType.Info, $"运行三色灯!");
+                        // 4.启动灯
+                        _lightManager.RunningLight();
 
-                _deviceEngine.OnLog(LogType.Info, $"关闭机器人信号!");
-                // 5.机器人所有信号关闭
-                SetRobotDO(false);
+                        _deviceEngine.OnLog(LogType.Info, $"关闭机器人信号!");
+                        // 5.机器人所有信号关闭
+                        SetRobotDO(false);
 
-                _deviceEngine.OnLog(LogType.Info, $"启动机器人!");
-                // 6.机器人启动
-                ProcessIO(SysConfig.RobotStart, io => io.SetDigital(true));
-                ProcessIO(SysConfig.RobotStart2, io => io.SetDigital(true));
+                        _deviceEngine.OnLog(LogType.Info, $"启动机器人!");
+                        // 6.机器人启动
+                        ProcessIO(SysConfig.RobotStart, io => io.SetDigital(true));
+                        ProcessIO(SysConfig.RobotStart2, io => io.SetDigital(true));
 
-                // 7.防止连续点击
-                Interlocked.Decrement(ref lockCommand);
-                _deviceEngine.OnLog(LogType.Info, $"readylockcommand复位2：{lockCommand}!");
-                _deviceEngine.OnLog(LogType.Info, $"关闭门锁!");
-                LockDoor(true);
-                return true;
+                        // 7.防止连续点击
+                        Interlocked.Decrement(ref lockCommand);
+                        _deviceEngine.OnLog(LogType.Info, $"readylockcommand复位2：{lockCommand}!");
+
+                        // 如果Start()期间发生了报警，延迟执行Pause
+                        if (_pendingAlarm)
+                        {
+                            _pendingAlarm = false;
+                            Pause(true, () => { _lightManager.SetBuzzer(true); });
+                        }
+
+                        _deviceEngine.OnLog(LogType.Info, $"关闭门锁!");
+                        LockDoor(true);
+                        startResult = true;
+                    }
+                    finally
+                    {
+                        frame.Continue = false;
+                    }
+                });
+                Dispatcher.PushFrame(frame);
+                return startResult;
             }
             else
             {
@@ -1022,12 +1078,14 @@ namespace Luster.Motion.TaskFlow.Engine
         /// <returns></returns>
         public bool CanAutoRun(out string mesage)
         {
-            bool isAuto = true;
+            bool isAuto = false;
+            bool ioChecked = false;
             string error = "";
             mesage = "";
             // 如果有配置自动/手动,检查按钮
             ProcessIO(SysConfig.ManualSwitchButton, (r) =>
             {
+                ioChecked = true;
                 isAuto = r.GetDigitalIn();
 
                 if (!isAuto)
@@ -1035,6 +1093,12 @@ namespace Luster.Motion.TaskFlow.Engine
                     error = "机台处于手动状态,不允许自动运行!";
                 }
             });
+
+            // 未配置手动/自动切换按钮时，默认允许自动运行
+            if (!ioChecked)
+            {
+                isAuto = true;
+            }
 
             mesage = error;
             return isAuto;
@@ -1144,6 +1208,9 @@ namespace Luster.Motion.TaskFlow.Engine
 
                 action?.Invoke();
 
+                // 停止时清理活跃报警，写入EndTime
+                clearAlarm();
+
                 // 防止连续点击
                 Lock(false);
 
@@ -1235,6 +1302,7 @@ namespace Luster.Motion.TaskFlow.Engine
                     pauseReset1?.Set();
                     if (!isResult)
                     {
+                        closeOtherAlarms();
                         AlarmProcEvent?.Invoke(AlarmInfo, false);
                         OnAlarm(AlarmInfo);
                     }
@@ -1276,10 +1344,33 @@ namespace Luster.Motion.TaskFlow.Engine
             AlarmInfos?.Clear();
             AlarmInfosUpEvent?.Invoke(AlarmInfos, true);
         }
+
         /// <summary>
-        /// 用于防止检查IO时同时触发多次命令 
+        /// 关闭除当前报警外的其他历史报警（用于复位失败场景）
+        /// </summary>
+        private void closeOtherAlarms()
+        {
+            if (AlarmInfos != null && AlarmInfos.Count > 0)
+            {
+                foreach (var item in AlarmInfos)
+                {
+                    if (item != AlarmInfo
+                        && (item.EndTime == null || item.EndTime == default(DateTime)))
+                    {
+                        AlarmProcEvent?.Invoke(item, false);
+                    }
+                }
+            }
+        }
+        /// <summary>
+        /// 用于防止检查IO时同时触发多次命令
         /// </summary>
         private int lockCommand = 0;
+
+        /// <summary>
+        /// 标记在Start()过程中是否发生了报警，用于延迟处理
+        /// </summary>
+        private volatile bool _pendingAlarm = false;
 
         /// <summary>
         /// 暂停
@@ -1303,7 +1394,12 @@ namespace Luster.Motion.TaskFlow.Engine
 
             // 防止连续点击
             if (lockCommand > 0)
+            {
+                // 报警暂停被Start()阻塞时，标记待处理，等Start()完成后执行
+                if (isAlarm)
+                    _pendingAlarm = true;
                 return;
+            }
             Interlocked.Increment(ref lockCommand);
             _deviceEngine.OnLog(LogType.Info, $"Pauselockcommand置位：{lockCommand}!");
             // 记录停止时间
@@ -1640,14 +1736,13 @@ namespace Luster.Motion.TaskFlow.Engine
                         if (!DoorIsClosed(out var errMsg))
                         {
                             MotionEngine.OnAlarm(new AlarmInfo(this, AlarmType.WarningTip, "安全门被打开", "F02SCOO-01@The security door was opened"));
-                            //MotionEngine.OnAlarm(new AlarmInfo(this, AlarmType.WarningTip, "安全门被打开", "F98OOOO-12@The security door was opened"));
                             return;
                         }
 
                         // 自动打开
                         if (!CanAutoRun(out errMsg))
                         {
-                            //MotionEngine.OnAlarm(new AlarmInfo(this, AlarmType.InfoTip, "安全门被打开", "F98OOOO-12"));
+                            //MotionEngine.OnAlarm(new AlarmInfo(this, AlarmType.InfoTip, "安全门被打开", "N03OOOO-01"));
                             return;
                         }
 
@@ -1667,7 +1762,6 @@ namespace Luster.Motion.TaskFlow.Engine
                 if (!DoorIsClosed(out var errMsg))
                 {
                     MotionEngine.OnAlarm(new AlarmInfo(this, AlarmType.WarningTip, "安全门被打开", "F02SCOO-01@The security door was opened"));
-                    //MotionEngine.OnAlarm(new AlarmInfo(this, AlarmType.WarningTip, "安全门被打开", "F98OOOO-12@The security door was opened"));
                     return;
                 }
 
@@ -1740,7 +1834,7 @@ namespace Luster.Motion.TaskFlow.Engine
                         if (SmokeAlarmNum == 3)
                         {
                             IsSmokeAlarm = true;
-                            MotionEngine.OnAlarm(new AlarmInfo(this, AlarmType.DeviceError, "烟雾报警器触发停止&Smoke alarm triggers stop", "F98OOOO-09"));
+                            MotionEngine.OnAlarm(new AlarmInfo(this, AlarmType.DeviceError, "烟雾报警器触发停止&Smoke alarm triggers stop", "N03OOOO-01"));
                         }
                     }
                     else
@@ -1785,7 +1879,6 @@ namespace Luster.Motion.TaskFlow.Engine
                         {
                             IsEmg = true;
                             MotionEngine.OnAlarm(new AlarmInfo(this, AlarmType.DeviceError, "Emergency stop error", "F01ESOO-01@Emergency stop error"));
-                            //MotionEngine.OnAlarm(new AlarmInfo(this, AlarmType.DeviceError, "急停按钮被暂停!&The emergency stop button is suspended", "F98OOOO-11"));
                         }
 
                         Thread.Sleep(10);
@@ -1863,7 +1956,7 @@ namespace Luster.Motion.TaskFlow.Engine
             // 光幕检查
             if (!CheckLightCurtain())
             {
-                var lightAlarm = new AlarmInfo(this, AlarmType.WarningTip, "光幕被遮挡&The light curtain is blocked", "F98OOOO-10");
+                var lightAlarm = new AlarmInfo(this, AlarmType.WarningTip, "光幕被遮挡&The light curtain is blocked", "N03OOOO-01");
                 MotionEngine.OnAlarm(lightAlarm);
             }
         }
@@ -1902,10 +1995,10 @@ namespace Luster.Motion.TaskFlow.Engine
                 if (status == PlcStatus.Alarm && isPlcChanged)
                 {
                     // 先设置报警状态，防止定时器重入导致重复报警
-                    MotionEngine.EngineStatus = EngineStatus.Alarm;
+                    //MotionEngine.EngineStatus = EngineStatus.Alarm;
 
                     //如果当前在报警中，则退出
-                    Thread.Sleep(100);
+                    //Thread.Sleep(100);
                     if (vPlc == null)
                     {
                         vPlc = _deviceEngine.GetVDevices<VPlc>().FirstOrDefault();
@@ -1918,10 +2011,11 @@ namespace Luster.Motion.TaskFlow.Engine
                     {
                         string alarmMsg = $"PLC:{string.Join(",", alarms.Select(u => u.Desc))}";
 
-                        var plcAlarm = new AlarmInfo(this, AlarmType.PlcAlarm, "PLC报警&PLC Alarm", "F98OOOO-13", "System", "PLC");
+                        var plcAlarm = new AlarmInfo(this, AlarmType.PlcAlarm, "PLC报警&PLC Alarm", "N03PLOO-01@PLC Alarm", "System", "PLC");
 
                         //WritePlcValueInt(SysConfig.TricolorStatusAddr, 5);
                         MotionEngine.OnAlarm(plcAlarm);
+                        MotionEngine.EngineStatus = EngineStatus.Alarm;
                     });
                 }
             });
@@ -2678,6 +2772,63 @@ namespace Luster.Motion.TaskFlow.Engine
             }
 
             return stations;
+        }
+
+        /// <summary>
+        /// 更新运行时报警模块参数：通过 MotionEngine.Get(id) 直接定位模块并更新 AlarmCode/Message/Detail
+        /// </summary>
+        private bool DeviceEngine_UpdateAlarmModuleParamsEvent(string moduleId, string code, string message, string detail)
+        {
+            try
+            {
+                if (!Guid.TryParse(moduleId, out var guid) || guid == Guid.Empty)
+                    return false;
+
+                var module = MotionEngine.Get(guid);
+                if (module == null) return false;
+
+                // 更新 Parameters 字典
+                if (module.Parameters.ContainsKey("AlarmCode"))
+                {
+                    var p = module.Parameters["AlarmCode"];
+                    if (p.Value?.ToString() != code) p.Value = code;
+                }
+                if (module.Parameters.ContainsKey("Message"))
+                {
+                    var p = module.Parameters["Message"];
+                    if (p.Value?.ToString() != message) p.Value = message;
+                }
+                if (module.Parameters.ContainsKey("Detail"))
+                {
+                    var p = module.Parameters["Detail"];
+                    if (p.Value?.ToString() != detail) p.Value = detail;
+                }
+
+                // 更新 TaskFunction 属性（通过反射，避免直接引用 Luster.Module.Motion.Logic）
+                var func = module.TaskFunction;
+                if (func != null)
+                {
+                    var funcType = func.GetType();
+                    if (funcType.Name == "Alarm")
+                    {
+                        var pAlarmCode = funcType.GetProperty("AlarmCode");
+                        var pMessage = funcType.GetProperty("Message");
+                        var pDetail = funcType.GetProperty("Detail");
+                        if (pAlarmCode != null && pAlarmCode.GetValue(func)?.ToString() != code)
+                            pAlarmCode.SetValue(func, code);
+                        if (pMessage != null && pMessage.GetValue(func)?.ToString() != message)
+                            pMessage.SetValue(func, message);
+                        if (pDetail != null && pDetail.GetValue(func)?.ToString() != detail)
+                            pDetail.SetValue(func, detail);
+                    }
+                }
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         /// <summary>

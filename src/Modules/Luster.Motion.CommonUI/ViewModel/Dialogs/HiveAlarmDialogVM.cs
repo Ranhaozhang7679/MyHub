@@ -98,6 +98,15 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
 
 
         /// <summary>
+        /// 剩余点击次数
+        /// </summary>
+        public int RemainingCount
+        {
+            get => _remainingClickCount;
+            set => SetProperty(ref _remainingClickCount, value);
+        }
+
+        /// <summary>
         /// 刷卡背景色        /// </summary>
         private Brush _cardBkColor;
         public Brush CardBkColor
@@ -143,6 +152,11 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
         // Help Request是否已发送
         private bool _helpRequested = false;
 
+        // 剩余点击次数（跨对话框实例共享）
+        private static int _remainingClickCount = 3;
+        private static string _trackedErrorCode = "";
+        private static DateTime _lastResetTime = DateTime.MinValue;
+
         private SubscriptionToken _alarmClosedToken;
 
         public HiveAlarmDialogVM(IMotionController motionController, IDeviceEngine deviceEngine, HiveAPI _hiveApi, IDialogService dialogService, VisionAPI _visionAPI, ICommonBus commonBus, SFCHelper sFCHelper)
@@ -165,10 +179,10 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                 //    //补发Help Request
                 //    hiveAPI.HelpRequest(ErrorMessage, ErrorCode);
                 //}
-                
+
                 if (!isOpen)   // ReportEnd窗口关闭，按钮恢复可点击状态（如果时间未到）
                 {
-                    IsButtonEnable = !_greenIsOpen && (beginTime - DateTime.Now).TotalSeconds > 0;
+                    IsButtonEnable = !_greenIsOpen && (beginTime - DateTime.Now).TotalSeconds > 0 && RemainingCount > 0;
                 }
             });
 
@@ -195,13 +209,30 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
             {
                 ErrorStartTime = alarmInfo.StartTime.ToString();
                 if (string.IsNullOrEmpty(alarmInfo.AlarmCode))
-                    alarmInfo.AlarmCode = "S12ABC99-01@alarm";
+                    alarmInfo.AlarmCode = "O99OOOO-01@alarm";
                 string[] arrAlarm = alarmInfo.AlarmCode.Split('@');
                 ErrorCode = arrAlarm[0];
                 ErrorMessage = arrAlarm.Length > 1 ? arrAlarm[1] : "Recipe Config Error,please recheck";
                 ErrorDetail = alarmInfo.Message;
             }
-            // 警告提示也需要转入Hive报警，因为会造成机台切为“报警中”，进而导致停机
+
+            // 剩余点击次数重置逻辑
+            if (ErrorCode != _trackedErrorCode)
+            {
+                // error code 发生变化，重置次数
+                if (RemainingCount != 3)
+                    RemainingCount = 3;
+                _trackedErrorCode = ErrorCode;
+                _lastResetTime = DateTime.Now;
+            }
+            else if (RemainingCount != 3 && (DateTime.Now - _lastResetTime).TotalMinutes >= 30)
+            {
+                // 同一 error code 达到30分钟，重置次数
+                RemainingCount = 3;
+                _lastResetTime = DateTime.Now;
+            }
+
+            // 警告提示也需要转入Hive报警，因为会造成机台切为”报警中”，进而导致停机
             if (alarmInfo != null && alarmInfo.AlarmType == DataStruct.Enums.AlarmType.InfoTip) // WarningTip
             {
                 //如果是信息提示（InfoTip），则不需要转入Hive报警。
@@ -221,7 +252,7 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                 {
                     ErrorStartTime = alarmInfo.StartTime.ToString();
                     if (string.IsNullOrEmpty(alarmInfo.AlarmCode))
-                        alarmInfo.AlarmCode = "S12ABC99-01@Track temperature alarm";
+                        alarmInfo.AlarmCode = "O99OOOO-01@Track temperature alarm";
                     string[] arrAlarm = alarmInfo.AlarmCode.Split('@');
                     ErrorCode = arrAlarm[0];
                     ErrorMessage = arrAlarm.Length > 1 ? arrAlarm[1] : "Axis Error";
@@ -240,7 +271,7 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                         {
                             //目前先改成15min
                             //倒计时15min,未来要改成5min
-                            beginTime = DateTime.Now.AddMinutes(5);
+                            beginTime = DateTime.Now.AddMinutes(2);
                             dispatcherTimer.Interval = TimeSpan.FromSeconds(1);
                             dispatcherTimer.Tick += Timer_Tick;
                             _motionController.FileConfig.HiveHelpRequestTime = DateTime.Now;
@@ -260,6 +291,9 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                     }
 
                 }
+                // 剩余次数为0时，按钮置灰
+                if (RemainingCount <= 0)
+                    IsButtonEnable = false;
                 //回零完成，才允许停止
                 if (isHome)
                 {
@@ -383,7 +417,12 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                     // Hive 2.7要求，L7和L8权限不允许停机
                     if (ret && (auth == "L1" || auth == "L2" || auth == "L3" || auth == "L6" || auth == "L9"))
                     {
-
+                        // 刷卡成功，重置剩余次数
+                        if (RemainingCount != 3)
+                        {
+                            RemainingCount = 3;
+                            _lastResetTime = DateTime.Now;
+                        }
                         CardLog = $"ID:{currentID}" + Environment.NewLine +
                                   $"Badge info sent" + Environment.NewLine +
                                   $"MES info received" + Environment.NewLine +
@@ -397,7 +436,8 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                             Application.Current.Dispatcher.Invoke(() =>
                             {
                                 _bus.OnLog(Common.DataStruct.Enums.LogType.Info, $"刷卡信息响应成功，[Alarm]窗口即将关闭");
-                                base.CloseDialog("ok");
+                                //base.CloseDialog("ok");
+                                CloseDialog("ok");
                                 _dialogService.ShowHiveStopDialog("停机", r =>
                                 {
                                     //0720，取消每次刷卡后都停止，减少回零次数
@@ -453,6 +493,15 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                 );
                 return;
             }
+            // 检查剩余点击次数
+            if (RemainingCount <= 0)
+            {
+                IsButtonEnable = false;
+                return;
+            }
+            RemainingCount = _remainingClickCount - 1;
+            if (RemainingCount <= 0)
+                IsButtonEnable = false;
             //_motionController.Recovery();
             //Thread.Sleep(500);
 
@@ -472,7 +521,7 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
             if (!isHome || _motionController.IsHoming)
             {
                 _bus.OnLog(Common.DataStruct.Enums.LogType.Info, $"设备未回零完成!!!");
-                base.CloseDialog("ok");
+                CloseDialog("ok");
                 _motionController.Stop();
                 return;
                 throw new FriendlyException($"设备未回零完成！！！");
@@ -503,7 +552,7 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
 
             if (hsa1.Contains(_motionController.MachineStatus))
             {
-                base.CloseDialog("ok");
+                CloseDialog("ok");
                 _bus.OnLog(Common.DataStruct.Enums.LogType.Info, $"当前设备状态Stop,不满足启动条件");
                 //hiveAPI.ClearAlarm();
                 return;
@@ -512,7 +561,7 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
             HashSet<EngineStatus> hsb = new HashSet<EngineStatus>() { EngineStatus.Ready, EngineStatus.Running };
             if (hsb.Contains(_motionController.MachineStatus))
             {
-                base.CloseDialog("ok");
+                CloseDialog("ok");
                 _bus.OnLog(Common.DataStruct.Enums.LogType.Info, $"当前设备状态可保持原状,无需启动");
                 return;
             }
@@ -522,20 +571,24 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
             if (_motionController.Start())
             {
                 _bus.OnLog(Common.DataStruct.Enums.LogType.Info, $"设备从报警状态中成功启动，[Alarm]窗口即将关闭");
-                base.CloseDialog("ok");
+                //base.CloseDialog("ok");
+                CloseDialog("ok");
                 hiveAPI.ClearAlarm();
             }
             else
                 throw new FriendlyException($"设备启动失败,请再次执行复位操作！");
         }));
 
+        private bool _isNormalClosed = false;
+
         protected override void CloseDialog(string parameter)
         {
+            _isNormalClosed = true;
             base.CloseDialog(parameter);
             dispatcherTimer.Stop();
             // 取消事件订阅
             if (_alarmClosedToken != null)
-                _bus.EventBus.GetEvent<AlarmEventOnboardClosed>().Unsubscribe(_alarmClosedToken);
+                _bus.EventBus.GetEvent<HiveReportStateChangedEvent>().Unsubscribe(_alarmClosedToken);
         }
         private string closeWay = "";
         protected override void Ok(IDialogResult result)
@@ -547,7 +600,17 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
             dispatcherTimer.Stop();
             // 取消事件订阅
             if (_alarmClosedToken != null)
-                _bus.EventBus.GetEvent<AlarmEventOnboardClosed>().Unsubscribe(_alarmClosedToken);
+                _bus.EventBus.GetEvent<HiveReportStateChangedEvent>().Unsubscribe(_alarmClosedToken);
+        }
+
+        public override void OnDialogClosed()
+        {
+            base.OnDialogClosed();
+            if (_isNormalClosed) return;
+            hiveAPI.RepairStart(ErrorMessage, ErrorCode, "L3");
+            dispatcherTimer.Stop();
+            if (_alarmClosedToken != null)
+                _bus.EventBus.GetEvent<HiveReportStateChangedEvent>().Unsubscribe(_alarmClosedToken);
         }
     }
 }
