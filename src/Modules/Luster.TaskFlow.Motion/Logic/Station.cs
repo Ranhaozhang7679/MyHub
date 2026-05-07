@@ -461,7 +461,7 @@ namespace Luster.TaskFlow.Motion.Logic
                 // 事件触发后，清理记录
                 StationTimes.Clear();
             }
-            catch(Exception ex) 
+            catch(Exception ex)
             {
                MyOwner.OnLog(LogType.Info, string.Format("模块:{0} 报警:{1} ", this.Alias, ex.ToString()));
             }

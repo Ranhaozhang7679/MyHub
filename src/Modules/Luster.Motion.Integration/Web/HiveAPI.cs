@@ -1661,7 +1661,7 @@ namespace Luster.Motion.Integration.Web
         {
             base.MController_StationEvent(WIP, InputTime, OutputTime, Result);
             // 如果没有连接上，不触发通讯
-            if (!isConnected || !PDCAEnable() || !Result)
+            if (!isConnected ||  !Result)
             {
                 LogTool.Warn("通讯异常或PDCA未启用，无法上传生产数据到Hive！");
                 return;
@@ -1671,10 +1671,10 @@ namespace Luster.Motion.Integration.Web
             string urlSim = Path.Combine(URLSimulator, "capture/v6/machinedata");
             // 20251021 生产数据接口新增mode字段
             int modeCur = -1;
-            if (PDCAEnable()) modeCur = 0;
-            else if (CPKEnable()) modeCur = 1;
-            else if (GRREnable()) modeCur = 2;
-            else if (DryRunEnable()) modeCur = 5;
+            if (PDCAEnable()&& !CPKEnable()&& !GRREnable()&& !DryRunEnable()) modeCur = 0;
+            else if (PDCAEnable() && CPKEnable() && !GRREnable() && !DryRunEnable()) modeCur = 1;
+            else if (PDCAEnable() && !CPKEnable() && GRREnable() && !DryRunEnable()) modeCur = 2;
+            else if (!PDCAEnable() && !CPKEnable() && !GRREnable() && DryRunEnable()) modeCur = 5;
             else modeCur = 6;
 
             //构建发送数据
