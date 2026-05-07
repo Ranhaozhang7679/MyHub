@@ -83,15 +83,26 @@ namespace Luster.Motion.ReportUI.Model
         }
 
 
-        /// <summary> 
+        /// <summary>
         /// 压力
-        /// </summary> 
+        /// </summary>
         private double _press;
 
         public double Press
         {
             get => _press;
             set => SetProperty(ref _press, value);
+        }
+
+        /// <summary>
+        /// 位置
+        /// </summary>
+        private double _position;
+
+        public double Position
+        {
+            get => _position;
+            set => SetProperty(ref _position, value);
         }
     }
 
