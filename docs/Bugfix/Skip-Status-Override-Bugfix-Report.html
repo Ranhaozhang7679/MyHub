@@ -113,7 +113,7 @@
                 </p>
             </div>
             <p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px;">
-                正常自动运行时 Skip 状态不会被取消，只有在流程图界面左键单击忽略模块后才出现。具体触发时机与引擎自动运行循环的执行进度相关。
+                正常自动运行时 Skip 状态不会被取消，只有在流程图界面<strong>左键单击</strong>或<strong>拖动</strong>忽略模块后才出现。拖动动作比单击耗时更长，增大了与引擎自动运行循环的竞态窗口，因此触发概率更高。
             </p>
         </section>
 
@@ -179,11 +179,17 @@
                 <ol style="padding-left:20px;line-height:2.2;">
                     <li>用户将子模块设为忽略（<code>Status = Skip</code>）</li>
                     <li>设备进入 <strong>Running</strong>，引擎循环执行工站</li>
-                    <li>用户在流程图界面<strong>左键单击</strong>该忽略模块（仅选中操作）</li>
+                    <li>用户在流程图界面<strong>左键单击</strong>或<strong>拖动</strong>该忽略模块（仅选中/移动操作，不涉及状态变更）</li>
+                    <li>拖动操作比单击耗时更长，正好增大了与引擎自动循环的<strong>竞态窗口</strong></li>
                     <li>引擎循环恰好运行到该工站，调用 <code>SetModuleStatus(station, Default)</code></li>
                     <li>若存在竞态窗口，模块的 Skip 状态未能被 <code>MotionRunEngine.Run</code> 的检查拦截</li>
                     <li><code>MotionModule.DoFunction()</code> 被调用 &mdash; <strong>没有 Skip 检查</strong> &rarr; 状态变为 <code>Running</code> &rarr; 执行失败 &rarr; 变红报错</li>
                 </ol>
+            </div>
+            <div class="callout callout-blue" style="margin-top:16px;">
+                <p>
+                    <strong>为什么拖动更容易触发？</strong>单击操作瞬间完成（MouseDown &rarr; MouseUp），竞态窗口极小。而拖动操作（MouseDown &rarr; MouseMove &rarr; ... &rarr; MouseUp）持续时间更长，与引擎后台线程的 <code>SetModuleStatus</code> 调用产生时间重叠的概率显著增加。
+                </p>
             </div>
         </section>
 
