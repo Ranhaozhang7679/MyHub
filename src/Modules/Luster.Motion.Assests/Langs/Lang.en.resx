@@ -3189,6 +3189,9 @@
   <data name="BUSOP" xml:space="preserve">
     <value>BUSOP</value>
   </data>
+  <data name="TaikeAnnotatedCurve" xml:space="preserve">
+    <value>PressureCurveStackedChart</value>
+  </data>
   <data name="ReadModbus" xml:space="preserve">
     <value>ReadModbus</value>
   </data>
