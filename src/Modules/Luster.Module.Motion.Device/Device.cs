@@ -91,6 +91,10 @@ namespace Luster.Module.Motion.IO
 
             //鑫精诚多通道压力传感器F600
             AddFunction<XJCPressureSensorF600>();
+
+            //音圈电机
+            AddFunction<JunRudderVCM>();
+            AddFunction<DHRoboticsVCM>();
         }
     }
 

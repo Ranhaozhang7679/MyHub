@@ -1512,7 +1512,7 @@ namespace Luster.SimDevice.MotionCard.LC
             SafeNativeMethod((out string err) =>
             {
                 err = "";
-                string msgHead = $"{Brand} PDO读取失败。";
+                string msgHead = $"{Brand} PDO读取{index}失败。";
                 //short ret = ecat_motion.M_AxisPDORead(axis, index, subindex, data_size, ref Value, count, cardNo);
 
                 short ret = ecat_motion.M_ReadActualTorque(axis, ref Value, count, cardNo);
@@ -1534,7 +1534,7 @@ namespace Luster.SimDevice.MotionCard.LC
             SafeNativeMethod((out string err) =>
             {
                 err = "";
-                string msgHead = $"{Brand} PDO写入失败。";
+                string msgHead = $"{Brand} PDO写入{index}失败。";
                 short ret = ecat_motion.M_AxisPDOWrite(axis, index, subindex, udata, data_size, cardNo);
                 if (ret != 0)
                 {
