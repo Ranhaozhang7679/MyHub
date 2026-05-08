@@ -1721,6 +1721,11 @@ namespace Luster.Motion.TaskFlow.Engine
         private bool? isAutoMode = null;
 
         /// <summary>
+        /// 手动/自动切换按钮消抖计数器
+        /// </summary>
+        private int manualSwitchDebounceCount = 0;
+
+        /// <summary>
         /// 机台状态监控
         /// </summary>
         private void MachineMonitor()
@@ -1783,9 +1788,16 @@ namespace Luster.Motion.TaskFlow.Engine
             {
                 var canRun = io.GetDigitalIn();
 
+                // 仅在IO值发生变化时记录，避免每100ms重复打印
+                if (isAutoMode != canRun)
+                {
+                    MotionEngine.OnLog(LogType.Debug, $"ManualSwitch IO变化: {isAutoMode}->{canRun}, 消抖计数: {manualSwitchDebounceCount}");
+                }
+
                 // 开机启动时，触发一次
                 if (isAutoMode == null)
                 {
+                    MotionEngine.OnLog(LogType.Info, $"ManualSwitch 首次初始化: IO值={canRun}");
                     CanAutoRunEvent?.Invoke(canRun);
                     isAutoMode = canRun;
                 }
@@ -1793,6 +1805,13 @@ namespace Luster.Motion.TaskFlow.Engine
                 // 触发上升沿或下降延，才进行开门或则锁门动作
                 if (isAutoMode != canRun)
                 {
+                    manualSwitchDebounceCount++;
+                    // 连续3次（300ms）读取到相同变化才确认有效，防止IO信号抖动
+                    if (manualSwitchDebounceCount < 3)
+                    {
+                        return;
+                    }
+
                     CanAutoRunEvent?.Invoke(canRun);
                     //自动打到手动后，先把三色灯颜色改变
                     if (MachineStatus == EngineStatus.Running)
@@ -1817,6 +1836,10 @@ namespace Luster.Motion.TaskFlow.Engine
                     }
                     // 进行门锁功能切换
 
+                }
+                else
+                {
+                    manualSwitchDebounceCount = 0;
                 }
 
                 isAutoMode = canRun;
