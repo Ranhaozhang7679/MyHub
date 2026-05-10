@@ -529,7 +529,9 @@ namespace Luster.Motion.TaskFlow.Engine
             if (alarmInfo.AlarmType == AlarmType.WarningTip ||
                 alarmInfo.AlarmType == AlarmType.FailError ||
                 alarmInfo.AlarmType == AlarmType.Timeout ||
-                alarmInfo.AlarmType == AlarmType.PopInfoTip)
+                alarmInfo.AlarmType == AlarmType.PopInfoTip||
+                alarmInfo.AlarmType == AlarmType.DeviceError)
+
             {
                 // 流程暂停
                 Pause(true, () =>
