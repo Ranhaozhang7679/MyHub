@@ -1187,12 +1187,10 @@ namespace TaiKeCommon
             bool hasPosData = posData != null && posData.Length > 0;
 
             int width = 900;
-            int marginLeft = 70, marginRight = 30, marginTop = 40, marginBottom = 50;
+            int marginLeft = 70, marginRight = hasPosData ? 70 : 30, marginTop = 40, marginBottom = 50;
             int plotWidth = width - marginLeft - marginRight;
-            // 有位置数据时画两个子图，否则只画一个
-            int singlePlotHeight = hasPosData ? 220 : 450;
-            int gap = hasPosData ? 60 : 0;
-            int height = marginTop + singlePlotHeight * (hasPosData ? 2 : 1) + gap + marginBottom;
+            int plotHeight = 450;
+            int height = marginTop + plotHeight + marginBottom;
 
             double timeMin = 0;
             double timeMax = timeData.Max();
@@ -1255,109 +1253,119 @@ namespace TaiKeCommon
 
                 var gridPaint = new SKPaint { Color = SKColors.LightGray, StrokeWidth = 1 };
                 var tickPaint = new SKPaint { Color = SKColors.Black, TextSize = 14, IsAntialias = true };
-                var labelPaint = new SKPaint { Color = SKColors.Black, TextSize = 16, IsAntialias = true };
+                var tickPaintBlue = new SKPaint { Color = SKColors.Blue, TextSize = 14, IsAntialias = true };
+                var tickPaintRed = new SKPaint { Color = SKColors.Red, TextSize = 14, IsAntialias = true };
+                var labelPaint = new SKPaint { Color = SKColors.Blue, TextSize = 16, IsAntialias = true };
+                var labelPaintRed = new SKPaint { Color = SKColors.Red, TextSize = 16, IsAntialias = true };
                 var curvePaint = new SKPaint { Color = SKColors.Blue, StrokeWidth = 2, IsAntialias = true };
                 var curvePaintRed = new SKPaint { Color = SKColors.Red, StrokeWidth = 2, IsAntialias = true };
                 var axisPaint = new SKPaint { Color = SKColors.Black, StrokeWidth = 2, IsAntialias = true };
+                var axisPaintBlue = new SKPaint { Color = SKColors.Blue, StrokeWidth = 2, IsAntialias = true };
+                var axisPaintRed = new SKPaint { Color = SKColors.Red, StrokeWidth = 2, IsAntialias = true };
 
-                // ===== 上方子图：时间-压力曲线 =====
-                int topY1 = marginTop;
-                int botY1 = marginTop + singlePlotHeight;
+                int topY = marginTop;
+                int botY = marginTop + plotHeight;
 
-                // X轴网格和刻度
+                // ===== 标题 =====
+                var titlePaint = new SKPaint { Color = SKColors.Black, TextSize = 20, IsAntialias = true };
+                canvas.DrawText("Time-Pressure/Position Curve", marginLeft + plotWidth / 2 - 120, topY - 10, titlePaint);
+
+                // ===== X轴网格和刻度 =====
                 for (double x = 0; x <= timeMax; x += timeStep)
                 {
                     float px = marginLeft + (float)(x / timeMax * plotWidth);
-                    canvas.DrawLine(px, topY1, px, botY1, gridPaint);
-                    canvas.DrawText(x.ToString("0"), px - 10, botY1 + 18, tickPaint);
+                    canvas.DrawLine(px, topY, px, botY, gridPaint);
+                    canvas.DrawText(x.ToString("0"), px - 10, botY + 18, tickPaint);
                 }
 
-                // Y轴网格和刻度
+                // ===== 左Y轴（压力）网格和刻度 =====
                 for (double y = Math.Ceiling(pressMin / pressStep) * pressStep; y <= pressMax + 1e-9; y += pressStep)
                 {
-                    float py = botY1 - (float)((y - pressMin) / (pressMax - pressMin) * singlePlotHeight);
+                    float py = botY - (float)((y - pressMin) / (pressMax - pressMin) * plotHeight);
                     canvas.DrawLine(marginLeft, py, marginLeft + plotWidth, py, gridPaint);
-                    canvas.DrawText(y.ToString("0.##"), marginLeft - 50, py + 5, tickPaint);
+                    canvas.DrawText(y.ToString("0.##"), marginLeft - 50, py + 5, tickPaintBlue);
                 }
 
-                // 坐标轴线
-                canvas.DrawLine(marginLeft, topY1, marginLeft, botY1, axisPaint);
-                canvas.DrawLine(marginLeft, botY1, marginLeft + plotWidth, botY1, axisPaint);
-
-                // 子图标题
-                var subTitlePaint = new SKPaint { Color = SKColors.Black, TextSize = 20, IsAntialias = true };
-                canvas.DrawText("Time-Pressure Curve", marginLeft + plotWidth / 2 - 80, topY1 - 10, subTitlePaint);
-
-                // Y轴标签
+                // 左Y轴标签
                 canvas.Save();
-                canvas.RotateDegrees(-90, marginLeft - 55, topY1 + singlePlotHeight / 2);
-                canvas.DrawText("Press/N", marginLeft - 55, topY1 + singlePlotHeight / 2, labelPaint);
+                canvas.RotateDegrees(-90, marginLeft - 55, topY + plotHeight / 2);
+                canvas.DrawText("Press/N", marginLeft - 55, topY + plotHeight / 2, labelPaint);
                 canvas.Restore();
 
-                // 画压力曲线
+                // ===== 右Y轴（位置）刻度 =====
+                if (hasPosData)
+                {
+                    for (double y = Math.Ceiling(posMin / posStep) * posStep; y <= posMax + 1e-9; y += posStep)
+                    {
+                        float py = botY - (float)((y - posMin) / (posMax - posMin) * plotHeight);
+                        canvas.DrawText(y.ToString("0.##"), marginLeft + plotWidth + 5, py + 5, tickPaintRed);
+                    }
+
+                    // 右Y轴标签
+                    canvas.Save();
+                    canvas.RotateDegrees(90, marginLeft + plotWidth + 55, topY + plotHeight / 2);
+                    canvas.DrawText("Position/mm", marginLeft + plotWidth + 55, topY + plotHeight / 2, labelPaintRed);
+                    canvas.Restore();
+                }
+
+                // ===== 坐标轴线 =====
+                // 左Y轴（蓝色）
+                canvas.DrawLine(marginLeft, topY, marginLeft, botY, axisPaintBlue);
+                // X轴（黑色）
+                canvas.DrawLine(marginLeft, botY, marginLeft + plotWidth, botY, axisPaint);
+                // 右Y轴（红色）
+                if (hasPosData)
+                    canvas.DrawLine(marginLeft + plotWidth, topY, marginLeft + plotWidth, botY, axisPaintRed);
+
+                // X轴标签
+                var xLabelPaint = new SKPaint { Color = SKColors.Black, TextSize = 16, IsAntialias = true };
+                canvas.DrawText("Time/ms", marginLeft + plotWidth / 2 - 30, botY + 40, xLabelPaint);
+
+                // ===== 画压力曲线（蓝色） =====
                 if (timeData.Length > 1 && pressData.Length == timeData.Length)
                 {
                     for (int i = 1; i < timeData.Length; i++)
                     {
                         float x0 = marginLeft + (float)((timeData[i - 1]) / timeMax * plotWidth);
-                        float y0 = botY1 - (float)((pressData[i - 1] - pressMin) / (pressMax - pressMin) * singlePlotHeight);
+                        float y0 = botY - (float)((pressData[i - 1] - pressMin) / (pressMax - pressMin) * plotHeight);
                         float x1 = marginLeft + (float)((timeData[i]) / timeMax * plotWidth);
-                        float y1 = botY1 - (float)((pressData[i] - pressMin) / (pressMax - pressMin) * singlePlotHeight);
+                        float y1 = botY - (float)((pressData[i] - pressMin) / (pressMax - pressMin) * plotHeight);
                         canvas.DrawLine(x0, y0, x1, y1, curvePaint);
                     }
                 }
 
-                // ===== 下方子图：时间-位置曲线 =====
+                // ===== 画位置曲线（红色） =====
                 if (hasPosData)
                 {
-                    int topY2 = botY1 + gap;
-                    int botY2 = topY2 + singlePlotHeight;
-
-                    // X轴网格和刻度
-                    for (double x = 0; x <= timeMax; x += timeStep)
-                    {
-                        float px = marginLeft + (float)(x / timeMax * plotWidth);
-                        canvas.DrawLine(px, topY2, px, botY2, gridPaint);
-                        canvas.DrawText(x.ToString("0"), px - 10, botY2 + 18, tickPaint);
-                    }
-
-                    // Y轴网格和刻度
-                    for (double y = Math.Ceiling(posMin / posStep) * posStep; y <= posMax + 1e-9; y += posStep)
-                    {
-                        float py = botY2 - (float)((y - posMin) / (posMax - posMin) * singlePlotHeight);
-                        canvas.DrawLine(marginLeft, py, marginLeft + plotWidth, py, gridPaint);
-                        canvas.DrawText(y.ToString("0.##"), marginLeft - 50, py + 5, tickPaint);
-                    }
-
-                    // 坐标轴线
-                    canvas.DrawLine(marginLeft, topY2, marginLeft, botY2, axisPaint);
-                    canvas.DrawLine(marginLeft, botY2, marginLeft + plotWidth, botY2, axisPaint);
-
-                    // 子图标题
-                    canvas.DrawText("Time-Position Curve", marginLeft + plotWidth / 2 - 80, topY2 - 10, subTitlePaint);
-
-                    // Y轴标签
-                    canvas.Save();
-                    canvas.RotateDegrees(-90, marginLeft - 55, topY2 + singlePlotHeight / 2);
-                    canvas.DrawText("Position/mm", marginLeft - 55, topY2 + singlePlotHeight / 2, labelPaint);
-                    canvas.Restore();
-
-                    // X轴总标签
-                    canvas.DrawText("Time/ms", marginLeft + plotWidth / 2 - 30, botY2 + 40, labelPaint);
-
-                    // 画位置曲线
                     int posLen = Math.Min(timeData.Length, posData.Length);
                     if (posLen > 1)
                     {
                         for (int i = 1; i < posLen; i++)
                         {
                             float x0 = marginLeft + (float)((timeData[i - 1]) / timeMax * plotWidth);
-                            float y0 = botY2 - (float)((posData[i - 1] - posMin) / (posMax - posMin) * singlePlotHeight);
+                            float y0 = botY - (float)((posData[i - 1] - posMin) / (posMax - posMin) * plotHeight);
                             float x1 = marginLeft + (float)((timeData[i]) / timeMax * plotWidth);
-                            float y1 = botY2 - (float)((posData[i] - posMin) / (posMax - posMin) * singlePlotHeight);
+                            float y1 = botY - (float)((posData[i] - posMin) / (posMax - posMin) * plotHeight);
                             canvas.DrawLine(x0, y0, x1, y1, curvePaintRed);
                         }
                     }
+                }
+
+                // ===== 图例 =====
+                if (hasPosData)
+                {
+                    float legendX = marginLeft + plotWidth - 180;
+                    float legendY = topY + 20;
+                    var legendBgPaint = new SKPaint { Color = new SKColor(255, 255, 255, 220), IsAntialias = true };
+                    var legendBorderPaint = new SKPaint { Color = SKColors.Gray, StrokeWidth = 1, IsAntialias = true, Style = SKPaintStyle.Stroke };
+                    canvas.DrawRect(legendX - 10, legendY - 15, 180, 45, legendBgPaint);
+                    canvas.DrawRect(legendX - 10, legendY - 15, 180, 45, legendBorderPaint);
+                    // 压力图例
+                    canvas.DrawLine(legendX, legendY, legendX + 25, legendY, curvePaint);
+                    canvas.DrawText("Press/N", legendX + 30, legendY + 5, tickPaintBlue);
+                    // 位置图例
+                    canvas.DrawLine(legendX, legendY + 20, legendX + 25, legendY + 20, curvePaintRed);
+                    canvas.DrawText("Position/mm", legendX + 30, legendY + 25, tickPaintRed);
                 }
 
                 // 保存PNG
