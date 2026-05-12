@@ -529,9 +529,8 @@ namespace Luster.Motion.TaskFlow.Engine
             if (alarmInfo.AlarmType == AlarmType.WarningTip ||
                 alarmInfo.AlarmType == AlarmType.FailError ||
                 alarmInfo.AlarmType == AlarmType.Timeout ||
-                alarmInfo.AlarmType == AlarmType.PopInfoTip||
+                 alarmInfo.AlarmType == AlarmType.PopInfoTip ||
                 alarmInfo.AlarmType == AlarmType.DeviceError)
-
             {
                 // 流程暂停
                 Pause(true, () =>
@@ -553,6 +552,9 @@ namespace Luster.Motion.TaskFlow.Engine
             // PLC 报警，需要红灯亮，蜂鸣器响
             if (alarmInfo.AlarmType == AlarmType.PlcAlarm)
             {
+                // PlcAlarm不走Pause流程，但也需要标记待处理
+                if (lockCommand > 0)
+                    _pendingAlarm = true;
                 _lightManager.StopLight(true);
                 //_lightManager.SetBuzzer(true, 400, 400);
             }
@@ -838,6 +840,7 @@ namespace Luster.Motion.TaskFlow.Engine
             //MotionEngine.RunStartStation();
 
             AlarmInfo = null;
+            _pendingAlarm = false;
             RecoveryIOSetInit();
             if (MachineStatus == EngineStatus.Pause)
             {
@@ -872,8 +875,17 @@ namespace Luster.Motion.TaskFlow.Engine
                             Interlocked.Decrement(ref lockCommand);
                             _deviceEngine.OnLog(LogType.Info, $"暂停lockcommand复位：{lockCommand}!");
 
-                            // 2.启动灯
-                            _lightManager.RunningLight();
+                            // 如果Start()期间发生了报警，延迟执行Pause
+                            if (_pendingAlarm)
+                            {
+                                _pendingAlarm = false;
+                                Pause(true, () => { _lightManager.SetBuzzer(true); });
+                            }
+                            else
+                            {
+                                // 2.启动灯
+                                _lightManager.RunningLight();
+                            }
                         });
 
                         // 程序经过暂停->恢复，需要刷新稼动率
@@ -912,6 +924,7 @@ namespace Luster.Motion.TaskFlow.Engine
                 {
                     _deviceEngine.OnLog(LogType.Info, "MotionEngine.Recovery失败");
                     // 防止连续点击
+                    _pendingAlarm = false;
                     Interlocked.Decrement(ref lockCommand);
                     _deviceEngine.OnLog(LogType.Info, $"暂停lockcommand复位：{lockCommand}!");
                     return false;
@@ -946,6 +959,7 @@ namespace Luster.Motion.TaskFlow.Engine
                         if (AlarmInfos.Count > alarmCountBefore)
                         {
                             _deviceEngine.OnLog(LogType.Info, "开始工站执行后产生报警，不允许启动!");
+                            _pendingAlarm = false;
                             Interlocked.Decrement(ref lockCommand);
                             _deviceEngine.OnLog(LogType.Info, $"readylockcommand复位报警：{lockCommand}!");
                             return;
@@ -956,6 +970,7 @@ namespace Luster.Motion.TaskFlow.Engine
                         if (!_deviceEngine.IsHome(out var errMsg))
                         {
                             _deviceEngine.OnLog(LogType.Info, "存在轴未回零完成，不允许启动!");
+                            _pendingAlarm = false;
                             Interlocked.Decrement(ref lockCommand);
                             _deviceEngine.OnLog(LogType.Info, $"readylockcommand复位1：{lockCommand}!");
                             return;
@@ -1002,6 +1017,14 @@ namespace Luster.Motion.TaskFlow.Engine
                         // 7.防止连续点击
                         Interlocked.Decrement(ref lockCommand);
                         _deviceEngine.OnLog(LogType.Info, $"readylockcommand复位2：{lockCommand}!");
+
+                        // 如果Start()期间发生了报警，延迟执行Pause
+                        if (_pendingAlarm)
+                        {
+                            _pendingAlarm = false;
+                            Pause(true, () => { _lightManager.SetBuzzer(true); });
+                        }
+
                         _deviceEngine.OnLog(LogType.Info, $"关闭门锁!");
                         LockDoor(true);
                         startResult = true;
@@ -1341,9 +1364,14 @@ namespace Luster.Motion.TaskFlow.Engine
             }
         }
         /// <summary>
-        /// 用于防止检查IO时同时触发多次命令 
+        /// 用于防止检查IO时同时触发多次命令
         /// </summary>
         private int lockCommand = 0;
+
+        /// <summary>
+        /// 标记在Start()过程中是否发生了报警，用于延迟处理
+        /// </summary>
+        private volatile bool _pendingAlarm = false;
 
         /// <summary>
         /// 暂停
@@ -1367,7 +1395,12 @@ namespace Luster.Motion.TaskFlow.Engine
 
             // 防止连续点击
             if (lockCommand > 0)
+            {
+                // 报警暂停被Start()阻塞时，标记待处理，等Start()完成后执行
+                if (isAlarm)
+                    _pendingAlarm = true;
                 return;
+            }
             Interlocked.Increment(ref lockCommand);
             _deviceEngine.OnLog(LogType.Info, $"Pauselockcommand置位：{lockCommand}!");
             // 记录停止时间
