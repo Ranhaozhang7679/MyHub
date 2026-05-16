@@ -45,6 +45,7 @@ namespace Luster.Module.Motion.DataProc.Functions
         [Parameter("开始模块", 2, CN = "开始模块")]
         public LStatus StartModule { get; set; }
 
+        [DependOn("Method", TimeMethod.Multi)]
         [Parameter("结束模块", 3, CN = "结束模块")]
         public LStatus EndModule { get; set; }
 
