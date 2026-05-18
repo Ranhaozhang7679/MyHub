@@ -862,10 +862,21 @@ namespace Luster.Motion.TaskFlow.Engine
                     /*if (lockCommand > 0) { _deviceEngine.OnLog(LogType.Info, $"暂停lockcommand次数>0,:{lockCommand}，直接退出!"); return; }
                     Interlocked.Increment(ref lockCommand);
                     _deviceEngine.OnLog(LogType.Info, $"lockCommand为{lockCommand}");*/
-                    MotionEngine.Reset(AlarmInfo, (isOK) =>
+                    MotionEngine.Reset(AlarmInfo, (isResetOK) =>
                     {
+                        //现场出现过暂停时轴点位运动正在执行,被加入暂停模块,加入暂停模块后点位运动显示checkmotiondone,调机完成启动时执行这个暂停的模块,
+                        //显示模块未复位成功,但设备继续运行,再次暂停时,再次启动后这个上次未复位成功的点位运动复位成功,走错了路径;
+                        //所以对这段代码进行出错处理
+                        if (!isResetOK)
+                        {
+                            _deviceEngine.OnLog(LogType.Error, "模块复位(Reset)失败，终止恢复流程！");
+                            MotionEngine.OnAlarm(new AlarmInfo(this, AlarmType.FailError, "模块复位失败，请处理后重试！", "Reset-Fail"));
+                            Interlocked.Decrement(ref lockCommand);
+                            return;
+                        }
+
                         _deviceEngine.OnLog(LogType.Info, "Reset成功");
-                        MotionEngine.Recovery((isOK) =>
+                        MotionEngine.Recovery((isRecoveryOK) =>
                         {
                             _deviceEngine.OnLog(LogType.Info, "MotionEngine.Recovery成功");
                             // 1.Plc恢复

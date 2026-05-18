@@ -486,25 +486,40 @@ namespace Luster.Motion.TaskFlow.Engine
         /// </summary>
         /// <param name="mId"></param>
         /// <returns></returns>
+        private readonly ConcurrentDictionary<Guid, bool> _runningOneModules = new ConcurrentDictionary<Guid, bool>();
         public bool RunOne(Guid mId)
         {
-            IMotionModule module = Get(mId);
-            if (module != null)
+            if (!_runningOneModules.TryAdd(mId, true))
             {
-                module.IsBreak = false;
-
-                module.DoFunction();
-                if (module.AlarmInfo != null)
-                {
-                    // 统一通过运行器进行报警事件挂载与上抛
-                    motionRunEngine.RegisterAndRaiseAlarm(module);
-                }
-
+                IMotionModule m = Get(mId);
+                LogEvent?.Invoke(LogType.Warning, $"模块:{m?.TaskFunction?.Alias ?? mId.ToString()} 正在运行中，忽略重复执行", ExcutorNo);
                 return true;
             }
-            else
+
+            try
             {
-                return false;
+                IMotionModule module = Get(mId);
+                if (module != null)
+                {
+                    module.IsBreak = false;
+
+                    module.DoFunction();
+                    if (module.AlarmInfo != null)
+                    {
+                        // 统一通过运行器进行报警事件挂载与上抛
+                        motionRunEngine.RegisterAndRaiseAlarm(module);
+                    }
+
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            finally
+            {
+                _runningOneModules.TryRemove(mId, out _);
             }
         }
 
