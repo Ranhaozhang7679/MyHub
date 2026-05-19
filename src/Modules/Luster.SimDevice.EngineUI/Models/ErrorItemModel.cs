@@ -54,7 +54,17 @@ namespace Luster.SimDevice.EngineUI.Models
         public string Name
         {
             get { return _name; }
-            set { SetProperty(ref _name, value); }
+            set
+            {
+                string src = _name;
+                SetProperty(ref _name, value);
+                if (Tag != null && src != value)
+                {
+                    var vDevice = Tag as Luster.Motion.DataStruct.Virtual.VirtualDeviceBase;
+                    if (vDevice?.ErrorNames != null)
+                        vDevice.ErrorNames[ErrorType] = value;
+                }
+            }
         }
 
         public DeviceError ErrorType { get; set; }
@@ -147,11 +157,15 @@ namespace Luster.SimDevice.EngineUI.Models
         {
             DeviceName = (tag as IVirtualDevice).Name;
             ErrorType = error.Key;
-            Name = error.Key.GetDescription();
             ErrorCode = error.Value;
             Tag = tag;
-            errorForeignMessage = tag.ErrorMessage;
+            // 优先读取自定义名称，否则使用枚举描述
             var vDevice = tag as Luster.Motion.DataStruct.Virtual.VirtualDeviceBase;
+            if (vDevice?.ErrorNames != null && vDevice.ErrorNames.TryGetValue(error.Key, out var customName) && !string.IsNullOrEmpty(customName))
+                _name = customName;
+            else
+                _name = error.Key.GetDescription();
+            errorForeignMessage = tag.ErrorMessage;
             _alarmCategory = vDevice?.AlarmCategory;
             _repairAction = vDevice?.RepairAction;
         }
