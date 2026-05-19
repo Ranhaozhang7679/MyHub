@@ -168,9 +168,8 @@
                             <Run Text="CardNo"/>
                         </TextBlock>
                         <TextBox Grid.Column="1" Style="{StaticResource InfoTextBoxStyle}"
-                                 Text="{Binding CardNo, Mode=OneWay}"
-                                 IsReadOnly="True"
-                                 Focusable="False"
+                                 Text="{Binding CardNo, UpdateSourceTrigger=PropertyChanged}"
+                                 IsReadOnly="{Binding IsCardNoReadOnly}"
                                  Background="#F5F5F5"
                                  Foreground="#555555"/>
                     </Grid>

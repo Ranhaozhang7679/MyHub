@@ -21,6 +21,8 @@
 ************************************************************************************/
 #endregion
 
+using DC.Authorization;
+using DC.Authorization.Models;
 using Luster.Common.Tools;
 using Luster.Control.Wpf.Motion;
 using Luster.Control.Wpf.Motion.Flow;
@@ -42,6 +44,7 @@ using System.Configuration;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 
@@ -65,18 +68,93 @@ namespace Luster.Motion.EditorUI.ViewModel
         private IDialogService _dialogService;
 
         private readonly Dispatcher _dispatcher;
+        private readonly IAuthorizationFacade _authFacade;
 
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="cBus"></param>
-        /// <param name="bus"></param>
-        public FlowContentVM(ICommonBus cBus, IRegionManager regionManager, FlowBus flowBus, IDialogService dialogService, Dispatcher dispatcher) : base(cBus)
+        public FlowContentVM(ICommonBus cBus, IRegionManager regionManager, FlowBus flowBus,
+            IDialogService dialogService, Dispatcher dispatcher, IAuthorizationFacade authFacade) : base(cBus, authFacade)
         {
             _regionManager = regionManager;
             eventBus = flowBus;
             _dialogService = dialogService;
             _dispatcher = dispatcher;
+            _authFacade = authFacade;
+
+            RefreshVisibility();
+
+            // 登录/注销/等级切换时刷新面板可见性
+            _authFacade.AuthChanged += (_, _) => _dispatcher.Invoke(() => RefreshVisibility());
+        }
+
+        private void RefreshVisibility()
+        {
+            FlowFuncModuleVisible = ToVisibility(_authFacade.HasAuth(AuthDictionary.FlowFuncModule, RightType.Visibility));
+            FlowParamConfigVisible = ToVisibility(_authFacade.HasAuth(AuthDictionary.FlowParamConfig, RightType.Visibility));
+            FlowSearchModuleVisible = ToVisibility(_authFacade.HasAuth(AuthDictionary.FlowSearchModule, RightType.Visibility));
+            FlowEditorVisible = ToVisibility(_authFacade.HasAuth(AuthDictionary.FlowEditor, RightType.Visibility));
+            FlowLogVisible = ToVisibility(_authFacade.HasAuth(AuthDictionary.FlowLog, RightType.Visibility));
+            FlowGlobalVarVisible = ToVisibility(_authFacade.HasAuth(AuthDictionary.FlowGlobalVar, RightType.Visibility));
+            FlowAxisDebugVisible = ToVisibility(_authFacade.HasAuth(AuthDictionary.FlowAxisDebug, RightType.Visibility));
+            FlowCTVisible = ToVisibility(_authFacade.HasAuth(AuthDictionary.FlowCT, RightType.Visibility));
+            FlowCacheDataVisible = ToVisibility(_authFacade.HasAuth(AuthDictionary.FlowCacheData, RightType.Visibility));
+            FlowStationOverviewVisible = ToVisibility(_authFacade.HasAuth(AuthDictionary.FlowStationOverview, RightType.Visibility));
+        }
+
+        private static Visibility ToVisibility(bool hasAuth) => hasAuth ? Visibility.Visible : Visibility.Collapsed;
+
+        // ─── 面板可见性（绑定到 XAML，登录/注销时自动刷新）───
+        private Visibility _flowFuncModuleVisible;
+        public Visibility FlowFuncModuleVisible { get => _flowFuncModuleVisible; private set => SetProperty(ref _flowFuncModuleVisible, value); }
+        private Visibility _flowParamConfigVisible;
+        public Visibility FlowParamConfigVisible { get => _flowParamConfigVisible; private set => SetProperty(ref _flowParamConfigVisible, value); }
+        private Visibility _flowSearchModuleVisible;
+        public Visibility FlowSearchModuleVisible { get => _flowSearchModuleVisible; private set => SetProperty(ref _flowSearchModuleVisible, value); }
+        private Visibility _flowEditorVisible;
+        public Visibility FlowEditorVisible { get => _flowEditorVisible; private set => SetProperty(ref _flowEditorVisible, value); }
+        private Visibility _flowLogVisible;
+        public Visibility FlowLogVisible { get => _flowLogVisible; private set => SetProperty(ref _flowLogVisible, value); }
+        private Visibility _flowGlobalVarVisible;
+        public Visibility FlowGlobalVarVisible { get => _flowGlobalVarVisible; private set => SetProperty(ref _flowGlobalVarVisible, value); }
+        private Visibility _flowAxisDebugVisible;
+        public Visibility FlowAxisDebugVisible { get => _flowAxisDebugVisible; private set => SetProperty(ref _flowAxisDebugVisible, value); }
+        private Visibility _flowCTVisible;
+        public Visibility FlowCTVisible { get => _flowCTVisible; private set => SetProperty(ref _flowCTVisible, value); }
+        private Visibility _flowCacheDataVisible;
+        public Visibility FlowCacheDataVisible { get => _flowCacheDataVisible; private set => SetProperty(ref _flowCacheDataVisible, value); }
+        private Visibility _flowStationOverviewVisible;
+        public Visibility FlowStationOverviewVisible { get => _flowStationOverviewVisible; private set => SetProperty(ref _flowStationOverviewVisible, value); }
+
+        // ─── Region名称 → AuthItem 映射（用于导航前权限拦截）───
+        private static readonly Dictionary<string, AuthItem> ConfigAuthMap = new Dictionary<string, AuthItem>
+        {
+            { "LogContent", AuthDictionary.FlowLog },
+            { "GlobalContent", AuthDictionary.FlowGlobalVar },
+            { "AxisSetContent", AuthDictionary.FlowAxisDebug },
+            { "CTConfigContent", AuthDictionary.FlowCT },
+            { "CacheDataContent", AuthDictionary.FlowCacheData },
+            { "FlowViewContent", AuthDictionary.FlowStationOverview },
+        };
+
+        private static readonly Dictionary<string, AuthItem> LeftPanelAuthMap = new Dictionary<string, AuthItem>
+        {
+            { "ModuleContent", AuthDictionary.FlowFuncModule },
+            { "InParamContent", AuthDictionary.FlowParamConfig },
+            { "SearchContent", AuthDictionary.FlowSearchModule },
+        };
+
+        /// <summary>
+        /// 根据 ConfigAuthMap 顺序，找到第一个有权限的面板名称
+        /// </summary>
+        private string GetFirstAuthorizedConfigPanel()
+        {
+            foreach (var kv in ConfigAuthMap)
+            {
+                if (_authFacade.HasAuth(kv.Value, RightType.Visibility))
+                    return kv.Key;
+            }
+            return null;
         }
 
         /// <summary>
@@ -104,7 +182,7 @@ namespace Luster.Motion.EditorUI.ViewModel
 
             bus.GetEvent<CompareLookEvent>().Subscribe(arrayModules =>
             {
-                if (!IsModuleDiffer)
+                if (!IsModuleDiffer && _authFacade.HasAuth(AuthDictionary.FlowStationOverview, RightType.Visibility))
                 {
                     _regionManager.RequestNavigate("EditorConfigRegion", "FlowViewContent");
                     IsModuleDiffer = true;
@@ -132,6 +210,9 @@ namespace Luster.Motion.EditorUI.ViewModel
         private DelegateCommand<string> _changeCommand;
         public DelegateCommand<string> ChangeCommand => _changeCommand ?? (_changeCommand = new DelegateCommand<string>((region) =>
         {
+            if (LeftPanelAuthMap.TryGetValue(region, out var authItem)
+                && !_authFacade.HasAuth(authItem, RightType.Visibility))
+                return;
             _regionManager.RequestNavigate("TopRegion", region);
         }));
 
@@ -141,6 +222,9 @@ namespace Luster.Motion.EditorUI.ViewModel
         private DelegateCommand<string> _configCommand;
         public DelegateCommand<string> ConfigCommand => _configCommand ?? (_configCommand = new DelegateCommand<string>((region) =>
         {
+            if (ConfigAuthMap.TryGetValue(region, out var authItem)
+                && !_authFacade.HasAuth(authItem, RightType.Visibility))
+                return;
             _regionManager.RequestNavigate("EditorConfigRegion", region);
         }));
 
@@ -283,9 +367,13 @@ namespace Luster.Motion.EditorUI.ViewModel
         private DelegateCommand<object> _loadedCommand;
         public DelegateCommand<object> LoadedCommand => _loadedCommand ?? (_loadedCommand = new DelegateCommand<object>((obj) =>
         {
-            // 默认日志页面
-            _regionManager.RequestNavigate("EditorConfigRegion", "LogContent");
-            IsCheckLog = true;
+            // 导航到第一个有权限的右侧面板
+            var firstPanel = GetFirstAuthorizedConfigPanel();
+            if (firstPanel != null)
+            {
+                _regionManager.RequestNavigate("EditorConfigRegion", firstPanel);
+                IsCheckLog = firstPanel == "LogContent";
+            }
         }));
 
         /// <summary>
@@ -311,7 +399,7 @@ namespace Luster.Motion.EditorUI.ViewModel
         //    base.OnNavigatedTo(navigationContext);
 
         //    // 检查是否需要进行指纹认证
-            
+
         //}
     }
 }

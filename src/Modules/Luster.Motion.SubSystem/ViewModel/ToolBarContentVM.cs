@@ -21,6 +21,9 @@
 ************************************************************************************/
 #endregion
 
+using DC.Authorization;
+using DC.Authorization.Models;
+using DC.Authorization.WPF;
 using HandyControl.Expression.Shapes;
 using LiveCharts.Dtos;
 using Luster.Common.DataStruct;
@@ -165,7 +168,8 @@ namespace Luster.Motion.SubSystem.ViewModel
         /// </summary>
         protected ToolBarContentVM(ICommonBus commonBus, IMotionController mController, IMotionEngine motionEngine,
             IDbManager dbManager, Dispatcher dispatcher, IDialogService dialogService,
-            IErrorManager errorManager, IAuthService authService, HiveAPI hiveAPI, VisionAPI visionAPI) : base(commonBus)
+            IErrorManager errorManager, IAuthService authService, HiveAPI hiveAPI, VisionAPI visionAPI,
+            IAuthorizationFacade facade) : base(commonBus, facade)
         {
             _dispatcher = dispatcher;
             _dbManager = dbManager;
@@ -590,25 +594,6 @@ namespace Luster.Motion.SubSystem.ViewModel
                     };
                     UserMsg = string.Concat(userInfo.Name, "-", userInfo.Company, "-", userInfo.Level);
                     _authService?.OnRoleChanged(userInfo);
-
-                    foreach (var item in Pages)
-                    {
-                        if (userInfo.Role == SystemRole.Operator)
-                        {
-                            Pages.FirstOrDefault(x => x.Name == "Flow").page_IsEnabled = false;
-                            Pages.FirstOrDefault(x => x.Name == "Configure").page_IsEnabled = false;
-                            Pages.FirstOrDefault(x => x.Name == "Project").page_IsEnabled = false;
-
-                        }
-                        else
-                        {
-                            Pages.FirstOrDefault(x => x.Name == "Flow").page_IsEnabled = true;
-                            Pages.FirstOrDefault(x => x.Name == "Configure").page_IsEnabled = true;
-                            Pages.FirstOrDefault(x => x.Name == "Project").page_IsEnabled = true;
-
-                        }
-
-                    }
 
                 });
                 bus.GetEvent<UserLogoutEvent>().Subscribe((Timeout) =>
@@ -1191,6 +1176,9 @@ namespace Luster.Motion.SubSystem.ViewModel
         {
             if (pagemodel.Region != null)
             {
+                // 操作权限验证
+                if (!CheckOperationAuth(pagemodel.AuthItemName)) return;
+
                 commonBus.OnNavigate(pagemodel);
                 LoginCheck = false;
                 //FingerTest(pagemodel.Name, (isOK) =>
@@ -1213,6 +1201,8 @@ namespace Luster.Motion.SubSystem.ViewModel
             string memo = string.Empty;
 
             commonBus.OnLog(Common.DataStruct.Enums.LogType.Info, $"软件点击动作:{command.Key}");
+                // 操作权限验证
+                if (!CheckOperationAuth(command.AuthItemName)) return;
             try
             {
                 BtnClick = false;
@@ -1570,7 +1560,48 @@ namespace Luster.Motion.SubSystem.ViewModel
             set
             {
                 SetProperty(ref _modeEnabled, value);
+                UpdateModeSwitchVisible();
             }
+        }
+
+        /// <summary>
+        /// 模式切换按钮可见性（结合 ModeEnabled 和权限判断）
+        /// </summary>
+        private Visibility _modeSwitchVisible = Visibility.Collapsed;
+        public Visibility ModeSwitchVisible
+        {
+            get { return _modeSwitchVisible; }
+            set { SetProperty(ref _modeSwitchVisible, value); }
+        }
+
+        /// <summary>
+        /// 根据 ModeEnabled 和权限状态更新模式切换按钮可见性
+        /// </summary>
+        private void UpdateModeSwitchVisible()
+        {
+            if (!ModeEnabled) { ModeSwitchVisible = Visibility.Collapsed; return; }
+            try
+            {
+                bool hasRight = Auth?.HasAuth(AuthDictionary.VizModeSwitch, RightType.Visibility) ?? true;
+                ModeSwitchVisible = hasRight ? Visibility.Visible : Visibility.Collapsed;
+            }
+            catch { ModeSwitchVisible = Visibility.Visible; }
+        }
+
+        /// <summary>
+        /// 根据 AuthItemName 解析 AuthItem 并进行操作权限验证，无权限时弹窗拦截
+        /// </summary>
+        private bool CheckOperationAuth(string authItemName)
+        {
+            if (string.IsNullOrEmpty(authItemName)) return true;
+            try
+            {
+                var field = typeof(AuthDictionary).GetField(authItemName, BindingFlags.Public | BindingFlags.Static);
+                if (field == null || field.FieldType != typeof(AuthItem)) return true;
+                var authItem = (AuthItem)field.GetValue(null);
+                return Auth?.CheckAuth(authItem) ?? true;
+            }
+            catch { return true; }
         }
 
         /// <summary>
@@ -1899,6 +1930,8 @@ namespace Luster.Motion.SubSystem.ViewModel
             var rButton = obj as RadioButton;
             if (rButton != null)
             {
+                // 操作权限验证
+                if (!CheckOperationAuth(nameof(AuthDictionary.VizModeSwitch))) return;
                 // 关闭popup
                 var grid = CommonHelper.VisualUpwardSearch<Grid>(rButton) as Grid;
                 if (grid != null && grid.Parent is Popup popup)
@@ -2122,5 +2155,210 @@ namespace Luster.Motion.SubSystem.ViewModel
             WeekMaintenanceColor = RemainWeekMaintenanceDays >= 0 ? GreenBrush : RedBrush;
             MonthMaintenanceColor = RemainMonthMaintenanceDays >= 0 ? GreenBrush : RedBrush;
         }
+
+        #region 权限项自动注册（[AuthVisibility] 可见性 + [AuthRight] 操作权限）
+
+        // ── 模式切换可见性 + 操作权限 ──
+        [AuthVisibility(nameof(AuthDictionary.VizModeSwitch))]
+        private void AuthVizModeSwitch() { }
+        [AuthRight(nameof(AuthDictionary.VizModeSwitch))]
+        private void AuthRightModeSwitch() { }
+
+        // ── 页面导航可见性 ──
+        [AuthVisibility(nameof(AuthDictionary.VizPageHome))]
+        private void AuthVizPageHome() { }
+        [AuthVisibility(nameof(AuthDictionary.VizPageHardWare))]
+        private void AuthVizPageHardWare() { }
+        [AuthVisibility(nameof(AuthDictionary.VizPageFlow))]
+        private void AuthVizPageFlow() { }
+        [AuthVisibility(nameof(AuthDictionary.VizPageAlarm))]
+        private void AuthVizPageAlarm() { }
+        [AuthVisibility(nameof(AuthDictionary.VizPageStatistics))]
+        private void AuthVizPageStatistics() { }
+        [AuthVisibility(nameof(AuthDictionary.VizPageConfigure))]
+        private void AuthVizPageConfigure() { }
+        [AuthVisibility(nameof(AuthDictionary.VizPageIntegratedHardware))]
+        private void AuthVizPageIntegratedHardware() { }
+        [AuthVisibility(nameof(AuthDictionary.VizPageProject))]
+        private void AuthVizPageProject() { }
+
+        // ── 页面导航操作权限 ──
+        [AuthRight(nameof(AuthDictionary.VizPageHome))]
+        private void AuthRightPageHome() { }
+        [AuthRight(nameof(AuthDictionary.VizPageHardWare))]
+        private void AuthRightPageHardWare() { }
+        [AuthRight(nameof(AuthDictionary.VizPageFlow))]
+        private void AuthRightPageFlow() { }
+        [AuthRight(nameof(AuthDictionary.VizPageAlarm))]
+        private void AuthRightPageAlarm() { }
+        [AuthRight(nameof(AuthDictionary.VizPageStatistics))]
+        private void AuthRightPageStatistics() { }
+        [AuthRight(nameof(AuthDictionary.VizPageConfigure))]
+        private void AuthRightPageConfigure() { }
+        [AuthRight(nameof(AuthDictionary.VizPageIntegratedHardware))]
+        private void AuthRightPageIntegratedHardware() { }
+        [AuthRight(nameof(AuthDictionary.VizPageProject))]
+        private void AuthRightPageProject() { }
+
+        // ── 操作按钮可见性 ──
+        [AuthVisibility(nameof(AuthDictionary.VizCmdStart))]
+        private void AuthVizCmdStart() { }
+        [AuthVisibility(nameof(AuthDictionary.VizCmdReset))]
+        private void AuthVizCmdReset() { }
+        [AuthVisibility(nameof(AuthDictionary.VizCmdPause))]
+        private void AuthVizCmdPause() { }
+        [AuthVisibility(nameof(AuthDictionary.VizCmdStop))]
+        private void AuthVizCmdStop() { }
+        [AuthVisibility(nameof(AuthDictionary.VizCmdHomeZero))]
+        private void AuthVizCmdHomeZero() { }
+
+        // ── 操作按钮操作权限 ──
+        [AuthRight(nameof(AuthDictionary.VizCmdStart))]
+        private void AuthRightCmdStart() { }
+        [AuthRight(nameof(AuthDictionary.VizCmdReset))]
+        private void AuthRightCmdReset() { }
+        [AuthRight(nameof(AuthDictionary.VizCmdPause))]
+        private void AuthRightCmdPause() { }
+        [AuthRight(nameof(AuthDictionary.VizCmdStop))]
+        private void AuthRightCmdStop() { }
+        [AuthRight(nameof(AuthDictionary.VizCmdHomeZero))]
+        private void AuthRightCmdHomeZero() { }
+
+        // ── 硬件页面 - 管理可见性 ──
+        [AuthVisibility(nameof(AuthDictionary.DevAlarmConfig))]
+        private void AuthVizDevAlarmConfig() { }
+        [AuthVisibility(nameof(AuthDictionary.DevMaintain))]
+        private void AuthVizDevMaintain() { }
+        [AuthVisibility(nameof(AuthDictionary.DevModuleName))]
+        private void AuthVizDevModuleName() { }
+        [AuthVisibility(nameof(AuthDictionary.DevAxisIODebug))]
+        private void AuthVizDevAxisIODebug() { }
+        [AuthVisibility(nameof(AuthDictionary.DevModuleConfig))]
+        private void AuthVizDevModuleConfig() { }
+        [AuthVisibility(nameof(AuthDictionary.DevAlarmCustom))]
+        private void AuthVizDevAlarmCustom() { }
+        [AuthVisibility(nameof(AuthDictionary.DevPositionParameter))]
+        private void AuthVizDevPositionParameter() { }
+        [AuthVisibility(nameof(AuthDictionary.DevKeyParameter))]
+        private void AuthVizDevKeyParameter() { }
+
+        // ── 硬件页面 - 真实设备可见性 ──
+        [AuthVisibility(nameof(AuthDictionary.DevCamera))]
+        private void AuthVizDevCamera() { }
+        [AuthVisibility(nameof(AuthDictionary.DevLineLaser))]
+        private void AuthVizDevLineLaser() { }
+        [AuthVisibility(nameof(AuthDictionary.DevMotionCard))]
+        private void AuthVizDevMotionCard() { }
+        [AuthVisibility(nameof(AuthDictionary.DevLightController))]
+        private void AuthVizDevLightController() { }
+        [AuthVisibility(nameof(AuthDictionary.DevRobot))]
+        private void AuthVizDevRobot() { }
+        [AuthVisibility(nameof(AuthDictionary.DevPrinter))]
+        private void AuthVizDevPrinter() { }
+        [AuthVisibility(nameof(AuthDictionary.DevFXTCP))]
+        private void AuthVizDevFXTCP() { }
+
+        // ── 硬件页面 - 虚拟设备可见性 ──
+        [AuthVisibility(nameof(AuthDictionary.DevVAxis))]
+        private void AuthVizDevVAxis() { }
+        [AuthVisibility(nameof(AuthDictionary.DevVIO))]
+        private void AuthVizDevVIO() { }
+        [AuthVisibility(nameof(AuthDictionary.DevVLineLaser))]
+        private void AuthVizDevVLineLaser() { }
+        [AuthVisibility(nameof(AuthDictionary.DevVCamera))]
+        private void AuthVizDevVCamera() { }
+        [AuthVisibility(nameof(AuthDictionary.DevVVacuum))]
+        private void AuthVizDevVVacuum() { }
+        [AuthVisibility(nameof(AuthDictionary.DevVCylinder))]
+        private void AuthVizDevVCylinder() { }
+        [AuthVisibility(nameof(AuthDictionary.DevVAxisM))]
+        private void AuthVizDevVAxisM() { }
+        [AuthVisibility(nameof(AuthDictionary.DevVPrinter))]
+        private void AuthVizDevVPrinter() { }
+        [AuthVisibility(nameof(AuthDictionary.DevVPlc))]
+        private void AuthVizDevVPlc() { }
+        [AuthVisibility(nameof(AuthDictionary.DevVIOSimulation))]
+        private void AuthVizDevVIOSimulation() { }
+        [AuthVisibility(nameof(AuthDictionary.DevVCommunication))]
+        private void AuthVizDevVCommunication() { }
+        [AuthVisibility(nameof(AuthDictionary.DevVPCylinder))]
+        private void AuthVizDevVPCylinder() { }
+        [AuthVisibility(nameof(AuthDictionary.DevVRobot))]
+        private void AuthVizDevVRobot() { }
+        [AuthVisibility(nameof(AuthDictionary.DevVFlyingPhoto))]
+        private void AuthVizDevVFlyingPhoto() { }
+        [AuthVisibility(nameof(AuthDictionary.DevVModule))]
+        private void AuthVizDevVModule() { }
+
+        // ── 流程页面 - 左侧面板可见性 ──
+        [AuthVisibility(nameof(AuthDictionary.FlowFuncModule))]
+        private void AuthFlowFuncModule() { }
+        [AuthVisibility(nameof(AuthDictionary.FlowParamConfig))]
+        private void AuthFlowParamConfig() { }
+        [AuthVisibility(nameof(AuthDictionary.FlowSearchModule))]
+        private void AuthFlowSearchModule() { }
+
+        // ── 流程页面 - 编辑器可见性 + 操作权限 ──
+        [AuthVisibility(nameof(AuthDictionary.FlowEditor))]
+        private void AuthFlowEditor() { }
+        [AuthRight(nameof(AuthDictionary.FlowEditor))]
+        private void AuthRightFlowEditor() { }
+
+        // ── 流程页面 - 右侧面板可见性 ──
+        [AuthVisibility(nameof(AuthDictionary.FlowLog))]
+        private void AuthFlowLog() { }
+        [AuthVisibility(nameof(AuthDictionary.FlowGlobalVar))]
+        private void AuthFlowGlobalVar() { }
+        [AuthVisibility(nameof(AuthDictionary.FlowAxisDebug))]
+        private void AuthFlowAxisDebug() { }
+        [AuthVisibility(nameof(AuthDictionary.FlowCT))]
+        private void AuthFlowCT() { }
+        [AuthVisibility(nameof(AuthDictionary.FlowCacheData))]
+        private void AuthFlowCacheData() { }
+        [AuthVisibility(nameof(AuthDictionary.FlowStationOverview))]
+        private void AuthFlowStationOverview() { }
+
+        // ── 配置页面 - 可见性 ──
+        [AuthVisibility(nameof(AuthDictionary.CfgMachineConfigure))]
+        private void AuthCfgMachineConfigure() { }
+        [AuthVisibility(nameof(AuthDictionary.CfgPLCConfigure))]
+        private void AuthCfgPLCConfigure() { }
+        [AuthVisibility(nameof(AuthDictionary.CfgSoftConfigure))]
+        private void AuthCfgSoftConfigure() { }
+        [AuthVisibility(nameof(AuthDictionary.CfgCockpit))]
+        private void AuthCfgCockpit() { }
+        [AuthVisibility(nameof(AuthDictionary.CfgRobotInfo))]
+        private void AuthCfgRobotInfo() { }
+        [AuthVisibility(nameof(AuthDictionary.CfgFileConfig))]
+        private void AuthCfgFileConfig() { }
+        [AuthVisibility(nameof(AuthDictionary.CfgVisionInfo))]
+        private void AuthCfgVisionInfo() { }
+        [AuthVisibility(nameof(AuthDictionary.CfgFXTCP))]
+        private void AuthCfgFXTCP() { }
+        [AuthVisibility(nameof(AuthDictionary.CfgFunctionEnable))]
+        private void AuthCfgFunctionEnable() { }
+
+        // ── 配置页面 - 操作权限 ──
+        [AuthRight(nameof(AuthDictionary.CfgMachineConfigure))]
+        private void AuthRightCfgMachineConfigure() { }
+        [AuthRight(nameof(AuthDictionary.CfgPLCConfigure))]
+        private void AuthRightCfgPLCConfigure() { }
+        [AuthRight(nameof(AuthDictionary.CfgSoftConfigure))]
+        private void AuthRightCfgSoftConfigure() { }
+        [AuthRight(nameof(AuthDictionary.CfgCockpit))]
+        private void AuthRightCfgCockpit() { }
+        [AuthRight(nameof(AuthDictionary.CfgRobotInfo))]
+        private void AuthRightCfgRobotInfo() { }
+        [AuthRight(nameof(AuthDictionary.CfgFileConfig))]
+        private void AuthRightCfgFileConfig() { }
+        [AuthRight(nameof(AuthDictionary.CfgVisionInfo))]
+        private void AuthRightCfgVisionInfo() { }
+        [AuthRight(nameof(AuthDictionary.CfgFXTCP))]
+        private void AuthRightCfgFXTCP() { }
+        [AuthRight(nameof(AuthDictionary.CfgFunctionEnable))]
+        private void AuthRightCfgFunctionEnable() { }
+
+
+        #endregion
     }
 }
