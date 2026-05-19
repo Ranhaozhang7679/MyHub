@@ -14,7 +14,15 @@ namespace DC.Authorization.WPF.Providers
     /// Hive SFC 接口返回格式：skills_info=姓名;公司;等级 （例：skills_info=王小明;ABC;L8）
     /// </para>
     /// <para>
-    /// 四级权限对应 DeviceLevel 映射矩阵（依据开发文档）：
+    /// 五级权限体系（Level 0-4）：
+    ///   Level 0 = 超级管理员（IsAdmin=true，不参与 Hive 映射，仅本地密码登录）
+    ///   Level 1 = Administrator
+    ///   Level 2 = Integrator
+    ///   Level 3 = Maintenance
+    ///   Level 4 = OP ReadOnly
+    /// </para>
+    /// <para>
+    /// Level 1-4 对应 DeviceLevel 映射矩阵（依据开发文档）：
     /// <code>
     /// DeviceLevel │ OP  │ Maintenance │ Integrator │ Administrator
     ///    L1       │  ✓  │      ✓      │     ✓      │      ✗
@@ -25,7 +33,7 @@ namespace DC.Authorization.WPF.Providers
     ///    L8       │  ✓  │      ✗      │     ✗      │      ✗
     ///    L9       │  ✓  │      ✓      │     ✗      │      ✗
     /// </code>
-    /// Role.Level 约定：数值越小权限越高（1=Administrator, 2=Integrator, 3=Maintenance, 4=OP）
+    /// Role.Level 约定：数值越小权限越高（0=超级管理员, 1=Administrator, 2=Integrator, 3=Maintenance, 4=OP）
     /// </para>
     /// </summary>
     public class HiveAuthProvider : IAuthProvider
@@ -40,6 +48,7 @@ namespace DC.Authorization.WPF.Providers
         /// <summary>
         /// DeviceLevel 字符串 → 该等级可授权的最高 Role.Level
         /// Role.Level 约定：数值越小权限越高。
+        ///   0 = 超级管理员（不参与 Hive 映射）
         ///   1 = Administrator
         ///   2 = Integrator
         ///   3 = Maintenance
@@ -51,7 +60,7 @@ namespace DC.Authorization.WPF.Providers
             {
                 { "L1", 2 },  // OP / Maintenance / Integrator（不含 Administrator）
                 { "L2", 2 },  // OP / Maintenance / Integrator
-                { "L3", 1 },  // 全部四级均可（含 Administrator）
+                { "L3", 2 },  // 全部四级均可（含 Administrator）
                 { "L6", 3 },  // OP / Maintenance
                 { "L7", 4 },  // 仅 OP Read only
                 { "L8", 4 },  // 仅 OP Read only（Line leader）
@@ -328,7 +337,7 @@ namespace DC.Authorization.WPF.Providers
         /// 校验 Hive DeviceLevel 是否允许所选 Role.Level（四级权限矩阵）
         /// </summary>
         /// <param name="hiveDeviceLevel">Hive 返回的等级字符串（如 "L8"）</param>
-        /// <param name="targetRoleLevel">本地 Role.Level（1=Admin, 2=Integrator, 3=Maintenance, 4=OP）</param>
+        /// <param name="targetRoleLevel">本地 Role.Level（1=Administrator, 2=Integrator, 3=Maintenance, 4=OP）</param>
         /// <param name="message">校验结果说明</param>
         /// <returns>是否有权限</returns>
         private bool CheckPermission(string hiveDeviceLevel, int targetRoleLevel, out string message)

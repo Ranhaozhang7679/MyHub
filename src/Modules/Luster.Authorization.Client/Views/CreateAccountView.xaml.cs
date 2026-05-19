@@ -24,5 +24,17 @@ namespace DC.Authorization.WPF.Views
         {
             InitializeComponent();
         }
+
+        private void PwdBox_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is ViewModels.CreateAccountViewModel vm)
+                vm.Password = ((PasswordBox)sender).Password;
+        }
+
+        private void ConfirmPwdBox_PasswordChanged(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is ViewModels.CreateAccountViewModel vm)
+                vm.CheckedPassword = ((PasswordBox)sender).Password;
+        }
     }
 }

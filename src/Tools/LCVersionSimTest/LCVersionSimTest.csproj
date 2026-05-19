@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net472</TargetFramework>
+        <PlatformTarget>x64</PlatformTarget>
+        <RootNamespace>LCVersionSimTest</RootNamespace>
+        <AssemblyName>LCVersionSimTest</AssemblyName>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Newtonsoft.Json" />
+    </ItemGroup>
+
+</Project>

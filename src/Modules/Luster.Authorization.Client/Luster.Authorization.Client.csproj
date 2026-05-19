@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net472</TargetFramework>
@@ -52,6 +52,7 @@
 		<Resource Include="Resources\PhosphorIcons-UserSwitch.png" />
 		<Resource Include="Resources\RemixIcon-ExportFill.png" />
 		<Resource Include="Resources\RemixIcon-ImportLine.png" />
-</ItemGroup>
+		<EmbeddedResource Include="Resources\authorization_template0514.db" />
+	</ItemGroup>
 
 </Project>
