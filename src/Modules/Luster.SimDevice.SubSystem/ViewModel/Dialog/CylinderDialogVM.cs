@@ -239,6 +239,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Dialog
 
                 //更新Device
                 var device = deviceEngine.GetVirtualByID(cylinderModel.ID) as VCylinder;
+                device.Module = Module;
                 device.Name = CylinderName;
                 device.OutExtend = CylinderExtendDO;
                 device.Category = IsSingle ? CylinderCategory.Single : CylinderCategory.Double;
