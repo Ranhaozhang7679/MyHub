@@ -41,34 +41,40 @@
             <TabItem
                 Margin="0,10,0,0"
                 Header="{lang:Lang Key={x:Static lang:LangKeys.FunctionalModule}}"
-                IsSelected="{Binding SelectModule}">
+                IsSelected="{Binding SelectModule}"
+	                Visibility="{Binding FlowFuncModuleVisible}">
                 <Border
                     Margin="5"
                     Background="{DynamicResource RegionBrush}"
                     CornerRadius="5">
-                    <ContentControl prism:RegionManager.RegionName="TopRegion" />
+                    <ContentControl prism:RegionManager.RegionName="TopRegion" 
+                                    Visibility="{Binding FlowFuncModuleVisible}"/>
                 </Border>
             </TabItem>
             <TabItem
                 Margin="0,10,0,0"
                 Header="{lang:Lang Key={x:Static lang:LangKeys.ParameterConfigure}}"
-                IsSelected="{Binding SelectPara}">
+                IsSelected="{Binding SelectPara}"
+	                Visibility="{Binding FlowParamConfigVisible}">
                 <Border
                     Margin="5"
                     Background="{DynamicResource RegionBrush}"
                     CornerRadius="5">
-                    <ContentControl MinHeight="250" prism:RegionManager.RegionName="InParamRegion" />
+                    <ContentControl MinHeight="250" prism:RegionManager.RegionName="InParamRegion" 
+                                    Visibility="{Binding FlowParamConfigVisible}"/>
                 </Border>
             </TabItem>
             <TabItem
                 Margin="0,10,0,0"
                 Header="{lang:Lang Key={x:Static lang:LangKeys.SearchModule}}"
-                IsSelected="{Binding SelectSearch}">
+                IsSelected="{Binding SelectSearch}"
+	                Visibility="{Binding FlowSearchModuleVisible}">
                 <Border
                     Margin="5"
                     Background="{DynamicResource RegionBrush}"
                     CornerRadius="5">
-                    <ContentControl MinHeight="250" prism:RegionManager.RegionName="SearchRegion" />
+                    <ContentControl MinHeight="250" prism:RegionManager.RegionName="SearchRegion" 
+                                    Visibility="{Binding FlowSearchModuleVisible}"/>
                 </Border>
             </TabItem>
         </TabControl>
@@ -83,7 +89,8 @@
             Grid.Column="2"
             Margin="5"
             Background="{DynamicResource RegionBrush}"
-            CornerRadius="5">
+            CornerRadius="5"
+            Visibility="{Binding FlowEditorVisible}">
             <ContentControl Margin="5" prism:RegionManager.RegionName="EditorRegion" />
         </Border>
         <GridSplitter
@@ -111,42 +118,48 @@
                     CommandParameter="LogContent"
                     Content="{lang:Lang Key={x:Static lang:LangKeys.Log}}"
                     GroupName="Config"
-                    IsChecked="{Binding IsCheckLog}" />
+                    IsChecked="{Binding IsCheckLog}"
+	                    Visibility="{Binding FlowLogVisible}" />
                 <RadioButton
                     MinWidth="70"
                     Command="{Binding ConfigCommand}"
                     CommandParameter="GlobalContent"
                     Content="{lang:Lang Key={x:Static lang:LangKeys.GlobalVar}}"
                     GroupName="Config"
-                    IsChecked="{Binding IsCheckGlobal}" />
+                    IsChecked="{Binding IsCheckGlobal}"
+	                    Visibility="{Binding FlowGlobalVarVisible}" />
                 <RadioButton
                     MinWidth="70"
                     Command="{Binding ConfigCommand}"
                     CommandParameter="AxisSetContent"
                     Content="{lang:Lang Key={x:Static lang:LangKeys.AxisDebug}}"
                     GroupName="Config"
-                    IsChecked="{Binding IsCheckAxis}" />
+                    IsChecked="{Binding IsCheckAxis}"
+	                    Visibility="{Binding FlowAxisDebugVisible}" />
                 <RadioButton
                     MinWidth="70"
                     Command="{Binding ConfigCommand}"
                     CommandParameter="CTConfigContent"
                     Content="{lang:Lang Key={x:Static lang:LangKeys.CT}}"
                     GroupName="Config"
-                    IsChecked="{Binding IsCheckCT}" />
+                    IsChecked="{Binding IsCheckCT}"
+	                    Visibility="{Binding FlowCTVisible}" />
                 <RadioButton
                     MinWidth="70"
                     Command="{Binding ConfigCommand}"
                     CommandParameter="CacheDataContent"
                     Content="{lang:Lang Key={x:Static lang:LangKeys.CacheData}}"
                     GroupName="Config"
-                    IsChecked="{Binding IsCacheData}" />
+                    IsChecked="{Binding IsCacheData}"
+	                    Visibility="{Binding FlowCacheDataVisible}" />
                 <RadioButton
                     MinWidth="70"
                     Command="{Binding ConfigCommand}"
                     CommandParameter="FlowViewContent"
                     Content="{lang:Lang Key={x:Static lang:LangKeys.StationOverview}}"
                     GroupName="Config"
-                    IsChecked="{Binding IsModuleDiffer}" />
+                    IsChecked="{Binding IsModuleDiffer}"
+	                    Visibility="{Binding FlowStationOverviewVisible}" />
                 <!--<RadioButton
                     MinWidth="70"
                     Command="{Binding ConfigCommand}"

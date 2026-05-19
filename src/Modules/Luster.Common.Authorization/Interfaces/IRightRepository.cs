@@ -15,7 +15,7 @@ namespace DC.Authorization
         void Upsert(Right[] rights);
 
         /// <summary>检查指定账号是否拥有某权限</summary>
-        bool HasRight(int accountId, string moduleName, string viewName, string rightName);
+        bool HasRight(int accountId, string moduleName, string viewName, string rightName, RightType rightType);
 
         /// <summary>删除角色的所有权限</summary>
         void DeleteRoleRights(int roleId);

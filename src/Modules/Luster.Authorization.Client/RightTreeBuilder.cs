@@ -18,10 +18,10 @@ namespace DC.Authorization.WPF
         {
             var tree = new List<RightTreeNode>();
 
-            // 一级：按 ModuleName 分组
+            // 按 SortOrder 排序后，一级按 ModuleName 分组
             var moduleGroups = allRights
-                .GroupBy(r => r.ModuleName ?? "未分类")
-                .OrderBy(g => g.Key);
+                .OrderBy(r => r.SortOrder)
+                .GroupBy(r => r.ModuleName ?? "未分类");
 
             foreach (var moduleGroup in moduleGroups)
             {
@@ -30,10 +30,9 @@ namespace DC.Authorization.WPF
                     DisplayName = moduleGroup.Key
                 };
 
-                // 二级：按 ViewName 分组
+                // 二级：按 ViewName 分组，组内按 SortOrder 排序
                 var viewGroups = moduleGroup
-                    .GroupBy(r => r.ViewName ?? "默认")
-                    .OrderBy(g => g.Key);
+                    .GroupBy(r => r.ViewName ?? "默认");
 
                 foreach (var viewGroup in viewGroups)
                 {
@@ -43,8 +42,8 @@ namespace DC.Authorization.WPF
                         Parent = moduleNode
                     };
 
-                    // 三级：权限项（叶子节点）
-                    foreach (var right in viewGroup.OrderBy(r => r.Name))
+                    // 三级：权限项（叶子节点），按 SortOrder 排序
+                    foreach (var right in viewGroup.OrderBy(r => r.SortOrder))
                     {
                         var leafNode = new RightTreeNode
                         {
@@ -61,7 +60,6 @@ namespace DC.Authorization.WPF
                     moduleNode.Children.Add(viewNode);
                 }
 
-                // 根据子节点状态设置父节点初始状态
                 moduleNode.UpdateCheckStateFromChildren();
                 tree.Add(moduleNode);
             }

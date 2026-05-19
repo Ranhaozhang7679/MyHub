@@ -14,7 +14,7 @@ namespace DC.Authorization.WPF.Repositories
             using var conn = new SQLiteConnection(DbConfig.ConnectionString);
             conn.Open();
             using var cmd = conn.CreateCommand();
-            cmd.CommandText = "SELECT id,right_name,module_name,view_name,description,right_type FROM right_info";
+            cmd.CommandText = "SELECT id,right_name,module_name,view_name,description,right_type,sort_order FROM right_info ORDER BY sort_order";
             using var reader = cmd.ExecuteReader();
             var res = new List<Right>();
             while (reader.Read())
@@ -27,6 +27,7 @@ namespace DC.Authorization.WPF.Repositories
                     ViewName = reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
                     Description = reader.IsDBNull(4) ? string.Empty : reader.GetString(4),
                     Type = (RightType) reader.GetByte(5),
+                    SortOrder = reader.IsDBNull(6) ? 0 : reader.GetInt32(6),
                 });
             }
             return res;
@@ -40,9 +41,9 @@ namespace DC.Authorization.WPF.Repositories
             foreach (var right in rights)
             {
                 using var cmd = conn.CreateCommand();
-                cmd.CommandText = @"INSERT INTO right_info(right_name, module_name, view_name, description, right_type) 
-VALUES (@name, @moduleName, @viewName, @description, @rightType) 
-ON CONFLICT(module_name, view_name, right_name) DO UPDATE SET description=@description, right_type=@rightType;";
+                cmd.CommandText = @"INSERT INTO right_info(right_name, module_name, view_name, description, right_type, sort_order)
+VALUES (@name, @moduleName, @viewName, @description, @rightType, @sortOrder)
+ON CONFLICT(module_name, view_name, right_name, right_type) DO UPDATE SET description=@description, right_type=@rightType, sort_order=@sortOrder;";
                 cmd.Parameters.AddRange(new SQLiteParameter[]
                 {
                     new SQLiteParameter("@name", right.Name),
@@ -50,25 +51,27 @@ ON CONFLICT(module_name, view_name, right_name) DO UPDATE SET description=@descr
                     new SQLiteParameter("@viewName", right.ViewName),
                     new SQLiteParameter("@description", right.Description),
                     new SQLiteParameter("@rightType", (byte)right.Type),
+                    new SQLiteParameter("@sortOrder", right.SortOrder),
                 });
                 cmd.ExecuteNonQuery();
             }
             tran.Commit();
         }
 
-        public bool HasRight(int accountId, string moduleName, string viewName, string rightName)
+        public bool HasRight(int accountId, string moduleName, string viewName, string rightName, RightType rightType)
         {
             using var conn = new SQLiteConnection(DbConfig.ConnectionString);
             conn.Open();
             using var cmd = conn.CreateCommand();
-            cmd.CommandText = @"SELECT 1 FROM role_right RR 
-JOIN account_info ACC ON rr.role_id=acc.role_id 
-JOIN right_info RI ON rr.right_id=ri.id 
-WHERE acc.id=@accountId AND ri.module_name=@moduleName AND ri.view_name=@viewName AND ri.right_name=@rightName";
+            cmd.CommandText = @"SELECT 1 FROM role_right RR
+JOIN account_info ACC ON rr.role_id=acc.role_id
+JOIN right_info RI ON rr.right_id=ri.id
+WHERE acc.id=@accountId AND ri.module_name=@moduleName AND ri.view_name=@viewName AND ri.right_name=@rightName AND ri.right_type=@rightType";
             cmd.Parameters.Add(new SQLiteParameter("@accountId", accountId));
             cmd.Parameters.Add(new SQLiteParameter("@moduleName", moduleName));
             cmd.Parameters.Add(new SQLiteParameter("@viewName", viewName));
             cmd.Parameters.Add(new SQLiteParameter("@rightName", rightName));
+            cmd.Parameters.Add(new SQLiteParameter("@rightType", (byte)rightType));
             return cmd.ExecuteScalar() != null;
         }
 
