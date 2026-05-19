@@ -593,9 +593,6 @@ namespace Luster.Motion.Integration.Web
                 var second = currentCTInfos.FirstOrDefault(c => listA.Contains(c.Station) && c.Module == secondKey);
                 // first或second不会为空，只是属性取值会为空
                 //if (first != null && second != null)
-                // 左右流线独立作业时，产品只经过一条流线，找不到对应模块数据时跳过，避免上传错误数据
-                if (string.IsNullOrEmpty(first.Module))
-                    continue;
                 if (first.StartTime == DateTime.MinValue)
                 {
                     first.StartTime = DateTime.Now;
