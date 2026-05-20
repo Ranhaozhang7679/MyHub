@@ -89,7 +89,7 @@ namespace Luster.Module.Motion.Business.Functions
         [Parameter("动作类型", 2, CN = "动作类型", DefaultV = PDCAType.SendData)]
         public PDCAType PDCAMode { get; set; }
 
-        [DependOn("PDCAMode", PDCAType.Whole, PDCAType.SendData)]
+        [DependOn("PDCAMode", PDCAType.Whole, PDCAType.SendData, PDCAType.WholeContinous)]
         [Parameter("启用Display_SN上传项", 3, CN = "启用Display_SN", CanRef = ParamRef.Ref, DefaultV = false)]
         public bool IsCGDisplaySN { get; set; }
 
