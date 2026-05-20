@@ -1684,11 +1684,14 @@ namespace Luster.Motion.Integration.SFC
                 {
                     lock (lockPDCA)
                     {
+                        // 0.发送前检查连接状态
+                        vComm.ConnectOK();
+
                         // 1.发生请求
                         vComm.Write(startCmd);
 
                         // 2.接收数据
-                        result = vComm.ReadSingle<string>("", 3000);
+                        result = vComm.ReadSingle<string>("", timeOutMs);
                     }
 
                     //PDCA返回超时后，result会为空导致设备停机

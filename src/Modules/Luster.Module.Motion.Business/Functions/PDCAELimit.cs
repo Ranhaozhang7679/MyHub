@@ -50,7 +50,9 @@ namespace Luster.Module.Motion.Business.Functions
             [Description("结束")]
             End,
             [Description("CCTV文件拷贝")]
-            CCTV
+            CCTV,
+            [Description("打包上传")]
+            WholeContinous
         }
         /// <summary>
         /// 通信服务器
@@ -480,9 +482,54 @@ namespace Luster.Module.Motion.Business.Functions
                     }
 
                     break;
+
+                case PDCAType.WholeContinous:
+
+                    // 1.异步拷贝图片（非CPK/GRR模式下）
+                    if (!IsCPKMode && !IsGRRMode)
+                    {
+                        if (IsConnectMacMini)
+                        {
+                            CopyFolderAsync(OutWIP.ToString());
+                        }
+                        // 图片拷贝为异步操作，不阻塞数据上传
+                        iCopyImgRes = 1;
+                    }
+                    else
+                    {
+                        iCopyImgRes = 1;
+                    }
+
+                    // 2.拼接完整批量消息（start + attr + data + submit 一次性发送）
+                    sendStr = GetSendDataContinuous(OutWIP, ProdData, IsCPKMode, IsGRRMode, WorkId);
+
+                    // 3.检测压力值异常
+                    if (sendStr.ToLower().Contains("force@-1@"))
+                    {
+                        MyOwner.OnAlarm(AlarmType.InfoTip, $"压力值读到-1，不再上传PDCA!!!");
+                        iResult = 5;
+                        return true;
+                    }
+
+                    // 4.一次性发送
+                    _sfcHelper.SendPDCAData(sendStr, "PDCA打包上传", out errMsg, TimeOutMS, IsAutoDisConnect);
+                    if (!string.IsNullOrEmpty(errMsg))
+                    {
+                        OnAlarm(AlarmType.InfoTip, $"PDCA打包上传失败:{errMsg}");
+                        iSendPDCARes = 0;
+                        SaveErrorData(SN, sendStr);
+                        iResult = 3;
+                        return true;
+                    }
+                    else
+                    {
+                        iSendPDCARes = 1;
+                    }
+
+                    break;
             }
 
-            if (PDCAMode == PDCAType.Whole)
+            if (PDCAMode == PDCAType.Whole || PDCAMode == PDCAType.WholeContinous)
             {
                 if (iCopyImgRes == 1 && iSendPDCARes == 1)
                     iResult = 1;
@@ -760,6 +807,84 @@ namespace Luster.Module.Motion.Business.Functions
                        $"}}\n";
                 }
             }
+
+            return sendContent;
+        }
+
+        /// <summary>
+        /// 连续一次性发送：将 start + attr + data + submit 拼成一条 _{} 批量消息
+        /// </summary>
+        private string GetSendDataContinuous(string wip, LStringEx pDataEx, bool IsCPK, bool IsGRR, int WorkId)
+        {
+            string QPLNum = MyOwner.ConfigManager.GetWebConfig("UniteCode");
+
+            string mode = "0";
+            string priority = "0";
+            string straudit = "";
+
+            // 拼接过程数据
+            string prodDatas = pDataEx.GetString(MyOwner).Replace('\r', ';').Replace('\n', ';');
+            prodDatas = prodDatas.Replace("QPL@1@@", $"QPL@{QPLNum}@@");
+
+            StringBuilder sbData = new StringBuilder();
+            var datas = prodDatas.Split(';');
+            foreach (var item in datas)
+            {
+                if (string.IsNullOrEmpty(item.Trim())) continue;
+                sbData.Append($"{wip}@pdata@{item}\n");
+            }
+
+            if (IsCPKMode)
+            {
+                mode = "1";
+                priority = "-2";
+                straudit = "@audit";
+            }
+            else if (IsGRRMode)
+            {
+                mode = "2";
+                priority = "-2";
+                straudit = "@audit";
+            }
+            else
+            {
+                mode = "0";
+                priority = "0";
+                straudit = "";
+                testSeriesID = "0";
+            }
+
+            // 拼接 attr
+            StringBuilder sbAttr = new StringBuilder();
+            string machineSN = MyOwner.ConfigManager.GetWebConfig("MachineSN");
+            if (!IsContainLine)
+            {
+                sbAttr.Append($"{wip}@attr@Machine SN@{machineSN}\n");
+                sbAttr.Append($"{wip}@attr@CG SN@{SN}\n");
+                sbAttr.Append($"{wip}@attr@Carrier SN@{CarrierSN}\n");
+                if (IsCGDisplaySN)
+                    sbAttr.Append($"{wip}@attr@CG Display_SN@{CGDisplaySN}\n");
+            }
+            else
+            {
+                sbAttr.Append($"{wip}@attr@Machine_SN@{machineSN}\n");
+                sbAttr.Append($"{wip}@attr@CG_SN@{SN}\n");
+                sbAttr.Append($"{wip}@attr@Carrier_SN@{CarrierSN}\n");
+                if (IsCGDisplaySN)
+                    sbAttr.Append($"{wip}@attr@CG Display_SN@{CGDisplaySN}\n");
+            }
+
+            string sendContent =
+                $"_{{\n" +
+                $"{wip}@start{straudit}\n" +
+                sbAttr.ToString() +
+                sbData.ToString() +
+                $"{wip}@pdata@Mode@{mode}\n" +
+                $"{wip}@pdata@Operator_ID@1\n" +
+                $"{wip}@pdata@Priority@{priority}\n" +
+                $"{wip}@pdata@TestSeriesID@{(IsCPKMode || IsGRRMode ? testSeriesID : "0")}\n" +
+                $"{wip}@submit@{MyOwner.ConfigManager.GetWebConfig("SoftVersion")}\n" +
+                $"}}\n";
 
             return sendContent;
         }

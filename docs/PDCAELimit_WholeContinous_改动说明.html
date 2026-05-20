@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>PDCAELimit 功能改动说明 - WholeContinous 模式</title>
+    <style>
+        body { font-family: "Microsoft YaHei", sans-serif; max-width: 960px; margin: 0 auto; padding: 24px; color: #333; line-height: 1.7; }
+        h1 { color: #1a73e8; border-bottom: 2px solid #1a73e8; padding-bottom: 8px; }
+        h2 { color: #333; margin-top: 32px; border-left: 4px solid #1a73e8; padding-left: 10px; }
+        h3 { color: #555; margin-top: 20px; }
+        table { border-collapse: collapse; width: 100%; margin: 12px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+        th { background: #f5f5f5; font-weight: 600; }
+        tr:nth-child(even) { background: #fafafa; }
+        code { background: #f1f3f5; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+        pre { background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: 6px; padding: 14px; overflow-x: auto; font-size: 0.85em; line-height: 1.5; }
+        .tag-new { background: #e6f4ea; color: #137333; padding: 2px 8px; border-radius: 3px; font-size: 0.8em; font-weight: 600; }
+        .tag-fix { background: #fce8e6; color: #c5221f; padding: 2px 8px; border-radius: 3px; font-size: 0.8em; font-weight: 600; }
+        .highlight { background: #fff3cd; padding: 1px 4px; border-radius: 2px; }
+        .info-box { background: #e8f0fe; border-left: 4px solid #1a73e8; padding: 12px 16px; margin: 12px 0; border-radius: 4px; }
+        .warn-box { background: #fff3cd; border-left: 4px solid #f9ab00; padding: 12px 16px; margin: 12px 0; border-radius: 4px; }
+        .diff-add { color: #22863a; background: #f0fff4; }
+        .diff-del { color: #cb2431; background: #ffeef0; }
+    </style>
+</head>
+<body>
+
+<h1>PDCAELimit 功能改动说明 — WholeContinous 模式</h1>
+<p><strong>日期：</strong>2026-05-20 &nbsp;|&nbsp; <strong>分支：</strong>develop &nbsp;|&nbsp; <strong>改动文件：</strong>2 个</p>
+
+<!-- ==================== 背景与问题 ==================== -->
+<h2>1. 背景与问题</h2>
+<p>现场反馈 PDCAELimit 的 <strong>Whole</strong> 模式在运行时，偶发 PDCA 服务端异常导致上传失败。</p>
+
+<h3>根本原因</h3>
+<p>Whole 模式将一次完整的 PDCA 流程拆分为 <strong>3 步串行操作</strong>，每步是独立的 TCP 事务：</p>
+
+<table>
+    <tr><th>步骤</th><th>操作</th><th>TCP 交互</th></tr>
+    <tr><td>①</td><td>发送 Start 命令</td><td>Write → Read（等返回）</td></tr>
+    <tr><td>②</td><td>拷贝图片到 MacMini 网盘</td><td>文件操作（可能耗时数秒）</td></tr>
+    <tr><td>③</td><td>发送 Data + Submit</td><td>Write → Read（等返回）</td></tr>
+</table>
+
+<div class="warn-box">
+    <strong>问题：</strong>步骤 ① 和步骤 ③ 是两次独立的 TCP 通信。当步骤 ②（图片拷贝）耗时长时，PDCA 服务端因长时间未收到完整事务（Submit），会话超时导致步骤 ③ 失败。
+</div>
+
+<p>参考其他项目（BABI）的实现，其做法是将 <code>start + attr + data + submit</code> 全部拼在一条 <code>_{}</code> 批量消息里<strong>一次性发送</strong>，一个 TCP 事务完成全部操作，不存在中间间隔。</p>
+
+<!-- ==================== 改动方案 ==================== -->
+<h2>2. 改动方案</h2>
+
+<div class="info-box">
+    <strong>核心思路：</strong>新增 <code>WholeContinous</code>（打包上传）模式，将 Start、Attr、Data、Submit 合并为一次 <code>_{}</code> 批量发送。<br>
+    保持现有 <code>Whole</code> 模式不变，<strong>向后兼容</strong>，现有产线无需修改配置。
+</div>
+
+<h3>改动文件清单</h3>
+<table>
+    <tr><th>文件</th><th>改动类型</th><th>说明</th></tr>
+    <tr>
+        <td><code>PDCAELimit.cs</code></td>
+        <td><span class="tag-new">新增</span></td>
+        <td>新增枚举值、case 分支、批量消息拼接方法</td>
+    </tr>
+    <tr>
+        <td><code>SFCHelper.cs</code></td>
+        <td><span class="tag-fix">修复</span></td>
+        <td>修复 SendPDCAData 缺少连接检查和超时参数未生效的问题</td>
+    </tr>
+</table>
+
+<!-- ==================== 详细改动 ==================== -->
+<h2>3. 详细改动</h2>
+
+<h3>3.1 PDCAELimit.cs</h3>
+
+<h4>① 新增枚举值 <code>PDCAType.WholeContinous</code></h4>
+<pre>
+public enum PDCAType
+{
+    Start,
+    GetWIP,
+    CopyImage,
+    SendData,
+    Whole,
+    End,
+    CCTV,
+    <span class="diff-add">WholeContinous  // 打包上传</span>
+}
+</pre>
+
+<h4>② 新增 <code>WholeContinous</code> case（DoExcute 中）</h4>
+<p>执行流程：</p>
+<ol>
+    <li><strong>异步拷贝图片</strong>（非 CPK/GRR 模式时，fire-and-forget，不阻塞主流程）</li>
+    <li><strong>拼接完整批量消息</strong> — 调用 <code>GetSendDataContinuous</code> 将 start + attr + data + submit 合为一条 <code>_{}</code></li>
+    <li><strong>压力值异常检测</strong>（force@-1@ 时跳过上传）</li>
+    <li><strong>一次性 TCP 发送</strong> — 调用 <code>SendPDCAData</code> 发送完整批量消息</li>
+</ol>
+
+<h4>③ 新增 <code>GetSendDataContinuous</code> 方法</h4>
+<p>生成的消息格式如下：</p>
+<pre>
+_{
+    {WIP}@start[@audit]
+    {WIP}@attr@Machine SN@{MachineSN}
+    {WIP}@attr@CG SN@{SN}
+    {WIP}@attr@Carrier SN@{CarrierSN}
+    [{WIP}@attr@CG Display_SN@{DisplaySN}]    // 启用时包含
+    {WIP}@pdata@{过程数据项1}
+    {WIP}@pdata@{过程数据项2}
+    ...
+    {WIP}@pdata@Mode@{mode}
+    {WIP}@pdata@Operator_ID@1
+    {WIP}@pdata@Priority@{priority}
+    {WIP}@pdata@TestSeriesID@{testSeriesID}
+    {WIP}@submit@{软件版本}
+}
+</pre>
+
+<h3>3.2 SFCHelper.cs — 修复 SendPDCAData</h3>
+<p><code>SendPDCAData</code> 方法存在两个已知问题，一并修复：</p>
+
+<table>
+    <tr><th>问题</th><th>修复</th></tr>
+    <tr>
+        <td>发送前未检查连接状态</td>
+        <td>在 <code>lock</code> 块内添加 <code>vComm.ConnectOK()</code></td>
+    </tr>
+    <tr>
+        <td><code>timeOutMs</code> 参数未使用，硬编码 3000ms</td>
+        <td>改为 <code>vComm.ReadSingle&lt;string&gt;("", timeOutMs)</code></td>
+    </tr>
+</table>
+
+<pre>
+lock (lockPDCA)
+{
+    <span class="diff-add">// 0.发送前检查连接状态
+    vComm.ConnectOK();</span>
+
+    // 1.发送请求
+    vComm.Write(startCmd);
+
+    // 2.接收数据
+    <span class="diff-del">result = vComm.ReadSingle&lt;string&gt;("", 3000);</span>
+    <span class="diff-add">result = vComm.ReadSingle&lt;string&gt;("", timeOutMs);</span>
+}
+</pre>
+
+<!-- ==================== 对比 ==================== -->
+<h2>4. Whole vs WholeContinous 对比</h2>
+
+<table>
+    <tr><th>对比项</th><th>Whole（原有）</th><th>WholeContinous（新增）</th></tr>
+    <tr><td>TCP 交互次数</td><td>2 次（Start + Submit 分开发送）</td><td>1 次（批量发送）</td></tr>
+    <tr><td>中间间隔</td><td>有（图片拷贝在两次 TCP 之间）</td><td>无</td></tr>
+    <tr><td>图片拷贝</td><td>异步，不阻塞 TCP 发送</td><td>异步，不阻塞 TCP 发送</td></tr>
+    <tr><td>服务端超时风险</td><td>存在（拷贝耗时长时）</td><td>不存在</td></tr>
+    <tr><td>消息格式</td><td>Start 单发 + <code>_{data+submit}</code></td><td><code>_{start+attr+data+submit}</code> 一条</td></tr>
+    <tr><td>向后兼容</td><td colspan="2">✅ 现有 Whole 模式完全不变</td></tr>
+</table>
+
+<!-- ==================== 使用方式 ==================== -->
+<h2>5. 使用方式</h2>
+<p>在流程编辑器中，将 PDCAELimit 模块的 <strong>动作类型</strong> 从 <code>所有动作</code> 改为 <code>打包上传</code> 即可。</p>
+<p>其余参数（SN、WIP长度、图片路径、过程数据等）与 Whole 模式完全一致，无需额外配置。</p>
+
+<!-- ==================== 注意事项 ==================== -->
+<h2>6. 注意事项</h2>
+<ul>
+    <li>图片拷贝为异步操作，其失败不会阻塞数据上传流程，但会有日志记录</li>
+    <li><code>IsManual</code>（手动输入 AELimits）模式下不支持 WholeContinous，该模式会走原有的数据拼接逻辑</li>
+    <li>CPK/GRR 模式下不拷贝图片，行为与 Whole 模式一致</li>
+    <li>如果 PDCA 服务端不支持 <code>_{}</code> 批量格式，请继续使用 Whole 模式</li>
+</ul>
+
+</body>
+</html>
