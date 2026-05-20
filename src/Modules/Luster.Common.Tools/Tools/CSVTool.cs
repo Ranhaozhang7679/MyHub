@@ -355,5 +355,33 @@ namespace Luster.Common.Tools
             }
             return list;
         }
+
+        public static int GetCSVColNum(string fileName, int dataStartRow = 1)
+        {
+            int num = 0;
+            if (!File.Exists(fileName))
+                throw new FileNotFoundException("file:" + fileName + " is not exist!");
+
+            // 读取标题，获取顺序
+            using (var reader = new StreamReader(fileName, Encoding.UTF8))
+            {
+                // 读取标题
+                string line = string.Empty;
+                for (int i = 0; i < dataStartRow; i++)
+                {
+                    line = reader.ReadLine();
+                }
+
+                // 读取内容
+                while ((line = reader.ReadLine()) != null)
+                {
+                    var data = line.Split(',');
+                    num = data.Length;
+                }
+                reader.Close();
+            }
+            return num;
+        }
+
     }
 }

@@ -95,6 +95,9 @@ namespace Luster.Module.Motion.IO
             //音圈电机
             AddFunction<JunRudderVCM>();
             AddFunction<DHRoboticsVCM>();
+
+            // 设备模拟量采集与转换并生成图
+            AddFunction<AnalogConvertChart>();
         }
     }
 
