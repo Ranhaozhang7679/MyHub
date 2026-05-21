@@ -1339,7 +1339,7 @@ namespace Luster.Motion.Integration.SFC
             string cmd = $"c=QUERY_4_SFC&subcmd=carrier_link_csa&carrier_no={carrierSN}&link_inf=1:{wip}&station_id={StationID}";
             HttpSend(cmd, "绑定载具", r =>
             {
-                if (r.Contains(OKChar) || r.Contains(OKChar_))
+                if ((r.Contains(OKChar) || r.Contains(OKChar_)) && r.ToUpper().Contains("LINK SN SUCCESS"))
                 {
                     return string.Empty;
                 }

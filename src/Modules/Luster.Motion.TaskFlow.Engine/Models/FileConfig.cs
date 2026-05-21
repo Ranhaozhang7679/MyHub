@@ -77,7 +77,7 @@ namespace Luster.Motion.TaskFlow.Engine.Models
         /// <summary>
         /// 数据库保存天数
         /// </summary>
-        public int DBSaveDays { get; set; }
+        public int DBSaveDays { get; set; } = 90;
 
         /// <summary>
         /// 日志备份天数
@@ -92,7 +92,7 @@ namespace Luster.Motion.TaskFlow.Engine.Models
         /// <summary>
         /// 数据库备份天数
         /// </summary>
-        public int DBBackUpDays { get; set; }
+        public int DBBackUpDays { get; set; } = 90;
 
 
         #region Hive 相关

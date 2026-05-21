@@ -2936,24 +2936,164 @@ namespace Luster.SimDevice.MotionCard.GG
         #endregion
 
         #region SDO和PDO读写
+
+        /// <summary>
+        /// EtherCAT SDO读取
+        /// </summary>
         public void SDORead(short slave, short index, short subindex, short data_size, out int value, short count)
         {
-            throw new NotImplementedException();
+            CheckInit();
+
+            GetAxisNum(slave, out short coreNum, out short axisNum);
+
+            string msgHead = $"{Brand} 从站{slave} SDO读取失败。";
+            byte[] buffer = new byte[4];
+            uint resultSize = 0;
+            uint errCode = 0;
+
+            SafeNativeMethod((out string err) =>
+            {
+                err = "";
+
+                short ret = mc.GTN_EcatSDOUpload(
+                    coreNum,
+                    (ushort)axisNum,
+                    (ushort)index,
+                    (byte)subindex,
+                    out buffer[0],
+                    (uint)data_size,
+                    out resultSize,
+                    out errCode);
+
+                if (ret != 0)
+                {
+                    err = $"{msgHead} 原因：index=0x{index:X4}, subindex={subindex}, 错误码={ret}, abortCode=0x{errCode:X8}";
+                    return false;
+                }
+
+                return true;
+            });
+
+            // 根据 data_size 解析对应字节数的值
+            value = data_size switch
+            {
+                1 => buffer[0],
+                2 => BitConverter.ToInt16(buffer, 0),
+                4 => BitConverter.ToInt32(buffer, 0),
+                _ => BitConverter.ToInt32(buffer, 0)
+            };
         }
 
+        /// <summary>
+        /// EtherCAT SDO写入
+        /// </summary>
         public void SDOWrite(short slave, short index, short subindex, int data, short data_size)
         {
-            throw new NotImplementedException();
+            CheckInit();
+
+            GetAxisNum(slave, out short coreNum, out short axisNum);
+
+            string msgHead = $"{Brand} 从站{slave} SDO写入失败。";
+            byte[] buffer = BitConverter.GetBytes(data);
+            uint errCode = 0;
+
+            SafeNativeMethod((out string err) =>
+            {
+                err = "";
+
+                short ret = mc.GTN_EcatSDODownload(
+                    coreNum,
+                    (ushort)axisNum,
+                    (ushort)index,
+                    (byte)subindex,
+                    ref buffer[0],
+                    (uint)data_size,
+                    out errCode);
+
+                if (ret != 0)
+                {
+                    err = $"{msgHead} 原因：index=0x{index:X4}, subindex={subindex}, data={data}, 错误码={ret}, abortCode=0x{errCode:X8}";
+                    return false;
+                }
+
+                return true;
+            });
         }
 
+        /// <summary>
+        /// EtherCAT PDO读取
+        /// </summary>
         public void PDORead(short axis, short index, short subindex, short data_size, ref int value, short count)
         {
-            throw new NotImplementedException();
+            CheckInit();
+
+            GetAxisNum(axis, out short coreNum, out short axisNum);
+
+            string msgHead = $"{Brand} 从站{axis} PDO读取失败。";
+            byte[] buffer = new byte[4];
+
+            SafeNativeMethod((out string err) =>
+            {
+                err = "";
+
+                short ret = mc.GTN_GetEcatSlavePdo(
+                    coreNum,
+                    (ushort)axisNum,
+                    (ushort)index,
+                    (byte)subindex,
+                    out buffer[0],
+                    (uint)data_size);
+
+                if (ret != 0)
+                {
+                    err = $"{msgHead} 原因：index=0x{index:X4}, subindex={subindex}, 错误码={ret}";
+                    return false;
+                }
+
+                return true;
+            });
+
+            value = data_size switch
+            {
+                1 => buffer[0],
+                2 => BitConverter.ToInt16(buffer, 0),
+                4 => BitConverter.ToInt32(buffer, 0),
+                _ => BitConverter.ToInt32(buffer, 0)
+            };
         }
 
+        /// <summary>
+        /// EtherCAT PDO写入
+        /// </summary>
         public void PDOWrite(short axis, short index, short subindex, int data, short data_size)
         {
-            throw new NotImplementedException();
+            CheckInit();
+
+            GetAxisNum(axis, out short coreNum, out short axisNum);
+
+            string msgHead = $"{Brand} 从站{axis} PDO写入失败。";
+            byte[] buffer = BitConverter.GetBytes(data);
+
+            SafeNativeMethod((out string err) =>
+            {
+                err = "";
+
+                short ret = mc.GTN_SetEcatSlavePdo(
+                    coreNum,
+                    (ushort)axisNum,
+                    (ushort)index,
+                    (byte)subindex,
+                    ref buffer[0],
+                    (uint)data_size);
+
+                if (ret != 0)
+                {
+                    err = $"{msgHead} 原因：index=0x{index:X4}, subindex={subindex}, data={data}, 错误码={ret}";
+                    return false;
+                }
+
+                return true;
+            });
         }
 
         public void AxisContinuousMove(int axisNo, double acc, double dec, double perPulse, List<double> pos, List<double> vel)

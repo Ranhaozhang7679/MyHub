@@ -1685,7 +1685,23 @@ namespace Luster.Motion.Integration.Web
                 IsRobotEnabledMem = robotEnabled;
             }
 
-
+            //根据FX的需求,CGL CGSFA CGSF等工站临时添加机器人速度,定值
+            var vComms = mController.MotionEngine.DeviceEngine.GetVDevices<VCommuncation>();
+            foreach (var item in vComms)
+            {
+                if (item.Name.Contains("机器人") || item.Name.Contains("机械手"))
+                {
+                    var addSpdContent = new
+                    {
+                        parameter = $"Robot Speed",
+                        preValue = 100,
+                        aftValue = 100,
+                        changeReason = "NoRepair"
+                    };
+                    ctList.Add(addSpdContent);
+                    break;
+                }
+            }
 
             //获取aelimits上下限不再跟二维码相关
             double upLimit = 0;

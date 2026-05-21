@@ -1,0 +1,104 @@
+<UserControl
+    x:Class="Luster.Motion.ReportUI.Views.StepConfigDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:prism="http://prismlibrary.com/"
+    Width="600"
+    Height="450"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    mc:Ignorable="d">
+
+    <Border BorderBrush="#57a9fd" BorderThickness="1" Background="White" CornerRadius="4">
+        <Grid Margin="8">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- 标题栏 -->
+            <DockPanel Grid.Row="0" Margin="0,0,0,8">
+                <TextBlock Text="步骤配置"
+                           FontSize="16" FontWeight="Bold"
+                           VerticalAlignment="Center" />
+            </DockPanel>
+
+            <!-- 步骤列表 DataGrid -->
+            <DataGrid Grid.Row="1"
+                      ItemsSource="{Binding Steps}"
+                      SelectedItem="{Binding SelectedStep}"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      HeadersVisibility="Column"
+                      BorderThickness="1"
+                      BorderBrush="#57a9fd"
+                      IsReadOnly="False"
+                      SelectionMode="Single"
+                      SelectionUnit="FullRow">
+                <DataGrid.Columns>
+                    <DataGridTextColumn
+                        Header="步骤名称"
+                        Binding="{Binding Name, UpdateSourceTrigger=LostFocus}"
+                        Width="*" />
+                    <DataGridTextColumn
+                        Header="起始时间(ms)"
+                        Binding="{Binding StartTimeMs, UpdateSourceTrigger=LostFocus}"
+                        Width="100" />
+                    <DataGridTextColumn
+                        Header="结束时间(ms)"
+                        Binding="{Binding EndTimeMs, UpdateSourceTrigger=LostFocus}"
+                        Width="100" />
+                    <DataGridTemplateColumn Header="颜色" Width="100">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Color}" VerticalAlignment="Center" Margin="4,0" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate>
+                                <ComboBox ItemsSource="{Binding DataContext.ColorOptions, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                          DisplayMemberPath="Name"
+                                          SelectedValuePath="Value"
+                                          SelectedValue="{Binding Color, UpdateSourceTrigger=PropertyChanged}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- 操作按钮 -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,4">
+                <Button Content="添加步骤"
+                        Command="{Binding AddStepCommand}"
+                        Style="{StaticResource ButtonPrimary}"
+                        Width="90" Margin="0,0,6,0" />
+                <Button Content="删除选中"
+                        Command="{Binding RemoveStepCommand}"
+                        Style="{StaticResource ButtonDanger}"
+                        Width="90" Margin="0,0,6,0" />
+                <Button Content="加载配置"
+                        Command="{Binding LoadCommand}"
+                        Width="90" Margin="0,0,6,0" />
+                <Button Content="保存配置"
+                        Command="{Binding SaveCommand}"
+                        Width="90" />
+            </StackPanel>
+
+            <!-- 确定/取消 -->
+            <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                <Button Content="确定"
+                        Command="{Binding ConfirmCommand}"
+                        Style="{StaticResource ButtonPrimary}"
+                        Width="80" Margin="0,0,8,0" />
+                <Button Content="取消"
+                        Command="{Binding CancelCommand}"
+                        Width="80" />
+            </StackPanel>
+        </Grid>
+    </Border>
+</UserControl>

@@ -37,118 +37,118 @@ namespace Luster.TaskFlow.Motion
     public abstract class MotionModule : AbsModule, IMotionModule
     {
         /// <summary>
-        /// ÈİÆ÷¿ØÖÆ¶ÔÏó
+        /// å®¹å™¨æ§åˆ¶å¯¹è±¡
         /// </summary>
         public IIocManager Ioc { get; set; }
 
         /// <summary>
-        /// ¶©µ¥¹ÜÀí
+        /// è®¢å•ç®¡ç†
         /// </summary>
         public IOrderManager OrderManager { get; set; }
 
 
         /// <summary>
-        /// ¾íÁÏ¹ÜÀí
+        /// å·æ–™ç®¡ç†
         /// </summary>
         public IRollManager RollManager { get; set; }
 
         /// <summary>
-        /// ´íÎó¹ÜÀíÆ÷
+        /// é”™è¯¯ç®¡ç†å™¨
         /// </summary>
         public IErrorManager ErrorManager { get; set; }
 
         /// <summary>
-        /// ¹âÔ´¿ØÖÆÆ÷
+        /// å…‰æºæ§åˆ¶å™¨
         /// </summary>
         public ILightManager LightManager { get; set; }
 
         /// <summary>
-        /// ¶©µ¥¹ÜÀí
+        /// è®¢å•ç®¡ç†
         /// </summary>
         public IConfigManager ConfigManager { get; set; }
 
         /// <summary>
-        /// Êı¾İ¿â·ÃÎÊ½Ó¿Ú
+        /// æ•°æ®åº“è®¿é—®æ¥å£
         /// </summary>
         public IDbHelper DbHelper { get; set; }
 
         /// <summary>
-        /// ×Ó½Úµã
+        /// å­èŠ‚ç‚¹
         /// </summary>
         public new List<IMotionModule> Children { get; set; }
 
         /// <summary>
-        /// ËùÊô¸¸½Úµã
+        /// æ‰€å±çˆ¶èŠ‚ç‚¹
         /// </summary>
         public new IMotionModule Parent { get; set; }
 
         /// <summary>
-        /// ÔËĞĞÄ£Ê½
+        /// è¿è¡Œæ¨¡å¼
         /// </summary>
         public RunMode RunMode { get; set; }
 
         /// <summary>
-        /// ±¨¾¯Àà±ğ
+        /// æŠ¥è­¦ç±»åˆ«
         /// </summary>
         public AlarmInfo AlarmInfo { get; set; }
 
         /// <summary>
-        /// ±ê×¼CT
+        /// æ ‡å‡†CT
         /// </summary>
         public int CT { get; set; } = 0;
 
         /// <summary>
-        /// Á¥Êô¹¤Õ¾
+        /// éš¶å±å·¥ç«™
         /// </summary>
         public IMotionModule Station { get; set; }
 
         /// <summary>
-        /// ¿ªÊ¼ÊÂ¼ş
+        /// å¼€å§‹äº‹ä»¶
         /// </summary>
         public DateTime StartTime { get; set; }
 
         /// <summary>
-        /// ½áÊøÊ±¼ä
+        /// ç»“æŸæ—¶é—´
         /// </summary>
         public DateTime EndTime { get; set; }
 
         /// <summary>
-        /// ÔİÍ£Ê±¼ä
+        /// æš‚åœæ—¶é—´
         /// </summary>
         public float PauseTime { get; set; } = 0;
 
         /// <summary>
-        /// Ç°Ò»Ä£¿é
+        /// å‰ä¸€æ¨¡å—
         /// </summary>
         public IMotionModule PrevModule { get; set; }
 
         /// <summary>
-        /// ÏÂÒ»²½Ä£¿é
+        /// ä¸‹ä¸€æ­¥æ¨¡å—
         /// </summary>
         public IMotionModule NextModule { get; set; }
 
         /// <summary>
-        /// Éè±¸
+        /// è®¾å¤‡
         /// </summary>
         public IDeviceEngine DeviceEngine { get; set; }
 
 
         /// <summary>
-        /// ´¥·¢ÊÂ¼ş
+        /// è§¦å‘äº‹ä»¶
         /// </summary>
         public event Action<string, string> MachineStatusComplete;
 
         /// <summary>
-        /// ÖÕÖ¹Á÷³Ì
+        /// ç»ˆæ­¢æµç¨‹
         /// </summary>
         public bool IsBreak { get; set; }
 
         /// <summary>
-        /// ÊÇ·ñ°üº¬Êä³öÊı¾İ
+        /// æ˜¯å¦åŒ…å«è¾“å‡ºæ•°æ®
         /// </summary>
         public bool IsOutData { get; set; }
         /// <summary>
-        /// µ±Ç°ÔËĞĞ´ÎÊı
+        /// å½“å‰è¿è¡Œæ¬¡æ•°
         /// </summary>
         private int _runNum = 0;
         public int RunNum
@@ -165,26 +165,26 @@ namespace Luster.TaskFlow.Motion
         }
 
         /// <summary>
-        /// Ïß³ÌID
+        /// çº¿ç¨‹ID
         /// </summary>
         public int ThreadID { get; set; }
 
         /// <summary>
-        /// °æ±¾
+        /// ç‰ˆæœ¬
         /// </summary>
         public string Version { get; set; }
 
         /// <summary>
-        /// ±¨¾¯´úÂë Ä¬ÈÏ±¨¾¯´úÂëÎª -1£ºÎ´ÅäÖÃ£¬²»ĞèÒªÉÏ´«±¨¾¯ĞÅÏ¢
+        /// æŠ¥è­¦ä»£ç  é»˜è®¤æŠ¥è­¦ä»£ç ä¸º -1ï¼šæœªé…ç½®ï¼Œä¸éœ€è¦ä¸Šä¼ æŠ¥è­¦ä¿¡æ¯
         /// </summary>
         public virtual string ErrorCode { get; set; }
         /// <summary>
-        /// ±¨¾¯ÄÚÈİ
+        /// æŠ¥è­¦å†…å®¹
         /// </summary>
         public virtual string ErrorContent { get; set; }
 
         /// <summary>
-        /// ÊÇ·ñÊ¹ÓÃLog
+        /// æ˜¯å¦ä½¿ç”¨Log
         /// </summary>
         /// <returns></returns>
         public bool IsUseLog()
@@ -198,7 +198,7 @@ namespace Luster.TaskFlow.Motion
         }
 
         /// <summary>
-        /// Ä£¿é½ÚµãÀàĞÍ
+        /// æ¨¡å—èŠ‚ç‚¹ç±»å‹
         /// </summary>
         public ModuleType ModuleType
         {
@@ -211,28 +211,28 @@ namespace Luster.TaskFlow.Motion
         }
 
         /// <summary>
-        /// º¯Êı
+        /// å‡½æ•°
         /// </summary>
         //public new IMotionFunction TaskFunction { get; set; }
 
         /// <summary>
-        /// ÓÃÓÚÏß³ÌÖĞ¶Ï
+        /// ç”¨äºçº¿ç¨‹ä¸­æ–­
         /// </summary>
         public ManualResetEventSlim BrokenOff { get; set; }
 
 
         /// <summary>
-        /// ±¨¾¯ÊÂ¼ş
+        /// æŠ¥è­¦äº‹ä»¶
         /// </summary>
         public event Action<AlarmInfo> AlarmEvent_module;
 
         /// <summary>
-        /// ±»ÒıÓÃÄ£¿é
+        /// è¢«å¼•ç”¨æ¨¡å—
         /// </summary>
         private Dictionary<Guid, string> OtherRefModules = new Dictionary<Guid, string>();
 
         /// <summary>
-        /// ¹¹Ôìº¯Êı
+        /// æ„é€ å‡½æ•°
         /// </summary>
         public MotionModule() : base()
         {
@@ -245,37 +245,43 @@ namespace Luster.TaskFlow.Motion
             base.SetFunction(funcName);
             //var func = Activator.CreateInstance(FuncTypes[funcName]) as IMotionFunction;
 
-            //// ÉèÖÃÄ£¿éµÄFunction
+            //// è®¾ç½®æ¨¡å—çš„Function
             //TaskFunction = func;
             //Alias = L(func.Name) ?? func.Name;
             TaskFunction.Owner = this;
 
-            // Ä¬ÈÏÔËĞĞÊ±
+            // é»˜è®¤è¿è¡Œæ—¶
             //Mode = DesignMode.Runtime;
         }
 
         /// <summary>
-        /// Ä£¿éÃû³Æ
+        /// æ¨¡å—åç§°
         /// </summary>
         private string moduleAlias = "";
 
         /// <summary>
-        /// Ä£¿éÁ¥Êô¹¤Õ¾
+        /// æ¨¡å—éš¶å±å·¥ç«™
         /// </summary>
         private IStation mStation = null;
 
         /// <summary>
-        /// º¯ÊıÔËĞĞ
+        /// å‡½æ•°è¿è¡Œ
         /// </summary>
-        /// <param name="errMsg">´íÎóÏûÏ¢</param>
-        /// <returns>ÔËĞĞÊÇ·ñ³É¹¦</returns>
+        /// <param name="errMsg">é”™è¯¯æ¶ˆæ¯</param>
+        /// <returns>è¿è¡Œæ˜¯å¦æˆåŠŸ</returns>
         public override bool DoFunction()
         {
+            // å¿½ç•¥çŠ¶æ€ä¸æ‰§è¡Œ
+            if (Status == Common.Enums.RunStatus.Skip)
+            {
+                return true;
+            }
+
             ThreadID = Thread.CurrentThread.ManagedThreadId;
 
             if (IsBreak)
             {
-                OnLog(LogType.Debug, $"Ä£¿é:{Alias} ±»Í£Ö¹,ĞèÒª»ØÁã²ÅÄÜÔËĞĞ!");
+                OnLog(LogType.Debug, $"æ¨¡å—:{Alias} è¢«åœæ­¢,éœ€è¦å›é›¶æ‰èƒ½è¿è¡Œ!");
                 return true;
             }
 
@@ -283,15 +289,15 @@ namespace Luster.TaskFlow.Motion
             {
                 UpdateStation();
             }
-            if (moduleAlias.Contains("³öÁÏÊÂ¼ş"))
+            if (moduleAlias.Contains("å‡ºæ–™äº‹ä»¶"))
             {
-                OnLog(LogType.Debug, $"Ä£¿é:{moduleAlias}¿ªÊ¼");
+                OnLog(LogType.Debug, $"æ¨¡å—:{moduleAlias}å¼€å§‹");
             }
-            // ÔËĞĞ×´Ì¬³õÊ¼»¯
-            // Ä£¿éÔËĞĞ¿ªÊ¼Ê±¼ä
+            // è¿è¡ŒçŠ¶æ€åˆå§‹åŒ–
+            // æ¨¡å—è¿è¡Œå¼€å§‹æ—¶é—´
             StartTime = DateTime.Now;
 
-            // 1.³õÊ¼±êÊ¶×´Ì¬
+            // 1.åˆå§‹æ ‡è¯†çŠ¶æ€
             statusMsg = string.Empty;
             AlarmInfo = null;
             bool success = false;
@@ -299,61 +305,61 @@ namespace Luster.TaskFlow.Motion
             TaskFunction.Status.SetDefault();
             Status = Common.Enums.RunStatus.Running;
 
-            // ÏÔÊ¾µ±Ç°ÔËĞĞµÄÄ£¿é
+            // æ˜¾ç¤ºå½“å‰è¿è¡Œçš„æ¨¡å—
             if (Station != null && Station.TaskFunction is IFreeStation f)
             {
                 f.AddRunningModule(this);
             }
 
-            // 2.¿ªÊ¼¼ÆËãÊ±¼ä
+            // 2.å¼€å§‹è®¡ç®—æ—¶é—´
             StartTimer();
 
-            // 3.Çå¿ÕOutput½á¹û
+            // 3.æ¸…ç©ºOutputç»“æœ
             ResetParameters();
 
             try
             {
-                // 4.²ÎÊıÑéÖ¤¼°¸³Öµ
+                // 4.å‚æ•°éªŒè¯åŠèµ‹å€¼
                 var isValid = ValidateHelper.ValidateAllIn(TaskFunction, out statusMsg);
                 timeconsumingValid = (float)Math.Round(_sw.Elapsed.TotalMilliseconds, 3);
-                // 5.º¯ÊıÔËĞĞ
+                // 5.å‡½æ•°è¿è¡Œ
                 if (isValid)
                 {
-                    // ³¬Ê±±¨¾¯
+                    // è¶…æ—¶æŠ¥è­¦
                     success = TaskFunction.DoExcute(out statusMsg);
                     timeconsumingDoexcute = (float)Math.Round(_sw.Elapsed.TotalMilliseconds, 3);
 
-                    if (moduleAlias == "¸´¼ì¹¤Õ¾")
+                    if (moduleAlias == "å¤æ£€å·¥ç«™")
                     {
-                        OnLog(LogType.Debug, $"Ä£¿é:{moduleAlias}³É¹¦");
+                        OnLog(LogType.Debug, $"æ¨¡å—:{moduleAlias}æˆåŠŸ");
                     }
                 }
 
-                // ¶ÔÊä³ö²ÎÊı Value ½á¹û½øĞĞ¸³Öµ£¬¹©ÒıÓÃ¸Ã²ÎÊıµÄÀàĞÍÊ¹ÓÃ
+                // å¯¹è¾“å‡ºå‚æ•° Value ç»“æœè¿›è¡Œèµ‹å€¼ï¼Œä¾›å¼•ç”¨è¯¥å‚æ•°çš„ç±»å‹ä½¿ç”¨
                 if (success)
                 {
                     SetOutput();
                     timeconsumingSetOutput = (float)Math.Round(_sw.Elapsed.TotalMilliseconds, 3);
-                    if (moduleAlias == "¸´¼ì¹¤Õ¾")
+                    if (moduleAlias == "å¤æ£€å·¥ç«™")
                     {
-                        OnLog(LogType.Debug, $"Ä£¿é:{moduleAlias}SetOutput()");
+                        OnLog(LogType.Debug, $"æ¨¡å—:{moduleAlias}SetOutput()");
                     }
                 }
             }
             catch (DeviceTimeoutException tx)
             {
-                //bool isEmpty = string.IsNullOrEmpty(ErrorCode) || ErrorCode == "±¨¾¯´úÂë";
+                //bool isEmpty = string.IsNullOrEmpty(ErrorCode) || ErrorCode == "æŠ¥è­¦ä»£ç ";
 
                 string eCode = tx.AlarmCode;
                 string eMessage = tx.Message;
-                // ×´Ì¬¸ü±¨¾¯
+                // çŠ¶æ€æ›´æŠ¥è­¦
                 Status = Common.Enums.RunStatus.Alarmed;
                 AlarmInfo = new AlarmInfo(this, AlarmType.Timeout, $"{eMessage}", $"{eCode}") { DeviceID = tx.DeviceID, Module = tx.Module, Name = tx.DeviceName };
                 statusMsg = tx.Message;
             }
             catch (DeviceException dx)
             {
-                //bool isEmpty = string.IsNullOrEmpty(ErrorCode) || ErrorCode == "±¨¾¯´úÂë";
+                //bool isEmpty = string.IsNullOrEmpty(ErrorCode) || ErrorCode == "æŠ¥è­¦ä»£ç ";
                 string eCode = dx.AlarmCode;
                 string eMessage = dx.Message;
                 AlarmInfo = new AlarmInfo(this, AlarmType.DeviceError, $" {eMessage}", eCode) { DeviceID = dx.DeviceID };
@@ -363,17 +369,17 @@ namespace Luster.TaskFlow.Motion
             {
                 statusMsg = ex.Message;
 
-                // ¸ø½á¹ûÒì³£
-                OnLog(LogType.Error, $"Ä£¿é:{Alias},{statusMsg},{ex.StackTrace}");
+                // ç»™ç»“æœå¼‚å¸¸
+                OnLog(LogType.Error, $"æ¨¡å—:{Alias},{statusMsg},{ex.StackTrace}");
             }
 
-            // ÖÕÖ¹¼ÆÊ±Æ÷
+            // ç»ˆæ­¢è®¡æ—¶å™¨
             StopTimer();
-            if (moduleAlias == "¸´¼ì¹¤Õ¾")
+            if (moduleAlias == "å¤æ£€å·¥ç«™")
             {
-                OnLog(LogType.Debug, $"Ä£¿é:{moduleAlias}StopTimer()");
+                OnLog(LogType.Debug, $"æ¨¡å—:{moduleAlias}StopTimer()");
             }
-            // 6.ºó´¦Àí
+            // 6.åå¤„ç†
             if (success)
             {
                 Status = Common.Enums.RunStatus.Success;
@@ -382,8 +388,8 @@ namespace Luster.TaskFlow.Motion
             {
                 Status = Common.Enums.RunStatus.Error;
 
-                // ±ä¸ü×´Ì¬ĞÅÏ¢
-                string errMsg = $"Ä£¿é:{moduleAlias} ÔËĞĞÊ§°Ü:{statusMsg}";
+                // å˜æ›´çŠ¶æ€ä¿¡æ¯
+                string errMsg = $"æ¨¡å—:{moduleAlias} è¿è¡Œå¤±è´¥:{statusMsg}";
                 OnLog(LogType.Error, errMsg);
             }
             if (mStation != null && mStation.UseLog &&
@@ -392,21 +398,21 @@ namespace Luster.TaskFlow.Motion
                 this.CT = Convert.ToInt32(timeconsuming);
             }
 
-            // 6.äÖÈ¾
+            // 6.æ¸²æŸ“
             if (Mode == DesignMode.Design && success)
             {
                 Render();
-                if (moduleAlias == "¸´¼ì¹¤Õ¾")
+                if (moduleAlias == "å¤æ£€å·¥ç«™")
                 {
-                    OnLog(LogType.Debug, $"Ä£¿é:{moduleAlias}Render()");
+                    OnLog(LogType.Debug, $"æ¨¡å—:{moduleAlias}Render()");
                 }
             }
             try
             {
-                // ´òÓ¡LogĞÅÏ¢
+                // æ‰“å°Logä¿¡æ¯
                 if (success)
                 {
-                    // ¼ÇÂ¼Á¥Êô¹¤Õ¾¼°ºÄÊ±Çé¿ö £¬Èç¹ûCTÊÇ´óÓÚ0£¬²¢ÇÒÄ£¿éÖ§³ÖÔİÍ£
+                    // è®°å½•éš¶å±å·¥ç«™åŠè€—æ—¶æƒ…å†µ ï¼Œå¦‚æœCTæ˜¯å¤§äº0ï¼Œå¹¶ä¸”æ¨¡å—æ”¯æŒæš‚åœ
                     if (mStation != null && mStation.UseLog && (CT > 0 || (TaskFunction is IPauseFunction)))
                     {
                         string sn = Station?.DataID;
@@ -431,18 +437,18 @@ namespace Luster.TaskFlow.Motion
                         mStation.StationTimes.Add(new StationTime(mStation.Station, Alias, TimeConsuming, CT, StartTime, sn, extParams));
                     }
 
-                    // ¶ÔÊı¾İ½øĞĞÉÏ´«  
+                    // å¯¹æ•°æ®è¿›è¡Œä¸Šä¼   
                     OnDataUpload();
-                    if (moduleAlias == "¸´¼ì¹¤Õ¾")
+                    if (moduleAlias == "å¤æ£€å·¥ç«™")
                     {
-                        OnLog(LogType.Debug, $"Ä£¿é:{moduleAlias}OnDataUpload()");
+                        OnLog(LogType.Debug, $"æ¨¡å—:{moduleAlias}OnDataUpload()");
                     }
-                    // ¼ÇÂ¼ÔËĞĞµÄ´ÎÊı
+                    // è®°å½•è¿è¡Œçš„æ¬¡æ•°
                     RunNum++;
 
-                    // Ö»ÓĞÆôÓÃLOG²Å½øĞĞ¼ÇÂ¼
+                    // åªæœ‰å¯ç”¨LOGæ‰è¿›è¡Œè®°å½•
                     if (mStation != null && mStation.UseLog)
-                        OnLog(LogType.Info, string.Format("Ä£¿é:{0} ºÄÊ±:{1} ms ÔİÍ£ºÄÊ±:{2} ÊäÈë²ÎÊıºÄÊ±:{3} Ö´ĞĞºÄÊ±:{4} Êä³ö²ÎÊıºÄÊ±:{5}",
+                        OnLog(LogType.Info, string.Format("æ¨¡å—:{0} è€—æ—¶:{1} ms æš‚åœè€—æ—¶:{2} è¾“å…¥å‚æ•°è€—æ—¶:{3} æ‰§è¡Œè€—æ—¶:{4} è¾“å‡ºå‚æ•°è€—æ—¶:{5}",
                                                           moduleAlias,
                                                           TimeConsuming,
                                                           PauseTime,
@@ -450,31 +456,31 @@ namespace Luster.TaskFlow.Motion
                                                           timeconsumingDoexcute,
                                                           timeconsumingSetOutput));
 
-                    // ÔËĞĞ×´Ì¬Íê³É
+                    // è¿è¡ŒçŠ¶æ€å®Œæˆ
                     TaskFunction.Status.SetEnd();
                 }
             }
             catch (Exception ex)
             {
-                // Çå¿ÕÊı×é£¬±ÜÃâÔÙ´Î³öÏÖ£ºË÷Òı³¬³öÊı×é½çÏŞÎÊÌâ
-                // ÄÜÔÚ±ğµÄÏß³Ì»òÄ£¿éÕıÔÚ±éÀúList£¬Ö±½Ó Clear()£¬´ËÊ±¼¯ºÏÕıÔÚÊ¹ÓÃÖĞ£¬µ¼ÖÂÔ½½ç¡£
-                // ¼ÓËø£¬È·±£ mStation.StationTimes µÄ·ÃÎÊÊÇÏß³Ì°²È«µÄ¡£
+                // æ¸…ç©ºæ•°ç»„ï¼Œé¿å…å†æ¬¡å‡ºç°ï¼šç´¢å¼•è¶…å‡ºæ•°ç»„ç•Œé™é—®é¢˜
+                // èƒ½åœ¨åˆ«çš„çº¿ç¨‹æˆ–æ¨¡å—æ­£åœ¨éå†Listï¼Œç›´æ¥ Clear()ï¼Œæ­¤æ—¶é›†åˆæ­£åœ¨ä½¿ç”¨ä¸­ï¼Œå¯¼è‡´è¶Šç•Œã€‚
+                // åŠ é”ï¼Œç¡®ä¿ mStation.StationTimes çš„è®¿é—®æ˜¯çº¿ç¨‹å®‰å…¨çš„ã€‚
                 lock (mStation.StationTimes)
                 {
                     mStation.StationTimes.Clear();
                 }
-                OnLog(LogType.Info, string.Format("Ä£¿é:{0} ±¨¾¯:{1} ", moduleAlias, ex.ToString()));
+                OnLog(LogType.Info, string.Format("æ¨¡å—:{0} æŠ¥è­¦:{1} ", moduleAlias, ex.ToString()));
             }
 
 
-            // ½áÊøÊ±¼ä
+            // ç»“æŸæ—¶é—´
             EndTime = DateTime.Now;
 
             return Status == Common.Enums.RunStatus.Success;
         }
 
         /// <summary>
-        /// ×ÜºÄÊ±¼õÈ¥ÔİÍ£Ê±¼ä
+        /// æ€»è€—æ—¶å‡å»æš‚åœæ—¶é—´
         /// </summary>
         public override void StopTimer()
         {
@@ -487,7 +493,7 @@ namespace Luster.TaskFlow.Motion
         }
 
         /// <summary>
-        /// ²ÎÊıĞ£Ñé
+        /// å‚æ•°æ ¡éªŒ
         /// </summary>
         /// <param name="errMsg"></param>
         /// <returns></returns>
@@ -507,7 +513,7 @@ namespace Luster.TaskFlow.Motion
         }
 
         /// <summary>
-        /// ¸üĞÂ¹¤Õ¾ĞÅÏ¢
+        /// æ›´æ–°å·¥ç«™ä¿¡æ¯
         /// </summary>
         public void UpdateStation()
         {
@@ -519,7 +525,7 @@ namespace Luster.TaskFlow.Motion
         }
 
         /// <summary>
-        /// µİ¹é²éÕÒ
+        /// é€’å½’æŸ¥æ‰¾
         /// </summary>
         /// <param name="motion"></param>
         /// <param name="alias"></param>
@@ -554,11 +560,11 @@ namespace Luster.TaskFlow.Motion
             }
         }
 
-        #region ±¨¾¯´¦Àí
+        #region æŠ¥è­¦å¤„ç†
         /// <summary>
-        /// ±¨¾¯ÖĞ¶Ï
+        /// æŠ¥è­¦ä¸­æ–­
         /// </summary>
-        /// <param name="alarmMsg">±¨¾¯ĞÅÏ¢</param>
+        /// <param name="alarmMsg">æŠ¥è­¦ä¿¡æ¯</param>
         public void OnAlarm(AlarmType alarmType, string alarmMsg, string code = "", string ModuleName = "")
         {
             switch (alarmType)
@@ -591,20 +597,20 @@ namespace Luster.TaskFlow.Motion
                     UpdateStation();
                 }
 
-                // ×ÓÄ£¿é±¨¾¯£¬¸üĞÂ¸¸Ä£¿é±¨¾¯
+                // å­æ¨¡å—æŠ¥è­¦ï¼Œæ›´æ–°çˆ¶æ¨¡å—æŠ¥è­¦
                 Station.Status = Status;
                 Station.AlarmInfo = AlarmInfo;
 
-                // ÒòÎª×ÓÄ£¿é±¨¾¯£¬»á½«±¨¾¯ĞÅÏ¢´«µİµ½¸¸Ä£¿é£¬ËùÒÔ±¨¾¯ÊÂ¼ş±ØĞëÊÇ±¾Ä£¿é×Ô¼º´¥·¢
+                // å› ä¸ºå­æ¨¡å—æŠ¥è­¦ï¼Œä¼šå°†æŠ¥è­¦ä¿¡æ¯ä¼ é€’åˆ°çˆ¶æ¨¡å—ï¼Œæ‰€ä»¥æŠ¥è­¦äº‹ä»¶å¿…é¡»æ˜¯æœ¬æ¨¡å—è‡ªå·±è§¦å‘
                 if (AlarmInfo.Sender == this)
                 {
-                    AlarmEvent_module?.Invoke(AlarmInfo); //´«µİÖÁMotionEngion
+                    AlarmEvent_module?.Invoke(AlarmInfo); //ä¼ é€’è‡³MotionEngion
                 }
             }
         }
 
         /// <summary>
-        /// Çå³ı±¨¾¯
+        /// æ¸…é™¤æŠ¥è­¦
         /// </summary>
         public void ClearAlarm()
         {
@@ -618,7 +624,7 @@ namespace Luster.TaskFlow.Motion
 
             var cloneModule = Activator.CreateInstance(GetType()) as IMotionModule;
 
-            // ±ØĞëÒªÅäÖÃÃû³Æ
+            // å¿…é¡»è¦é…ç½®åç§°
             cloneModule.Name = this.Name;
             cloneModule.Icon = this.Icon;
             cloneModule.Tips = this.Tips;
@@ -631,7 +637,7 @@ namespace Luster.TaskFlow.Motion
             cloneModule.LanguageEvent += (s) => L(s);
             cloneModule.ParserXml(xClone);
 
-            // ĞèÒª¼Ç×¡µ±Ç°µÄÄ£Ê½£¬·ñÔòÎŞ·¨äÖÈ¾
+            // éœ€è¦è®°ä½å½“å‰çš„æ¨¡å¼ï¼Œå¦åˆ™æ— æ³•æ¸²æŸ“
             cloneModule.Mode = this.Mode;
 
             if (Children.Count > 0)
@@ -670,12 +676,12 @@ namespace Luster.TaskFlow.Motion
 
         public string GetInParameters()
         {
-            // Ê¹ÓÃ StringBuilder ±ÜÃâ×Ö·û´®Æ´½ÓµÄÄÚ´æ·ÖÅä
+            // ä½¿ç”¨ StringBuilder é¿å…å­—ç¬¦ä¸²æ‹¼æ¥çš„å†…å­˜åˆ†é…
             var sb = new StringBuilder();
 
             foreach (var item in Parameters)
             {
-                // ÌáÇ°¹ıÂË£¬¼õÉÙÇ¶Ì×
+                // æå‰è¿‡æ»¤ï¼Œå‡å°‘åµŒå¥—
                 if (item.Value?.ParamType != ParamType.IN)
                     continue;
 
@@ -683,16 +689,16 @@ namespace Luster.TaskFlow.Motion
                 if (v == null)
                     continue;
 
-                // Ê¹ÓÃ StringBuilder.Append£¬±ÜÃâÁÙÊ±×Ö·û´®
+                // ä½¿ç”¨ StringBuilder.Appendï¼Œé¿å…ä¸´æ—¶å­—ç¬¦ä¸²
                 sb.Append(item.Value.Name)
                   .Append('#')
                   .Append(JsonTool.ToJson(v))
                   .Append(';');
             }
 
-            // ÒÆ³ıÄ©Î²·ÖºÅ£¨±È Trim ¸ü¸ßĞ§£¬Ö»´¦ÀíÌØ¶¨×Ö·û£©
+            // ç§»é™¤æœ«å°¾åˆ†å·ï¼ˆæ¯” Trim æ›´é«˜æ•ˆï¼Œåªå¤„ç†ç‰¹å®šå­—ç¬¦ï¼‰
             if (sb.Length > 0)
-                sb.Length--; // Ö±½ÓĞŞ¸Ä³¤¶È£¬±ÜÃâ´´½¨ĞÂ×Ö·û´®
+                sb.Length--; // ç›´æ¥ä¿®æ”¹é•¿åº¦ï¼Œé¿å…åˆ›å»ºæ–°å­—ç¬¦ä¸²
 
             return sb.ToString();
         }
@@ -804,7 +810,7 @@ namespace Luster.TaskFlow.Motion
                         }
                     }
 
-                    // Ñ­»·Ö§³Ö´ËÊ±ÒıÓÃ
+                    // å¾ªç¯æ”¯æŒæ­¤æ—¶å¼•ç”¨
                     if (TaskFunction is ILoop loop)
                     {
                         var pItem = Parameters[nameof(loop.LoopNum)];
@@ -941,7 +947,7 @@ namespace Luster.TaskFlow.Motion
                         }
                     }
 
-                    // Ñ­»·Ö§³Ö´ËÊ±ÒıÓÃ
+                    // å¾ªç¯æ”¯æŒæ­¤æ—¶å¼•ç”¨
                     if (TaskFunction is ILoop loop)
                     {
                         var pItem = Parameters[nameof(loop.LoopNum)];
@@ -971,7 +977,7 @@ namespace Luster.TaskFlow.Motion
         }
         
 
-        #region µ¼ÈëºÍµ¼³ö
+        #region å¯¼å…¥å’Œå¯¼å‡º
         public override XElement ExportXml()
         {
             var xml = base.ExportXml();
@@ -993,7 +999,7 @@ namespace Luster.TaskFlow.Motion
             xElement.GetAttribute("ErrorCode", item => ErrorCode = item);
             xElement.GetAttribute("ErrorContent", item => ErrorContent = item);
 
-            // Èç¹ûµ±Ç°Ä£¿éÊÇ¹¤Õ¾
+            // å¦‚æœå½“å‰æ¨¡å—æ˜¯å·¥ç«™
             if (TaskFunction is IStation)
             {
                 Station = this;
@@ -1001,14 +1007,14 @@ namespace Luster.TaskFlow.Motion
         }
         #endregion
 
-        #region ²úÆ·Ïà¹ØÊÂ¼ş
+        #region äº§å“ç›¸å…³äº‹ä»¶
         /// <summary>
-        /// ²úÆ·ÈëÁÏ
+        /// äº§å“å…¥æ–™
         /// </summary>
         public event Action<IMotionModule, StationResult, List<LColumn>> ProLoadedEvent;
 
         /// <summary>
-        /// ²úÆ·ÈëÁÏÊÂ¼ş
+        /// äº§å“å…¥æ–™äº‹ä»¶
         /// </summary>
         /// <param name="jigCode"></param>
         public void OnProLoaded(string jigCode, string barCode, bool prevResult, DateTime dateTime)
@@ -1020,7 +1026,7 @@ namespace Luster.TaskFlow.Motion
 
             if (Station != null && Station.TaskFunction is IStation curStation)
             {
-                // ¸üĞÂÊı¾İID
+                // æ›´æ–°æ•°æ®ID
                 Station.DataID = barCode;
 
                 var sResult = new StationResult()
@@ -1043,15 +1049,15 @@ namespace Luster.TaskFlow.Motion
                 }
 
                 curStation.Enqueue(barCode);
-                OnLog(LogType.Info, $"Èë¶ÓÁĞ¶şÎ¬Âë{sResult.ProCode}");
-                // Í¨Öª²úÆ·ÈëÁÏÊÂ¼ş
+                OnLog(LogType.Info, $"å…¥é˜Ÿåˆ—äºŒç»´ç {sResult.ProCode}");
+                // é€šçŸ¥äº§å“å…¥æ–™äº‹ä»¶
                 ProLoadedEvent?.Invoke(this, sResult, curStation.Datas);
 
             }
         }
 
         /// <summary>
-        /// ÉèÖÃµ±Ç°¹¤Õ¾Ä£¿é
+        /// è®¾ç½®å½“å‰å·¥ç«™æ¨¡å—
         /// </summary>
         /// <param name="module"></param>
         private void SetCurStation(IMotionModule module)
@@ -1086,16 +1092,16 @@ namespace Luster.TaskFlow.Motion
         }
 
         /// <summary>
-        /// ²úÆ·³öÁÏ
+        /// äº§å“å‡ºæ–™
         /// </summary>
         public event Action<IMotionModule, StationResult> ProUnloadedEvent;
 
         /// <summary>
-        /// ²úÆ·³öÁÏ
+        /// äº§å“å‡ºæ–™
         /// </summary>
-        /// <param name="barCode">²úÆ·±àºÅ</param>
-        /// <param name="sResult">²úÆ·½á¹û</param>
-        /// <param name="datas">ËùÓĞÊı¾İ</param>
+        /// <param name="barCode">äº§å“ç¼–å·</param>
+        /// <param name="sResult">äº§å“ç»“æœ</param>
+        /// <param name="datas">æ‰€æœ‰æ•°æ®</param>
         public void OnProUnloaded(StationResult sResult)
         {
             if (Station == null)
@@ -1106,36 +1112,36 @@ namespace Luster.TaskFlow.Motion
             if (Station != null && Station.TaskFunction is IStation station)
             {
 
-                //1.Ê×ÏÈĞèÒªÅĞ¶ÏÅä·½ÖĞÊÇ·ñ´«Èë¶şÎ¬Âë
-                //2.Èç¹û´«Èë¶şÎ¬Âë£¬ÔòÊ¹ÓÃÅä·½ÖĞµÄ´«Èë¶şÎ¬Âë
-                //3.Èç¹ûÎ´´«Èë£¬ÔòÊ¹ÓÃ³ö¶ÓÁĞµÄ¶şÎ¬Âë
+                //1.é¦–å…ˆéœ€è¦åˆ¤æ–­é…æ–¹ä¸­æ˜¯å¦ä¼ å…¥äºŒç»´ç 
+                //2.å¦‚æœä¼ å…¥äºŒç»´ç ï¼Œåˆ™ä½¿ç”¨é…æ–¹ä¸­çš„ä¼ å…¥äºŒç»´ç 
+                //3.å¦‚æœæœªä¼ å…¥ï¼Œåˆ™ä½¿ç”¨å‡ºé˜Ÿåˆ—çš„äºŒç»´ç 
 
-                //Î´´«ÈëSN
+                //æœªä¼ å…¥SN
                 if (sResult.ProCode == "NG")
                 {
                     if (station.TryDequeue(out string dataID))
                     {
-                        OnLog(LogType.Info, $"³ö¶ÓÁĞ¶şÎ¬Âë¶şÎ¬Âë{sResult.ProCode}");
+                        OnLog(LogType.Info, $"å‡ºé˜Ÿåˆ—äºŒç»´ç äºŒç»´ç {sResult.ProCode}");
                         sResult.ProCode = dataID;
                         Station.DataID = dataID;
                     }
-                    //Èç¹ûSNÎª¿Õ
+                    //å¦‚æœSNä¸ºç©º
                     else if (string.IsNullOrEmpty(Station.DataID))
                     {
                         Station.DataID = sResult.ProCode;
                     }
                 }
-                //´«ÈëÁËSN
+                //ä¼ å…¥äº†SN
                 else
                 {
 
                     Station.DataID = sResult.ProCode;
                 }
 
-                //// ½«Êı¾İID·Åµ½¶ÓÁĞÖĞ
+                //// å°†æ•°æ®IDæ”¾åˆ°é˜Ÿåˆ—ä¸­
                 //if (station.TryDequeue(out string dataID))
                 //{
-                //    OnLog(LogType.Info, $"³ö¶ÓÁĞ¶şÎ¬Âë¶şÎ¬Âë{sResult.ProCode}");
+                //    OnLog(LogType.Info, $"å‡ºé˜Ÿåˆ—äºŒç»´ç äºŒç»´ç {sResult.ProCode}");
                 //    sResult.ProCode = dataID;
                 //    Station.DataID = dataID;
                 //}
@@ -1147,30 +1153,30 @@ namespace Luster.TaskFlow.Motion
                 //{
                 //    Station.DataID = sResult.ProCode;
                 //}
-                OnLog(LogType.Info, $"³öÁÏÊÂ¼ş¶şÎ¬Âë{sResult.ProCode}");
-                // Í¨Öª²úÆ·³öÁÏÊÂ¼ş
+                OnLog(LogType.Info, $"å‡ºæ–™äº‹ä»¶äºŒç»´ç {sResult.ProCode}");
+                // é€šçŸ¥äº§å“å‡ºæ–™äº‹ä»¶
                 ProUnloadedEvent?.Invoke(Station, sResult);
             }
         }
 
         /// <summary>
-        /// ²úÆ·Å×ÁÏ
+        /// äº§å“æŠ›æ–™
         /// </summary>
         public event Action<StationResult, string, string> ProThrowEvent;
 
 
 
         /// <summary>
-        /// ¹¤Õ¾ºÄÊ±Í³¼ÆÊÂ¼ş
+        /// å·¥ç«™è€—æ—¶ç»Ÿè®¡äº‹ä»¶
         /// WIP 
-        /// ÈëÕ¾Ê±¼ä
-        /// ³öÕ¾Ê±¼ä
-        /// ×öÁÏ½á¹û
+        /// å…¥ç«™æ—¶é—´
+        /// å‡ºç«™æ—¶é—´
+        /// åšæ–™ç»“æœ
         /// </summary>
         public event Action<string, string, string, bool> StationTimeEvent;
 
         /// <summary>
-        /// ²úÆ·Å×ÁÏ
+        /// äº§å“æŠ›æ–™
         /// </summary>
         public void OnProThrow(StationResult sResult, string material = "")
         {
@@ -1188,7 +1194,7 @@ namespace Luster.TaskFlow.Motion
 
 
         /// <summary>
-        /// ¹¤Õ¾½áÊø
+        /// å·¥ç«™ç»“æŸ
         /// </summary>
         public void OnStationTime(string WIP, string InputTime, string OutputTime, bool Result)
         {
@@ -1197,7 +1203,7 @@ namespace Luster.TaskFlow.Motion
 
 
         /// <summary>
-        /// »ñÈ¡¶ÔÓ¦µÄDataID
+        /// è·å–å¯¹åº”çš„DataID
         /// </summary>
         /// <returns></returns>
         protected override string GetDataID()
@@ -1218,13 +1224,13 @@ namespace Luster.TaskFlow.Motion
         }
 
         /// <summary>
-        /// ¼ì²âÈç¹ûÊÇÏàÍ¬µÄ½Úµã£¬¾Í²»´Ó»º´æÖĞ»ñÈ¡Êı¾İ
+        /// æ£€æµ‹å¦‚æœæ˜¯ç›¸åŒçš„èŠ‚ç‚¹ï¼Œå°±ä¸ä»ç¼“å­˜ä¸­è·å–æ•°æ®
         /// </summary>
         /// <param name="module"></param>
         /// <returns></returns>
         public override bool IsSameRoot(IModule module)
         {
-            // Èç¹ûµ±Ç°Ä£Ê½ÊÇÈ«¾Ö±äÁ¿£¬Ä¬ÈÏ»ñÈ¡µ±Ç°Öµ
+            // å¦‚æœå½“å‰æ¨¡å¼æ˜¯å…¨å±€å˜é‡ï¼Œé»˜è®¤è·å–å½“å‰å€¼
             if (this is IGlobal) return true;
 
             if (module is IMotionModule m)
@@ -1248,7 +1254,7 @@ namespace Luster.TaskFlow.Motion
         }
 
         /// <summary>
-        /// Êı¾İÉÏ´«
+        /// æ•°æ®ä¸Šä¼ 
         /// </summary>
         /// <param name="code"></param>
         /// <param name="datas"></param>
@@ -1258,7 +1264,7 @@ namespace Luster.TaskFlow.Motion
         }
 
         /// <summary>
-        /// ÔËĞĞÍê³Éºó£¬Ä¬ÈÏÖ´ĞĞÉÏ´«ÊÂ¼ş
+        /// è¿è¡Œå®Œæˆåï¼Œé»˜è®¤æ‰§è¡Œä¸Šä¼ äº‹ä»¶
         /// </summary>
         private void OnDataUpload()
         {
@@ -1288,14 +1294,14 @@ namespace Luster.TaskFlow.Motion
                 }
                 else
                 {
-                    // Èç¹û´ËÊ±»¹Ã»ÓĞ´¥·¢ÈëÁÏÊÂ¼ş£¬ÄÇÃ´¾Í½«Êı¾İÍ¬²½µÄ±¾¹¤Õ¾ÖĞ
+                    // å¦‚æœæ­¤æ—¶è¿˜æ²¡æœ‰è§¦å‘å…¥æ–™äº‹ä»¶ï¼Œé‚£ä¹ˆå°±å°†æ•°æ®åŒæ­¥çš„æœ¬å·¥ç«™ä¸­
                     var station = Station.TaskFunction as IStation;
                     foreach (var item in tempDatas)
                     {
-                        // É¾³ıÀúÊ·´æÔÚ¼ÇÂ¼
+                        // åˆ é™¤å†å²å­˜åœ¨è®°å½•
                         station.Datas.RemoveAll(u => u == item);
 
-                        // ĞÂÔöµ±Ç°¼ÇÂ¼
+                        // æ–°å¢å½“å‰è®°å½•
                         station.Datas.Add(item);
                     }
                 }
@@ -1303,10 +1309,10 @@ namespace Luster.TaskFlow.Motion
             else if (Station != null && !string.IsNullOrEmpty(Station.DataID) &&
                         Station.TaskFunction is IStation s)
             {
-                // ×ÔÓÉ¹¤Õ¾Èç¹û´æÔÚÊı¾İ¾Í½øĞĞÉÏ´«
+                // è‡ªç”±å·¥ç«™å¦‚æœå­˜åœ¨æ•°æ®å°±è¿›è¡Œä¸Šä¼ 
                 if (s.Datas.Count > 0)
                 {
-                    // ×ÔÓÉ¹¤Õ¾Èç¹û´æÔÚ»¹Ã»ÓĞÉÏ´«µÄÊı¾İ,ÄÇÃ´¾ÍÉÏ´«µ½»º´æÖĞ£¬ÉÏ´«Íê³Éºó£¬ÇåÀí¼¯ºÏ
+                    // è‡ªç”±å·¥ç«™å¦‚æœå­˜åœ¨è¿˜æ²¡æœ‰ä¸Šä¼ çš„æ•°æ®,é‚£ä¹ˆå°±ä¸Šä¼ åˆ°ç¼“å­˜ä¸­ï¼Œä¸Šä¼ å®Œæˆåï¼Œæ¸…ç†é›†åˆ
                     OnDataUpload(Station.DataID, s.Datas);
                     s.Datas.Clear();
                 }
@@ -1314,21 +1320,21 @@ namespace Luster.TaskFlow.Motion
         }
 
         /// <summary>
-        /// ²úÆ·Å×ÁÏ
+        /// äº§å“æŠ›æ–™
         /// </summary>
         public event Action<Guid, string, List<LColumn>> DataUploadEvent;
 
         /// <summary>
-        /// ²úÆ·×èÈûÊÂ¼ş
+        /// äº§å“é˜»å¡äº‹ä»¶
         /// </summary>
         public event Action<IMotionModule, double, string, string> ProBlockEvent;
 
         /// <summary>
-        /// ²úÆ·×èÈû
+        /// äº§å“é˜»å¡
         /// </summary>
-        /// <param name="blockCt">×èÈûÊ±¼ä</param>
-        /// <param name="errCode">´íÎó±àÂë block/</param>
-        /// <param name="reason">×èÈûÔ­Òò</param>
+        /// <param name="blockCt">é˜»å¡æ—¶é—´</param>
+        /// <param name="errCode">é”™è¯¯ç¼–ç  block/</param>
+        /// <param name="reason">é˜»å¡åŸå› </param>
         public void OnProBlock(double blockCt, string errCode, string reason) => ProBlockEvent?.Invoke(this, blockCt, errCode, reason);
         #endregion
 
@@ -1336,14 +1342,14 @@ namespace Luster.TaskFlow.Motion
         {
             base.OnPropertyChanged(propertyName, srcVal, newV);
 
-            // ÊôĞÔ±ä¸ü£¬¸üĞÂÄ£¿é±ğÃû
+            // å±æ€§å˜æ›´ï¼Œæ›´æ–°æ¨¡å—åˆ«å
             if (propertyName == "Alias")
             {
                 moduleAlias = "";
             }
         }
 
-        #region ºÍÆäËûÄ£¿éÒıÓÃ¹ØÏµ
+        #region å’Œå…¶ä»–æ¨¡å—å¼•ç”¨å…³ç³»
         /// <summary>
         /// 
         /// </summary>
@@ -1376,7 +1382,7 @@ namespace Luster.TaskFlow.Motion
 
         #endregion
 
-        // Ì«¿ÆµçÅú×¢²áÊÂ¼ş
+        // å¤ªç§‘ç”µæ‰¹æ³¨å†Œäº‹ä»¶
         public event Action<object, string> TaiKeScrewRegisterEvent;
         public void TaiKeScrewRegister(object obj, string name)
         {
@@ -1384,7 +1390,7 @@ namespace Luster.TaskFlow.Motion
         }
 
 
-        // Toein×¢²áÊÂ¼ş
+        // Toeinæ³¨å†Œäº‹ä»¶
         public event Action<object, string> ToeinForceRegisterEvent;
         public void ToeinForceRegister(object obj, string name)
         {
@@ -1395,14 +1401,14 @@ namespace Luster.TaskFlow.Motion
 
 
 
-        // Ñ¹Á¦×¢²áÊÂ¼ş
+        // å‹åŠ›æ³¨å†Œäº‹ä»¶
         public event Action<object, string> PressRegisterEvent;
         public void PressRegister(object obj, string name)
         {
             PressRegisterEvent?.Invoke(obj, name);
         }
 
-        // Ñ¹Á¦×¢²áÊÂ¼ş
+        // å‹åŠ›æ³¨å†Œäº‹ä»¶
         public event Action<object, string> ForceRegisterEvent;
 
 

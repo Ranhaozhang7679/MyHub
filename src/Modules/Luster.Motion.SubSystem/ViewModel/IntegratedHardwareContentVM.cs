@@ -170,7 +170,8 @@ namespace Luster.Motion.SubSystem.ViewModel
                 new NavigationItemModel { Index = 4, Name = "VIO", Region = "VIOContent", IsSelected = false },
                 new NavigationItemModel { Index = 5, Name = "VAxisM", Region = "AxisIODebugContent", IsSelected = false },
                 new NavigationItemModel { Index = 6, Name = "VCommuncation", Region = "VCommuncationContent", IsSelected = false },
-                new NavigationItemModel { Index = 7, Name = "VAxis", Region = "VAxisContent", IsSelected = false }
+                new NavigationItemModel { Index = 7, Name = "VAxis", Region = "VAxisContent", IsSelected = false },
+                new NavigationItemModel { Index = 8, Name = "VPlcIO", Region = "VPlcIOContent", IsSelected = false }
             };
         }
 

@@ -833,6 +833,9 @@ namespace Luster.Motion.TaskFlow.Engine
         /// <param name="status"></param>
         private void SetModuleStatus(IMotionModule motionModule, RunStatus status)
         {
+            // 忽略状态的模块不重置状态，避免忽略被意外取消
+            if (motionModule.Status == RunStatus.Skip) return;
+
             motionModule.Status = status;
             if (motionModule.Children.Count > 0)
             {

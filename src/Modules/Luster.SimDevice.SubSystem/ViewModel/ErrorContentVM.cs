@@ -196,13 +196,9 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                         item.RepairAction = diTable.Rows[i][5]?.ToString();
                     i++;
                 }
-                //for (int i = 0; i < diTable.Rows.Count; i++)
-                //{
-                //    var item = items.Where(x => x.DeviceName == diTable.Rows[i][0].ToString()).First();
-                //    item.Name = diTable.Rows[i][1].ToString();
-                //    item.ErrorCode = diTable.Rows[i][2].ToString();
-                //    item.ErrorForeignMessage = diTable.Rows[i][3].ToString();
-                //}
+
+                // 导入完成后立即保存，防止重启丢失
+                deviceEngine.Save();
             }
         }
 
