@@ -351,8 +351,8 @@ namespace Luster.Motion.Integration.Web
                 build_type = stationInfo.build_type,
             };
             string jsonData = JsonTool.ToJson(statusData);
-            var result = Send(url, jsonData, 5);
-            SendAsync(urlSim, jsonData, 5);
+            _ = SendAsync(url, jsonData, 5);
+            _ = SendAsync(urlSim, jsonData, 5);
         }
 
         public override void StartFinish()
@@ -841,14 +841,15 @@ namespace Luster.Motion.Integration.Web
                     }
                 };
                 string jsonData = JsonTool.ToJson(statusData);
-                var ok = Send(url, jsonData, 5);
-                SendAsync(urlSim, jsonData, 5);
-                //ok = true;
-                if (ok && !string.IsNullOrEmpty(actualEventID) && statusMessage == "report end")
+                _ = SendAsync(urlSim, jsonData, 5);
+                _ = SendAsync(url, jsonData, 5, ok =>
                 {
-                    MarkChain(actualEventID, RepairState.ReportEnd, DateTime.Now);
-                }
-                return ok;
+                    if (ok && !string.IsNullOrEmpty(actualEventID) && statusMessage == "report end")
+                    {
+                        MarkChain(actualEventID, RepairState.ReportEnd, DateTime.Now);
+                    }
+                });
+                return true;
             }
 
             // 用 switch 重写状态推进逻辑，计算 statusMessage 并更新 _hiveState
@@ -969,10 +970,11 @@ namespace Luster.Motion.Integration.Web
                                 }
                             };
                             string jsonData0 = JsonTool.ToJson(statusData0);
-                            var result0 = Send(url, jsonData0, 5);
+                            _ = SendAsync(url, jsonData0, 5);
+                            _ = SendAsync(urlSim, jsonData0, 5);
                             SaveHiveState();
                             _visionAPI.MachineStatusUpload(TrainRunMode.Idle, TrainRunMode.Running, "", "");
-                            return result0;
+                            return true;
 
                         case 5: // Idle->Down（HelpRequest）
                             if (dstRepairState == RepairState.HelpRequest)
@@ -1109,23 +1111,26 @@ namespace Luster.Motion.Integration.Web
                         }
                     };
                     string jsonData = JsonTool.ToJson(statusData);
-                    var ok = Send(url, jsonData, 5);
-                    SendAsync(urlSim, jsonData, 5);
-                    //ok = true;
-                    if (ok && !string.IsNullOrEmpty(currentEventID))
+                    _ = SendAsync(urlSim, jsonData, 5);
+                    var eid = currentEventID;
+                    var sm = statusMessage;
+                    _ = SendAsync(url, jsonData, 5, ok =>
                     {
-                        var now = DateTime.Now;
-                        switch (statusMessage)
+                        if (ok && !string.IsNullOrEmpty(eid))
                         {
-                            case "repair end":
-                                MarkChain(currentEventID, RepairState.RepairEnd, now);
-                                break;
-                            case "report end":
-                                MarkChain(currentEventID, RepairState.ReportEnd, now);
-                                break;
+                            var now = DateTime.Now;
+                            switch (sm)
+                            {
+                                case "repair end":
+                                    MarkChain(eid, RepairState.RepairEnd, now);
+                                    break;
+                                case "report end":
+                                    MarkChain(eid, RepairState.ReportEnd, now);
+                                    break;
+                            }
                         }
-                    }
-                    return ok;
+                    });
+                    return true;
                 }
                 else
                 {
@@ -1159,23 +1164,26 @@ namespace Luster.Motion.Integration.Web
                         }
                     };
                     string jsonData = JsonTool.ToJson(statusData);
-                    var ok = Send(url, jsonData, 5);
-                    SendAsync(urlSim, jsonData, 5);
-                    //ok = true;
-                    if (ok && !string.IsNullOrEmpty(currentEventID))
+                    _ = SendAsync(urlSim, jsonData, 5);
+                    var eid = currentEventID;
+                    var sm = statusMessage;
+                    _ = SendAsync(url, jsonData, 5, ok =>
                     {
-                        var now = DateTime.Now;
-                        switch (statusMessage)
+                        if (ok && !string.IsNullOrEmpty(eid))
                         {
-                            case "help request":
-                                MarkChain(currentEventID, RepairState.HelpRequest, now);
-                                break;
-                            case "repair start":
-                                MarkChain(currentEventID, RepairState.RepairStart, now);
-                                break;
+                            var now = DateTime.Now;
+                            switch (sm)
+                            {
+                                case "help request":
+                                    MarkChain(eid, RepairState.HelpRequest, now);
+                                    break;
+                                case "repair start":
+                                    MarkChain(eid, RepairState.RepairStart, now);
+                                    break;
+                            }
                         }
-                    }
-                    return ok;
+                    });
+                    return true;
                 }
             }
             else
@@ -1208,26 +1216,30 @@ namespace Luster.Motion.Integration.Web
                         }
                     };
                     string jsonData = JsonTool.ToJson(statusData);
-                    var ok = Send(url, jsonData, 5);
-                    SendAsync(urlSim, jsonData, 5);
-                    //ok = true;
-                    if (ok && !string.IsNullOrEmpty(currentEventID))
+                    _ = SendAsync(urlSim, jsonData, 5);
+                    var eid = currentEventID;
+                    var sm = statusMessage;
+                    var isDirect = isDirectRecoverFromHelp;
+                    _ = SendAsync(url, jsonData, 5, ok =>
                     {
-                        var now = DateTime.Now;
-                        if (statusMessage == "repair end")
+                        if (ok && !string.IsNullOrEmpty(eid))
                         {
-                            MarkChain(currentEventID, RepairState.RepairEnd, now);
+                            var now = DateTime.Now;
+                            if (sm == "repair end")
+                            {
+                                MarkChain(eid, RepairState.RepairEnd, now);
+                            }
+                            else if (isDirect)
+                            {
+                                // 特例闭合：help request后直接恢复
+                                MarkChain(eid, RepairState.RepairEnd, now);
+                                _hiveState.HiveRepairState = RepairState.Normal;
+                                _hiveState.HiveCurrentCode = "";
+                                SaveHiveState();
+                            }
                         }
-                        else if (isDirectRecoverFromHelp)
-                        {
-                            // 特例闭合：help request后直接恢复
-                            MarkChain(currentEventID, RepairState.RepairEnd, now);
-                            _hiveState.HiveRepairState = RepairState.Normal;
-                            _hiveState.HiveCurrentCode = "";
-                            SaveHiveState();
-                        }
-                    }
-                    return ok;
+                    });
+                    return true;
                 }
                 // 90s无料Running切idle，不上传event_id
                 else if (status == 2)
@@ -1258,9 +1270,9 @@ namespace Luster.Motion.Integration.Web
                         }
                     };
                     string jsonData = JsonTool.ToJson(statusData);
-                    var ok = Send(url, jsonData, 5);
-                    SendAsync(urlSim, jsonData, 5);
-                    return ok;
+                    _ = SendAsync(urlSim, jsonData, 5);
+                    _ = SendAsync(url, jsonData, 5);
+                    return true;
                 }
                 else
                 {
@@ -1303,14 +1315,17 @@ namespace Luster.Motion.Integration.Web
                         }
                     };
                     string jsonData = JsonTool.ToJson(statusData);
-                    var ok = Send(url, jsonData, 5);
-                    SendAsync(urlSim, jsonData, 5);
-                    //ok = true;
-                    if (ok && !string.IsNullOrEmpty(currentEventID) && statusMessage == "help request")
+                    _ = SendAsync(urlSim, jsonData, 5);
+                    var eid = currentEventID;
+                    var sm = statusMessage;
+                    _ = SendAsync(url, jsonData, 5, ok =>
                     {
-                        MarkChain(currentEventID, RepairState.HelpRequest, DateTime.Now);
-                    }
-                    return ok;
+                        if (ok && !string.IsNullOrEmpty(eid) && sm == "help request")
+                        {
+                            MarkChain(eid, RepairState.HelpRequest, DateTime.Now);
+                        }
+                    });
+                    return true;
                 }
             }
         }
@@ -1586,8 +1601,8 @@ namespace Luster.Motion.Integration.Web
                                }
             };
             string jsonData = JsonTool.ToJson(errorData);
-            Send(url, jsonData, 5);
-            SendAsync(urlSim, jsonData, 5);
+            _ = SendAsync(url, jsonData, 5);
+            _ = SendAsync(urlSim, jsonData, 5);
         }
 
         /// <summary>
@@ -1661,7 +1676,7 @@ namespace Luster.Motion.Integration.Web
             LogTool.Debug("hive产品接口上传" + productInfo.Result.IsPreviousStationUndo.ToString(), "visionlog记录");
             if (!productInfo.Result.IsPreviousStationUndo && statusNow == "running" && statusNow != "idle")
             {
-                Send(url, jsonData, 5);
+                _ = SendAsync(url, jsonData, 5);
             }
         }
 
@@ -1721,8 +1736,8 @@ namespace Luster.Motion.Integration.Web
             string jsonData = JsonTool.ToJson(sendData);
             //if ( statusNow == "running" && statusNow != "idle")
             //{
-            Send(url, jsonData, 5);
-            SendAsync(urlSim, jsonData, 5);
+            _ = SendAsync(url, jsonData, 5);
+            _ = SendAsync(urlSim, jsonData, 5);
             //}
 
         }
@@ -2211,8 +2226,8 @@ namespace Luster.Motion.Integration.Web
 
 
             string jsonData = JsonTool.ToJson(motionSw);
-            Send(url, jsonData, 5, true);
-            Send(urlSim, jsonData, 5, true);
+            _ = SendAsync(url, jsonData, 5, specialTimeout: true);
+            _ = SendAsync(urlSim, jsonData, 5, specialTimeout: true);
 
         }
 
@@ -2278,8 +2293,8 @@ namespace Luster.Motion.Integration.Web
                                }
             };
             string jsonData = JsonTool.ToJson(motionSw);
-            Send(url, jsonData, 5, true);
-            Send(urlSim, jsonData, 5, true);
+            _ = SendAsync(url, jsonData, 5, specialTimeout: true);
+            _ = SendAsync(urlSim, jsonData, 5, specialTimeout: true);
         }
         protected override void Register(IMotionController motionController)
         {
@@ -2570,6 +2585,16 @@ namespace Luster.Motion.Integration.Web
                 }
             }
             return isSendSuccess;
+        }
+
+        /// <summary>
+        /// 异步发送Hive报文（带回调重载），不阻塞调用线程，完成后执行回调
+        /// </summary>
+        private async Task<bool> SendAsync(string url, string datas, int times, Action<bool> onDone, bool specialTimeout = false)
+        {
+            var result = await SendAsync(url, datas, times, specialTimeout);
+            onDone?.Invoke(result);
+            return result;
         }
 
         private async Task<bool> SendAsync(string url, string datas, int times, bool specialTimeout = false)
