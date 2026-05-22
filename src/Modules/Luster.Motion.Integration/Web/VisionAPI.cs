@@ -618,6 +618,8 @@ namespace Luster.Motion.Integration.Web
             }
             // 2026-1-19，CtConfig联动CtLogConfig
             var kvList = ctConfigs.ToList();          // 保持插入顺序
+            // 2026-5-22，记录上一步的结束时间，用于填充假数据时保证步序连续
+            DateTime lastEndTime = DateTime.MinValue;
             for (int i = 0; i + 1 < kvList.Count; i += 2)
             {
                 var firstKey = kvList[i].Key;     // 第一行 key
@@ -638,7 +640,9 @@ namespace Luster.Motion.Integration.Web
                 //if (first != null && second != null)
                 if (first.StartTime == DateTime.MinValue)
                 {
-                    first.StartTime = DateTime.Now;
+                    //first.StartTime = DateTime.Now;
+                    // 用上一步的结束时间作为本步的开始，保证步序连续
+                    first.StartTime = lastEndTime != DateTime.MinValue ? lastEndTime : DateTime.Now;
                     first.CT = 1000;
                 }
                 // SN不会拿不到，因为只有拿到后，才会存入currentCTInfos
@@ -679,8 +683,11 @@ namespace Luster.Motion.Integration.Web
                 }
                 if (second.EndTime == DateTime.MinValue)
                 {
-                    second.EndTime = DateTime.Now.AddSeconds(1);
+                    //second.EndTime = DateTime.Now.AddSeconds(1);
+                    second.EndTime = first.StartTime.AddSeconds(1);
                 }
+                // 记录本步结束时间，供下一步填充假数据时使用
+                lastEndTime = second.EndTime;
                 var moduleTime4 = new
                 {
                     parameter = $"{firstValue}_Start_Time",
