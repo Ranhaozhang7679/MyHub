@@ -335,10 +335,11 @@ namespace Luster.Motion.EditorUI
                 return newModule;
             }
 
-            OnRecipeChanged();
-
             _engine.Insert(newModule, index);
             _engine.BuildPrimModule();
+
+            var addCommand = new ModuleAddCommand(newModule.ExportXml(), parent.ID, newModule.Sort);
+            OnRecipeChanged(addCommand);
 
             SortModule(parent);
             newModule.UpdateStation();
@@ -714,10 +715,13 @@ namespace Luster.Motion.EditorUI
                 throw new FriendlyException("要移动的模块不存在!");
             }
 
-            OnRecipeChanged();
-
             var curModule = parent;
             var srcIndex = modules[0].Sort;
+
+            var moduleIDs = modules.Select(m => m.ID).ToArray();
+            var originalSorts = modules.Select(m => m.Sort).ToArray();
+
+            OnRecipeChanged(new ModuleMoveCommand(moduleIDs, originalSorts, destIndex));
 
             if (srcIndex > destIndex)
             {
