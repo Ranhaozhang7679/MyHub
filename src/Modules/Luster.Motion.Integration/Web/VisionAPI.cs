@@ -135,6 +135,10 @@ namespace Luster.Motion.Integration.Web
 
         public Dictionary<string, string> ctConfigs = new Dictionary<string, string>();
         /// <summary>
+        /// 目标CT配置（毫秒），key为模块名，value为目标CT
+        /// </summary>
+        public Dictionary<string, float> ctTargetCTs = new Dictionary<string, float>();
+        /// <summary>
         /// 互斥组配置，key为模块名，value为互斥组名。同组内的模块只会有一个有数据（如左右双工位）
         /// </summary>
         public Dictionary<string, string> ctExclusiveGroups = new Dictionary<string, string>();
@@ -204,17 +208,30 @@ namespace Luster.Motion.Integration.Web
                         var strs = line.Split(new char[] { ',' });
                         if (strs.Length > 1 && !string.IsNullOrWhiteSpace(strs[0]) && !string.IsNullOrWhiteSpace(strs[1]))
                         {
-                            if (ctConfigs.ContainsKey(strs[0].Trim()) == false)
+                            //if (ctConfigs.ContainsKey(strs[0].Trim()) == false)
+                            //{
+                            //    ctConfigs.Add(strs[0].Trim(), strs[1].Trim());
+                            //}
+                            string key = strs[0].Trim();                             
+                            if (ctConfigs.ContainsKey(key) == false)
                             {
-                                ctConfigs.Add(strs[0].Trim(), strs[1].Trim());
+                                ctConfigs.Add(key, strs[1].Trim());
                             }
-                            // 读取第三列：互斥组名（左右双工位等场景）
+                            // 读取第三列：目标CT（毫秒）
                             if (strs.Length > 2 && !string.IsNullOrWhiteSpace(strs[2]))
                             {
-                                if (ctExclusiveGroups.ContainsKey(strs[0].Trim()) == false)
+                                if (ctTargetCTs.ContainsKey(key) == false && float.TryParse(strs[2].Trim(), out float ct))
                                 {
-                                    ctExclusiveGroups.Add(strs[0].Trim(), strs[2].Trim());
-                                }
+                                    ctTargetCTs.Add(key, ct);                                 
+                                }                            
+                             }
+                            // 读取第四列：互斥组名（左右双工位等场景）
+                            if (strs.Length > 3 && !string.IsNullOrWhiteSpace(strs[3]))
+                            {
+                                    if (ctExclusiveGroups.ContainsKey(key) == false)
+                                    {
+                                        ctExclusiveGroups.Add(key, strs[3].Trim());
+                                    }
                             }
                         }
                     }
@@ -641,9 +658,11 @@ namespace Luster.Motion.Integration.Web
                 if (first.StartTime == DateTime.MinValue)
                 {
                     //first.StartTime = DateTime.Now;
+                    //first.CT = 1000;
                     // 用上一步的结束时间作为本步的开始，保证步序连续
                     first.StartTime = lastEndTime != DateTime.MinValue ? lastEndTime : DateTime.Now;
-                    first.CT = 1000;
+                    // 从配置文件CtConfig.csv第三列获取目标CT，未配置时默认1000ms
+                    first.CT = ctTargetCTs.TryGetValue(firstKey, out var targetCT) ? targetCT : 1000; 
                 }
                 // SN不会拿不到，因为只有拿到后，才会存入currentCTInfos
                 //if (!station.Contains("+") || station.Length < 14)
@@ -684,7 +703,13 @@ namespace Luster.Motion.Integration.Web
                 if (second.EndTime == DateTime.MinValue)
                 {
                     //second.EndTime = DateTime.Now.AddSeconds(1);
-                    second.EndTime = first.StartTime.AddSeconds(1);
+                    // 保证平台填充数据的CT步序首尾是连续的
+                    //second.EndTime = first.StartTime.AddSeconds(1);
+                    // 填充随机假时间，范围 [max(0, CT/1000 - 0.1), CT/1000]
+                    double rand = first.CT / 1000.0;
+                    double minDuration = Math.Max(0, rand - 0.1);
+                    double fakeDuration = minDuration + new Random().NextDouble() * (rand - minDuration);
+                    second.EndTime = first.StartTime.AddSeconds(fakeDuration);
                 }
                 // 记录本步结束时间，供下一步填充假数据时使用
                 lastEndTime = second.EndTime;
