@@ -62,6 +62,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Policy;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
@@ -133,6 +134,10 @@ namespace Luster.Motion.Integration.Web
         private static bool IsUploadPara;
 
         public Dictionary<string, string> ctConfigs = new Dictionary<string, string>();
+        /// <summary>
+        /// 互斥组配置，key为模块名，value为互斥组名。同组内的模块只会有一个有数据（如左右双工位）
+        /// </summary>
+        public Dictionary<string, string> ctExclusiveGroups = new Dictionary<string, string>();
         List<string> listA = new List<string>();
 
         //2025/12/24 添加
@@ -188,12 +193,28 @@ namespace Luster.Motion.Integration.Web
                     var lines = File.ReadAllLines(csvPath, Encoding.Default);
                     foreach (var line in lines)
                     {
-                        var strs = line.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                        if (strs.Length > 1)
+                        //var strs = line.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                        //if (strs.Length > 1)
+                        //{
+                        //    if (ctConfigs.ContainsKey(strs[0]) == false)
+                        //    {
+                        //        ctConfigs.Add(strs[0], strs[1]);
+                        //    }
+                        //}
+                        var strs = line.Split(new char[] { ',' });
+                        if (strs.Length > 1 && !string.IsNullOrWhiteSpace(strs[0]) && !string.IsNullOrWhiteSpace(strs[1]))
                         {
-                            if (ctConfigs.ContainsKey(strs[0]) == false)
+                            if (ctConfigs.ContainsKey(strs[0].Trim()) == false)
                             {
-                                ctConfigs.Add(strs[0], strs[1]);
+                                ctConfigs.Add(strs[0].Trim(), strs[1].Trim());
+                            }
+                            // 读取第三列：互斥组名（左右双工位等场景）
+                            if (strs.Length > 2 && !string.IsNullOrWhiteSpace(strs[2]))
+                            {
+                                if (ctExclusiveGroups.ContainsKey(strs[0].Trim()) == false)
+                                {
+                                    ctExclusiveGroups.Add(strs[0].Trim(), strs[2].Trim());
+                                }
                             }
                         }
                     }
@@ -582,6 +603,19 @@ namespace Luster.Motion.Integration.Web
 
             //从缓存中取出对应出料SN的所有步序            
             cacheTimes.TryRemove(validSN, out List<StationTime> currentCTInfos);
+            // 计算互斥组中哪些组有真实数据，用于区分"另一条流线"和"丢步"
+            var groupsWithData = new HashSet<string>();
+            foreach (var kvp in ctConfigs)
+            {
+                if (ctExclusiveGroups.TryGetValue(kvp.Key, out var group) && !string.IsNullOrEmpty(group))
+                {
+                    var match = currentCTInfos.FirstOrDefault(c => listA.Contains(c.Station) && c.Module == kvp.Key);
+                    if (!string.IsNullOrEmpty(match.Module))
+                    {
+                        groupsWithData.Add(group);
+                    }
+                }
+            }
             // 2026-1-19，CtConfig联动CtLogConfig
             var kvList = ctConfigs.ToList();          // 保持插入顺序
             for (int i = 0; i + 1 < kvList.Count; i += 2)
@@ -591,6 +625,15 @@ namespace Luster.Motion.Integration.Web
                 // 到 ctInfos 里找对应元素
                 var first = currentCTInfos.FirstOrDefault(c => listA.Contains(c.Station) && c.Module == firstKey);
                 var second = currentCTInfos.FirstOrDefault(c => listA.Contains(c.Station) && c.Module == secondKey);
+                // 互斥组判断：同组内有数据则跳过无数据的（左右双工位场景）
+                // 不在互斥组内的模块，始终填充假数据（丢步场景）
+                if (string.IsNullOrEmpty(first.Module))
+                {
+                    if (ctExclusiveGroups.TryGetValue(firstKey, out var group) && !string.IsNullOrEmpty(group) && groupsWithData.Contains(group))
+                    {
+                        continue;
+                    }
+                }
                 // first或second不会为空，只是属性取值会为空
                 //if (first != null && second != null)
                 if (first.StartTime == DateTime.MinValue)
