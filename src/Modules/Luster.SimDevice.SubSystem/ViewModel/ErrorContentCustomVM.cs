@@ -1553,7 +1553,21 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                     }
                 }
 
-                // 5. 生成目标 CSV
+                // 5. 过滤无效数据：报警代码/报警内容/报警英文任一为空则过滤，报警代码为 10000 或 TBD 也过滤
+                rows = rows.Where(row =>
+                {
+                    if (row.Length < 4) return false;
+                    string code = row[1]?.Trim() ?? "";
+                    string descCn = row[3]?.Trim() ?? "";
+                    string descEn = row[0]?.Trim() ?? "";
+                    if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(descCn) || string.IsNullOrEmpty(descEn))
+                        return false;
+                    if (code == "10000" || code == "TBD")
+                        return false;
+                    return true;
+                }).ToList();
+
+                // 6. 生成目标 CSV
                 using (var sw = new StreamWriter(outputPath, false, new System.Text.UTF8Encoding(true)))
                 {
                     sw.WriteLine(string.Join(",", headers));
