@@ -1553,8 +1553,10 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                     }
                 }
 
-                // 5. 过滤无效数据：报警代码/报警内容/报警英文任一为空则过滤，报警代码为 10000 或 TBD 也过滤
-                rows = rows.Where(row =>
+                // 5. 过滤无效数据：报警代码/报警内容/报警英文任一为空则过滤，报警代码为 10000 也过滤
+                //    DefaultErrorCodeRows 不过滤 TBD，其他来源过滤报警代码包含 TBD 的项
+                int defaultRowCount = defaultRows.Count;
+                rows = rows.Where((row, index) =>
                 {
                     if (row.Length < 4) return false;
                     string code = row[1]?.Trim() ?? "";
@@ -1562,7 +1564,8 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                     string descEn = row[0]?.Trim() ?? "";
                     if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(descCn) || string.IsNullOrEmpty(descEn))
                         return false;
-                    if (code == "10000" || code == "TBD")
+                    if (code == "10000") return false;
+                    if (index >= defaultRowCount && code.Contains("TBD"))
                         return false;
                     return true;
                 }).ToList();
