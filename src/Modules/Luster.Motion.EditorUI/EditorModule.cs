@@ -64,6 +64,7 @@ namespace Luster.Motion.EditorUI
             containerRegistry.RegisterDialog<SetModeGlobalVarDialog, SetModeGlobalVarDialogVM>();// 设置运动模式全局变量
             containerRegistry.RegisterDialog<SetRunModeDialog, SetRunModeDialogVM>();// 添加设置模式
             containerRegistry.RegisterDialog<ModuleDialog, ModuleDialogVM>();// 添加设置模式
+            containerRegistry.RegisterDialog<EditorWindowDialog, EditorWindowDialogVM>();// 新窗口打开模块编辑
 
             // 注册配置导页面
             containerRegistry.RegisterForNavigation<FlowContent, FlowContentVM>();
