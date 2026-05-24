@@ -185,6 +185,24 @@ namespace Luster.Motion.DataStruct.Virtual
         public Dictionary<DeviceError, string> ErrorNames { get; set; }
 
         /// <summary>
+        /// 按报警类型存储的报警配置（英文描述）
+        /// </summary>
+        [Ignore]
+        public Dictionary<DeviceError, string> ErrorMessages { get; set; }
+
+        /// <summary>
+        /// 按报警类型存储的报警种类
+        /// </summary>
+        [Ignore]
+        public Dictionary<DeviceError, string> ErrorAlarmCategories { get; set; }
+
+        /// <summary>
+        /// 按报警类型存储的维修动作
+        /// </summary>
+        [Ignore]
+        public Dictionary<DeviceError, string> ErrorRepairActions { get; set; }
+
+        /// <summary>
         /// 对应的错误代码
         /// </summary>
         /// <param name="eCode"></param>
@@ -269,6 +287,9 @@ namespace Luster.Motion.DataStruct.Virtual
             VStatus = VStatus.Idle;
             Errors = new Dictionary<DeviceError, string>();
             ErrorNames = new Dictionary<DeviceError, string>();
+            ErrorMessages = new Dictionary<DeviceError, string>();
+            ErrorAlarmCategories = new Dictionary<DeviceError, string>();
+            ErrorRepairActions = new Dictionary<DeviceError, string>();
             foreach (var item in ErrorCodes)
             {
                 Errors.Add(item, "10000");
@@ -469,6 +490,18 @@ namespace Luster.Motion.DataStruct.Virtual
                     {
                         xItem.SetAttributeValue("Name", errorName);
                     }
+                    if (ErrorMessages != null && ErrorMessages.TryGetValue(item.Key, out var errMsg))
+                    {
+                        xItem.SetAttributeValue("Message", errMsg);
+                    }
+                    if (ErrorAlarmCategories != null && ErrorAlarmCategories.TryGetValue(item.Key, out var category))
+                    {
+                        xItem.SetAttributeValue("AlarmCategory", category);
+                    }
+                    if (ErrorRepairActions != null && ErrorRepairActions.TryGetValue(item.Key, out var action))
+                    {
+                        xItem.SetAttributeValue("RepairAction", action);
+                    }
                     xError.Add(xItem);
                 }
                 xRoot.Add(xError);
@@ -590,6 +623,21 @@ namespace Luster.Motion.DataStruct.Virtual
                             if (nameAttr != null && ErrorNames != null)
                             {
                                 ErrorNames[eCode] = nameAttr.Value;
+                            }
+                            var msgAttr = item.Attribute("Message");
+                            if (msgAttr != null && ErrorMessages != null)
+                            {
+                                ErrorMessages[eCode] = msgAttr.Value;
+                            }
+                            var categoryAttr = item.Attribute("AlarmCategory");
+                            if (categoryAttr != null && ErrorAlarmCategories != null)
+                            {
+                                ErrorAlarmCategories[eCode] = categoryAttr.Value;
+                            }
+                            var actionAttr = item.Attribute("RepairAction");
+                            if (actionAttr != null && ErrorRepairActions != null)
+                            {
+                                ErrorRepairActions[eCode] = actionAttr.Value;
                             }
                         }
                     }
