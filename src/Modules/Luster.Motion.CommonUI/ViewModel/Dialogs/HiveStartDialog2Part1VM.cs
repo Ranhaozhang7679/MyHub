@@ -251,7 +251,7 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                     if (cardID.Substring(0, 1) == "0")
                         cardID = cardID.Substring(1, cardID.Length - 1);
 
-                    var ret = sfcHelper.CheckCard(cardID, _hiveAPI.machineSN, out string auth);
+                    var ret = sfcHelper.CheckCard(cardID, _hiveAPI.machineSN, out string auth, string.IsNullOrEmpty(_hiveAPI._hiveState.HiveCurrentCode) ? "F99OOOO-07" : _hiveAPI._hiveState.HiveCurrentCode, DateTime.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.ff+0800"));
 
                     cardID = "";
 
