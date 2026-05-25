@@ -138,8 +138,13 @@ namespace Luster.Motion.EditorUI.ViewModel
             // 预处理
             bus.GetEvent<ModulePrevAddEvent>().Subscribe(module =>
             {
-                var pModule = eventBus.GetCurrent();
-                module.Parent = pModule;
+                // 仅在未设置 Parent 时才使用 GetCurrent()（兼容弹窗场景预设置 Parent 的情况）
+                if (module.Parent == null)
+                {
+                    var pModule = eventBus.GetCurrent();
+                    module.Parent = pModule;
+                }
+
                 if (module.TaskFunction is ISwitch iSwitch)
                 {
                     var parameter = module.Parameters[nameof(iSwitch.Condition)];

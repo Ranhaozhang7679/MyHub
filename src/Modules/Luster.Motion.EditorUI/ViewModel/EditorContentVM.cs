@@ -86,10 +86,28 @@ namespace Luster.Motion.EditorUI.ViewModel
         private IDialogService _dialogService;
 
         /// <summary>
+        /// 弹窗模式的根模块，设置后不依赖全局 GetCurrent()
+        /// </summary>
+        private IMotionModule _rootModule;
+        public IMotionModule RootModule
+        {
+            get => _rootModule;
+            set => SetProperty(ref _rootModule, value);
+        }
+
+        /// <summary>
+        /// 获取当前活跃模块（弹窗模式使用 RootModule，主窗口使用 GetCurrent()）
+        /// </summary>
+        private IMotionModule GetActiveModule()
+        {
+            return _rootModule ?? eventBus.GetCurrent();
+        }
+
+        /// <summary>
         /// 流程编辑器
         /// </summary>
         private FlowEditor flowItem = null;
-   
+
 
         /// <summary>
         /// 构造函数
@@ -209,13 +227,13 @@ namespace Luster.Motion.EditorUI.ViewModel
         /// <summary>
         /// UI 界面刷新功能
         /// </summary>
-        private void RefreshUI(string switchName = "", Action action = null)
+        internal void RefreshUI(string switchName = "", Action action = null)
         {
             //异步线程刷新功能
             Task.Run(() =>
             {
                 //commonBus.EventBus.GetEvent<LoadingEvent>().Publish(true);
-                var curModule = eventBus.GetCurrent();
+                var curModule = GetActiveModule();
 
                 if (curModule == null) return;
 
@@ -408,7 +426,7 @@ namespace Luster.Motion.EditorUI.ViewModel
         private DelegateCommand<FlowItemDownArgs> _selectedCommand;
         public DelegateCommand<FlowItemDownArgs> SelectedCommand => _selectedCommand ?? (_selectedCommand = new DelegateCommand<FlowItemDownArgs>((args) =>
         {
-            if(!IsAdmin) return;
+            if (!IsAdmin) return;
             var selectItems = args.SelectItems.Select(u => u.Tag as IMotionModule).ToArray();
             eventBus.OnSelected(selectItems);
         }));
@@ -433,7 +451,14 @@ namespace Luster.Motion.EditorUI.ViewModel
                     if (r.Result == ButtonResult.OK)
                     {
                         var selectItems = args.MoveItems.Select(u => u.Tag as IMotionModule).ToList();
-                        eventBus.OnMoveModule(selectItems, args.MoveIndex);
+                        if (_rootModule != null)
+                        {
+                            eventBus.OnMoveModule(selectItems, args.MoveIndex, GetActiveModule());
+                        }
+                        else
+                        {
+                            eventBus.OnMoveModule(selectItems, args.MoveIndex);
+                        }
                     }
                 });
             }
@@ -523,19 +548,28 @@ namespace Luster.Motion.EditorUI.ViewModel
             // 新增：判断是否为Script模块
             if (motionModule != null && motionModule.TaskFunction?.Alias == "Script")
             {
-                _dialogService.ShowCSharpEditorDialog(motionModule, motionModule.ID.ToString(), r => {});
+                _dialogService.ShowCSharpEditorDialog(motionModule, motionModule.ID.ToString(), r => { });
                 return;
             }
 
             if (motionModule != null && motionModule.TaskFunction?.Alias == "PythonScript")
             {
-                _dialogService.ShowPythonEditorDialog(motionModule, motionModule.ID.ToString(), r => {});
+                _dialogService.ShowPythonEditorDialog(motionModule, motionModule.ID.ToString(), r => { });
                 return;
             }
 
-            if (motionModule != null && motionModule != eventBus.GetCurrent())
+            if (motionModule != null)
             {
-                eventBus.OnLoaded(motionModule);
+                if (_rootModule != null)
+                {
+                    // 弹窗模式：直接更新本地 RootModule，不影响全局 IsCurrent
+                    RootModule = motionModule;
+                    RefreshUI();
+                }
+                else if (motionModule != eventBus.GetCurrent())
+                {
+                    eventBus.OnLoaded(motionModule);
+                }
             }
         }));
 
@@ -558,6 +592,21 @@ namespace Luster.Motion.EditorUI.ViewModel
                         .OrderBy(u => u.Sort)
                         .ToList();
         }
+
+        /// <summary>
+        /// 新窗口打开
+        /// </summary>
+        private DelegateCommand<IMotionModule> _openInNewWindowCommand;
+        public DelegateCommand<IMotionModule> OpenInNewWindowCommand =>
+            _openInNewWindowCommand ?? (_openInNewWindowCommand = new DelegateCommand<IMotionModule>((module) =>
+            {
+                if (module == null) return;
+
+                DialogParameters param = new DialogParameters();
+                param.Add("Title", module.Alias);
+                param.Add("Module", module);
+                _dialogService.Show("EditorWindowDialog", param, r => { });
+            }));
 
         /// <summary>
         /// 模块移除
@@ -689,14 +738,14 @@ namespace Luster.Motion.EditorUI.ViewModel
             string text = Clipboard.GetText();
             if (text.Contains("Name=\"Stations\""))
             {
-                IMotionModule parent = eventBus.GetCurrent();
+                IMotionModule parent = GetActiveModule();
                 if (parent == null || parent.Alias != "Group")
                 {
                     _dialogService.ShowErrorTip("站点只能粘贴到数据流根节点下");
                     return;
                 }
             }
-            
+
 
             if (string.IsNullOrEmpty(text))
             {
@@ -712,7 +761,7 @@ namespace Luster.Motion.EditorUI.ViewModel
             }
 
             var xCopy = XElement.Parse(text);
-            eventBus.OnPaste(xCopy, null, insert);
+            eventBus.OnPaste(xCopy, GetActiveModule(), insert);
 
         }, () => CanPaste).ObservesProperty(() => CanPaste));
 
@@ -743,7 +792,7 @@ namespace Luster.Motion.EditorUI.ViewModel
                     eventBus.OnSkip(selectModules.ToArray());
                 }
             });
-           
+
         }, (obj) => IsBtnEnabled).ObservesCanExecute(() => IsBtnEnabled));
 
 
@@ -789,7 +838,7 @@ namespace Luster.Motion.EditorUI.ViewModel
             if (true) return;
             if (!IsAdmin) return;
 
-            var module = eventBus.GetCurrent();
+            var module = GetActiveModule();
             eventBus.OnRun(module.ID);
         }, () => IsBtnEnabled).ObservesCanExecute(() => IsBtnEnabled));
 
@@ -892,7 +941,7 @@ namespace Luster.Motion.EditorUI.ViewModel
                 {
                     if (function == null && node.Tag.ToString() == "Composition")
                     {
-                        newModule = eventBus.OnAddModule("Logic", "RefGroup", args.Index);
+                        newModule = eventBus.OnAddModule("Logic", "RefGroup", GetActiveModule(), args.Index);
                         if (newModule.TaskFunction is IRefComposition comp)
                         {
                             comp.SetRefModule(module as IMotionModule);
@@ -901,8 +950,15 @@ namespace Luster.Motion.EditorUI.ViewModel
                     }
                     else
                     {
-                        // 计算位置
-                        newModule = eventBus.OnAddModule(module.Name, function.Name, args.Index);
+                        // 弹窗模式使用带 parent 参数的重载
+                        if (_rootModule != null)
+                        {
+                            newModule = eventBus.OnAddModule(module.Name, function.Name, GetActiveModule(), args.Index);
+                        }
+                        else
+                        {
+                            newModule = eventBus.OnAddModule(module.Name, function.Name, args.Index);
+                        }
                     }
                 }
 
@@ -931,7 +987,7 @@ namespace Luster.Motion.EditorUI.ViewModel
         {
             if (!IsDataFlow) return;
 
-            var rootMotion = eventBus.GetCurrent();
+            var rootMotion = GetActiveModule();
             var rootNode = rootMotion.GetTreeNode();
             //string json = JsonConvert.SerializeObject(rootNode);
             var bmp = Luster.Common.Tools.ImageTool.SaveNodesToImage(commonBus.ProjInfo.ProjName, 60, rootNode.Children.ToArray());
@@ -1021,7 +1077,7 @@ namespace Luster.Motion.EditorUI.ViewModel
             {
                 Task.Factory.StartNew(() =>
                 {
-                    var rootMotion = eventBus.GetCurrent();
+                    var rootMotion = GetActiveModule();
 
                     //根节点处理
                     var rootNode = rootMotion.GetTreeNodeForFlow();
