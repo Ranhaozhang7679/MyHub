@@ -1369,6 +1369,9 @@ namespace Luster.SimDevice.SubSystem.ViewModel
         {
             try
             {
+                // 先将当前界面的报警配置数据（包括报警种类和维修动作）保存到CSV，确保生成时使用最新数据
+                SaveToCsvFile(ErrorList);
+
                 string configPath = deviceEngine.RecipeConfigPath;
                 if (string.IsNullOrEmpty(configPath))
                 {
@@ -1470,36 +1473,36 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                     }
                 }
 
-                // 3. 读取并添加 ProductEventAlarms.csv（产品事件报警配置）
-                string productEventAlarmsPath = Path.Combine(configPath, "ProductEventAlarms.csv");
-                if (File.Exists(productEventAlarmsPath))
-                {
-                    try
-                    {
-                        var peLines = File.ReadAllLines(productEventAlarmsPath, Encoding.UTF8);
-                        bool isFirstLine = true;
-                        foreach (var line in peLines)
-                        {
-                            if (isFirstLine) { isFirstLine = false; continue; }
-                            if (string.IsNullOrWhiteSpace(line)) continue;
+                //// 3. 读取并添加 ProductEventAlarms.csv（产品事件报警配置）
+                //string productEventAlarmsPath = Path.Combine(configPath, "ProductEventAlarms.csv");
+                //if (File.Exists(productEventAlarmsPath))
+                //{
+                //    try
+                //    {
+                //        var peLines = File.ReadAllLines(productEventAlarmsPath, Encoding.UTF8);
+                //        bool isFirstLine = true;
+                //        foreach (var line in peLines)
+                //        {
+                //            if (isFirstLine) { isFirstLine = false; continue; }
+                //            if (string.IsNullOrWhiteSpace(line)) continue;
 
-                            var parts = ParseCsvLine(line);
-                            if (parts.Length >= 5)
-                            {
-                                string alarmCode = parts[0];
-                                string alarmContent = UnescapeCsvField(parts[1]);
-                                string alarmEnglish = UnescapeCsvField(parts[2]);
-                                string alarmCategory = parts.Length > 3 ? UnescapeCsvField(parts[3]) : "";
-                                string repairAction = parts.Length > 4 ? UnescapeCsvField(parts[4]) : "";
-                                rows.Add(new[] { alarmEnglish, alarmCode, alarmCategory, alarmContent, repairAction, alarmCode });
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Warning, $"读取 ProductEventAlarms.csv 失败: {ex.Message}");
-                    }
-                }
+                //            var parts = ParseCsvLine(line);
+                //            if (parts.Length >= 5)
+                //            {
+                //                string alarmCode = parts[0];
+                //                string alarmContent = UnescapeCsvField(parts[1]);
+                //                string alarmEnglish = UnescapeCsvField(parts[2]);
+                //                string alarmCategory = parts.Length > 3 ? UnescapeCsvField(parts[3]) : "";
+                //                string repairAction = parts.Length > 4 ? UnescapeCsvField(parts[4]) : "";
+                //                rows.Add(new[] { alarmEnglish, alarmCode, alarmCategory, alarmContent, repairAction, alarmCode });
+                //            }
+                //        }
+                //    }
+                //    catch (Exception ex)
+                //    {
+                //        SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Warning, $"读取 ProductEventAlarms.csv 失败: {ex.Message}");
+                //    }
+                //}
 
                 // 4. 读取 Hardware.dproj
                 if (File.Exists(dprojPath))
@@ -1526,6 +1529,15 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                                     string tagName = errorEl.Name.LocalName;
                                     string content = errorEl.Value ?? "";
 
+                                    // 优先从错误元素属性读取 AlarmCategory 和 RepairAction，为空则回退到 VDevice 级别
+                                    string errCategory = errorEl.Attribute("AlarmCategory")?.Value ?? "";
+                                    if (string.IsNullOrEmpty(errCategory))
+                                        errCategory = alarmCategory;
+
+                                    string errRepairAction = errorEl.Attribute("RepairAction")?.Value ?? "";
+                                    if (string.IsNullOrEmpty(errRepairAction))
+                                        errRepairAction = repairAction;
+
                                     string translatedSuffix = ErrorTransMap.ContainsKey(tagName) ? ErrorTransMap[tagName] : tagName;
                                     string errDescCn = $"{deviceName}{translatedSuffix}";
 
@@ -1542,7 +1554,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                                         descPart = "";
                                     }
 
-                                    rows.Add(new[] { descPart, codePart, alarmCategory, errDescCn, repairAction, codePart });
+                                    rows.Add(new[] { descPart, codePart, errCategory, errDescCn, errRepairAction, codePart });
                                 }
                             }
                         }
