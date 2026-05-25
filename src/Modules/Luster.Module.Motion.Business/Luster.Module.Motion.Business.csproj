@@ -12,6 +12,7 @@
 	  <ProjectReference Include="..\Luster.TaskFlow.Motion\Luster.TaskFlow.Motion.csproj" />
 	  <ProjectReference Include="..\Luster.Motion.CommonUI\Luster.Motion.CommonUI.csproj" />
 	  <ProjectReference Include="..\Luster.Module.Motion.Protocol\Luster.Module.Motion.Protocol.csproj" />
+	  <ProjectReference Include="..\TaiKeCommon\TaiKeCommon.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

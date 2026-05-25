@@ -148,6 +148,10 @@ namespace Luster.Module.Motion.Device.Functions
                 pressureSamples.Add(CurrentDeviceRealValue);    
                 Thread.Sleep(InstallTime);
             }
+            for (int i = 0; i <= 10; i++)
+            {
+                pressureSamples.Add(0);
+            }
             //结束后写入csv
             SaveFile();
             return base.DoExcute(out errMsg);

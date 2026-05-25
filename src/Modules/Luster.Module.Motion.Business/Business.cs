@@ -59,6 +59,7 @@ namespace Luster.Module.Motion.Business
             AddFunction<LSMesUnLoad>();
             AddFunction<HiveCT>();
 
+            AddFunction<PressurizeChart>();
         }
     }
 
