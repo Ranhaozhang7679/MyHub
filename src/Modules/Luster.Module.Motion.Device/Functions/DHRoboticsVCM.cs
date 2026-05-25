@@ -222,6 +222,9 @@ namespace Luster.Module.Motion.Device.Functions
 
         private System.Collections.Generic.List<double> positionSamples;
 
+        // 真实采样时间戳(ms)，与 pressureSamples 一一对应
+        private System.Collections.Generic.List<long> timeSamples;
+
         // SAC-N2双轴控制器: 轴二地址偏移 +0x800
         private const int AxisOffset = 0x800;
 
@@ -543,7 +546,7 @@ namespace Luster.Module.Motion.Device.Functions
             for (int i = 0; i < pressureSamples.Count; i++)
             {
                 int num = i + 1;
-                int timenum = num * 5;
+                int timenum = (int)(i < timeSamples.Count ? timeSamples[i] : (timeSamples.Count > 0 ? timeSamples[timeSamples.Count - 1] + (i - timeSamples.Count + 1) * 5L : num * 5L));
                 double press = pressureSamples[i] / 1000;
                 double position1 = 0;
                 if (i<positionSamples.Count)
@@ -586,7 +589,7 @@ namespace Luster.Module.Motion.Device.Functions
                     double[] posArr = new double[pressureSamples.Count];
                     for (int i = 0; i < pressureSamples.Count; i++)
                     {
-                        timeArr[i] = (i + 1) * 5;
+                        timeArr[i] = i < timeSamples.Count ? timeSamples[i] : (timeSamples.Count > 0 ? timeSamples[timeSamples.Count - 1] + (i - timeSamples.Count + 1) * 5L : (i + 1) * 5L);
                         pressArr[i] = pressureSamples[i] / 1000;
                         posArr[i] = i < positionSamples.Count ? positionSamples[i] : 0;
                     }
@@ -684,13 +687,13 @@ namespace Luster.Module.Motion.Device.Functions
                 MyOwner.OnLog(Common.DataStruct.Enums.LogType.Debug, $"模块:{MyOwner.Alias} 慢速运动");
                 // Step 40: 保压
                 // Thread.Sleep(InstallTime);
-                while (InstallTime >= 0)
-                {
-                    Thread.Sleep(10);
-                    InstallTime = InstallTime - 10;
-                   
-                }
-
+                //int remainTime = InstallTime;
+                //while (remainTime >= 0)
+                //{
+                //    Thread.Sleep(10);
+                //    remainTime = remainTime - 10;
+                //}
+                Thread.Sleep(InstallTime);
                 double installPos = _axis.GetCurrentPos();
                 //在这读取压力和力控完成位置
                 OutPressure = ReadRawCurrent() * PressureCalibrationK + PressureCalibrationB;
@@ -773,6 +776,7 @@ namespace Luster.Module.Motion.Device.Functions
         {
             pressureSamples = new System.Collections.Generic.List<double>(); //一个用于存储所有数据的集合
             positionSamples = new System.Collections.Generic.List<double>();
+            timeSamples = new System.Collections.Generic.List<long>();
             if (!string.IsNullOrEmpty(GlobalVar))
             {
                 // 取消上次未完成的异步采集线程
@@ -782,6 +786,7 @@ namespace Luster.Module.Motion.Device.Functions
                 Task.Run(() =>
                 {
                     PullSamples = new System.Collections.Generic.List<double>();
+                    var sw = System.Diagnostics.Stopwatch.StartNew();
                     while (true)
                     {
                         if (_stopPressureCollect || _isBreak) break;
@@ -808,6 +813,7 @@ namespace Luster.Module.Motion.Device.Functions
                         // 实时采集压力
                         double pressure = ReadPressure12();
                         pressureSamples.Add(pressure);
+                        timeSamples.Add(sw.ElapsedMilliseconds);
                         double position = 0;
                         if (StartGetZ1Position)
                         {
@@ -818,7 +824,15 @@ namespace Luster.Module.Motion.Device.Functions
                             position = _axis.GetCurrentPos()+ _axis1.GetCurrentPos()-positionZ;
                         }
                         positionSamples.Add(position);
-                        Thread.Sleep(5);
+
+                        // Stopwatch补偿：保证5ms采样周期
+                        long elapsed = sw.ElapsedMilliseconds;
+                        long nextTarget = timeSamples.Count * 5L;
+                        long sleepMs = nextTarget - elapsed;
+                        if (sleepMs > 0)
+                        {
+                            Thread.Sleep((int)sleepMs);
+                        }
                     }
                     //结束后写入csv
                     SaveFile();
