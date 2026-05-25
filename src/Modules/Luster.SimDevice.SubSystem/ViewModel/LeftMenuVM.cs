@@ -35,6 +35,8 @@ using Luster.SimDevice.Real;
 using Luster.SimDevice.SubSystem.Config;
 using Luster.SimDevice.SubSystem.Events;
 using Luster.SimDevice.SubSystem.Views;
+using DC.Authorization;
+using DC.Authorization.Models;
 using Prism.Commands;
 using Prism.Events;
 using Prism.Mvvm;
@@ -71,15 +73,25 @@ namespace Luster.SimDevice.SubSystem.ViewModel
         /// </summary>
         /// <param name="deviceEngine">设备引擎</param>
         /// <param name="regionManager">区域视图管理器</param>
-        protected LeftMenuVM(ISimDeviceEngineUI deviceEngine, IRegionManager regionManager, Dispatcher dispatcher) : base(deviceEngine)
+        private readonly IAuthorizationFacade _authFacade;
+
+        protected LeftMenuVM(ISimDeviceEngineUI deviceEngine, IRegionManager regionManager, Dispatcher dispatcher, IAuthorizationFacade authFacade) : base(deviceEngine)
         {
             _regionManager = regionManager;
+            _authFacade = authFacade;
 
             // 构建左侧菜单
             DeviceList = new ObservableCollection<PageModel>();
             _dispatcher = dispatcher;
 
             BuildMenus();
+
+            // 登录/注销/等级切换时重建菜单
+            _authFacade.AuthChanged += (_, _) => _dispatcher.Invoke(() =>
+            {
+                DeviceList = new ObservableCollection<PageModel>();
+                BuildMenus();
+            });
 
             HomeCommand.Execute();
         }
@@ -113,6 +125,57 @@ namespace Luster.SimDevice.SubSystem.ViewModel
         }
 
         /// <summary>
+        /// 管理项名称 → 对应的 AuthItem，用于权限过滤
+        /// </summary>
+        private static readonly Dictionary<string, AuthItem> ManagementAuthMap = new Dictionary<string, AuthItem>
+        {
+            { "AlarmConfig", AuthDictionary.DevAlarmConfig },
+            { "Maintain", AuthDictionary.DevMaintain },
+            { "ModuleName", AuthDictionary.DevModuleName },
+            { "AxisIODebug", AuthDictionary.DevAxisIODebug },
+            { "ModuleConfig", AuthDictionary.DevModuleConfig },
+            { "AlarmConfigCustom", AuthDictionary.DevAlarmCustom },
+            { "PositionParameterConfig", AuthDictionary.DevPositionParameter },
+            { "KeyParameterConfig", AuthDictionary.DevKeyParameter },
+        };
+
+        /// <summary>
+        /// 真实设备 DeviceType 名称 → 对应的 AuthItem
+        /// </summary>
+        private static readonly Dictionary<string, AuthItem> DeviceAuthMap = new Dictionary<string, AuthItem>
+        {
+            { "Camera", AuthDictionary.DevCamera },
+            { "LineLaser", AuthDictionary.DevLineLaser },
+            { "MotionCard", AuthDictionary.DevMotionCard },
+            { "LightController", AuthDictionary.DevLightController },
+            { "Robot", AuthDictionary.DevRobot },
+            { "Printer", AuthDictionary.DevPrinter },
+            { "FXTCP", AuthDictionary.DevFXTCP },
+        };
+
+        /// <summary>
+        /// 虚拟设备名称 → 对应的 AuthItem
+        /// </summary>
+        private static readonly Dictionary<string, AuthItem> VDeviceAuthMap = new Dictionary<string, AuthItem>
+        {
+            { "VAxis", AuthDictionary.DevVAxis },
+            { "VIO", AuthDictionary.DevVIO },
+            { "VLineLaser", AuthDictionary.DevVLineLaser },
+            { "VCamera", AuthDictionary.DevVCamera },
+            { "VVacuum", AuthDictionary.DevVVacuum },
+            { "VCylinder", AuthDictionary.DevVCylinder },
+            { "VAxisM", AuthDictionary.DevVAxisM },
+            { "VPrinter", AuthDictionary.DevVPrinter },
+            { "VPlc", AuthDictionary.DevVPlc },
+            { "VIOSimulation", AuthDictionary.DevVIOSimulation },
+            { "VCommuncation", AuthDictionary.DevVCommunication },
+            { "VPCylinder", AuthDictionary.DevVPCylinder },
+            { "VRobot", AuthDictionary.DevVRobot },
+            { "VFlyingPhoto", AuthDictionary.DevVFlyingPhoto },
+            { "VModule", AuthDictionary.DevVModule },
+        };
+
+        /// <summary>
         /// 构造菜单
         /// </summary>
         private void BuildMenus()
@@ -121,105 +184,56 @@ namespace Luster.SimDevice.SubSystem.ViewModel
             {
                 DeviceList.Clear();
 
-                DeviceList.Add(new PageModel()
+                // ── 管理菜单（按权限过滤）──
+                var managementItems = new (string Name, string PageView)[]
                 {
-                    Group = "Management",
-                    Icon = "\xe6d7",
-                    Name = "AlarmConfig",
-                    PageView = "ErrorContent",
-                    DeviceType = DeviceType.Printer
-                });
+                    ("AlarmConfig", "ErrorContent"),
+                    ("Maintain", "MaintainContent"),
+                    ("ModuleName", "ModuleNameContent"),
+                    ("AxisIODebug", "AxisIODebugContent"),
+                    ("ModuleConfig", "VModuleContent"),
+                    ("AlarmConfigCustom", "ErrorContentCustom"),
+                    ("PositionParameterConfig", "PositionParameterContent"),
+                    ("KeyParameterConfig", "KeyParameterContent"),
+                };
 
-                DeviceList.Add(new PageModel()
+                foreach (var mi in managementItems)
                 {
-                    Group = "Management",
-                    Icon = "\xe6d7",
-                    Name = "Maintain",
-                    PageView = "MaintainContent",
-                    DeviceType = DeviceType.Printer
-                });
+                    if (ManagementAuthMap.TryGetValue(mi.Name, out var authItem)
+                        && !_authFacade.HasAuth(authItem, RightType.Visibility))
+                        continue;
 
-                DeviceList.Add(new PageModel()
-                {
-                    Group = "Management",
-                    Icon = "\xe6d7",
-                    Name = "ModuleName",
-                    PageView = "ModuleNameContent",
-                    DeviceType = DeviceType.Printer
-                });
+                    DeviceList.Add(new PageModel()
+                    {
+                        Group = "Management",
+                        Icon = "\xe6d7",
+                        Name = mi.Name,
+                        PageView = mi.PageView,
+                        DeviceType = DeviceType.Printer
+                    });
+                }
 
-                //DeviceList.Add(new PageModel()
-                //{
-                //    Group = "Management",
-                //    Icon = "\xe6d7",
-                //    Name = "AxisPosConfig",
-                //    PageView = "AxisPosContent",
-                //    DeviceType = DeviceType.Printer
-                //});
-
-                DeviceList.Add(new PageModel()
-                {
-                    Group = "Management",
-                    Icon = "\xe6d7",
-                    Name = "AxisIODebug",
-                    PageView = "AxisIODebugContent",
-                    DeviceType = DeviceType.Printer
-                });
-
-                DeviceList.Add(new PageModel()
-                {
-                    Group = "Management",
-                    Icon = "\xe6d7",
-                    Name = "ModuleConfig",
-                    PageView = "VModuleContent",
-                    DeviceType = DeviceType.Printer
-                });
-                
-                DeviceList.Add(new PageModel()
-                {
-                    Group = "Management",
-                    Icon = "\xe6d7",
-                    Name = "AlarmConfigCustom",
-                    PageView = "ErrorContentCustom",
-                    DeviceType = DeviceType.Printer
-                });
-                
-
-                DeviceList.Add(new PageModel()
-                {
-                    Group = "Management",
-                    Icon = "\xe6d7",
-                    Name = "PositionParameterConfig",
-                    PageView = "PositionParameterContent",
-                    DeviceType = DeviceType.Printer
-                });
-
-                DeviceList.Add(new PageModel()
-                {
-                    Group = "Management",
-                    Icon = "\xe6d7",
-                    Name = "KeyParameterConfig",
-                    PageView = "KeyParameterContent",
-                    DeviceType = DeviceType.Printer
-                });
-
-                var realTypes = deviceEngine.GetRealTypes(); //realDevices
-                var vTypes = deviceEngine.GetVirtualTypes();//virtualDevices
+                // ── 真实设备 + 虚拟设备（按权限过滤）──
+                var realTypes = deviceEngine.GetRealTypes();
+                var vTypes = deviceEngine.GetVirtualTypes();
                 var v = deviceEngine.GetDevice_Type();
 
                 List<PageModel> vDevices = new List<PageModel>();
 
                 foreach (var item in v)
                 {
-
                     if (realTypes.Contains(item.Key))
                     {
                         var d = item.Value as IDevice;
                         if (d.DeviceType == DeviceType.LineLaser)
-                        {
                             continue;
-                        }
-                        var deviceView = new PageModel()
+
+                        // 权限过滤：真实设备
+                        if (DeviceAuthMap.TryGetValue(d.DeviceType.ToString(), out var devAuth)
+                            && !_authFacade.HasAuth(devAuth, RightType.Visibility))
+                            continue;
+
+                        DeviceList.Add(new PageModel()
                         {
                             Group = "Device",
                             Icon = d.Icon,
@@ -227,15 +241,20 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                             PageView = $"{d.DeviceType}Content",
                             DeviceType = d.DeviceType,
                             ItemNum = deviceEngine.GetRealDevices(item.Key).Count(),
-                        };
-                        DeviceList.Add(deviceView);
+                        });
                     }
                     else if (vTypes.Contains(item.Key))
                     {
                         if (item.Key.Name == "VAlarm") continue;
 
                         var d = item.Value as IVirtualDevice;
-                        var deviceView = new PageModel()
+
+                        // 权限过滤：虚拟设备
+                        if (VDeviceAuthMap.TryGetValue(d.GetType().Name, out var vAuth)
+                            && !_authFacade.HasAuth(vAuth, RightType.Visibility))
+                            continue;
+
+                        vDevices.Add(new PageModel()
                         {
                             Group = "VDevice",
                             Icon = d.Icon,
@@ -243,10 +262,8 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                             PageView = $"{item.Key.Name}Content",
                             ItemNum = deviceEngine.GetDevices(item.Key).Count(),
                             Sort = d.Sort,
-                        };
-                        vDevices.Add(deviceView);
+                        });
                     }
-
                 }
                 vDevices.OrderBy(u => u.Sort).ToList().ForEach(vDevice => DeviceList.Add(vDevice));
 

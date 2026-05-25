@@ -395,7 +395,7 @@ namespace Luster.Motion.DataStruct.DataModels
             WaitCrdDone(motionCard);
 
             // 插补运行完成，需要主动停止下插补模式
-            Stop(deviceEngine, true);
+            //Stop(deviceEngine, true);
         }
 
         /// <summary>

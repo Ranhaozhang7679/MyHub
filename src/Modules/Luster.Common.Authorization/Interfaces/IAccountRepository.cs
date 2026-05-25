@@ -9,8 +9,8 @@ namespace DC.Authorization
     public interface IAccountRepository
     {
         /// <summary>加载所有账号</summary>
-        /// <param name="skipDefaultAdmin">是否跳过默认管理员</param>
-        List<Account> Load(bool skipDefaultAdmin = true);
+        /// <param name="skipAdmin">是否跳过管理员角色账号</param>
+        List<Account> Load(bool skipAdmin = true);
 
         /// <summary>用户名+密码登录</summary>
         (Account? Account, bool Succeeded, string Message) Login(string username, string password);

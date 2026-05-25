@@ -191,74 +191,83 @@
                     </DataGrid>
                 </StackPanel>
             </TabItem>
-            <TabItem Header="权限管理" >
+            <TabItem Header="权限配置" >
                 <Grid>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
-                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="80,0,80,0" >
-                        <ComboBox Margin="20"  Height="40" Width="600" HorizontalAlignment="Center" VerticalAlignment="Center" ItemsSource="{Binding Roles}" SelectedItem="{Binding SelectedRightRole}" DisplayMemberPath="Name"/>
-                        <Button Height="40" Width="50" FontSize="15" VerticalAlignment="Center" HorizontalAlignment="Left" Command="{Binding SaveRightsCommand}">保存</Button>
+                    <!-- 顶部：角色选择 + 保存 -->
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10,10,10,5" HorizontalAlignment="Center">
+                        <Label Content="角色" VerticalAlignment="Center" FontSize="14" Margin="0,0,5,0"/>
+                        <ComboBox Height="35" Width="500" VerticalAlignment="Center"
+                                  ItemsSource="{Binding RolesForRights}" SelectedItem="{Binding SelectedRightRole}" DisplayMemberPath="Name"/>
+                        <Button Height="35" Width="60" FontSize="14" Margin="15,0,0,0" VerticalAlignment="Center"
+                                Command="{Binding SaveRightsCommand}">保存</Button>
                     </StackPanel>
-                    <TreeView Grid.Row="1" Margin="80,10,80,0"
-                              ItemsSource="{Binding RightTree}"
-                              BorderThickness="0">
-                        <TreeView.ItemContainerStyle>
-                            <Style TargetType="TreeViewItem">
-                                <Setter Property="IsExpanded" Value="True"/>
-                                <Setter Property="Margin" Value="0,2,0,2"/>
-                            </Style>
-                        </TreeView.ItemContainerStyle>
-                        <TreeView.ItemTemplate>
-                            <HierarchicalDataTemplate ItemsSource="{Binding Children}">
-                                <StackPanel Orientation="Horizontal" Margin="2">
-                                    <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}"
-                                              VerticalAlignment="Center"
-                                              Margin="0,0,6,0"/>
-                                    <TextBlock Text="{Binding DisplayName}"
-                                               VerticalAlignment="Center"
-                                               FontSize="14"/>
-                                </StackPanel>
-                            </HierarchicalDataTemplate>
-                        </TreeView.ItemTemplate>
-                    </TreeView>
-                </Grid>
-            </TabItem>
-            <TabItem Header="界面可见性">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
 
-                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="80,0,80,0" >
-                        <ComboBox Margin="20"  Height="40" Width="600" HorizontalAlignment="Center" VerticalAlignment="Center" ItemsSource="{Binding Roles}" SelectedItem="{Binding SelectedRightRole}" DisplayMemberPath="Name"/>
-                        <Button Height="40" Width="50" FontSize="15" VerticalAlignment="Center" HorizontalAlignment="Left" Command="{Binding SaveRightsCommand}">保存</Button>
-                    </StackPanel>
-                    <TreeView Grid.Row="1" Margin="80,10,80,0"
-                              ItemsSource="{Binding VisibilityRightTree}"
-                              BorderThickness="0">
-                        <TreeView.ItemContainerStyle>
-                            <Style TargetType="TreeViewItem">
-                                <Setter Property="IsExpanded" Value="True"/>
-                                <Setter Property="Margin" Value="0,2,0,2"/>
-                            </Style>
-                        </TreeView.ItemContainerStyle>
-                        <TreeView.ItemTemplate>
-                            <HierarchicalDataTemplate ItemsSource="{Binding Children}">
-                                <StackPanel Orientation="Horizontal" Margin="2">
-                                    <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}"
-                                              VerticalAlignment="Center"
-                                              Margin="0,0,6,0"/>
-                                    <TextBlock Text="{Binding DisplayName}"
-                                               VerticalAlignment="Center"
-                                               FontSize="14"/>
-                                </StackPanel>
-                            </HierarchicalDataTemplate>
-                        </TreeView.ItemTemplate>
-                    </TreeView>
+                    <!-- 下方：左右两栏 -->
+                    <Grid Grid.Row="1" Margin="10,5,10,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <!-- 左栏：操作权限 -->
+                        <Grid Grid.Column="0">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Text="操作权限" FontWeight="Bold" FontSize="14" Margin="5,0,0,5"/>
+                            <TreeView Grid.Row="1" ItemsSource="{Binding RightTree}" BorderThickness="0">
+                                <TreeView.ItemContainerStyle>
+                                    <Style TargetType="TreeViewItem">
+                                        <Setter Property="IsExpanded" Value="True"/>
+                                        <Setter Property="Margin" Value="0,2,0,2"/>
+                                    </Style>
+                                </TreeView.ItemContainerStyle>
+                                <TreeView.ItemTemplate>
+                                    <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                                        <StackPanel Orientation="Horizontal" Margin="2">
+                                            <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                            <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" FontSize="13"/>
+                                        </StackPanel>
+                                    </HierarchicalDataTemplate>
+                                </TreeView.ItemTemplate>
+                            </TreeView>
+                        </Grid>
+
+                        <!-- 分隔线 -->
+                        <GridSplitter Grid.Column="1" Width="1" HorizontalAlignment="Center" VerticalAlignment="Stretch" Background="LightGray"/>
+
+                        <!-- 右栏：界面可见性 -->
+                        <Grid Grid.Column="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Grid.Row="0" Text="界面可见性" FontWeight="Bold" FontSize="14" Margin="5,0,0,5"/>
+                            <TreeView Grid.Row="1" ItemsSource="{Binding VisibilityRightTree}" BorderThickness="0">
+                                <TreeView.ItemContainerStyle>
+                                    <Style TargetType="TreeViewItem">
+                                        <Setter Property="IsExpanded" Value="True"/>
+                                        <Setter Property="Margin" Value="0,2,0,2"/>
+                                    </Style>
+                                </TreeView.ItemContainerStyle>
+                                <TreeView.ItemTemplate>
+                                    <HierarchicalDataTemplate ItemsSource="{Binding Children}">
+                                        <StackPanel Orientation="Horizontal" Margin="2">
+                                            <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                            <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center" FontSize="13"/>
+                                        </StackPanel>
+                                    </HierarchicalDataTemplate>
+                                </TreeView.ItemTemplate>
+                            </TreeView>
+                        </Grid>
+                    </Grid>
                 </Grid>
             </TabItem>
             <TabItem Header="审计日志" Visibility="{Binding CurrentLogin,Converter={StaticResource TabItemVisibilityConverter}}">

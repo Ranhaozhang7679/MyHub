@@ -1,4 +1,5 @@
 using DC.Authorization;
+using DC.Authorization.Models;
 using Prism.Ioc;
 using System;
 using System.Collections.Generic;
@@ -110,7 +111,7 @@ namespace Luster.Authorization.Client.Helper
                 var authFacade = ContainerLocator.Current.Resolve<IAuthorizationFacade>();
                 if (authFacade != null)
                 {
-                    bool hasRight = authFacade.HasAuth(rightItem);
+                    bool hasRight = authFacade.HasAuth(rightItem, RightType.Visibility);
                     var action = GetAction(element);
 
                     if (!hasRight)

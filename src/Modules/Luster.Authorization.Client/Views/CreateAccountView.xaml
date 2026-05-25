@@ -98,12 +98,12 @@
             </StackPanel>
             <StackPanel Orientation="Horizontal" Visibility="{Binding IsEdit,Converter={StaticResource AccountCreateVisibilityConverter}}">
                 <Label Style="{StaticResource LabelStyle}">密码</Label>
-                <PasswordBox  Margin="5" Width="200" VerticalContentAlignment="Center"  mah:PasswordBoxBindingBehavior.Password ="{Binding Password}"/>
+                <PasswordBox x:Name="PwdBox" Margin="5" Width="200" VerticalContentAlignment="Center" PasswordChanged="PwdBox_PasswordChanged"/>
                 <Label Style="{StaticResource LabelStarStyle}" />
             </StackPanel>
             <StackPanel Orientation="Horizontal" Visibility="{Binding IsEdit,Converter={StaticResource AccountCreateVisibilityConverter}}">
                 <Label Style="{StaticResource LabelStyle}">确认密码</Label>
-                <PasswordBox  Margin="5" Width="200" VerticalContentAlignment="Center" mah:PasswordBoxBindingBehavior.Password ="{Binding CheckedPassword}"/>
+                <PasswordBox x:Name="ConfirmPwdBox" Margin="5" Width="200" VerticalContentAlignment="Center" PasswordChanged="ConfirmPwdBox_PasswordChanged"/>
                 <Label Style="{StaticResource LabelStarStyle}" Content="*" />
             </StackPanel>
             <StackPanel Orientation="Horizontal" Margin="10" HorizontalAlignment="Center">

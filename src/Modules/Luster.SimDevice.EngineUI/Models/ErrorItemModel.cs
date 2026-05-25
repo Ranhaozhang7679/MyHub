@@ -54,7 +54,17 @@ namespace Luster.SimDevice.EngineUI.Models
         public string Name
         {
             get { return _name; }
-            set { SetProperty(ref _name, value); }
+            set
+            {
+                string src = _name;
+                SetProperty(ref _name, value);
+                if (Tag != null && src != value)
+                {
+                    var vDevice = Tag as Luster.Motion.DataStruct.Virtual.VirtualDeviceBase;
+                    if (vDevice?.ErrorNames != null)
+                        vDevice.ErrorNames[ErrorType] = value;
+                }
+            }
         }
 
         public DeviceError ErrorType { get; set; }
@@ -82,11 +92,15 @@ namespace Luster.SimDevice.EngineUI.Models
         public string ErrorForeignMessage
         {
             get { return errorForeignMessage; }
-            set { 
+            set {
                 string src = errorForeignMessage;
                 SetProperty(ref errorForeignMessage, value);
                 if (Tag != null && src != value)
-                    Tag.ErrorMessage = value;
+                {
+                    var vDevice = Tag as Luster.Motion.DataStruct.Virtual.VirtualDeviceBase;
+                    if (vDevice?.ErrorMessages != null)
+                        vDevice.ErrorMessages[ErrorType] = value;
+                }
             }
 
         }
@@ -113,7 +127,8 @@ namespace Luster.SimDevice.EngineUI.Models
                 if (Tag != null && src != value)
                 {
                     var vDevice = Tag as Luster.Motion.DataStruct.Virtual.VirtualDeviceBase;
-                    if (vDevice != null) vDevice.AlarmCategory = value;
+                    if (vDevice?.ErrorAlarmCategories != null)
+                        vDevice.ErrorAlarmCategories[ErrorType] = value;
                 }
             }
         }
@@ -132,7 +147,8 @@ namespace Luster.SimDevice.EngineUI.Models
                 if (Tag != null && src != value)
                 {
                     var vDevice = Tag as Luster.Motion.DataStruct.Virtual.VirtualDeviceBase;
-                    if (vDevice != null) vDevice.RepairAction = value;
+                    if (vDevice?.ErrorRepairActions != null)
+                        vDevice.ErrorRepairActions[ErrorType] = value;
                 }
             }
         }
@@ -147,13 +163,26 @@ namespace Luster.SimDevice.EngineUI.Models
         {
             DeviceName = (tag as IVirtualDevice).Name;
             ErrorType = error.Key;
-            Name = error.Key.GetDescription();
             ErrorCode = error.Value;
             Tag = tag;
-            errorForeignMessage = tag.ErrorMessage;
+            // 优先读取自定义名称，否则使用枚举描述
             var vDevice = tag as Luster.Motion.DataStruct.Virtual.VirtualDeviceBase;
-            _alarmCategory = vDevice?.AlarmCategory;
-            _repairAction = vDevice?.RepairAction;
+            if (vDevice?.ErrorNames != null && vDevice.ErrorNames.TryGetValue(error.Key, out var customName) && !string.IsNullOrEmpty(customName))
+                _name = customName;
+            else
+                _name = error.Key.GetDescription();
+            if (vDevice?.ErrorMessages != null && vDevice.ErrorMessages.TryGetValue(error.Key, out var msg))
+                errorForeignMessage = msg;
+            else
+                errorForeignMessage = tag.ErrorMessage;
+            if (vDevice?.ErrorAlarmCategories != null && vDevice.ErrorAlarmCategories.TryGetValue(error.Key, out var cat))
+                _alarmCategory = cat;
+            else
+                _alarmCategory = vDevice?.AlarmCategory;
+            if (vDevice?.ErrorRepairActions != null && vDevice.ErrorRepairActions.TryGetValue(error.Key, out var act))
+                _repairAction = act;
+            else
+                _repairAction = vDevice?.RepairAction;
         }
     }
 }

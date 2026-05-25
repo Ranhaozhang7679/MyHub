@@ -11,6 +11,7 @@ using Luster.Motion.EditorUI;
 using Luster.Motion.TaskFlow.Engine;
 using Luster.Motion.TaskFlow.Engine.HyperTrain;
 using Luster.TaskFlow.Common.Enums;
+using Luster.TaskFlow.Motion;
 using Prism.Commands;
 using Prism.Regions;
 using Prism.Services.Dialogs;
@@ -224,14 +225,17 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                             await Task.Run(async () =>
                             {
                                 // 阶段1：等待流程启动（离开Default）
-                                while (stat.Status == RunStatus.Default)
+                                while (ReadStatus(stat) == RunStatus.Default)
                                 {
                                     _cts.Token.ThrowIfCancellationRequested();
                                     await Task.Delay(100);
                                 }
                                 // 阶段2：等待流程完成（Running/Pause继续等待，其他状态视为结束）
-                                while (stat.Status == RunStatus.Running || stat.Status == RunStatus.Pause)
+                                while (true)
                                 {
+                                    var s = ReadStatus(stat);
+                                    if (s != RunStatus.Running && s != RunStatus.Pause)
+                                        break;
                                     _cts.Token.ThrowIfCancellationRequested();
                                     await Task.Delay(200);
                                 }
@@ -277,14 +281,17 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                             await Task.Run(async () =>
                             {
                                 // 阶段1：等待流程启动（离开Default）
-                                while (stat.Status == RunStatus.Default)
+                                while (ReadStatus(stat) == RunStatus.Default)
                                 {
                                     _cts.Token.ThrowIfCancellationRequested();
                                     await Task.Delay(100);
                                 }
                                 // 阶段2：等待流程完成（Running/Pause继续等待，其他状态视为结束）
-                                while (stat.Status == RunStatus.Running || stat.Status == RunStatus.Pause)
+                                while (true)
                                 {
+                                    var s = ReadStatus(stat);
+                                    if (s != RunStatus.Running && s != RunStatus.Pause)
+                                        break;
                                     _cts.Token.ThrowIfCancellationRequested();
                                     await Task.Delay(200);
                                 }
@@ -332,14 +339,17 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                             await Task.Run(async () =>
                             {
                                 // 阶段1：等待流程启动（离开Default）
-                                while (stat.Status == RunStatus.Default)
+                                while (ReadStatus(stat) == RunStatus.Default)
                                 {
                                     _cts.Token.ThrowIfCancellationRequested();
                                     await Task.Delay(100);
                                 }
                                 // 阶段2：等待流程完成（Running/Pause继续等待，其他状态视为结束）
-                                while (stat.Status == RunStatus.Running || stat.Status == RunStatus.Pause)
+                                while (true)
                                 {
+                                    var s = ReadStatus(stat);
+                                    if (s != RunStatus.Running && s != RunStatus.Pause)
+                                        break;
                                     _cts.Token.ThrowIfCancellationRequested();
                                     await Task.Delay(200);
                                 }
@@ -559,7 +569,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                         }
                         break;
                     case "AutoFocusing":
-
+                        UpdateItemsFromCsv();
                         break;
 
                     case "AutoFieldOfView":
@@ -575,6 +585,15 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                 // 异常处理逻辑
             }
             PageStatusService.Instance.UpdateStatus(PageName, "未点检");
+        }
+
+        /// <summary>
+        /// 线程安全地读取模块状态，通过内存屏障确保读取到最新值
+        /// </summary>
+        private static RunStatus ReadStatus(IMotionModule module)
+        {
+            System.Threading.Thread.MemoryBarrier();
+            return module.Status;
         }
 
         private static (double lower, double upper) ParseColumnRange(string standardValue)

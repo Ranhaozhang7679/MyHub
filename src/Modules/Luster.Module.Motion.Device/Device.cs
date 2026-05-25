@@ -95,6 +95,9 @@ namespace Luster.Module.Motion.IO
             //闊冲湀鐢垫満
             AddFunction<JunRudderVCM>();
             AddFunction<DHRoboticsVCM>();
+
+            // 设备模拟量采集与转换并生成图
+            AddFunction<AnalogConvertChart>();
         }
     }
 

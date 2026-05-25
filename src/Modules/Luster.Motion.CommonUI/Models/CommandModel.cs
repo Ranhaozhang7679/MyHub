@@ -1,4 +1,4 @@
-﻿#region 作者和版权
+#region 作者和版权
 /*************************************************************************************
 * CLR 版本:       4.0.30319.42000
 * 类 名 称:       CommandModel
@@ -11,7 +11,7 @@
 * 版    权:    	  <copyright company="凌云光工业">
 * 签    名:       Luster Technology Co.,Ltd.
 * 网    站:       https://www.lusterinc.com/
-* 邮    箱:       pangpangzhang@lusterinc.com 
+* 邮    箱:       pangpangzhang@lusterinc.com
 * 唯一标识：      b59bc934-37e1-4db9-863e-265e36627a82
 * 登录用户:       张庞庞
 * 所 属 域:       LUSTERINC
@@ -104,6 +104,16 @@ namespace Luster.Motion.CommonUI.Models
             set { SetProperty(ref _isVisible, value); }
         }
 
+        /// <summary>
+        /// 对应的权限项名称（AuthDictionary 中的字段名），用于 AuthVisibilityConverter
+        /// </summary>
+        private string _authItemName;
+        public string AuthItemName
+        {
+            get { return _authItemName; }
+            set { SetProperty(ref _authItemName, value); }
+        }
+
         private ImageSource _imagenormal;
         public ImageSource Imagenormal
         {
@@ -138,11 +148,11 @@ namespace Luster.Motion.CommonUI.Models
                 {
                     _commands = new ObservableCollection<CommandModel>()
                     {
-                        new CommandModel() { Key=SystemOperation.Start,Name = "Start", Tips = "启动/恢复",  cmd_IsSelected = false,cmd_IsEnabled= false,Iconfont="\xe65f",cmd_IsVisible=false },
-                        new CommandModel() { Key=SystemOperation.Recovery,Name = "Reset", Tips = "复位",  cmd_IsSelected = false,cmd_IsEnabled= false,Iconfont="\xe64d",cmd_IsVisible=false },
-                        new CommandModel() { Key=SystemOperation.Pause,Name = "Pause", Tips = "暂停当前的动作",  cmd_IsSelected = false,cmd_IsEnabled= false,Iconfont="\xe640" ,cmd_IsVisible=false },
-                        new CommandModel() { Key=SystemOperation.Stop,Name = "Stop", Tips = "入料站不在上料，现有料做完",  cmd_IsSelected = false,cmd_IsEnabled= false,Iconfont="\xe641",cmd_IsVisible=false  },
-                        new CommandModel() { Key=SystemOperation.Home,Name = "HomeZero", Tips = "回零按钮", cmd_IsSelected = false,cmd_IsEnabled=true , Iconfont = "\xe642",cmd_IsVisible = false},
+                        new CommandModel() { Key=SystemOperation.Start,Name = "Start", Tips = "启动/恢复",  cmd_IsSelected = false,cmd_IsEnabled= false,Iconfont="\xe65f",cmd_IsVisible=false,AuthItemName="VizCmdStart" },
+                        new CommandModel() { Key=SystemOperation.Recovery,Name = "Reset", Tips = "复位",  cmd_IsSelected = false,cmd_IsEnabled= false,Iconfont="\xe64d",cmd_IsVisible=false,AuthItemName="VizCmdReset" },
+                        new CommandModel() { Key=SystemOperation.Pause,Name = "Pause", Tips = "暂停当前的动作",  cmd_IsSelected = false,cmd_IsEnabled= false,Iconfont="\xe640" ,cmd_IsVisible=false,AuthItemName="VizCmdPause" },
+                        new CommandModel() { Key=SystemOperation.Stop,Name = "Stop", Tips = "入料站不在上料，现有料做完",  cmd_IsSelected = false,cmd_IsEnabled= false,Iconfont="\xe641",cmd_IsVisible=false,AuthItemName="VizCmdStop"  },
+                        new CommandModel() { Key=SystemOperation.Home,Name = "HomeZero", Tips = "回零按钮", cmd_IsSelected = false,cmd_IsEnabled=true , Iconfont = "\xe642",cmd_IsVisible = false,AuthItemName="VizCmdHomeZero"},
                     };
                 }
                 return _commands;
@@ -162,21 +172,6 @@ namespace Luster.Motion.CommonUI.Models
             foreach (var item in CommandModel.Commands)
             {
                 item.cmd_IsSelected = item.Key == key;
-                //if (item.Key != key)
-                //{
-                //    if (key == SystemOperation.Recovery & item.Key == SystemOperation.Start)
-                //    {
-                //        item.IsSelected = true;
-                //    }
-                //    else
-                //    {
-                //        item.IsSelected = false;
-                //    }
-                //}
-                //else
-                //{
-                //    item.IsSelected = true;
-                //}
             }
         }
 

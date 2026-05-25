@@ -6,7 +6,8 @@
     xmlns:devicelangs="clr-namespace:Luster.SimDevice.SubSystem.Langs;assembly=Luster.SimDevice.SubSystem"
     xmlns:langs="clr-namespace:Luster.Motion.Assests.Langs;assembly=Luster.Motion.Assests"
     xmlns:local="clr-namespace:LusterMotion"
-    xmlns:prism="http://prismlibrary.com/">
+    xmlns:prism="http://prismlibrary.com/"
+    xmlns:auth="clr-namespace:DC.Authorization.WPF.Helper;assembly=DC.Authorization.WPF">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -40,6 +41,7 @@
             </ResourceDictionary.MergedDictionaries>
             <langs:LangProvider x:Key="MotionLangs" />
             <devicelangs:LangProvider x:Key="DeviceLangs" />
+            <auth:AuthVisibilityConverter x:Key="AuthVisibilityConverter" />
             <commonlangs:LangProvider x:Key="Langs" />
         </ResourceDictionary>
     </Application.Resources>

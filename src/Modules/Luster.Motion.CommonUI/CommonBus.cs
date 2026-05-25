@@ -581,8 +581,8 @@ namespace Luster.Motion.CommonUI
                 tbAlarm.Module = "system";
             }
 
-                // 更新报警的ID
-                alarmInfo.AlarmID = _repository.Insert(tbAlarm);
+            // 更新报警的ID
+            alarmInfo.AlarmID = _repository.Insert(tbAlarm);
         }
 
         /// <summary>
@@ -1131,7 +1131,7 @@ namespace Luster.Motion.CommonUI
                         _dbManager.WriteParameterToCSV();
                         // CGP工站SFCINFO保存
                         var sysConfig = _webService.GetConfig() as WebConfig;
-                        if (sysConfig != null && sysConfig.StationId?.Contains("CGP") == true)
+                        if (sysConfig != null && sysConfig.StationId != null && sysConfig.StationId.Contains("CGP"))
                         {
                             // webConfig.xml拷贝到Vision系统指定目录，并更名为SFCINFO.txt
                             string targetDir = @"E:\CGP\LUSTER";
@@ -1149,7 +1149,7 @@ namespace Luster.Motion.CommonUI
                                     OnLog(LogType.Error, $"拷贝SFCINFO.txt失败:{ex.Message}");
                                 }
                             }
-                            
+
                         }
                     });
                 }
