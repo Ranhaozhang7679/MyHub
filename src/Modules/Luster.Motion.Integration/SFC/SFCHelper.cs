@@ -1428,13 +1428,13 @@ namespace Luster.Motion.Integration.SFC
         /// <summary>
         /// 查询CardID
         /// </summary>
-        public bool CheckCard(string ID, string machineSN, out string auth)
+        public bool CheckCard(string ID, string machineSN, out string auth, string errorCode = "", string changeTime = "")
         {
             string err = "";
             auth = "";
             var sfcAuth = "";
-            // 
-            string cmd = $"c=QUERY_4_SFC&subcmd=query_skills_info&isAutomation=1&cardtagid={ID}&machinesn={machineSN}";// &station_id={StationID}&mac_address={MacAddress}";
+            //
+            string cmd = $"c=QUERY_4_SFC&subcmd=query_skills_info&isAutomation=1&cardtagid={ID}&machinesn={machineSN}&errorcode={errorCode}&changetime={changeTime}";// &station_id={StationID}&mac_address={MacAddress}";
 
             int queryCount = 1;
             for (int i = 0; i < 3; i++)

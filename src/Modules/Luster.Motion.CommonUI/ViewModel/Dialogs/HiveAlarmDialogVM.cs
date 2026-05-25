@@ -408,7 +408,7 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                     var currentID = cardID.Trim();
                     if (cardID.Substring(0, 1) == "0")
                         cardID = cardID.Substring(1, cardID.Length - 1);
-                    var ret = sfcHelper.CheckCard(cardID, hiveAPI.machineSN, out string auth);
+                    var ret = sfcHelper.CheckCard(cardID, hiveAPI.machineSN, out string auth, ErrorCode, DateTime.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.ff+0800"));
                     currentAuth = auth;
                     cardID = "";
                     //刷卡后，需要判断权限是否满足
