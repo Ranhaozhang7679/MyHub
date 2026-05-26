@@ -2209,6 +2209,7 @@ namespace Luster.Motion.Integration.Web
                     {
                         version = spareVersion,
                         hash_key = Sha1Signature(spareVersion),
+                        count = 15,
                     }                   
                 },
                 attributes = new
