@@ -420,6 +420,10 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                 if (moduleEl.Elements("Function").Any(f => f.Attribute("Name")?.Value == "TestStation"))
                     continue;
 
+                // 跳过回零工站（其内部报警工具不应纳入自定义报警配置）
+                if (moduleEl.Elements("Function").Any(f => f.Attribute("Name")?.Value == "HomeStation"))
+                    continue;
+
                 // 模块唯一 ID（GUID）
                 string moduleId = moduleEl.Attribute("ID")?.Value ?? "";
 
