@@ -2256,6 +2256,15 @@
   <data name="AxisPosMove" xml:space="preserve">
     <value>AxisPosMove</value>
   </data>
+  <data name="AxisPosArray" xml:space="preserve">
+    <value>AxisPosArray</value>
+  </data>
+  <data name="DHRoboticsVCM" xml:space="preserve">
+    <value>DHRoboticsVCM</value>
+  </data>
+  <data name="JunRudderVCM" xml:space="preserve">
+    <value>JunRudderVCM</value>
+  </data>
   <data name="Acc" xml:space="preserve">
     <value>Acc</value>
   </data>

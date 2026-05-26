@@ -1,27 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading;
-using Luster.Common.DataStruct.Attributes;
+﻿using Luster.Common.DataStruct.Attributes;
 using Luster.Common.DataStruct.Enums;
 using Luster.Motion.DataStruct.DataModels;
 using Luster.Motion.DataStruct.Enums;
 using Luster.Motion.DataStruct.VDevice;
 using Luster.TaskFlow.Common.Attributes;
-using Luster.TaskFlow.Common.Functions;
-using Luster.TaskFlow.Common.Module;
+using Luster.TaskFlow.Common.Logics;
 using Luster.TaskFlow.Motion;
 using Luster.TaskFlow.Motion.Functions;
+using Luster.TaskFlow.Motion.Logic;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using TaiKeCommon;
 
 namespace Luster.Module.Motion.Business.Functions
 {
-    public class Pressurize : GoToFunction
+    public class PressurizeChart : GoToFunction
     {
-        private static object lockRW = new object();
-
-        private List<double> lstPressVal = new List<double>();
-
         [NotEmpty]
         [Parameter("轴的点位及对应的参数配置", 0, CN = "点位参数", MultiValues = false)]
         public VAxisPos AxisPos { get; set; }
@@ -34,47 +33,49 @@ namespace Luster.Module.Motion.Business.Functions
         [Parameter("通信设备", 2, CN = "通信设备", EditorType = typeof(VCommuncation))]
         public VDevice CommDevice { get; set; }
 
-        //[Range(1, 100)]
-        //[Parameter("设备地址", 3, CN = "设备地址", DefaultV = 1)]
         public int PressureAddress { get; set; }
 
-        [Parameter("从站设备", 2, CN = "设备地址", CanRef = ParamRef.NoRef)]
+        [Parameter("从站设备", 3, CN = "设备地址", CanRef = ParamRef.NoRef)]
         public SocketAction Slave { get; set; }
+
+        [NotEmpty]
+        [Parameter("选择对应的模拟量IO", 4, CN = "模拟量IO", EditorType = typeof(VIO))]
+        public VDevice Device { get; set; }
+
+        [Parameter("乘比例", 5, CN = "乘的比例", DefaultV = 1.0)]
+        public double RatioCG { get; set; }
+
+        [Parameter("除比例", 6, CN = "除的比例", DefaultV = 1.0)]
+        public double RatioCU { get; set; }
+
+        [Parameter("采集时间间隔(ms)", 7, CN = "采集时间间隔", DefaultV = 100)]
+        public int InstallTime { get; set; }
+
+        [Parameter("SN", 8, CN = "变量值", CanRef = ParamRef.Ref, DefaultV = "")]
+        public string GStringVal { get; set; }
 
 
         [NotEmpty]
-        [Parameter("IO类型，通过关键字搜索", 4, CN = "保压气缸", EditorType = typeof(VCylinder))]
+        [Parameter("IO类型，通过关键字搜索", 9, CN = "保压气缸", EditorType = typeof(VCylinder))]
         public VDevice Cylinder { get; set; }
 
         [NotEmpty]
-        [Parameter("气缸动作超时设定", 5, CN = "气缸超时", DefaultV = 5000)]
+        [Parameter("气缸动作超时设定", 10, CN = "气缸超时", DefaultV = 5000)]
         public int CylinderTime { get; set; }
 
         [NotEmpty]
-        [Parameter("气缸保压时间", 6, CN = "保压时间", DefaultV = 3000)]
+        [Parameter("气缸保压时间", 11, CN = "保压时间", DefaultV = 3000)]
         public int PressureTime { get; set; }
 
         [NotEmpty]
-        [DependOn("HasCylinder1", new object[] { true })]
-        [Parameter("气缸保压压力值", 7, CN = "保压压力值", DefaultV = 1000)]
-        public double PressureValue { get; set; }
-
-        [NotEmpty]
-        [Parameter("偏差值", 8, CN = "偏差值", DefaultV = 200)]
+        [Parameter("最大压力值", 12, CN = "最大压力值", DefaultV = 200)]
         public double OffsetValue { get; set; }
 
-        [Parameter("延时读取压力值", 9, CN = "延时读取", DefaultV = 0.2)]
+        [Parameter("延时读取压力值", 13, CN = "延时读取", DefaultV = 0.2)]
         public int DelayTime { get; set; }
 
-        [Range(1, 100)]
-        [Parameter("多次读取次数", 10, CN = "读取次数", DefaultV = 1)]
-        public int Times { get; set; }
-
-        [Parameter("多次读取间隔时间，单位为ms", 11, CN = "读取间隔", DefaultV = 1)]
-        public int Interval { get; set; }
-
         [NotEmpty]
-        [Parameter("压力超限提示", 12, CN = "超限提示", DefaultV = false)]
+        [Parameter("压力超限提示", 14, CN = "超限提示", DefaultV = false)]
         public bool IsShowAlarm { get; set; }
 
         [Parameter("真实保压值", 20, CN = "真实保压值", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
@@ -91,15 +92,24 @@ namespace Luster.Module.Motion.Business.Functions
 
         public override bool IsNeedPause => true;
 
-        public Pressurize()
+        private static object lockRW = new object();
+        private List<double> lstPressVal = new List<double>();
+        //按压数据
+        private System.Collections.Generic.List<double> pressureSamples;
+        //用于数据采集的停止
+        private bool _isBreak;
+
+        public PressurizeChart()
         {
-            this.Tips = "保压";
+            this.Tips = "保压并生成曲线";
             this.Icon = "\ue652";
         }
 
         [Step(1, "移动到保压位", IsNeedPause = true)]
         public void Move()
         {
+            _isBreak = false;
+            pressureSamples = new System.Collections.Generic.List<double>();
             if (HasAxisPos)
             {
                 AxisPos.MovePostion(MyOwner.DeviceEngine, false);
@@ -113,7 +123,7 @@ namespace Luster.Module.Motion.Business.Functions
             val.Open(5000, (byte[])null);
             val.SetProtocol(ProtocolType.ModbusRTU);
             PressureAddress = getSlaveNum(val);
-            GetVDevice<VCylinder>(Cylinder, out var val2);      
+            GetVDevice<VCylinder>(Cylinder, out var val2);
             lock (lockRW)
             {
                 val.Write<int>(1, $"{PressureAddress} 10 17924 1", true);
@@ -124,10 +134,7 @@ namespace Luster.Module.Motion.Business.Functions
         public void Retract()
         {
             MyOwner.OnLog(LogType.Info, $"开始保压过程");
-            GetVDevice<VCommuncation>(CommDevice, out var val);
-            val.Open(5000, (byte[])null);
-            val.SetProtocol(ProtocolType.ModbusRTU);
-            PressureAddress = getSlaveNum(val);
+            press(); //异步进行压力采集
             GetVDevice<VCylinder>(Cylinder, out var val2);
             val2.InRetractSensorCheck(CylinderTime);
             DateTime startTime = DateTime.Now;
@@ -136,50 +143,21 @@ namespace Luster.Module.Motion.Business.Functions
             DateTime endTime = DateTime.Now;
             TimeSpan timedec = endTime - startTime;
             CylinderTTimeOut = timedec.TotalSeconds;
-            Thread.Sleep(DelayTime);
             double num = 0.0;
-            lstPressVal.Clear();
-            for (int i = 0; i < Times; i++)
-            {
-                lock (lockRW)
-                {
-                    List<float> list = val.Read<float>($"{PressureAddress} 04 02 01", 2000);
-                    if (Times < 3)
-                    {
-                        num = ((list.Count <= 0) ? 0.0 : (num + (double)list[0]));
-                    }
-                    else
-                    {
-                        lstPressVal.Add(list[0]);
-                    }
-                }
-                Thread.Sleep(Interval);
-            }
-            if (Times >= 3)
-            {
-                PressurizeVal = 0.0;
-                lstPressVal.Remove(lstPressVal.Max());
-                lstPressVal.Remove(lstPressVal.Min());
-                for (int j = 0; j < Times - 2; j++)
-                {
-                    PressurizeVal += lstPressVal[j];
-                }
-                PressurizeVal = Math.Round(Math.Round(PressurizeVal, 3) / (double)(Times - 2), 3);
-            }
-            else
-            {
-                PressurizeVal = Math.Round(Math.Round(num, 3) / (double)Times, 3);
-            }
+            Thread.Sleep(DelayTime);
+            double PressureValue = Singlepress();
+            PressurizeVal = PressureValue;
             MyOwner.OnLog((LogType)1, $"保压设备{PressureAddress}读值为{PressurizeVal}", "");
             if (Math.Abs(PressureValue - num) > OffsetValue && !IsEmptyMode)
             {
                 val2.Retract();
                 val2.InRetractSensorCheck(CylinderTime);
                 Pressure();
-                if(IsShowAlarm)
+                if (IsShowAlarm)
                 {
                     OnAlarm((AlarmType)0, $"保压设备{PressureAddress}读值为{PressurizeVal}超过误差值！", "");
                 }
+                _isBreak=true; //停止采集
                 return;
             }
             if (IsEmptyMode)
@@ -193,9 +171,87 @@ namespace Luster.Module.Motion.Business.Functions
             DateTime endTime1 = DateTime.Now;
             TimeSpan timedec1 = endTime1 - startTime1;
             CylinderFTimeOut = timedec1.TotalSeconds;
+            _isBreak = true; //停止采集
             PressureTimeOut = PressureTime / 1000;
         }
 
+        private void press()
+        {
+            Task.Run(() =>
+            {
+                var io = MyOwner.DeviceEngine.GetVirtualByID(Device.DeviceID) as VIO;
+                while (true)
+                {
+                    if (_isBreak) break;
+                    // 实时采集压力
+                    double CurentCardAnalogValue = io.GetAnglogIn();
+                    double CurrentDeviceRealValue = Math.Round(CurentCardAnalogValue * RatioCG / RatioCU, 3);
+                    pressureSamples.Add(CurrentDeviceRealValue);
+                    Thread.Sleep(InstallTime);
+                }
+                //有一些曲线图最后数据会没有，传感器在气缸运动时不改变
+                for (int i = 0; i <= 10; i++)
+                {
+                    pressureSamples.Add(0);
+                }
+                //结束后写入csv
+                SaveFile();
+            });
+        }
+        //单次读取模拟量
+        private double Singlepress()
+        {
+            var io = MyOwner.DeviceEngine.GetVirtualByID(Device.DeviceID) as VIO;
+            // 实时采集压力
+            double CurentCardAnalogValue = io.GetAnglogIn();
+            double CurrentDeviceRealValue = Math.Round(CurentCardAnalogValue * RatioCG / RatioCU, 3);
+            return CurrentDeviceRealValue;
+        }
+
+        public void SaveFile()
+        {
+            DateTime now = DateTime.Now;
+            string dateStr = now.ToString("yyyyMMdd");
+            string timeStr = now.ToString("HHmmss");
+            string FileDir = @"D:\力控数据存储\" + dateStr + "\\" + timeStr + "\\";
+            string filename = GStringVal + ".csv";
+            string picName = GStringVal;
+            CRecordValue recordValuePress = new CRecordValue();
+            string title = "No" + "," + "Time" + "," + "Press" + "," + "Position";
+            string value = "";
+            int pressindex = 0;
+            for (int i = 0; i < pressureSamples.Count; i++)
+            {
+                int num = i + 1;
+                int timenum = num * InstallTime;
+                double press = pressureSamples[i] >= 0 ? pressureSamples[i] : 0;
+                double position = 0;
+                value = num + "," + timenum + "," + press + "," + position;
+                recordValuePress.RecordValue(FileDir, filename, title, value);
+                pressindex = i;
+            }
+            try
+            {
+                if (pressureSamples.Count > 0)
+                {
+                    double[] timeArr = new double[pressureSamples.Count];
+                    double[] pressArr = new double[pressureSamples.Count];
+                    double[] posArr = new double[pressureSamples.Count];
+                    for (int i = 0; i < pressureSamples.Count; i++)
+                    {
+                        timeArr[i] = (i + 1) * InstallTime;
+                        pressArr[i] = pressureSamples[i] >= 0 ? pressureSamples[i] : 0;
+                        posArr[i] = 0;
+                    }
+                    TorqueChart torqueChart = new TorqueChart();
+                    torqueChart.SavePressureCurveImage(timeArr, pressArr, posArr, FileDir, picName);
+                }
+            }
+            catch (Exception ex)
+            {
+                MyOwner.OnLog(LogType.Debug, $"模块 {MyOwner.Alias} 曲线图生成失败: {ex.Message}");
+            }
+        }
         public override void OnNotifyPropertyUIChanged(ParameterAttribute parameter, object newV)
         {
             base.OnNotifyPropertyUIChanged(parameter, newV);
@@ -232,12 +288,6 @@ namespace Luster.Module.Motion.Business.Functions
 
         public Dictionary<string, object> GetExtResult()
         {
-            //IL_002e: Unknown result type (might be due to invalid IL or missing references)
-            //IL_005a: Unknown result type (might be due to invalid IL or missing references)
-            //IL_0086: Unknown result type (might be due to invalid IL or missing references)
-            //IL_00b2: Unknown result type (might be due to invalid IL or missing references)
-            //IL_00ed: Unknown result type (might be due to invalid IL or missing references)
-            //IL_011c: Unknown result type (might be due to invalid IL or missing references)
             Dictionary<string, object> dictionary = new Dictionary<string, object>();
             foreach (AxisPosItem item in (List<AxisPosItem>)(object)AxisPos)
             {

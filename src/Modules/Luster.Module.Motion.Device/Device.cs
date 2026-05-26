@@ -6,7 +6,7 @@ using System;
 namespace Luster.Module.Motion.IO
 {
     /// <summary>
-    /// �㷨ģ��
+    /// 算法模块
     /// </summary>
     public class Device : MotionModule
     {
@@ -18,9 +18,9 @@ namespace Luster.Module.Motion.IO
             AddFunction<CheckIO>();
             AddFunction<SingleAxis>();
 
-            // ���λ�˶�
+            // 轴点位运动
             AddFunction<AxisPosMove>();
-
+            AddFunction<AxisPosArray>();
             AddFunction<MultiAxis>();
             AddFunction<Turntable>();
 
@@ -30,69 +30,69 @@ namespace Luster.Module.Motion.IO
             AddFunction<IOSimulation>();
             AddFunction<LightFlashing>();
 
-            // ��е��
+            // 机械臂
             //AddFunction<AxisArm>();
 
-            // �ɴ�
+            // 飞达
             //AddFunction<Feeder>();
 
-            // ���Ӳ����
+            // 相机硬触发
             AddFunction<CameraIO>();
 
-            // �������ŷ���
+            // 力传感伺服轴
             AddFunction<ForceAxis>();
 
-            // �����ഫ����
+            // 激光测距传感器
             AddFunction<LaserSensor>();
 
 
-            // ѹ��������
+            // 压力传感器
             AddFunction<PressureSensor>();
 
-            // �豸ģ�����ɼ���ת�������忨�ɼ���ģ����ת�����豸��ʵ��ֵ
+            // 设备模拟量采集与转换：将板卡采集的模拟量转换成设备真实的值
             AddFunction<AnalogConvert>();
 
-            //�жϵ�ǰ���Ƿ�λ
+            //判断当前轴是否到位
             AddFunction<AxisPos>();
 
-            //������
+            //机器人
             AddFunction<RobotMove>();
 
-            //SDO��д
+            //SDO读写
             AddFunction<SDOAction>();
 
-            //PDO��д
+            //PDO读写
             AddFunction<PDOAction>();
 
-            //����ģ��
+            //飞拍模块
             AddFunction<FlyingPhoto>();
-            
-            //̫�Ƶ���ģ��
+
+            //太科电批模块
             AddFunction<TaiKeScrewDriver>();
-            //�ξ���ѹ��ģ��
+            //鑫精诚压力模块
             AddFunction<XJCPressureSensor>();
-            //ModbusRTUͨ�ö�ȡģ��
+            //ModbusRTU通用读取模块
             AddFunction<ModbusRTU>();
 
-            //��ȡѹ��������ʾ
+            //读取压力曲线显示
             AddFunction<PressDriver>();
 
-            //���Ӽ������
+            //增加激光读数
             AddFunction<SerialPortDrive>();
 
-            //���ӻ�ȡ��λ�û�Ԫ
+            //增加获取轴位置基元
             AddFunction<GenAxisPos>();
 
-            //��ֵ�ռ�
+            //力值收集
             AddFunction<ForceCollect>();
 
             //SetAxisPos
             AddFunction<SetAxisPos>();
 
-            //�ξ��϶�ͨ��ѹ��������F600
+            //鑫精诚多通道压力传感器F600
             AddFunction<XJCPressureSensorF600>();
 
-            //��Ȧ���
+            //音圈电机
             AddFunction<JunRudderVCM>();
             AddFunction<DHRoboticsVCM>();
 
@@ -102,7 +102,7 @@ namespace Luster.Module.Motion.IO
     }
 
     /// <summary>
-    /// ģ�鴴��
+    /// 模块创建
     /// </summary>
     public class DeviceCreator : MotionModuleCreator<Device>
     {
