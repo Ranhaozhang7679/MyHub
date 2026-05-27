@@ -30,7 +30,7 @@ namespace Luster.Module.Motion.IO
             AddFunction<IOSimulation>();
             AddFunction<LightFlashing>();
 
-            // 机械臂
+            // 机械手
             //AddFunction<AxisArm>();
 
             // 飞达
@@ -55,7 +55,7 @@ namespace Luster.Module.Motion.IO
             //判断当前轴是否到位
             AddFunction<AxisPos>();
 
-            //机器人
+            //机器手
             AddFunction<RobotMove>();
 
             //SDO读写
@@ -80,7 +80,7 @@ namespace Luster.Module.Motion.IO
             //增加激光读数
             AddFunction<SerialPortDrive>();
 
-            //增加获取轴位置基元
+            //增加获取轴位置基准
             AddFunction<GenAxisPos>();
 
             //力值收集
@@ -96,7 +96,7 @@ namespace Luster.Module.Motion.IO
             AddFunction<JunRudderVCM>();
             AddFunction<DHRoboticsVCM>();
 
-            // �豸ģ�����ɼ���ת��������ͼ
+            // 设备模拟量采集与转换显示图表
             AddFunction<AnalogConvertChart>();
         }
     }
