@@ -266,6 +266,40 @@ namespace Luster.Common.Assets.ViewModel
         }));
 
         /// <summary>
+        /// 条件上移
+        /// </summary>
+        private DelegateCommand<object> _moveUpCommand;
+        public DelegateCommand<object> MoveUpCommand => _moveUpCommand ?? (_moveUpCommand = new DelegateCommand<object>((tag) =>
+        {
+            if (tag is LExpression exp)
+            {
+                int index = TagList.IndexOf(exp);
+                if (index > 0)
+                {
+                    TagList.Remove(exp);
+                    TagList.Insert(index - 1, exp);
+                }
+            }
+        }));
+
+        /// <summary>
+        /// 条件下移
+        /// </summary>
+        private DelegateCommand<object> _moveDownCommand;
+        public DelegateCommand<object> MoveDownCommand => _moveDownCommand ?? (_moveDownCommand = new DelegateCommand<object>((tag) =>
+        {
+            if (tag is LExpression exp)
+            {
+                int index = TagList.IndexOf(exp);
+                if (index < TagList.Count - 1)
+                {
+                    TagList.Remove(exp);
+                    TagList.Insert(index + 1, exp);
+                }
+            }
+        }));
+
+        /// <summary>
         /// 点击确认
         /// </summary>
         /// <param name="result"></param>

@@ -286,7 +286,42 @@ namespace Luster.Motion.EditorUI.ViewModel
                     existNum++;
                 }
             }
-            else if (existNum <= newCondition.Count)
+            else if (existNum == newCondition.Count)
+            {
+                // 条件数量不变：按名称匹配并重排子节点
+                var childByAlias = module.Children.ToDictionary(c => c.Alias);
+                var reordered = new List<IMotionModule>();
+                var matchedAliases = new HashSet<string>();
+
+                for (int j = 0; j < newCondition.Count; j++)
+                {
+                    var condName = newCondition[j].Name;
+                    if (childByAlias.TryGetValue(condName, out var matchedChild) && matchedAliases.Add(condName))
+                    {
+                        reordered.Add(matchedChild);
+                    }
+                    else
+                    {
+                        // 改名的情况：按位置匹配未使用的子节点
+                        var unmatched = module.Children.FirstOrDefault(c => !reordered.Contains(c));
+                        if (unmatched != null)
+                        {
+                            unmatched.Alias = condName;
+                            reordered.Add(unmatched);
+                        }
+                    }
+                }
+
+                module.Children.Clear();
+                foreach (var child in reordered)
+                {
+                    module.Children.Add(child);
+                }
+
+                eventBus.SortModule(module);
+                eventBus.Bus.GetEvent<ModuleUpdateEvent>().Publish(new ModuleUpdateModule { Module = module });
+            }
+            else if (existNum < newCondition.Count)
             {
                 // 更新或者添加
                 for (int j = 0; j < newCondition.Count; j++)
