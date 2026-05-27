@@ -18,7 +18,7 @@ namespace Luster.Module.Motion.IO
             AddFunction<CheckIO>();
             AddFunction<SingleAxis>();
 
-            // 轴点位运动
+            // 轴点位运�?
             AddFunction<AxisPosMove>();
             AddFunction<AxisPosArray>();
             AddFunction<MultiAxis>();
@@ -30,13 +30,13 @@ namespace Luster.Module.Motion.IO
             AddFunction<IOSimulation>();
             AddFunction<LightFlashing>();
 
-            // 机械臂
+            // 机械�?
             //AddFunction<AxisArm>();
 
             // 飞达
             //AddFunction<Feeder>();
 
-            // 相机硬触发
+            // 相机硬触�?
             AddFunction<CameraIO>();
 
             // 力传感伺服轴
@@ -46,16 +46,16 @@ namespace Luster.Module.Motion.IO
             AddFunction<LaserSensor>();
 
 
-            // 压力传感器
+            // 压力传感�?
             AddFunction<PressureSensor>();
 
-            // 设备模拟量采集与转换：将板卡采集的模拟量转换成设备真实的值
+            // 设备模拟量采集与转换：将板卡采集的模拟量转换成设备真实的�?
             AddFunction<AnalogConvert>();
 
-            //判断当前轴是否到位
+            //判断当前轴是否到�?
             AddFunction<AxisPos>();
 
-            //机器人
+            //机器�?
             AddFunction<RobotMove>();
 
             //SDO读写
@@ -69,7 +69,7 @@ namespace Luster.Module.Motion.IO
 
             //太科电批模块
             AddFunction<TaiKeScrewDriver>();
-            //鑫精诚压力模块
+            //鑫精诚压力模�?
             AddFunction<XJCPressureSensor>();
             //ModbusRTU通用读取模块
             AddFunction<ModbusRTU>();
@@ -77,13 +77,13 @@ namespace Luster.Module.Motion.IO
             //读取压力曲线显示
             AddFunction<PressDriver>();
 
-            //增加激光读数
+            //增加激光读�?
             AddFunction<SerialPortDrive>();
 
-            //增加获取轴位置基元
+            //增加获取轴位置基�?
             AddFunction<GenAxisPos>();
 
-            //力值收集
+            //力值收�?
             AddFunction<ForceCollect>();
 
             //SetAxisPos
