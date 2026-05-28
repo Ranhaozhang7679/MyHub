@@ -236,7 +236,10 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                 dialog.IsFolderPicker = true;
                 dialog.Title = "选择包含报警配置文件的文件夹";
                 if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
+                {
+                    MessageBox.Show("未选择导入文件夹，操作已取消", "提示");
                     return;
+                }
 
                 string selectedFolder = dialog.FileName;
                 int importedCount = 0;
@@ -275,6 +278,10 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                     MessageBox.Show($"已导入 {importedCount} 个文件的配置", "导入完成");
                 else
                     MessageBox.Show("未找到匹配的配置文件", "提示");
+            }
+            catch (System.IO.IOException)
+            {
+                MessageBox.Show("导入文件失败：文件正在被其他程序占用，请关闭文件后重试", "错误");
             }
             catch (Exception ex)
             {
