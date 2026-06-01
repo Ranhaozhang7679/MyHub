@@ -2055,7 +2055,7 @@ namespace Luster.Motion.Integration.SFC
         {
             if (subcmd == subcmd_new)
             {
-                return $"c=PROCESS_HANDING&subcmd={subcmd_new}&sn={sn}&serialNo={serialNo}&partname={partname}&stationCode={StationCode}&ccdflag={ccdflag}&mac_address={MacAddress}&station_id={StationID}&isAutomation=1";
+                return $"c=QUERY_4_SFC&subcmd={subcmd_new}&sn={sn}&serialNo={serialNo}&partname={partname}&stationCode={StationCode}&ccdflag={ccdflag}&mac_address={MacAddress}&station_id={StationID}&isAutomation=1";
             }
             else
             {
