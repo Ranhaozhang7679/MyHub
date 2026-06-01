@@ -384,6 +384,11 @@ namespace Luster.Motion.Integration.Web
         public string category_key { get; set; }
 
         /// <summary>
+        /// SFC工站Code（如CGSFA对应IV）
+        /// </summary>
+        public string StationCode { get; set; }
+
+        /// <summary>
         /// Hive启用阀门
         /// </summary>
         public bool IsHiveValveEnabled { get; set; } = true;
