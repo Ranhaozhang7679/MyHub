@@ -475,6 +475,16 @@
                                 Foreground="{DynamicResource EditorForeground}"
                                 Text="{Binding category_key, UpdateSourceTrigger=PropertyChanged}"
                                 TextChanged="TextBox_TextChanged" />
+                            <hc:TextBox
+                                Grid.Row="2"
+                                Grid.Column="1"
+                                Margin="10,10,10,0"
+                                hc:InfoElement.Title="多料件組裝自動化接口参数stationCode"
+                                hc:InfoElement.TitlePlacement="Left"
+                                hc:InfoElement.TitleWidth="80"
+                                Foreground="{DynamicResource EditorForeground}"
+                                Text="{Binding stationCode, UpdateSourceTrigger=PropertyChanged}"
+                                TextChanged="TextBox_TextChanged" />
                         </Grid>
                     </StackPanel>
                     <hc:Divider Margin="0,3,0,20" />
