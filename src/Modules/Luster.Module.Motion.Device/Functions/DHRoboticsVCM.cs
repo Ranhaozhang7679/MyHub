@@ -45,7 +45,6 @@ namespace Luster.Module.Motion.Device.Functions
         [Parameter("轴设备选择", 0, CN = "轴名称", EditorType = typeof(VAxis))]
         public VDevice DeviceParam { get; set; }
 
-        [NotEmpty]
         [Parameter("伺服Z轴设备选择", 1, CN = "伺服Z轴名称", EditorType = typeof(VAxis))]
         public VDevice DeviceParam1 { get; set; }
 
@@ -258,12 +257,10 @@ namespace Luster.Module.Motion.Device.Functions
                 return false;
             }
 
-            GetVDevice<VAxis>(DeviceParam1, out _axis1);
-            if (_axis1 == null)
+            // 伺服Z轴可选，不填则按设置的点位运动
+            if (DeviceParam1 != null && !string.IsNullOrEmpty(DeviceParam1.Name))
             {
-                errMsg = $"设备:{DeviceParam1.Name}未找到";
-                OutFailReason = errMsg;
-                return false;
+                GetVDevice<VAxis>(DeviceParam1, out _axis1);
             }
 
             try
@@ -606,7 +603,7 @@ namespace Luster.Module.Motion.Device.Functions
             positionSamples = new System.Collections.Generic.List<double>();
             try
             {
-                positionZ = _axis1.GetCurrentPos();
+                positionZ = _axis1?.GetCurrentPos() ?? 0;
                 int InitalRaw = ReadRawCurrent();
                 // Step 0: 设定扭矩限制为最大
                 WriteTorqueLimit(MaxTorque);
@@ -815,7 +812,7 @@ namespace Luster.Module.Motion.Device.Functions
                         //timeSamples.Add(sw.ElapsedMilliseconds);
                         timeSamples.Add(stopwatch.ElapsedMilliseconds);
                         double position = 0;
-                        if (StartGetZ1Position)
+                        if (StartGetZ1Position || _axis1 == null)
                         {
                             position = _axis.GetCurrentPos();
                         }
