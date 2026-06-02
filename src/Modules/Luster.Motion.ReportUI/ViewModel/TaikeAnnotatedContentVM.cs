@@ -147,7 +147,7 @@ namespace Luster.Motion.ReportUI.ViewModel
 
         private double _yAxisMax = 0.3;
         /// <summary>
-        /// 图表1 Y轴上限（kgf）
+        /// 图表1 Y轴上限（kgf），设置为0时自动调整
         /// </summary>
         public double YAxisMax
         {
@@ -178,7 +178,7 @@ namespace Luster.Motion.ReportUI.ViewModel
 
         private double _yAxisMax2 = 5.0;
         /// <summary>
-        /// 图表2 Y轴上限
+        /// 图表2 Y轴上限，设置为0时自动调整
         /// </summary>
         public double YAxisMax2
         {
@@ -272,14 +272,14 @@ namespace Luster.Motion.ReportUI.ViewModel
                     Chart2Title = "Time-Position";
                     Chart2XLabel = "X间隔(ms):";
                     Chart2YLabel = "Y间隔(mm):";
-                    Chart2YMaxLabel = "Y上限(mm):";
+                    Chart2YMaxLabel = "Y上限(mm,0自动):";
                 }
                 else
                 {
                     Chart2Title = "Position-Press";
                     Chart2XLabel = "X间隔(mm):";
                     Chart2YLabel = "Y间隔(kgf):";
-                    Chart2YMaxLabel = "Y上限(kgf):";
+                    Chart2YMaxLabel = "Y上限(kgf,0自动):";
                 }
                 RedrawChart();
             }));
