@@ -20,7 +20,7 @@ namespace Luster.Module.Motion.IO
 
             // 轴点位运动
             AddFunction<AxisPosMove>();
-
+            AddFunction<AxisPosArray>();
             AddFunction<MultiAxis>();
             AddFunction<Turntable>();
 
