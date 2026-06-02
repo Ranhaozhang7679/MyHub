@@ -232,7 +232,23 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                         if (cardID.Substring(0, 1) == "0")
                             cardID = cardID.Substring(1, cardID.Length - 1);
 
-                        var ret = sfcHelper.CheckCard(cardID, hiveAPI.machineSN, out string auth);
+                        // 提前计算alarmCode用于CheckCard
+                        string alarmCodeForCard = cmdStr switch
+                        {
+                            "一级供应商" => "F99OOOO-01",
+                            "一+二级供应商" => "F99OOOO-02",
+                            "凌云光" => "F99OOOO-03",
+                            "汇川" => "F99OOOO-04",
+                            "工厂人员" => "F99OOOO-11",
+                            "耗材/物料补充" => "F99OOOO-08",
+                            "非生产时间调试" => "F99OOOO-09",
+                            "周保养" => "F99OOOO-05",
+                            "月保养" => "F99OOOO-06",
+                            "计划关机/待机" => "F99OOOO-07",
+                            "记录非停机异常" => "F99OOOO-10",
+                            _ => "F99OOOO-20",
+                        };
+                        var ret = sfcHelper.CheckCard(cardID, hiveAPI.machineSN, out string auth, alarmCodeForCard, DateTime.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.ff+0800"));
 
                         SendHiveMsg(cmdStr);
                         cardID = "";
