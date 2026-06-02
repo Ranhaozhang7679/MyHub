@@ -224,13 +224,13 @@ namespace Luster.Module.Motion.Device.Functions
                 {
                     //这里的流程是
                     //1、输入密码：地址-0002 值-1149952000（44 8A E0 00）
-                    communcation.WriteWithoutBlocking<int>(1149952000, $"{StationNum} 10 2 1");
+                    communcation.WriteWithoutBlocking<int>(1149952000, $"{StationNum} 16 2 1");
                     Thread.Sleep(5);
                     //2、设置标定类型（砝码标定）地址-200（00 C8）值-0
-                    communcation.WriteWithoutBlocking<int>(0, $"{StationNum} 10 200 1");
+                    communcation.WriteWithoutBlocking<int>(0, $"{StationNum} 16 200 1");
                     Thread.Sleep(5);
                     //3、设置零点标定 地址-206（00 CE） 值-0
-                    communcation.WriteWithoutBlocking<int>(0, $"{StationNum} 10 206 1");
+                    communcation.WriteWithoutBlocking<int>(0, $"{StationNum} 16 206 1");
 
                 }
                 catch (Exception ex)
@@ -243,13 +243,13 @@ namespace Luster.Module.Motion.Device.Functions
                 try
                 {
                     //4、设置增益标定 地址-208（00 D0） 值-0
-                    communcation.WriteWithoutBlocking<int>(0, $"{StationNum} 10 208 1");
+                    communcation.WriteWithoutBlocking<int>(0, $"{StationNum} 16 208 1");
                     Thread.Sleep(5);
                     //5、设置增益对应重量值 地址-210（00 D2）值-手持压力值
-                    communcation.WriteWithoutBlocking<float>((float)CalibrationValue, $"{StationNum} 10 210 1");
+                    communcation.WriteWithoutBlocking<float>((float)CalibrationValue, $"{StationNum} 16 210 1");
                     Thread.Sleep(5);
                     //6、设置仪表最大量程 地址-218（00 DA）值-1000（03 E8）
-                    communcation.WriteWithoutBlocking<float>((float)MeasuringRange, $"{StationNum} 10 218 1");
+                    communcation.WriteWithoutBlocking<float>((float)MeasuringRange, $"{StationNum} 16 218 1");
                 }
                 catch (Exception ex)
                 {

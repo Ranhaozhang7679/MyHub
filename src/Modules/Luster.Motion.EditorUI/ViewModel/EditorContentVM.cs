@@ -298,7 +298,7 @@ namespace Luster.Motion.EditorUI.ViewModel
                 SwitchButtons = new ObservableCollection<SwitchModel>();
                 if (mParent.Children.Count > 0)
                 {
-                    foreach (var item in mParent.Children)
+                    foreach (var item in mParent.Children.OrderBy(c => c.Sort))
                     {
                         SwitchButtons.Add(new SwitchModel(item) { IsCurrent = item == module });
                     }

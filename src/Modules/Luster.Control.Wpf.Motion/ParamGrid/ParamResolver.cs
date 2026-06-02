@@ -44,7 +44,9 @@ namespace Luster.Control.Wpf.Motion
             [typeof(LExpress)] = UIEditorType.Express,
             [typeof(VDevice)] = UIEditorType.Device,
             [typeof(LNetwork)] = UIEditorType.Network,
-            [typeof(IGlobal)] = UIEditorType.Global
+            [typeof(IGlobal)] = UIEditorType.Global,
+            [typeof(IGlobalBool)] = UIEditorType.GlobalBool,
+            [typeof(IGlobalByType)] = UIEditorType.GlobalByType
         };
 
         /// <summary>
@@ -134,6 +136,12 @@ namespace Luster.Control.Wpf.Motion
                         break;
                     case UIEditorType.Global:
                         editor = new GlobalEditor();
+                        break;
+                    case UIEditorType.GlobalBool:
+                        editor = new GlobalBoolEditor();
+                        break;
+                    case UIEditorType.GlobalByType:
+                        editor = new GlobalTypeFilterEditor();
                         break;
                     default:
                         editor = new ReadOnlyTextEditor();
@@ -301,6 +309,8 @@ namespace Luster.Control.Wpf.Motion
         Express,
         Device,
         Network,
-        Global
+        Global,
+        GlobalBool,
+        GlobalByType
     }
 }

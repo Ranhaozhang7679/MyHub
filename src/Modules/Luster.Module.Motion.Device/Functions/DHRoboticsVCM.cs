@@ -45,7 +45,6 @@ namespace Luster.Module.Motion.Device.Functions
         [Parameter("轴设备选择", 0, CN = "轴名称", EditorType = typeof(VAxis))]
         public VDevice DeviceParam { get; set; }
 
-        [NotEmpty]
         [Parameter("伺服Z轴设备选择", 1, CN = "伺服Z轴名称", EditorType = typeof(VAxis))]
         public VDevice DeviceParam1 { get; set; }
 
@@ -223,6 +222,9 @@ namespace Luster.Module.Motion.Device.Functions
 
         private System.Collections.Generic.List<double> positionSamples;
 
+        // 真实采样时间戳(ms)，与 pressureSamples 一一对应
+        private System.Collections.Generic.List<long> timeSamples;
+
         // SAC-N2双轴控制器: 轴二地址偏移 +0x800
         private const int AxisOffset = 0x800;
 
@@ -255,12 +257,10 @@ namespace Luster.Module.Motion.Device.Functions
                 return false;
             }
 
-            GetVDevice<VAxis>(DeviceParam1, out _axis1);
-            if (_axis1 == null)
+            // 伺服Z轴可选，不填则按设置的点位运动
+            if (DeviceParam1 != null && !string.IsNullOrEmpty(DeviceParam1.Name))
             {
-                errMsg = $"设备:{DeviceParam1.Name}未找到";
-                OutFailReason = errMsg;
-                return false;
+                GetVDevice<VAxis>(DeviceParam1, out _axis1);
             }
 
             try
@@ -514,29 +514,23 @@ namespace Luster.Module.Motion.Device.Functions
             DateTime now = DateTime.Now;
             string dateStr = now.ToString("yyyyMMdd");
             string timeStr = now.ToString("HHmmss");
-            string FileDir = @"D:\力控数据存储\" + dateStr + "\\" + SlaveNum.ToString() + "\\" ;
+            string FileDir = @"D:\力控数据存储\" + dateStr + "\\" + SlaveNum.ToString() + "\\";
             string filename = GStringVal + ".csv";
             string picName = GStringVal;
             CRecordValue recordValuePress = new CRecordValue();
             string title = "No" + "," + "Time" + "," + "Press" + "," + "Position";
             string title1 = "No" + "," + "Position" + "," + "Press";
             string value = "";
-            //PM要求最后抬起来要添加点数据，好看
-            //for (int i = 0; i < 5; i++)
-            //{
-            //    Double presstemp = OutPressure- Convert.ToInt32(OutPressure/5*i);
-            //    pressureSamples.Add(presstemp);
-            //}
             int pressindex = 0;
             for (int i = 0; i < pressureSamples.Count; i++)
             {
                 int num = i + 1;
-                int timenum = num * 10;              
+                int timenum = (int)(i < timeSamples.Count ? timeSamples[i] : (timeSamples.Count > 0 ? timeSamples[timeSamples.Count - 1] + (i - timeSamples.Count + 1) * 5L : num * 5L));
                 double press = pressureSamples[i] / 1000;
                 double position1 = 0;
-                if (i<positionSamples.Count)
+                if (i < positionSamples.Count)
                 {
-                     position1 = positionSamples[i];
+                    position1 = positionSamples[i];
 
                 }
 
@@ -574,7 +568,7 @@ namespace Luster.Module.Motion.Device.Functions
                     double[] posArr = new double[pressureSamples.Count];
                     for (int i = 0; i < pressureSamples.Count; i++)
                     {
-                        timeArr[i] = (i + 1) * 10;
+                        timeArr[i] = i < timeSamples.Count ? timeSamples[i] : (timeSamples.Count > 0 ? timeSamples[timeSamples.Count - 1] + (i - timeSamples.Count + 1) * 5L : (i + 1) * 5L);
                         pressArr[i] = pressureSamples[i] / 1000;
                         posArr[i] = i < positionSamples.Count ? positionSamples[i] : 0;
                     }
@@ -589,7 +583,7 @@ namespace Luster.Module.Motion.Device.Functions
         }
 
         double positionZ = 0;
-        bool StartGetZ1Position=false;
+        bool StartGetZ1Position = false;
         /// <summary>
         /// 软着陆(参考DH Control Demo的SoftLand_ServoExternal)
         /// 流程: 力矩最大 → 快进PP → 设目标力矩 → 慢速PT → 等力矩到达 → 保压 → 返回PB → 解除力矩
@@ -598,6 +592,7 @@ namespace Luster.Module.Motion.Device.Functions
         {
             const int MaxTorque = 3000;
             int defaultTorqueLimit = ReadTorqueLimit();
+            Stopwatch stopwatch = new Stopwatch();
             // 获取全局模块
             if (gModule == null)
             {
@@ -608,13 +603,13 @@ namespace Luster.Module.Motion.Device.Functions
             positionSamples = new System.Collections.Generic.List<double>();
             try
             {
-                positionZ=_axis1.GetCurrentPos();
+                positionZ = _axis1?.GetCurrentPos() ?? 0;
                 int InitalRaw = ReadRawCurrent();
                 // Step 0: 设定扭矩限制为最大
                 WriteTorqueLimit(MaxTorque);
                 Thread.Sleep(20);
 
-               
+
                 //pressureSamples.Add(ReadPressure()); //记录力控数据
                 // Step 10: 快速段 - 快速接近产品上方(PP位置)
                 _axis.MoveAbs(PPPosition[0].Position, PPVelocity, MoveAcc, MoveDec);
@@ -624,7 +619,7 @@ namespace Luster.Module.Motion.Device.Functions
                 ReadPressure1();
 
                 MyOwner.OnLog(Common.DataStruct.Enums.LogType.Debug, $"模块:{MyOwner.Alias} 快速运动");
-                
+
                 if (_isBreak) return;
                 // Step 20: 设定扭矩限制为目标值
                 WriteTorqueLimit(TorqueLimit);
@@ -670,12 +665,14 @@ namespace Luster.Module.Motion.Device.Functions
                 MyOwner.OnLog(Common.DataStruct.Enums.LogType.Debug, $"模块:{MyOwner.Alias} 慢速运动");
                 // Step 40: 保压
                 // Thread.Sleep(InstallTime);
-                while (InstallTime >= 0)
-                {
-                    Thread.Sleep(10);
-                    InstallTime = InstallTime - 10;
-                   
-                }
+                //while (InstallTime >= 0)
+                //{
+                //    Thread.Sleep(10);
+                //    InstallTime = InstallTime - 10;
+
+                //}
+                //Thread.Sleep(InstallTime);
+                stopwatch.Restart();
                 //保压后使用二段力矩
 
                 double installPos = _axis.GetCurrentPos();
@@ -684,24 +681,34 @@ namespace Luster.Module.Motion.Device.Functions
                 OutPosition = _axis.GetCurrentPos();
                 MyOwner.OnLog(Common.DataStruct.Enums.LogType.Debug, $"模块:{MyOwner.Alias} 保压完成");
 
-                WriteTorqueLimit(TorqueLimit1);
-                Thread.Sleep(TimeOut);
+                while (stopwatch.ElapsedMilliseconds < InstallTime)
+                {
+                    Thread.Sleep(5);
+                }
 
+                WriteTorqueLimit(TorqueLimit1);
+                //Thread.Sleep(TimeOut);
+                stopwatch.Restart();
                 if (_isBreak) return;
 
                 OutPressureData = string.Join(",", pressureSamples);
-               
+
                 //方案3
                 _axis.Stop();
                 Double currentpos = _axis.GetCurrentPos();
                 _axis.MoveAbs(currentpos, PTVelocity, MoveAcc, MoveDec);
+
+
                 //由于很小的力矩导致我点位运动直接失败，但是又不能一下设置最大，会过冲，所以尝试缓慢增加
                 WriteTorqueLimit(TorqueLimit2);
                 Thread.Sleep(TimeOut1);
 
                 _axis.CheckMotionDone();
+                while (stopwatch.ElapsedMilliseconds < TimeOut)
+                {
+                }
                 //方案4
-            
+
                 // Step 100: 完成
                 OutResult = true;
                 StartGetZ1Position = false;
@@ -758,57 +765,12 @@ namespace Luster.Module.Motion.Device.Functions
 
         #endregion
 
-        /// <summary>
-        /// 大寰音圈电机力控
-        /// </summary>
-        /// <param name="limit">力矩设置</param>
-        /// <param name="jl">是否记录点位和力值</param>
-        private bool ForceControl(int limit,bool jl)
-        {
-            // 等待力矩到达(接触判定)
-            double lastPos = _axis.GetCurrentPos();
-            int elapsed = 0;
-            int timeoutMs = SoftLandingTimeout * 1000;
-            bool torqueReached = false;
-
-            while (elapsed < timeoutMs)
-            {
-                if (_isBreak) return false;
-
-                Thread.Sleep(10);
-                elapsed += 10;
-
-                int rawCurrent = ReadRawCurrent();
-                double position = _axis.GetCurrentPos();
-                double speed = Math.Abs(position - lastPos) * 100; // mm/10ms → mm/s
-                lastPos = position;
-                //pressureSamples.Add(ReadPressure()); //记录力控数据
-                //positionSamples.Add(position);
-                if (Math.Abs(rawCurrent - limit) <= TorqueTolerance && speed <= SpeedThreshold)
-                {
-                    torqueReached = true;
-                    break;
-                }
-            }
-
-            if (!torqueReached)
-            {
-                _axis.Stop();
-                Thread.Sleep(50);
-                OutResult = false;
-                OutFailReason = $"软着陆力矩未到达, 超时({SoftLandingTimeout}秒)";
-                return false;
-            }
-            else
-            {
-                return true;
-            }
-        }
         private void ReadPressure1()
         {
             const int MaxTorque = 3000;
             pressureSamples = new System.Collections.Generic.List<double>(); //一个用于存储所有数据的集合
             positionSamples = new System.Collections.Generic.List<double>();
+            timeSamples = new System.Collections.Generic.List<long>();
             if (!string.IsNullOrEmpty(GlobalVar))
             {
                 // 取消上次未完成的异步采集线程
@@ -818,7 +780,9 @@ namespace Luster.Module.Motion.Device.Functions
                 Task.Run(() =>
                 {
                     PullSamples = new System.Collections.Generic.List<double>();
-                    bool once = true;
+                    //var sw = System.Diagnostics.Stopwatch.StartNew();
+                    Stopwatch stopwatch = new Stopwatch();
+                    stopwatch.Restart();
                     while (true)
                     {
                         if (_stopPressureCollect || _isBreak) break;
@@ -845,18 +809,29 @@ namespace Luster.Module.Motion.Device.Functions
                         // 实时采集压力
                         double pressure = ReadPressure12();
                         pressureSamples.Add(pressure);
+                        //timeSamples.Add(sw.ElapsedMilliseconds);
+                        timeSamples.Add(stopwatch.ElapsedMilliseconds);
                         double position = 0;
-                        if (StartGetZ1Position)
+                        if (StartGetZ1Position || _axis1 == null)
                         {
                             position = _axis.GetCurrentPos();
                         }
                         else
                         {
-                            position = _axis.GetCurrentPos()+ _axis1.GetCurrentPos()-positionZ;
+                            position = _axis.GetCurrentPos() + _axis1.GetCurrentPos() - positionZ;
                         }
                         positionSamples.Add(position);
-                        Thread.Sleep(5);
+                        // Stopwatch补偿：保证5ms采样周期
+                        // long elapsed = sw.ElapsedMilliseconds;
+                        long elapsed = stopwatch.ElapsedMilliseconds;
+                        long nextTarget = timeSamples.Count * 5L;
+                        long sleepMs = nextTarget - elapsed;
+                        if (sleepMs > 0)
+                        {
+                            Thread.Sleep((int)sleepMs);
+                        }
                     }
+                    stopwatch.Stop();
                     //结束后写入csv
                     SaveFile();
                     WriteTorqueLimit(MaxTorque);

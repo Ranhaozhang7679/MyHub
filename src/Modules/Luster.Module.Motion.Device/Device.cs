@@ -20,7 +20,7 @@ namespace Luster.Module.Motion.IO
 
             // 轴点位运动
             AddFunction<AxisPosMove>();
-
+            AddFunction<AxisPosArray>();
             AddFunction<MultiAxis>();
             AddFunction<Turntable>();
 
@@ -51,7 +51,7 @@ namespace Luster.Module.Motion.IO
 
             // 设备模拟量采集与转换：将板卡采集的模拟量转换成设备真实的值
             AddFunction<AnalogConvert>();
-
+            AddFunction<AnalogConvertChart>();
             //判断当前轴是否到位
             AddFunction<AxisPos>();
 
@@ -95,9 +95,6 @@ namespace Luster.Module.Motion.IO
             //音圈电机
             AddFunction<JunRudderVCM>();
             AddFunction<DHRoboticsVCM>();
-
-            // 设备模拟量采集与转换并生成图
-            AddFunction<AnalogConvertChart>();
         }
     }
 

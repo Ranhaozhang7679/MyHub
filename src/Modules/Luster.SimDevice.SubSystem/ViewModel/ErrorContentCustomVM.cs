@@ -420,6 +420,10 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                 if (moduleEl.Elements("Function").Any(f => f.Attribute("Name")?.Value == "TestStation"))
                     continue;
 
+                // 跳过回零工站（其内部报警工具不应纳入自定义报警配置）
+                if (moduleEl.Elements("Function").Any(f => f.Attribute("Name")?.Value == "HomeStation"))
+                    continue;
+
                 // 模块唯一 ID（GUID）
                 string moduleId = moduleEl.Attribute("ID")?.Value ?? "";
 
@@ -1207,57 +1211,66 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                 openFileDialog.Filter = "CSV文件 (*.csv)|*.csv|所有文件 (*.*)|*.*";
                 openFileDialog.DefaultExt = ".csv";
 
-                if (openFileDialog.ShowDialog() == true)
+                if (openFileDialog.ShowDialog() != true)
                 {
-                    string filePath = openFileDialog.FileName;
+                    SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Warning, "未选择导入文件，操作已取消");
+                    return;
+                }
 
-                    // 读取CSV文件
-                    var lines = File.ReadAllLines(filePath, Encoding.UTF8);
-                    if (lines.Length < 2) // 至少包含表头和数据行
+                string filePath = openFileDialog.FileName;
+
+                // 读取CSV文件
+                var lines = File.ReadAllLines(filePath, Encoding.UTF8);
+                if (lines.Length < 2) // 至少包含表头和数据行
+                {
+                    SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Warning, "CSV文件格式不正确，至少需要包含表头和数据行");
+                    return;
+                }
+
+                var importedItems = new List<ErrorItemCustomModel>();
+
+                // 跳过表头（第一行）
+                for (int i = 1; i < lines.Length; i++)
+                {
+                    var line = lines[i];
+                    if (string.IsNullOrWhiteSpace(line)) continue;
+
+                    var fields = ParseCsvLine(line);
+                    if (fields.Length >= 3)
                     {
-                        SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Warning, "CSV文件格式不正确，至少需要包含表头和数据行");
-                        return;
-                    }
-
-                    var importedItems = new List<ErrorItemCustomModel>();
-
-                    // 跳过表头（第一行）
-                    for (int i = 1; i < lines.Length; i++)
-                    {
-                        var line = lines[i];
-                        if (string.IsNullOrWhiteSpace(line)) continue;
-
-                        var fields = ParseCsvLine(line);
-                        if (fields.Length >= 3)
-                        {
-                            importedItems.Add(new ErrorItemCustomModel(
-                                alarmCode: fields[0],
-                                alarmContent: UnescapeCsvField(fields[1]),
-                                alarmEnglish: UnescapeCsvField(fields[2]),
-                                alarmCategory: fields.Length > 3 ? UnescapeCsvField(fields[3]) : "",
-                                repairAction: fields.Length > 4 ? UnescapeCsvField(fields[4]) : "",
-                                moduleName: fields.Length > 5 ? UnescapeCsvField(fields[5]) : "",
-                                moduleId: fields.Length > 6 ? UnescapeCsvField(fields[6]) : ""
-                            ));
-                        }
-                        else
-                        {
-                            SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Warning, $"跳过第 {i + 1} 行：字段数量不足");
-                        }
-                    }
-
-                    if (importedItems.Count > 0)
-                    {
-                        CleanupUnusedVAlarms(importedItems);
-                        ErrorList.Clear();
-                        BatchImport(importedItems);
-                        RaisePropertyChanged(nameof(FilteredErrorList));
+                        importedItems.Add(new ErrorItemCustomModel(
+                            alarmCode: fields[0],
+                            alarmContent: UnescapeCsvField(fields[1]),
+                            alarmEnglish: UnescapeCsvField(fields[2]),
+                            alarmCategory: fields.Length > 3 ? UnescapeCsvField(fields[3]) : "",
+                            repairAction: fields.Length > 4 ? UnescapeCsvField(fields[4]) : "",
+                            moduleName: fields.Length > 5 ? UnescapeCsvField(fields[5]) : "",
+                            moduleId: fields.Length > 6 ? UnescapeCsvField(fields[6]) : ""
+                        ));
                     }
                     else
                     {
-                        SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Warning, "CSV文件中没有有效数据");
+                        SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Warning, $"跳过第 {i + 1} 行：字段数量不足");
                     }
                 }
+
+                if (importedItems.Count > 0)
+                {
+                    CleanupUnusedVAlarms(importedItems);
+                    ErrorList.Clear();
+                    BatchImport(importedItems);
+                    RaisePropertyChanged(nameof(FilteredErrorList));
+                }
+                else
+                {
+                    SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Warning, "CSV文件中没有有效数据");
+                }
+            }
+            catch (System.IO.IOException)
+            {
+                var msg = "导入文件失败：文件正在被其他程序占用，请关闭文件后重试";
+                SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Error, msg);
+                _dialogService.ShowInfoTip(msg);
             }
             catch (Exception ex)
             {
@@ -1348,7 +1361,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel
             new[] { "Weekly Maintenance", "F99OOOO-05", "Waiting for OP", "周保养", "无", "F99OOOO-05" },
             new[] { "Monthly Maintenance", "F99OOOO-06", "Waiting for OP", "月保养", "无", "F99OOOO-06" },
             new[] { "Planned shutdown/idle", "F99OOOO-07", "Waiting for OP", "计划关机/待机", "无", "F99OOOO-07" },
-            new[] { "N / A", "F99OOOO-10", "Actual downtime", "N / A", "无", "F99OOOO-10" }
+            new[] { "Degraded mode", "F99OOOO-10", "Actual downtime", "非停机异常", "无", "F99OOOO-10" }
         };
 
         /// <summary>
@@ -1369,6 +1382,9 @@ namespace Luster.SimDevice.SubSystem.ViewModel
         {
             try
             {
+                // 先将当前界面的报警配置数据（包括报警种类和维修动作）保存到CSV，确保生成时使用最新数据
+                SaveToCsvFile(ErrorList);
+
                 string configPath = deviceEngine.RecipeConfigPath;
                 if (string.IsNullOrEmpty(configPath))
                 {
@@ -1470,36 +1486,36 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                     }
                 }
 
-                // 3. 读取并添加 ProductEventAlarms.csv（产品事件报警配置）
-                string productEventAlarmsPath = Path.Combine(configPath, "ProductEventAlarms.csv");
-                if (File.Exists(productEventAlarmsPath))
-                {
-                    try
-                    {
-                        var peLines = File.ReadAllLines(productEventAlarmsPath, Encoding.UTF8);
-                        bool isFirstLine = true;
-                        foreach (var line in peLines)
-                        {
-                            if (isFirstLine) { isFirstLine = false; continue; }
-                            if (string.IsNullOrWhiteSpace(line)) continue;
+                //// 3. 读取并添加 ProductEventAlarms.csv（产品事件报警配置）
+                //string productEventAlarmsPath = Path.Combine(configPath, "ProductEventAlarms.csv");
+                //if (File.Exists(productEventAlarmsPath))
+                //{
+                //    try
+                //    {
+                //        var peLines = File.ReadAllLines(productEventAlarmsPath, Encoding.UTF8);
+                //        bool isFirstLine = true;
+                //        foreach (var line in peLines)
+                //        {
+                //            if (isFirstLine) { isFirstLine = false; continue; }
+                //            if (string.IsNullOrWhiteSpace(line)) continue;
 
-                            var parts = ParseCsvLine(line);
-                            if (parts.Length >= 5)
-                            {
-                                string alarmCode = parts[0];
-                                string alarmContent = UnescapeCsvField(parts[1]);
-                                string alarmEnglish = UnescapeCsvField(parts[2]);
-                                string alarmCategory = parts.Length > 3 ? UnescapeCsvField(parts[3]) : "";
-                                string repairAction = parts.Length > 4 ? UnescapeCsvField(parts[4]) : "";
-                                rows.Add(new[] { alarmEnglish, alarmCode, alarmCategory, alarmContent, repairAction, alarmCode });
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Warning, $"读取 ProductEventAlarms.csv 失败: {ex.Message}");
-                    }
-                }
+                //            var parts = ParseCsvLine(line);
+                //            if (parts.Length >= 5)
+                //            {
+                //                string alarmCode = parts[0];
+                //                string alarmContent = UnescapeCsvField(parts[1]);
+                //                string alarmEnglish = UnescapeCsvField(parts[2]);
+                //                string alarmCategory = parts.Length > 3 ? UnescapeCsvField(parts[3]) : "";
+                //                string repairAction = parts.Length > 4 ? UnescapeCsvField(parts[4]) : "";
+                //                rows.Add(new[] { alarmEnglish, alarmCode, alarmCategory, alarmContent, repairAction, alarmCode });
+                //            }
+                //        }
+                //    }
+                //    catch (Exception ex)
+                //    {
+                //        SimEngineUI.OnLog(Common.DataStruct.Enums.LogType.Warning, $"读取 ProductEventAlarms.csv 失败: {ex.Message}");
+                //    }
+                //}
 
                 // 4. 读取 Hardware.dproj
                 if (File.Exists(dprojPath))
@@ -1526,6 +1542,15 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                                     string tagName = errorEl.Name.LocalName;
                                     string content = errorEl.Value ?? "";
 
+                                    // 优先从错误元素属性读取 AlarmCategory 和 RepairAction，为空则回退到 VDevice 级别
+                                    string errCategory = errorEl.Attribute("AlarmCategory")?.Value ?? "";
+                                    if (string.IsNullOrEmpty(errCategory))
+                                        errCategory = alarmCategory;
+
+                                    string errRepairAction = errorEl.Attribute("RepairAction")?.Value ?? "";
+                                    if (string.IsNullOrEmpty(errRepairAction))
+                                        errRepairAction = repairAction;
+
                                     string translatedSuffix = ErrorTransMap.ContainsKey(tagName) ? ErrorTransMap[tagName] : tagName;
                                     string errDescCn = $"{deviceName}{translatedSuffix}";
 
@@ -1542,7 +1567,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel
                                         descPart = "";
                                     }
 
-                                    rows.Add(new[] { descPart, codePart, alarmCategory, errDescCn, repairAction, codePart });
+                                    rows.Add(new[] { descPart, codePart, errCategory, errDescCn, errRepairAction, codePart });
                                 }
                             }
                         }
@@ -1636,6 +1661,60 @@ namespace Luster.SimDevice.SubSystem.ViewModel
             try
             {
                 var xDoc = System.Xml.Linq.XDocument.Load(xmlPath);
+                var codeToDefault = DefaultErrorCodeRows.ToDictionary(r => r[1]);
+                bool changed = false;
+
+                // 同步：用代码中的默认值更新 XML 中已有的对应条目
+                foreach (var element in xDoc.Descendants("Error"))
+                {
+                    string code = element.Element("Code")?.Value ?? "";
+                    if (!codeToDefault.TryGetValue(code, out var def)) continue;
+
+                    if (element.Element("ErrorDescription")?.Value != def[0])
+                    {
+                        element.Element("ErrorDescription").Value = def[0];
+                        changed = true;
+                    }
+                    if (element.Element("Category")?.Value != def[2])
+                    {
+                        element.Element("Category").Value = def[2];
+                        changed = true;
+                    }
+                    if (element.Element("ErrorDescriptionChinese")?.Value != def[3])
+                    {
+                        element.Element("ErrorDescriptionChinese").Value = def[3];
+                        changed = true;
+                    }
+                    if (element.Element("RepairActions")?.Value != def[4])
+                    {
+                        element.Element("RepairActions").Value = def[4];
+                        changed = true;
+                    }
+                }
+
+                // 补充 XML 中缺失的默认条目
+                var existingCodes = new HashSet<string>(
+                    xDoc.Descendants("Error").Select(e => e.Element("Code")?.Value ?? ""));
+                foreach (var def in DefaultErrorCodeRows)
+                {
+                    if (!existingCodes.Contains(def[1]))
+                    {
+                        xDoc.Root.Add(new System.Xml.Linq.XElement("Error",
+                            new System.Xml.Linq.XElement("ErrorDescription", def[0]),
+                            new System.Xml.Linq.XElement("Code", def[1]),
+                            new System.Xml.Linq.XElement("Category", def[2]),
+                            new System.Xml.Linq.XElement("ErrorDescriptionChinese", def[3]),
+                            new System.Xml.Linq.XElement("RepairActions", def[4]),
+                            new System.Xml.Linq.XElement("LocalAlarmCode", def[5])
+                        ));
+                        changed = true;
+                    }
+                }
+
+                if (changed)
+                    xDoc.Save(xmlPath);
+
+                // 从更新后的 XML 读取所有行
                 foreach (var element in xDoc.Descendants("Error"))
                 {
                     string p0 = element.Element("ErrorDescription")?.Value ?? "";
