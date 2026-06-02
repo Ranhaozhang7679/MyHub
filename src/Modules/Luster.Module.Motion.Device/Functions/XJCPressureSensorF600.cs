@@ -205,13 +205,13 @@ namespace Luster.Module.Motion.Device.Functions
                 {
                     //这里的流程是
                     //1、输入密码：
-                    communcation.WriteWithoutBlocking<int>(1111, $"{StationNum} 10 0 1");
+                    communcation.WriteWithoutBlocking<int>(1111, $"{StationNum} 16 0 1");
                     Thread.Sleep(5);
                     //2、设置标定类型（砝码标定）
-                    communcation.WriteWithoutBlocking<int>(0, $"{StationNum} 10 {(528 + ChannelNo * 10 - 10) * 2} 1");
+                    communcation.WriteWithoutBlocking<int>(0, $"{StationNum} 16 {(528 + ChannelNo * 10 - 10) * 2} 1");
                     Thread.Sleep(5);
                     //3、设置零点标定时得零点mV值
-                    communcation.WriteWithoutBlocking<int>(0, $"{StationNum} 10 {(531 + ChannelNo * 10 - 10) * 2} 1");
+                    communcation.WriteWithoutBlocking<int>(0, $"{StationNum} 16 {(531 + ChannelNo * 10 - 10) * 2} 1");
 
                 }
                 catch (Exception ex)
@@ -227,10 +227,10 @@ namespace Luster.Module.Motion.Device.Functions
                     //communcation.WriteWithoutBlocking<int>(0, $"{StationNum} 10 {(** + ChannelNo * 10 - 10) * 2} 1");
                     //Thread.Sleep(5);
                     //5、设置增益标定对应的重量显示值 - 手持压力值
-                    communcation.WriteWithoutBlocking<float>((float)CalibrationValue, $"{StationNum} 10 {(533 + ChannelNo * 10 - 10) * 2} 1");
+                    communcation.WriteWithoutBlocking<float>((float)CalibrationValue, $"{StationNum} 16 {(533 + ChannelNo * 10 - 10) * 2} 1");
                     Thread.Sleep(5);
-                    //6、设置仪表最大量程 
-                    communcation.WriteWithoutBlocking<float>((float)MeasuringRange, $"{StationNum} 10 {(537 + ChannelNo * 10 - 10) * 2} 1");
+                    //6、设置仪表最大量程
+                    communcation.WriteWithoutBlocking<float>((float)MeasuringRange, $"{StationNum} 16 {(537 + ChannelNo * 10 - 10) * 2} 1");
                 }
                 catch (Exception ex)
                 {
