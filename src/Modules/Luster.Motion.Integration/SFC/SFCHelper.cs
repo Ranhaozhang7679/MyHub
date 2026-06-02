@@ -60,6 +60,7 @@ namespace Luster.Motion.Integration.SFC
         private static string StationType = "";
         private static string PartName = "";
         private static string Category_key = "";
+        private static string StationCode = "";
         public static string CPKWIPFilePath = "";
 
         public static void SetCPKWIPFilePath(string filePath)
@@ -84,6 +85,7 @@ namespace Luster.Motion.Integration.SFC
             StationType = config.StationType;
             PartName = config.PartName;
             Category_key = config.category_key;
+            StationCode = config.StationCode;
             if (string.IsNullOrEmpty(MacAddress))
             {
                 MacAddress = config.DeviceMac != "" ? config.DeviceMac : "18:47:3D:E9:BE:B5";
@@ -846,8 +848,7 @@ namespace Luster.Motion.Integration.SFC
             // 2.1.7 绑定LCFM
             // 扫描到的码，可能末尾带空格
             lcfm = lcfm.TrimEnd();
-            var subcmd = Get_asy_4_sfc();
-            string cmd = $"c=QUERY_4_SFC&subcmd={subcmd}&sn={wip}&serialno={lcfm}&partname=LCFM&ccdflag=0&line={StationID}&mac_address={MacAddress}";
+            string cmd = BuildAsy4SfcCmd(wip, lcfm, "LCFM", "0");
             OnLog(LogType.Debug, $"绑定LCFM : {cmd}");
             HttpSend(cmd, $"LCFM自动绑定WIP", res =>
             {
@@ -869,8 +870,7 @@ namespace Luster.Motion.Integration.SFC
             // 扫描到的码，可能末尾带空格
             lcfm = lcfm.TrimEnd();
             var a = returnMessage.Split(',');
-            var subcmd = Get_asy_4_sfc();
-            string cmd = $"c=QUERY_4_SFC&subcmd={subcmd}&sn={wip}&serialno={lcfm}&partname={partname}&ccdflag={ccdflag}&line={StationID}&mac_address={MacAddress}";
+            string cmd = BuildAsy4SfcCmd(wip, lcfm, partname, ccdflag);
             HttpSend(cmd, $"Flex自动绑定WIP", res =>
             {
                 if (a.Length == 1)
@@ -1172,8 +1172,7 @@ namespace Luster.Motion.Integration.SFC
         public bool FlexBindingResult(string wip, string smallPartWip, string partname, out string errMsg)
         {
             bool isOK = false;
-            var subcmd = Get_asy_4_sfc();
-            string cmd = $"c=QUERY_4_SFC&subcmd={subcmd}&sn={wip}&serialno={smallPartWip}&partname={partname}&ccdflag=2&station_id={StationID}";   
+            string cmd = BuildAsy4SfcCmd(wip, smallPartWip, partname, "2");   
             HttpSend(cmd, $"查询Flex绑定结果", res =>
             {
                 if (res.Contains(OKChar_)&&res.Contains("is ok"))
@@ -1203,8 +1202,7 @@ namespace Luster.Motion.Integration.SFC
         public bool BindingFlex(string wip, string smallPartWip, string partname, out string errMsg)
         {
             bool isOK = false;
-            var subcmd = Get_asy_4_sfc();
-            string cmd = $"c=QUERY_4_SFC&subcmd={subcmd}&sn={wip}&serialno={smallPartWip}&partname={partname}&ccdflag=0&line={StationID}&mac_address={MacAddress}";
+            string cmd = BuildAsy4SfcCmd(wip, smallPartWip, partname, "0");
             HttpSend(cmd, $"Flex自动绑定WIP", res =>
             {
                 if (res.Contains(OKChar_)&&res.Contains("is ok"))
@@ -2048,6 +2046,21 @@ namespace Luster.Motion.Integration.SFC
                 Recv = strRecv,
                 SfcException = exception
             };
+        }
+
+        /// <summary>
+        /// 构建多料件组装SFC命令（自动区分旧接口asy_4_sfc和新接口asy_4_sfc_new）
+        /// </summary>
+        private string BuildAsy4SfcCmd(string sn, string serialNo, string partname, string ccdflag)
+        {
+            if (subcmd == subcmd_new)
+            {
+                return $"c=QUERY_4_SFC&subcmd={subcmd_new}&sn={sn}&serialNo={serialNo}&partname={partname}&stationCode={StationCode}&ccdflag={ccdflag}&mac_address={MacAddress}&station_id={StationID}&isAutomation=1";
+            }
+            else
+            {
+                return $"c=QUERY_4_SFC&subcmd={subcmd_old}&sn={sn}&serialno={serialNo}&partname={partname}&ccdflag={ccdflag}&line={StationID}&mac_address={MacAddress}";
+            }
         }
 
         private string Get_asy_4_sfc()
