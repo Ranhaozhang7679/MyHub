@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Document</title>
+<style>
+body {
+    font-family: "Microsoft YaHei", "SimSun", Arial, sans-serif;
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+    line-height: 1.8;
+    color: #333;
+    background: #fff;
+}
+h1, h2, h3, h4, h5, h6 { margin-top: 1.2em; margin-bottom: 0.6em; }
+p { margin: 0.5em 0; }
+table { margin: 1em 0; }
+img { max-width: 100%; }
+</style>
+</head>
+<body>
+<p>CG5 Vision过程参数上传调试记录</p>
+<p>目标：保证上传的信息是根据CtConfig.csv文件配置一致的。正确的配置和上传日志如下图：</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>如上，步序是完整的，并且时间是递增的。</p>
+<p>现场存在以下问题：</p>
+<p>1.步序时间重复，每个步序的开始和结束时间差1s</p>
+<p>2.步序时间不是递增的</p>
+<p>解决办法：</p>
+<p>确认配方流程中的模块名称和csv中的名称一模一样，如下为错误情况：</p>
+<p style="margin-left:18pt;">&nbsp;</p>
+<p style="margin-left:18pt;">解决这种问题的最好办法是复制一个流程中已经存在的针对CTLog的节点，名称最好包含CTLog标志，这样便于区分该节点的作用，如上图中的CT-延时118。该好之后，将CT-延时118同步修改到csv配置文件中，然后保存配方，重启软件测试。</p>
+<p>确认SN流转情况</p>
+<p style="margin-left:18pt;">从配方流程看，贴合龙门工位在Case70时，将当前CGSN缓存，所以在这之后的步序中，都应该使用该缓存的变量，如下图：</p>
+<p style="margin-left:18pt;">&nbsp;</p>
+<p style="margin-left:18pt;">因为有些步序所在的流程中获取不到SN，所以需要将SN传递到配置步序所在的case中，以防万一，为了不影响当前配方使用，自己手动新建一个全局变量，便于好区分当前变量的作用，名称中最好包含CTLog的标识，例如命名为SN码传递_CTLOG，同时注意将设置变量模块的单片耗时设置成大于0的值，除抛料case之外的其他正常作料流程按同样的方式修改，然后手动修改下设置变量模块的名称即可，最好保证每个模块的名称不要重复。如下图：</p>
+<p style="margin-left:18pt;">&nbsp;</p>
+<p style="margin-left:18pt;">保存配方后，再次测试，看日志是否正常。</p>
+</body>
+</html>
