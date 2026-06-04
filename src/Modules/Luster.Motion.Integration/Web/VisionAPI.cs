@@ -524,7 +524,7 @@ namespace Luster.Motion.Integration.Web
                 //parameterName = "None";
                 //parameterValue = "None";
                 parameterName = moduleValue;
-                parameterValue = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fff");
+                parameterValue = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
             }
             else
             {
@@ -532,9 +532,9 @@ namespace Luster.Motion.Integration.Web
                 parameterName = moduleValue;
 
                 if (moduleValue.EndsWith("Start_Time"))
-                    parameterValue = module.StartTime.ToString("yyyy-MM-dd HH:mm:ss:fff");
+                    parameterValue = module.StartTime.ToString("yyyy-MM-dd HH:mm:ss.fff");
                 else
-                    parameterValue = module.EndTime.ToString("yyyy-MM-dd HH:mm:ss:fff");
+                    parameterValue = module.EndTime.ToString("yyyy-MM-dd HH:mm:ss.fff");
             }
 
 
@@ -684,13 +684,13 @@ namespace Luster.Motion.Integration.Web
                     var moduleTime1 = new
                     {
                         parameter = $"CT1_{moduleNameTrim}_工站开始_Start_Time",
-                        value = first.StartTime.ToString("yyyy-MM-dd HH:mm:ss:fff")
+                        value = first.StartTime.ToString("yyyy-MM-dd HH:mm:ss.fff")
                     };
                     ctList.Add(moduleTime1);
                     var moduleTime2 = new
                     {
                         parameter = $"CT1_{moduleNameTrim}_工站开始_End_Time",
-                        value = first.StartTime.ToString("yyyy-MM-dd HH:mm:ss:fff")
+                        value = first.StartTime.ToString("yyyy-MM-dd HH:mm:ss.fff")
                     };
                     ctList.Add(moduleTime2);
                     var moduleTime3 = new
@@ -716,13 +716,13 @@ namespace Luster.Motion.Integration.Web
                 var moduleTime4 = new
                 {
                     parameter = $"{firstValue}_Start_Time",
-                    value = first.StartTime.ToString("yyyy-MM-dd HH:mm:ss:fff")
+                    value = first.StartTime.ToString("yyyy-MM-dd HH:mm:ss.fff")
                 };
                 ctList.Add(moduleTime4);
                 var moduleTime5 = new
                 {
                     parameter = $"{firstValue}_End_Time",
-                    value = second.EndTime.ToString("yyyy-MM-dd HH:mm:ss:fff")
+                    value = second.EndTime.ToString("yyyy-MM-dd HH:mm:ss.fff")
                 };
                 ctList.Add(moduleTime5);
                 var moduleTime6 = new
@@ -744,13 +744,13 @@ namespace Luster.Motion.Integration.Web
                         var moduleTime1 = new
                         {
                             parameter = $"{nextCtNumber}_{moduleNameTrim}_工站结束_Start_Time",
-                            value = second.EndTime.ToString("yyyy-MM-dd HH:mm:ss:fff")
+                            value = second.EndTime.ToString("yyyy-MM-dd HH:mm:ss.fff")
                         };
                         ctList.Add(moduleTime1);
                         var moduleTime2 = new
                         {
                             parameter = $"{nextCtNumber}_{moduleNameTrim}_工站结束_End_Time",
-                            value = second.EndTime.ToString("yyyy-MM-dd HH:mm:ss:fff")
+                            value = second.EndTime.ToString("yyyy-MM-dd HH:mm:ss.fff")
                         };
                         ctList.Add(moduleTime2);
                         var moduleTime3 = new
@@ -769,13 +769,13 @@ namespace Luster.Motion.Integration.Web
                     var moduleTime1 = new
                     {
                         parameter = $"{nextCtNumber}_{moduleNameTrim}_工站结束_Start_Time",
-                        value = second.EndTime.ToString("yyyy-MM-dd HH:mm:ss:fff")
+                        value = second.EndTime.ToString("yyyy-MM-dd HH:mm:ss.fff")
                     };
                     ctList.Add(moduleTime1);
                     var moduleTime2 = new
                     {
                         parameter = $"{nextCtNumber}_{moduleNameTrim}_工站结束_End_Time",
-                        value = second.EndTime.ToString("yyyy-MM-dd HH:mm:ss:fff")
+                        value = second.EndTime.ToString("yyyy-MM-dd HH:mm:ss.fff")
                     };
                     ctList.Add(moduleTime2);
                     var moduleTime3 = new
