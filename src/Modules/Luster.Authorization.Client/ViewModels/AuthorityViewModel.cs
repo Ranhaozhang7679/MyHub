@@ -20,6 +20,7 @@ namespace DC.Authorization.WPF.ViewModels
     public class AuthorityViewModel : BindableBase, IDialogAware
     {
         private ObservableCollection<Role> _roles = new ObservableCollection<Role>();
+        private ObservableCollection<Role> _rolesForRights = new ObservableCollection<Role>();
         private IAuthorizationFacade _authorizationFacade;
         private IRightRepository _rightRepository;
         private ILoginService _loginService;
@@ -57,7 +58,8 @@ namespace DC.Authorization.WPF.ViewModels
             _roleRepository = roleRepository;
             _accountRepository = accountRepository;
             _roles.AddRange(_roleRepository.Load()/*.Where(x => !x.IsAdmin)*/);
-            _accounts.AddRange(_accountRepository.Load()/*.Where(x => x.Id != 1)*/);
+            _rolesForRights.AddRange(_roles.Where(r => !r.IsAdmin));
+            _accounts.AddRange(_accountRepository.Load(false).Where(x => !x.IsAdmin));
             _dialogService = dialogService;
             _auditLogRepository = auditLogRepository;
             _logs.AddRange(_auditLogRepository.Query(new QueryModel()));
@@ -90,6 +92,8 @@ namespace DC.Authorization.WPF.ViewModels
         {
             get => _roles; set { SetProperty(ref _roles, value); }
         }
+        /// <summary>权限配置下拉框使用的角色列表（排除超级管理员）</summary>
+        public ObservableCollection<Role> RolesForRights => _rolesForRights;
         public ObservableCollection<Account> Accounts
         {
             get { return _accounts; }
@@ -115,7 +119,7 @@ namespace DC.Authorization.WPF.ViewModels
                 if (res.Result == ButtonResult.OK)
                 {
                     Accounts.Clear();
-                    Accounts.AddRange(_accountRepository.Load().Where(x => x.Id != 1));
+                    Accounts.AddRange(_accountRepository.Load(false).Where(x => !x.IsAdmin));
                 }
             });
         }
@@ -143,9 +147,9 @@ namespace DC.Authorization.WPF.ViewModels
         private List<string> AccountDeleteValidate()
         {
             List<string> warnings = new List<string>();
-            if (SelectedAccount.Id == 1)
+            if (SelectedAccount.IsAdmin)
             {
-                warnings.Add("系统管理员无法删除");
+                warnings.Add("管理员账户无法删除");
             }
             return warnings;
         }
@@ -166,7 +170,7 @@ namespace DC.Authorization.WPF.ViewModels
                 if (res.Result == ButtonResult.OK)
                 {
                     Accounts.Clear();
-                    Accounts.AddRange(_accountRepository.Load().Where(x => x.Id != 1));
+                    Accounts.AddRange(_accountRepository.Load(false).Where(x => !x.IsAdmin));
                 }
             });
         }
@@ -482,7 +486,7 @@ namespace DC.Authorization.WPF.ViewModels
             {
                 MessageBox.Show("导入成功!", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
                 Accounts.Clear();
-                Accounts.AddRange(_accountRepository.Load());
+                Accounts.AddRange(_accountRepository.Load(false).Where(x => !x.IsAdmin));
             }
         }
 

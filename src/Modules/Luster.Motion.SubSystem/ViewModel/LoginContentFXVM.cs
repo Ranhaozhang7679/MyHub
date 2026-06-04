@@ -55,6 +55,7 @@ namespace Luster.Motion.SubSystem.ViewModel
         private readonly ILoginService _loginService;
         private readonly IDialogService _dialogService;
         private readonly DC.Authorization.WPF.Providers.HiveAuthProvider _hiveAuthProvider;
+        private readonly LoginConfig _loginConfig;
 
         private UserInfo _userInfo;
         private UserModel _userModel;
@@ -90,8 +91,11 @@ namespace Luster.Motion.SubSystem.ViewModel
                 UserRole = _userInfo.Role,
             };
 
-            SelectLoginLevel = SystemRole.Integrator;
-            //_loginService.TargetRoleLevel = 4 - (int)SelectLoginLevel;
+            // 加载登录配置（记忆上次的登录模式和等级）
+            _loginConfig = new LoginConfig();
+            _loginConfig.Load();
+            SelectLoginMode = (LoginMode)_loginConfig.LoginMode;
+            SelectLoginLevel = (SystemRole)_loginConfig.LoginLevel;
             _loginService.TargetRoleLevel = (int)SelectLoginLevel + 1;
 
             // 订阅刷卡登录成功事件 → 自动完成登录并广播用户信息
@@ -391,14 +395,13 @@ namespace Luster.Motion.SubSystem.ViewModel
             set
             {
                 SetProperty(ref _selectLoginMode, value);
-                if (_selectLoginMode == LoginMode.FXCard)
-                {
-                    _loginService.LoginAllowed = true;
-                }
-                else
-                {
-                    _loginService.LoginAllowed = false;
-                }
+                // 同步视觉状态
+                IsOffline = value == LoginMode.Offline ? Visibility.Visible : Visibility.Collapsed;
+                FXCardModeVisual = value == LoginMode.FXCard ? Visibility.Visible : Visibility.Collapsed;
+                _loginService.LoginAllowed = value == LoginMode.FXCard;
+                // 保存配置
+                _loginConfig.LoginMode = (int)value;
+                _loginConfig.Save();
             }
         }
         private List<KeyValue> _loginModeList;
@@ -425,6 +428,9 @@ namespace Luster.Motion.SubSystem.ViewModel
                 //int targetLevel = 4 - (int)SelectLoginLevel;
                 int targetLevel = (int)SelectLoginLevel + 1;
                 _loginService.TargetRoleLevel = targetLevel;
+                // 保存配置
+                _loginConfig.LoginLevel = (int)value;
+                _loginConfig.Save();
             }
         }
         private List<KeyValue> _loginLevelList;
@@ -441,15 +447,7 @@ namespace Luster.Motion.SubSystem.ViewModel
         private DelegateCommand<object> _changeLoginModeCommand;
         public DelegateCommand<object> ChangeLoginModeCommand => _changeLoginModeCommand ?? (_changeLoginModeCommand = new DelegateCommand<object>((arg) =>
         {
-            var cArgs = arg as SelectionChangedEventArgs;
-
-            if (cArgs.AddedItems.Count > 0)
-            {
-                var keyVal = cArgs.AddedItems[0] as KeyValue;
-                LoginMode mode = (LoginMode)keyVal.Value;
-                IsOffline = mode == LoginMode.Offline ? Visibility.Visible : Visibility.Collapsed;
-                FXCardModeVisual = mode == LoginMode.FXCard ? Visibility.Visible : Visibility.Collapsed;
-            }
+            // 视觉状态同步已移至 SelectLoginMode setter，此处仅保留绑定兼容
         }));
 
 

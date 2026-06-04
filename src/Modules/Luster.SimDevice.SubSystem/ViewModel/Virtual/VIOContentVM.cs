@@ -179,6 +179,11 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
         /// </summary>
         private Dispatcher _dispatcher;
 
+        /// <summary>
+        /// 缓存最后一次 ListBox 的尺寸，用于切换 IO 类型时重新计算分页
+        /// </summary>
+        private Size _lastSize;
+
         protected VIOContentVM(ISimDeviceEngineUI _engine, Dispatcher dispatcher) : base(_engine)
         {
             _dispatcher = dispatcher;
@@ -428,7 +433,8 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
             IsDigitalOut=IsDigitalIn = str == "Digital";
             IsAnalogIn= IsAnalogOut = str == "Anglog";
 
-
+            // 切换 IO 类型后重新计算分页参数
+            CalcItemsSize(_lastSize);
             LoadDatas();
         }));
 
@@ -498,14 +504,16 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
 
         private void CalcItemsSize(Size size)
         {
+            _lastSize = size;
+
             // 计算页面能够容纳的IO数量
             int col = (int)(size.Width / 250);
             int row = (int)(size.Height / 35);
 
             if (IsAnalogIn || IsAnalogOut)
             {
-                col = (int)(size.Width / 400);
-                row = (int)(size.Height / 54);
+                col = 1;
+                row = (int)(size.Height / 42);
             }
 
             // 更新配置

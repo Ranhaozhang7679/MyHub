@@ -111,7 +111,7 @@ namespace Luster.Module.Motion.DataProc.Functions
                 }
             }
             
-            string DateTimeNow = DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss");
+            string DateTimeNow = DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss.fff");
             RowDatas = DateTimeNow + "," + RowDatas + "\r\n";
             fs.Write(Encoding.UTF8.GetBytes(RowDatas), 0, Encoding.UTF8.GetBytes(RowDatas).Length);
             //fs.Flush();

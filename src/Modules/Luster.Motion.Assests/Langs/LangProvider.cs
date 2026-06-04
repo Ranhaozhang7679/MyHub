@@ -113,7 +113,10 @@ namespace Luster.Motion.Assests.Langs
 			OnPropertyChanged(nameof(AxisDebug));
 			OnPropertyChanged(nameof(AxisPos));
 			OnPropertyChanged(nameof(AxisPosMove));
-			OnPropertyChanged(nameof(AxisPriority));
+            OnPropertyChanged(nameof(AxisPosArray));
+            OnPropertyChanged(nameof(DHRoboticsVCM));
+            OnPropertyChanged(nameof(JunRudderVCM));
+            OnPropertyChanged(nameof(AxisPriority));
 			OnPropertyChanged(nameof(BackCarrierNum));
 			OnPropertyChanged(nameof(BackgroundStation));
 			OnPropertyChanged(nameof(BackUp));
@@ -924,6 +927,7 @@ namespace Luster.Motion.Assests.Langs
 			OnPropertyChanged(nameof(SystemOperationTips));
 			OnPropertyChanged(nameof(TableCreate));
 			OnPropertyChanged(nameof(TableInsert));
+			OnPropertyChanged(nameof(TaikeAnnotatedCurve));
 			OnPropertyChanged(nameof(TaikeContent));
 			OnPropertyChanged(nameof(TaikeCurve));
 			OnPropertyChanged(nameof(TaiKeScrewDriver));
@@ -1422,6 +1426,21 @@ namespace Luster.Motion.Assests.Langs
         ///   查找类似 点位运动 的本地化字符串。
         /// </summary>
 		public string AxisPosMove => Lang.AxisPosMove;
+
+        /// <summary>
+        ///   查找类似 点位运动 的本地化字符串。
+        /// </summary>
+		public string AxisPosArray => Lang.AxisPosArray;
+
+        /// <summary>
+        ///   查找类似 大寰音圈电机 的本地化字符串。
+        /// </summary>
+		public string DHRoboticsVCM => Lang.DHRoboticsVCM;
+
+        /// <summary>
+        ///   查找类似 钧舵音圈电机 的本地化字符串。
+        /// </summary>
+		public string JunRudderVCM => Lang.JunRudderVCM;
 
         /// <summary>
         ///   查找类似 轴优先级 的本地化字符串。
@@ -5477,6 +5496,11 @@ namespace Luster.Motion.Assests.Langs
         ///   查找类似 表格写入 的本地化字符串。
         /// </summary>
 		public string TableInsert => Lang.TableInsert;
+
+        /// <summary>
+        ///   查找类似 压力曲线堆叠图 的本地化字符串。
+        /// </summary>
+		public string TaikeAnnotatedCurve => Lang.TaikeAnnotatedCurve;
 
         /// <summary>
         ///   查找类似 泰科统计 的本地化字符串。
@@ -10626,6 +10650,11 @@ namespace Luster.Motion.Assests.Langs
         ///   查找类似 表格写入 的本地化字符串。
         /// </summary>
 		public static string TableInsert = nameof(TableInsert);
+
+        /// <summary>
+        ///   查找类似 压力曲线堆叠图 的本地化字符串。
+        /// </summary>
+		public static string TaikeAnnotatedCurve = nameof(TaikeAnnotatedCurve);
 
         /// <summary>
         ///   查找类似 泰科统计 的本地化字符串。

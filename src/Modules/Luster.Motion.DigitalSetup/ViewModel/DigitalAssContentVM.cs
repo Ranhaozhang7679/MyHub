@@ -225,9 +225,17 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                                     }
                                 }
 
-                                // 然后计算并设置聚合状态
-                                CheckStatus aggregatedStatus = AggregateStatusFromRecords(records);
-                                page.CheckStatus = aggregatedStatus;
+                                // 优先使用持久化的总状态（如AutoVerification在子界面中已聚合并保存的状态）
+                                var overallRecord = records.FirstOrDefault(r => r.SubPageName == "Overall");
+                                if (overallRecord != null)
+                                {
+                                    page.CheckStatus = overallRecord.Status;
+                                }
+                                else
+                                {
+                                    CheckStatus aggregatedStatus = AggregateStatusFromRecords(records);
+                                    page.CheckStatus = aggregatedStatus;
+                                }
                                 loadedCount++;
                             }
                             else
@@ -481,8 +489,11 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                             {
                                 if (records != null && records.Count > 0)
                                 {
-                                    // 有记录，使用聚合状态
-                                    parentPage.CheckStatus = AggregateStatusFromRecords(records);
+                                    // 有记录，优先使用持久化的总状态
+                                    var overallRecord = records.FirstOrDefault(r => r.SubPageName == "Overall");
+                                    parentPage.CheckStatus = overallRecord != null
+                                        ? overallRecord.Status
+                                        : AggregateStatusFromRecords(records);
                                 }
                                 else
                                 {
@@ -506,7 +517,10 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                                 {
                                     if (records != null && records.Count > 0)
                                     {
-                                        parentPage.CheckStatus = AggregateStatusFromRecords(records);
+                                        var overallRec = records.FirstOrDefault(r => r.SubPageName == "Overall");
+                                        parentPage.CheckStatus = overallRec != null
+                                            ? overallRec.Status
+                                            : AggregateStatusFromRecords(records);
                                     }
                                     else
                                     {

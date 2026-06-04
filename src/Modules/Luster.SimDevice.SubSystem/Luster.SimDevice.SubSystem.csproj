@@ -59,6 +59,7 @@
 	  <ProjectReference Include="..\Luster.Motion.EditorUI\Luster.Motion.EditorUI.csproj" />
 	  <ProjectReference Include="..\Luster.SimDevice.EngineUI\Luster.SimDevice.EngineUI.csproj" />
 	  <ProjectReference Include="..\Luster.SimDevice.Laser\Luster.SimDevice.Laser.csproj" />
+		  <ProjectReference Include="..\Luster.Motion.CommonUI\Luster.Motion.CommonUI.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

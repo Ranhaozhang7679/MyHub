@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IDLE 状态切换与自动运行风险分析</title>
+    <style>
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface2: #222633;
+            --border: #2e3348;
+            --text: #c9d1d9;
+            --text-dim: #8b949e;
+            --accent: #58a6ff;
+            --red: #f85149;
+            --orange: #d29922;
+            --green: #3fb950;
+            --purple: #bc8cff;
+            --cyan: #56d4dd;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            padding: 2rem;
+        }
+        .container { max-width: 960px; margin: 0 auto; }
+
+        h1 {
+            font-size: 1.6rem;
+            color: #fff;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: .6rem;
+            margin-bottom: .4rem;
+        }
+        .meta {
+            color: var(--text-dim);
+            font-size: .85rem;
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            font-size: 1.15rem;
+            color: var(--accent);
+            margin: 2.2rem 0 .8rem;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+        h2::before { content: "▎"; color: var(--accent); }
+
+        h3 {
+            font-size: 1rem;
+            color: var(--purple);
+            margin: 1.4rem 0 .5rem;
+        }
+
+        p, li { margin-bottom: .45rem; }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.2rem 1.5rem;
+            margin: 1rem 0;
+        }
+
+        code {
+            background: var(--surface2);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: "Cascadia Code", "Consolas", monospace;
+            font-size: .88em;
+            color: var(--orange);
+        }
+
+        pre {
+            background: #0d0f14;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1rem 1.2rem;
+            font-family: "Cascadia Code", "Consolas", monospace;
+            font-size: .82rem;
+            line-height: 1.7;
+            overflow-x: auto;
+            margin: .8rem 0;
+        }
+        pre .kw { color: var(--purple); }
+        pre .str { color: var(--green); }
+        pre .cm { color: var(--text-dim); }
+        pre .fn { color: var(--accent); }
+        pre .em { color: var(--red); font-weight: bold; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: .8rem 0;
+            font-size: .9rem;
+        }
+        th, td {
+            text-align: left;
+            padding: .55rem .9rem;
+            border-bottom: 1px solid var(--border);
+        }
+        th { color: var(--accent); font-weight: 600; }
+
+        .tag {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 3px;
+            font-size: .78rem;
+            font-weight: 600;
+        }
+        .tag-critical { background: rgba(248,81,73,.15); color: var(--red); border: 1px solid rgba(248,81,73,.3); }
+        .tag-high     { background: rgba(210,153,34,.15); color: var(--orange); border: 1px solid rgba(210,153,34,.3); }
+        .tag-medium   { background: rgba(88,166,255,.15); color: var(--accent); border: 1px solid rgba(88,166,255,.3); }
+        .tag-low      { background: rgba(63,185,80,.15); color: var(--green); border: 1px solid rgba(63,185,80,.3); }
+        .tag-none     { background: rgba(139,148,158,.1); color: var(--text-dim); border: 1px solid rgba(139,148,158,.3); }
+
+        .flow {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            align-items: center;
+            margin: 1rem 0;
+        }
+        .flow-row {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+        }
+        .flow-box {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: .4rem 1rem;
+            font-size: .85rem;
+            white-space: nowrap;
+        }
+        .flow-box.pass { border-color: var(--green); color: var(--green); }
+        .flow-box.fail { border-color: var(--red); color: var(--red); }
+        .flow-box.warn { border-color: var(--orange); color: var(--orange); }
+        .flow-box.info { border-color: var(--cyan); color: var(--cyan); }
+        .flow-arrow { color: var(--text-dim); font-size: 1rem; }
+
+        .verdict {
+            background: linear-gradient(135deg, rgba(88,166,255,.06), rgba(63,185,80,.06));
+            border: 1px solid rgba(88,166,255,.25);
+            border-radius: 8px;
+            padding: 1.2rem 1.5rem;
+            margin: 1.2rem 0;
+        }
+        .verdict strong { color: var(--accent); }
+
+        .warn-box {
+            background: linear-gradient(135deg, rgba(210,153,34,.06), rgba(248,81,73,.06));
+            border: 1px solid rgba(210,153,34,.25);
+            border-radius: 8px;
+            padding: 1.2rem 1.5rem;
+            margin: 1.2rem 0;
+        }
+        .warn-box strong { color: var(--orange); }
+
+        ul { padding-left: 1.4rem; }
+        ol { padding-left: 1.4rem; }
+
+        .log {
+            background: #0d0f14;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1rem 1.2rem;
+            font-family: "Cascadia Code", "Consolas", monospace;
+            font-size: .82rem;
+            line-height: 1.9;
+            overflow-x: auto;
+        }
+        .log .ts { color: var(--text-dim); }
+        .log .info { color: var(--accent); }
+        .log .error { color: var(--red); }
+        .log .warn { color: var(--orange); }
+
+        .state-diagram {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.2rem 1.5rem;
+            margin: 1rem 0;
+            font-family: "Cascadia Code", "Consolas", monospace;
+            font-size: .82rem;
+            line-height: 1.9;
+            color: var(--text);
+        }
+        .state-diagram .state { color: var(--cyan); font-weight: bold; }
+        .state-diagram .trans { color: var(--text-dim); }
+        .state-diagram .highlight { color: var(--orange); font-weight: bold; }
+
+        .risk-bar {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            margin: .3rem 0;
+        }
+        .risk-bar .bar-bg {
+            flex: 1;
+            height: 8px;
+            background: var(--surface2);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .risk-bar .bar-fill {
+            height: 100%;
+            border-radius: 4px;
+        }
+        .risk-bar .label {
+            width: 260px;
+            font-size: .85rem;
+            white-space: nowrap;
+        }
+        .risk-bar .level {
+            width: 50px;
+            text-align: right;
+            font-size: .82rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+<h1>IDLE 状态切换与自动运行 — 风险分析报告</h1>
+<div class="meta">
+    报告日期：2026-05-08 &nbsp;|&nbsp; 分析对象：Luster Motion 2026 &nbsp;|&nbsp; 关联问题：手动状态启动 IO 仍能运行 &nbsp;|&nbsp; 分析人：Claude Code
+</div>
+
+<!-- ============================================================ -->
+<h2>1. 分析背景</h2>
+
+<div class="card">
+    <p>在修复「手动状态下启动 IO 仍能运行」问题（方案 A + C）后，进一步分析 <code>EngineStatus.Idle</code> 状态的切换逻辑，评估是否存在通过向 IDLE 状态切换或从 IDLE 状态出发导致非预期自动运行的路径。</p>
+    <p><strong>分析范围：</strong></p>
+    <ul>
+        <li>哪些场景会导致机台进入 IDLE 状态</li>
+        <li>进入 IDLE 后 <code>MachineMonitor</code> 的 100ms 轮询会响应哪些 IO 信号</li>
+        <li>从 IDLE 出发到 Running 的完整链路中是否存在安全薄弱点</li>
+        <li>相邻状态（Ready/Alarm）的恢复路径是否存在绕过 IDLE 直接自动运行的风险</li>
+    </ul>
+</div>
+
+<!-- ============================================================ -->
+<h2>2. 状态机概览</h2>
+
+<div class="state-diagram">
+    <span class="state">Idle(0)</span>  <span class="trans">───── 默认值 ──────→ 初始状态（MotionEngine == null 时也返回 Idle）</span><br>
+    <span class="state">Idle(0)</span>  <span class="trans">── Home() ──→</span>  <span class="state">Homing(1)</span>  <span class="trans">── 回零完成 ──→</span>  <span class="state">Ready(2)</span><br>
+    <span class="state">Ready(2)</span> <span class="trans">── Start() ──→</span> <span class="state">Running(4)</span><br>
+    <span class="state">Running(4)</span> <span class="trans">── 报警/暂停 ──→</span> <span class="state">Alarm(8)</span> / <span class="state">Pause(16)</span><br>
+    <span class="state">Alarm(8)</span> <span class="trans">── Reset() ──→</span> <span class="state">Resetting(64)</span> <span class="trans">── 复位完成 ──→</span> <span class="highlight">EStatus 决定目标</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="trans">├─ EStatus == Ready →</span> <span class="state">Ready(2)</span> <span class="trans">← ⚠ 可直接被 StartButton IO 触发启动</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="trans">├─ EStatus == Idle →</span> <span class="state">Idle(0)</span> <span class="trans">← 安全，需重新回零</span><br>
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="trans">└─ 其他 →</span> <span class="state">Pause(16)</span><br>
+    <span class="state">Running(4)</span> / <span class="state">其他</span> <span class="trans">── Stop() ──→</span> <span class="state">Stop(32)</span> <span class="trans">（不会到 Idle）</span>
+</div>
+
+<p style="color:var(--text-dim); font-size:.85rem; margin-top:.5rem;">
+    注：<code>EngineStatus</code> 带 <code>[Flags]</code> 特性，<code>Idle = 0</code> 是默认值。<code>MaterialPending(128)</code> 仅用于界面显示，不参与状态切换。
+</p>
+
+<!-- ============================================================ -->
+<h2>3. 进入 IDLE 状态的路径分析</h2>
+
+<table>
+    <tr>
+        <th>路径</th>
+        <th>触发条件</th>
+        <th>代码位置</th>
+        <th>安全评估</th>
+    </tr>
+    <tr>
+        <td>初始默认状态</td>
+        <td><code>MotionEngine == null</code> 或引擎默认值</td>
+        <td>MotionController.cs:132<br>MotionEngine_part2.cs:136</td>
+        <td><span class="tag tag-none">安全</span></td>
+    </tr>
+    <tr>
+        <td>报警恢复（EStatus=Idle）</td>
+        <td>报警发生在 Idle 状态，复位后回到 Idle</td>
+        <td>MotionEngine_part2.cs:704-706</td>
+        <td><span class="tag tag-none">安全</span></td>
+    </tr>
+    <tr>
+        <td colspan="4" style="color:var(--text-dim); font-size:.85rem;">
+            注：Stop() 只会到 <code>EngineStatus.Stop(32)</code>，不会进入 Idle。
+        </td>
+    </tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>4. IDLE 状态下 MachineMonitor 的 IO 响应</h2>
+
+<p><code>MachineMonitor()</code> 每 100ms 轮询一次。以下列出 <strong>当 MachineStatus == Idle 时</strong>会执行的 IO 处理：</p>
+
+<h3>4.1 急停检测（始终执行）</h3>
+<pre><span class="cm">// MotionController.cs:1840-1886</span>
+ProcessIO(SysConfig.EmergencyButton, io =&gt; {
+    <span class="kw">if</span> (!io.<span class="fn">GetDigitalIn</span>())  <span class="cm">// 急停常闭，false = 被按下</span>
+    {
+        IsEmg = <span class="kw">true</span>;
+        MotionEngine.<span class="fn">OnAlarm</span>(...);  <span class="cm">// 触发急停报警</span>
+    }
+});</pre>
+<p style="color:var(--text-dim); font-size:.85rem;">无状态限制，任何状态下急停均有效。✓ 设计合理。</p>
+
+<h3>4.2 回零按钮（仅 IDLE/Stop）</h3>
+<pre><span class="cm">// MotionController.cs:1890-1911</span>
+<span class="kw">if</span> (MachineStatus == EngineStatus.Idle || MachineStatus == EngineStatus.Stop)
+{
+    ProcessIO(SysConfig.RecoveryButton, io =&gt;
+    {
+        <span class="kw">if</span> (io.<span class="fn">GetDigitalIn</span>())
+        {
+            homeTime += 100;
+            <span class="kw">if</span> (homeTime &gt; 3000)  <span class="cm">// 持续按住 3 秒</span>
+                <span class="fn">Home</span>();  <span class="cm">// → Idle → Homing → Ready</span>
+        }
+    });
+}</pre>
+<p style="color:var(--text-dim); font-size:.85rem;">IDLE 下按住复位按钮 3 秒触发回零。回零完成后进入 Ready 状态，但不会自动运行。</p>
+
+<h3>4.3 复位按钮 — 报警清除（无状态限制）</h3>
+<pre><span class="cm">// MotionController.cs:1913-1922</span>
+<span class="em">// ⚠ 没有任何状态判断！</span>
+ProcessIO(SysConfig.RecoveryButton, io =&gt;
+{
+    <span class="kw">if</span> (io.<span class="fn">GetDigitalIn</span>())
+    {
+        <span class="fn">Recovery</span>();  <span class="cm">// ← 任何状态都会调用</span>
+    }
+});</pre>
+<p>在 IDLE 状态下按下复位按钮会调用 <code>Recovery()</code>，但 <code>Recovery()</code> 在 [line 1249](MotionController.cs:1249) 有保护：</p>
+<pre><span class="cm">// MotionController.cs:1249</span>
+<span class="kw">if</span> (MachineStatus != EngineStatus.Alarm) <span class="kw">return</span>;  <span class="cm">// ← 非报警状态直接返回</span></pre>
+<p>但有<strong>副作用</strong>：在 return 之前已执行了关闭蜂鸣器（line 1240）和安全门检查（line 1235）。</p>
+
+<h3>4.4 启动按钮 — 报警忽略（IDLE/Alarm）</h3>
+<pre><span class="cm">// MotionController.cs:1924-1954</span>
+<span class="kw">if</span> (MachineStatus == EngineStatus.Alarm || MachineStatus == EngineStatus.Idle)
+{
+    ProcessIO(SysConfig.StartButton, io =&gt;
+    {
+        <span class="kw">if</span> (io.<span class="fn">GetDigitalIn</span>() && <span class="em">AlarmInfo != null</span> &&
+            (AlarmType.InfoTip | WarningTip | PlcAlarm))
+        {
+            ignoreTime += 100;
+            <span class="kw">if</span> (ignoreTime &gt; 3000)
+                <span class="fn">Recovery</span>();  <span class="cm">// ← IDLE 下 AlarmInfo 残留时可能触发</span>
+        }
+    });
+}</pre>
+<p><strong>触发条件</strong>：<code>AlarmInfo != null</code> 且为特定报警类型，StartButton 持续按住 3 秒。</p>
+
+<h3>4.5 手动/自动切换（始终执行）</h3>
+<pre><span class="cm">// MotionController.cs:1782-1823</span>
+ProcessIO(SysConfig.ManualSwitchButton, io =&gt;
+{
+    var canRun = io.<span class="fn">GetDigitalIn</span>();
+    <span class="kw">if</span> (isAutoMode != canRun)
+    {
+        <span class="fn">CanAutoRunEvent?.Invoke</span>(canRun);
+        <span class="kw">if</span> (!canRun && MachineStatus != EngineStatus.Alarm)
+            MachineManualEvent?.<span class="fn">Invoke</span>(<span class="str">"Manual"</span>);  <span class="cm">// 切到手动时触发暂停</span>
+    }
+    isAutoMode = canRun;
+});</pre>
+<p style="color:var(--text-dim); font-size:.85rem;">在 IDLE 状态下，切到手动会触发 MachineManualEvent，最终调用 Pause()。但 Pause() 在 IDLE 状态直接返回（line 1392）。</p>
+
+<!-- ============================================================ -->
+<h2>5. 风险场景详细分析</h2>
+
+<div class="card" style="border-left: 3px solid var(--text-dim);">
+    <h3 style="margin-top:0;">风险 1：IDLE 状态直接触发自动运行</h3>
+    <p><span class="tag tag-none">无风险</span></p>
+    <p><code>MachineMonitor</code> 中 StartButton 的自动启动逻辑（line 1729-1755）仅在 <code>Ready</code> 或 <code>Pause</code> 状态下执行。IDLE 状态<strong>不存在直接自动运行的路径</strong>。</p>
+    <div class="flow">
+        <div class="flow-row"><div class="flow-box info">IDLE 状态下 StartButton IO 检测</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-row"><div class="flow-box fail">MachineMonitor line 1729: status != Ready/Pause → 跳过</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-row"><div class="flow-box pass">✓ 不会触发自动运行</div></div>
+    </div>
+</div>
+
+<div class="card" style="border-left: 3px solid var(--green);">
+    <h3 style="margin-top:0;">风险 2：IDLE → Home → Ready → StartButton IO 链路</h3>
+    <p><span class="tag tag-low">低风险</span></p>
+    <p><strong>链路：</strong></p>
+    <div class="flow">
+        <div class="flow-row"><div class="flow-box">IDLE</div></div>
+        <div class="flow-arrow">↓ RecoveryButton 按住 3s</div>
+        <div class="flow-row"><div class="flow-box">Home() → Homing</div></div>
+        <div class="flow-arrow">↓ 回零完成</div>
+        <div class="flow-row"><div class="flow-box">Ready</div></div>
+        <div class="flow-arrow">↓ StartButton IO 检测到信号</div>
+        <div class="flow-row"><div class="flow-box warn">CanAutoRun() 检查</div></div>
+        <div class="flow-arrow">↓ 如果通过</div>
+        <div class="flow-row"><div class="flow-box fail">MachineStartEvent → tryStart → Running</div></div>
+    </div>
+    <p><strong>风险条件（需同时满足）：</strong></p>
+    <ol>
+        <li>操作员按住 RecoveryButton 3 秒触发回零</li>
+        <li>回零完成瞬间 StartButton IO 信号恰好处于按下/抖动状态</li>
+        <li><code>CanAutoRun()</code> 返回 true（手动/自动 IO 误读或未配置）</li>
+    </ol>
+    <p><strong>现有防护：</strong></p>
+    <ul>
+        <li>✓ 方案 A：<code>CanAutoRun</code> 安全默认值已修复（<code>isAuto</code> 默认 <code>false</code>）</li>
+        <li>✓ 方案 C：<code>MController_MachineStartEvent</code> 独立检查已添加</li>
+        <li>✓ <code>Start()</code> 方法入口（line 830）再次检查 <code>CanAutoRun</code></li>
+    </ul>
+</div>
+
+<div class="card" style="border-left: 3px solid var(--orange);">
+    <h3 style="margin-top:0;">风险 3：AlarmInfo 残留导致 IDLE 下 Recovery() 被意外调用</h3>
+    <p><span class="tag tag-low">低风险</span></p>
+    <p><strong>场景：</strong>报警恢复后 <code>AlarmInfo</code> 未被完全清理（<code>clearAlarm()</code> 竞态），IDLE 状态下按住 StartButton 3 秒触发 <code>Recovery()</code>。</p>
+    <pre><span class="cm">// 触发路径：MachineMonitor line 1929-1940</span>
+<span class="kw">if</span> (io.<span class="fn">GetDigitalIn</span>() && <span class="em">AlarmInfo != null</span> ...)  <span class="cm">// ← 残留的 AlarmInfo</span>
+{
+    ignoreTime += 100;
+    <span class="kw">if</span> (ignoreTime &gt; 3000)
+        <span class="fn">Recovery</span>();  <span class="cm">// ← 调用 Recovery</span>
+}</pre>
+    <p><strong>Recovery() 在 IDLE 状态的执行路径：</strong></p>
+    <div class="flow">
+        <div class="flow-row"><div class="flow-box">Recovery() 被调用</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-row"><div class="flow-box warn">lockCommand > 0 ? → 返回（防止连续调用）</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-row"><div class="flow-box warn">DoorIsClosed() 检查 → 可能抛异常</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-row"><div class="flow-box warn">SetBuzzer(false) → 关闭蜂鸣器 ⚠</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-row"><div class="flow-box fail">MachineStatus != Alarm → return（line 1249）</div></div>
+    </div>
+    <p><strong>副作用：</strong></p>
+    <ul>
+        <li>⚠ 蜂鸣器被关闭 — 可能掩盖正在进行的报警提示</li>
+        <li>⚠ 安全门检查 — 门未关时抛出 <code>FriendlyException</code>，可能弹出错误提示框干扰操作</li>
+        <li>✓ 不会导致自动运行 — <code>Recovery()</code> 在非 Alarm 状态直接返回</li>
+    </ul>
+</div>
+
+<div class="warn-box">
+    <h3 style="margin-top:0; color:var(--orange);">⚠ 风险 4（关联发现）：EStatus == Ready 的报警恢复路径</h3>
+    <p><span class="tag tag-high">中高风险</span> <span style="color:var(--text-dim); font-size:.85rem;">— 不经过 IDLE，但与本分析高度相关</span></p>
+    <p><strong>这是真正值得关注的路径：</strong>报警恢复后直接进入 Ready，跳过了 IDLE 的安全缓冲。</p>
+    <div class="flow">
+        <div class="flow-row"><div class="flow-box">Ready 状态</div></div>
+        <div class="flow-arrow">↓ 报警发生</div>
+        <div class="flow-row"><div class="flow-box">alarmInfo.EStatus = Ready（line 492）</div></div>
+        <div class="flow-arrow">↓ 报警 → Alarm</div>
+        <div class="flow-row"><div class="flow-box">操作员按下复位按钮</div></div>
+        <div class="flow-arrow">↓ Reset</div>
+        <div class="flow-row"><div class="flow-box warn">Resetting → EStatus==Ready → Ready（line 701）</div></div>
+        <div class="flow-arrow">↓ MachineMonitor 立即响应</div>
+        <div class="flow-row"><div class="flow-box fail">StartButton IO 检测 + CanAutoRun → MachineStartEvent</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-row"><div class="flow-box fail">tryStart() → Start() → Running</div></div>
+    </div>
+    <p><strong>风险链路详解：</strong></p>
+    <ol>
+        <li>机台处于 <code>Ready</code> 状态时发生报警 → <code>EStatus</code> 记录为 <code>Ready</code>（<a href="#">MotionController.cs:492</a>）</li>
+        <li>操作员按下复位按钮清除报警 → <code>MotionEngine.Reset()</code> 执行（<a href="#">MotionEngine_part2.cs:632</a>）</li>
+        <li>复位成功后，因 <code>alarmInfo.EStatus == Ready</code>，引擎状态直接设为 <code>Ready</code>（<a href="#">MotionEngine_part2.cs:701</a>）</li>
+        <li><code>MachineMonitor</code> 的下一次 100ms 轮询检测到 <code>Ready</code> 状态（<a href="#">MotionController.cs:1729</a>）</li>
+        <li>若 <code>StartButton IO</code> 处于按下/抖动状态 → 触发 <code>CanAutoRun()</code> 检查</li>
+        <li>若 <code>CanAutoRun()</code> 通过 → <code>MachineStartEvent</code> → <code>tryStart()</code> → 自动运行</li>
+    </ol>
+    <p><strong>时间窗口：</strong>从 Reset 完成（Ready）到 MachineMonitor 下一次轮询，最多 100ms。如果此时 StartButton IO 恰好处于高电平（操作员手未松开、信号抖动），就会被捕获。</p>
+    <p><strong>现有防护：</strong></p>
+    <ul>
+        <li>✓ 方案 A：<code>CanAutoRun</code> 安全默认值（<code>isAuto</code> 默认 <code>false</code>，需 IO 回调确认才能放行）</li>
+        <li>✓ 方案 C：<code>MController_MachineStartEvent</code> 独立 <code>CanAutoRun</code> 检查</li>
+        <li>✓ <code>Start()</code> 方法入口三重检查</li>
+    </ul>
+    <p><strong>剩余风险：</strong>三重 <code>CanAutoRun</code> 检查依赖同一个 <code>ManualSwitchButton</code> IO 读取。如果该 IO 本身存在信号抖动或误读，三重检查可能全部失效。</p>
+</div>
+
+<div class="card" style="border-left: 3px solid var(--text-dim);">
+    <h3 style="margin-top:0;">风险 5：RecoveryButton 无状态检查的副作用</h3>
+    <p><span class="tag tag-low">低风险</span></p>
+    <pre><span class="cm">// MotionController.cs:1913-1922</span>
+<span class="em">// ⚠ 此段代码没有状态判断，任何状态下 RecoveryButton 按下都会调用 Recovery()</span>
+ProcessIO(SysConfig.RecoveryButton, io =&gt;
+{
+    <span class="kw">if</span> (io.<span class="fn">GetDigitalIn</span>())
+        <span class="fn">Recovery</span>();  <span class="cm">// 无前置状态检查</span>
+});</pre>
+    <p>在 IDLE 状态下每次按下复位按钮都会执行：</p>
+    <ul>
+        <li><code>DoorIsClosed()</code> 检查（可能抛异常）</li>
+        <li><code>SetBuzzer(false)</code> 关闭蜂鸣器</li>
+        <li><code>MachineStatus != Alarm → return</code> 直接返回</li>
+    </ul>
+    <p style="color:var(--text-dim); font-size:.85rem;">不会导致自动运行，但存在不必要的安全门检查和蜂鸣器操作。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>6. 风险等级汇总</h2>
+
+<table>
+    <tr>
+        <th>风险场景</th>
+        <th>等级</th>
+        <th>现有防护</th>
+        <th>建议</th>
+    </tr>
+    <tr>
+        <td>IDLE 状态直接自动运行</td>
+        <td><span class="tag tag-none">无</span></td>
+        <td>MachineMonitor 不响应</td>
+        <td>—</td>
+    </tr>
+    <tr>
+        <td>IDLE → Home → Ready → StartButton</td>
+        <td><span class="tag tag-low">低</span></td>
+        <td>方案 A + C + Start() 三重检查</td>
+        <td>可考虑 Home 完成后增加延时再允许 Start</td>
+    </tr>
+    <tr>
+        <td>AlarmInfo 残留 → IDLE 下 Recovery()</td>
+        <td><span class="tag tag-low">低</span></td>
+        <td>Recovery() 非 Alarm 状态返回</td>
+        <td>清理 Recovery() 副作用（蜂鸣器、安全门检查移到状态检查之后）</td>
+    </tr>
+    <tr>
+        <td style="color:var(--orange); font-weight:600;">Alarm(Ready) → Reset → Ready → 自动运行</td>
+        <td><span class="tag tag-high">中高</span></td>
+        <td>方案 A + C</td>
+        <td style="color:var(--orange);">建议 Reset 完成后不直接回 Ready，而是回 Idle 需重新确认</td>
+    </tr>
+    <tr>
+        <td>RecoveryButton 无状态检查副作用</td>
+        <td><span class="tag tag-low">低</span></td>
+        <td>Recovery() 状态检查保护</td>
+        <td>建议添加状态判断前置条件</td>
+    </tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>7. 安全防护层级图</h2>
+
+<p>从 IDLE/Ready 到 Running 的完整防护链路：</p>
+
+<div class="flow">
+    <div class="flow-row"><div class="flow-box">StartButton IO 信号 / 软件按钮</div></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-row">
+        <div class="flow-box pass">第 1 层：MachineMonitor 状态检查</div>
+        <span style="color:var(--text-dim); font-size:.8rem; margin-left:.5rem;">仅 Ready/Pause 响应</span>
+    </div>
+    <div class="flow-arrow">↓ 通过</div>
+    <div class="flow-row">
+        <div class="flow-box pass">第 2 层：MachineMonitor 内 CanAutoRun()</div>
+        <span style="color:var(--text-dim); font-size:.8rem; margin-left:.5rem;">方案 A：安全默认值</span>
+    </div>
+    <div class="flow-arrow">↓ 通过 → MachineStartEvent</div>
+    <div class="flow-row">
+        <div class="flow-box pass">第 3 层：MController_MachineStartEvent 独立检查</div>
+        <span style="color:var(--text-dim); font-size:.8rem; margin-left:.5rem;">方案 C</span>
+    </div>
+    <div class="flow-arrow">↓ 通过 → tryStart() → Start()</div>
+    <div class="flow-row">
+        <div class="flow-box pass">第 4 层：Start() 入口 CanAutoRun()</div>
+        <span style="color:var(--text-dim); font-size:.8rem; margin-left:.5rem;">MotionController.cs:830</span>
+    </div>
+    <div class="flow-arrow">↓ 通过</div>
+    <div class="flow-row"><div class="flow-box">Running</div></div>
+</div>
+
+<p style="margin-top:.8rem;"><strong>防护弱点：</strong>第 2/3/4 层均调用同一个 <code>CanAutoRun()</code> 方法，读取同一个 <code>ManualSwitchButton</code> IO。如果该 IO 信号本身存在问题（抖动、误读、未配置），三重检查可能同时失效。</p>
+
+<!-- ============================================================ -->
+<h2>8. 结论与建议</h2>
+
+<div class="verdict">
+    <p><strong>结论：IDLE 状态本身是安全的，不会直接导致自动运行。</strong></p>
+    <p style="margin-top:.5rem;">所有从 IDLE 到 Running 的路径都需要经过 <code>Home() → Ready → Start</code>，且每一步都需要明确的用户操作（按住按钮 3 秒、点击启动）。</p>
+    <p style="margin-top:.5rem;"><strong>真正的风险点在报警恢复路径</strong>：当 <code>EStatus == Ready</code> 时，复位完成后直接回到 Ready 状态，MachineMonitor 的 100ms 轮询会立即响应 StartButton IO 信号。方案 A + C 已覆盖此场景的三重检查，但均依赖同一个 IO 读取。</p>
+</div>
+
+<h3>建议优化项（优先级排序）</h3>
+
+<div class="card">
+    <p><strong>建议 1（中优先级）：调整 Recovery() 副作用顺序</strong></p>
+    <p>将 <code>SetBuzzer(false)</code> 和 <code>DoorIsClosed()</code> 移到 <code>MachineStatus != Alarm</code> 检查之后，避免在非报警状态下产生副作用：</p>
+    <pre><span class="kw">public void</span> <span class="fn">Recovery</span>()
+{
+    <span class="cm">// 先检查状态，避免非报警状态的副作用</span>
+    <span class="kw">if</span> (MachineStatus != EngineStatus.Alarm) <span class="kw">return</span>;
+
+    <span class="kw">if</span> (lockCommand &gt; 0) <span class="kw">return</span>;
+    <span class="kw">if</span> (!<span class="fn">DoorIsClosed</span>(<span class="kw">out var</span> errMsg))
+        <span class="kw">throw new</span> FriendlyException(errMsg);
+
+    _lightManager.<span class="fn">SetBuzzer</span>(<span class="kw">false</span>);
+    <span class="cm">// ... 后续逻辑</span>
+}</pre>
+</div>
+
+<div class="card">
+    <p><strong>建议 2（低优先级）：RecoveryButton 报警清除添加状态前置判断</strong></p>
+    <p>在 line 1913 处增加状态条件，避免在 IDLE 等无效状态下调用 Recovery()：</p>
+    <pre><span class="kw">if</span> (MachineStatus == EngineStatus.Alarm)  <span class="cm">// ← 添加前置条件</span>
+{
+    ProcessIO(SysConfig.RecoveryButton, io =&gt;
+    {
+        <span class="kw">if</span> (io.<span class="fn">GetDigitalIn</span>())
+            <span class="fn">Recovery</span>();
+    });
+}</pre>
+</div>
+
+<div class="card">
+    <p><strong>建议 3（长期考虑）：评估报警恢复后目标状态策略</strong></p>
+    <p>当前 <code>EStatus == Ready</code> 时复位后直接回到 Ready，可被 IO 信号立即触发启动。考虑是否需要：</p>
+    <ul>
+        <li>复位完成后统一回到 Idle，要求操作员重新回零确认后再启动</li>
+        <li>或在复位完成 → Ready 转换时增加一个"冷却期"（如 2 秒内不响应 StartButton IO）</li>
+        <li>或在 Reset 回调中增加一次独立的 <code>CanAutoRun()</code> 检查作为前置条件</li>
+    </ul>
+    <p style="color:var(--text-dim); font-size:.85rem;">此项需要评估对生产效率的影响，因为操作员可能期望报警恢复后快速恢复运行。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>9. 附录：关键代码位置索引</h2>
+
+<table>
+    <tr><th>代码区域</th><th>文件</th><th>行号</th></tr>
+    <tr><td>EngineStatus 枚举定义</td><td>EngineStatus.cs</td><td>39-71</td></tr>
+    <tr><td>MachineStatus 属性（Idle 默认）</td><td>MotionController.cs</td><td>126-139</td></tr>
+    <tr><td>CanAutoRun() 安全检查</td><td>MotionController.cs</td><td>1079-1105</td></tr>
+    <tr><td>Start() 方法入口检查</td><td>MotionController.cs</td><td>828-830</td></tr>
+    <tr><td>Recovery() 方法（副作用）</td><td>MotionController.cs</td><td>1226-1305</td></tr>
+    <tr><td>Home() 回零方法</td><td>MotionController.cs</td><td>1489-1595</td></tr>
+    <tr><td>MachineMonitor() IO 轮询</td><td>MotionController.cs</td><td>1726-1962</td></tr>
+    <tr><td>├ StartButton (Ready/Pause)</td><td>MotionController.cs</td><td>1729-1755</td></tr>
+    <tr><td>├ RecoveryButton 回零 (IDLE/Stop)</td><td>MotionController.cs</td><td>1890-1910</td></tr>
+    <tr><td>├ RecoveryButton 报警清除（无状态限制）</td><td>MotionController.cs</td><td>1913-1922</td></tr>
+    <tr><td>├ StartButton 忽略报警 (IDLE/Alarm)</td><td>MotionController.cs</td><td>1924-1954</td></tr>
+    <tr><td>└ ManualSwitchButton 手自动切换</td><td>MotionController.cs</td><td>1782-1823</td></tr>
+    <tr><td>MController_MachineStartEvent</td><td>ToolBarContentVM.cs</td><td>370-392</td></tr>
+    <tr><td>MController_MachineManualEvent</td><td>ToolBarContentVM.cs</td><td>476-527</td></tr>
+    <tr><td>报警 EStatus 记录</td><td>MotionController.cs</td><td>489-502</td></tr>
+    <tr><td>EngineStatus 状态属性</td><td>MotionEngine_part2.cs</td><td>141-167</td></tr>
+    <tr><td>Reset() 复位（EStatus 决定目标）</td><td>MotionEngine_part2.cs</td><td>632-726</td></tr>
+    <tr><td>Pause() 方法（IDLE 返回）</td><td>MotionController.cs</td><td>1380-1453</td></tr>
+    <tr><td>Engine Pause（状态更新）</td><td>MotionEngine_part2.cs</td><td>605-609</td></tr>
+</table>
+
+</div>
+</body>
+</html>

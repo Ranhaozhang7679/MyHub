@@ -41,12 +41,12 @@ namespace DC.Authorization.WPF.ViewModels
         {
             _dispatcher.Invoke(async () =>
             {
-                CardNo           = _loginService.LastCardNo;
-                CardUserName     = _loginService.LastCardUserName;
-                CardVendor       = _loginService.LastCardVendor;
-                CardLevel        = _loginService.LastCardDeviceLevel;
+                CardNo = _loginService.LastCardNo;
+                CardUserName = _loginService.LastCardUserName;
+                CardVendor = _loginService.LastCardVendor;
+                CardLevel = _loginService.LastCardDeviceLevel;
                 MesStatusMessage = _loginService.LastAuthMessage;
-                IsCardVerified   = true;
+                IsCardVerified = true;
                 IsProgressActive = false;
 
                 await Task.Delay(3000);
@@ -60,10 +60,10 @@ namespace DC.Authorization.WPF.ViewModels
         {
             _dispatcher.Invoke(() =>
             {
-                CardNo           = _loginService.LastCardNo;
-                CardUserName     = _loginService.LastCardUserName;
-                CardVendor       = _loginService.LastCardVendor;
-                CardLevel        = _loginService.LastCardDeviceLevel;
+                CardNo = _loginService.LastCardNo;
+                CardUserName = _loginService.LastCardUserName;
+                CardVendor = _loginService.LastCardVendor;
+                CardLevel = _loginService.LastCardDeviceLevel;
                 MesStatusMessage = _loginService.LastAuthMessage;
                 // 验证失败时不关闭，不设 IsCardVerified = true
             });
@@ -83,7 +83,7 @@ namespace DC.Authorization.WPF.ViewModels
 
             // 初始化显示状态
             MesStatusMessage = "请选择权限等级后刷卡 / Select level then swipe badge";
-            IsCardVerified   = false;
+            IsCardVerified = false;
             IsProgressActive = false;
         }
 
@@ -107,11 +107,11 @@ namespace DC.Authorization.WPF.ViewModels
                 Accounts = _accountList.Where(acc => acc.RoleId == value.Id).ToList();
 
                 // 切换等级时重置验证状态并提示重新刷卡
-                IsCardVerified   = false;
+                IsCardVerified = false;
                 IsProgressActive = true;
-                CardUserName     = string.Empty;
-                CardVendor       = string.Empty;
-                CardLevel        = string.Empty;
+                CardUserName = string.Empty;
+                CardVendor = string.Empty;
+                CardLevel = string.Empty;
                 MesStatusMessage = $"已选择: {value?.Name} — 请刷卡 / Swipe badge to verify";
             }
         }
@@ -153,8 +153,16 @@ namespace DC.Authorization.WPF.ViewModels
         public string CardLevel { get => _cardLevel; set => SetProperty(ref _cardLevel, value); }
 
         private string _cardNo = string.Empty;
-        /// <summary>刷卡读到的卡号（去前导零后），只读显示。</summary>
+        /// <summary>刷卡读到的卡号（去前导零后），离线模式下可作为用户名手动输入。</summary>
         public string CardNo { get => _cardNo; set => SetProperty(ref _cardNo, value); }
+
+        private bool _isCardNoReadOnly = true;
+        /// <summary>卡号输入框是否只读（在线模式只读，离线模式可编辑）</summary>
+        public bool IsCardNoReadOnly
+        {
+            get => _isCardNoReadOnly;
+            set => SetProperty(ref _isCardNoReadOnly, value);
+        }
 
         private bool _isCardVerified = false;
         /// <summary>刷卡验证成功标志</summary>
@@ -178,9 +186,10 @@ namespace DC.Authorization.WPF.ViewModels
             set
             {
                 if (!SetProperty(ref _isOfflineLogin, value)) return;
+                IsCardNoReadOnly = !value;
                 if (value)
                 {
-                    MesStatusMessage = "离线模式: 请输入登录密码 / Offline mode: Enter password";
+                    MesStatusMessage = "离线模式: 请输入用户名和密码 / Offline mode: Enter username & password";
                     IsProgressActive = false;
                 }
                 else
@@ -189,6 +198,7 @@ namespace DC.Authorization.WPF.ViewModels
                         ? $"已选择: {SelectedRole.Name} — 请刷卡 / Swipe badge to verify"
                         : "请选择权限等级后刷卡 / Select level then swipe badge";
                     IsProgressActive = SelectedRole != null;
+                    CardNo = string.Empty;
                     Password = string.Empty;
                 }
             }
@@ -218,9 +228,9 @@ namespace DC.Authorization.WPF.ViewModels
             }
             if (IsOfflineLogin)
             {
-                // 离线密码登录
-                if (SelectedAccount == null || string.IsNullOrWhiteSpace(SelectedAccount.AccName))
-                    res.Add("请选择账户 / Please select an account");
+                // 离线密码登录：用户名从 CardNo 字段手动输入
+                if (string.IsNullOrWhiteSpace(CardNo))
+                    res.Add("请输入用户名 / Please enter username");
                 if (string.IsNullOrWhiteSpace(Password))
                     res.Add("密码不能为空 / Password cannot be empty");
             }
@@ -244,7 +254,7 @@ namespace DC.Authorization.WPF.ViewModels
 
             if (IsOfflineLogin)
             {
-                var result = _loginService.Login(SelectedAccount.AccName, Password);
+                var result = _loginService.Login(CardNo, Password, 5 - SelectedRole.Level);
                 if (!result.Succeeded)
                 {
                     MessageBox.Show(result.Message, "登录失败", MessageBoxButton.OK, MessageBoxImage.Error);

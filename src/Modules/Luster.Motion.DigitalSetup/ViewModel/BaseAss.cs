@@ -2221,11 +2221,15 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                             }
                         }
                     }
-                    // 若有完成时间字段，自动赋值
+                    // 若有完成时间字段且CSV值为空，才自动赋当前时间
                     var timeProp = targetType.GetProperty("完成时间");
                     if (timeProp != null && timeProp.CanWrite)
                     {
-                        timeProp.SetValue(obj, DateTime.Now);
+                        var currentTime = timeProp.GetValue(obj);
+                        if (currentTime == null || (currentTime is DateTime dt && dt == default(DateTime)))
+                        {
+                            timeProp.SetValue(obj, DateTime.Now);
+                        }
                     }
                     newObjects.Add(obj);
                 }
@@ -2402,11 +2406,15 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                             }
                         }
                     }
-                    // 若有完成时间字段，自动赋值
-                    var timeProp = targetType.GetProperty("完成时间");
-                    if (timeProp != null && timeProp.CanWrite)
+                    // 若有完成时间字段且CSV值为空，才自动赋当前时间
+                    var timeProp2 = targetType.GetProperty("完成时间");
+                    if (timeProp2 != null && timeProp2.CanWrite)
                     {
-                        timeProp.SetValue(obj, DateTime.Now);
+                        var currentTime = timeProp2.GetValue(obj);
+                        if (currentTime == null || (currentTime is DateTime dt2 && dt2 == default(DateTime)))
+                        {
+                            timeProp2.SetValue(obj, DateTime.Now);
+                        }
                     }
                     newObjects.Add(obj);
                 }
@@ -2486,11 +2494,15 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                             }
                         }
                     }
-                    // 若有完成时间字段，自动赋值
-                    var timeProp = targetType.GetProperty("完成时间");
-                    if (timeProp != null && timeProp.CanWrite)
+                    // 若有完成时间字段且CSV值为空，才自动赋当前时间
+                    var timeProp3 = targetType.GetProperty("完成时间");
+                    if (timeProp3 != null && timeProp3.CanWrite)
                     {
-                        timeProp.SetValue(obj, DateTime.Now);
+                        var currentTime = timeProp3.GetValue(obj);
+                        if (currentTime == null || (currentTime is DateTime dt3 && dt3 == default(DateTime)))
+                        {
+                            timeProp3.SetValue(obj, DateTime.Now);
+                        }
                     }
                     ItemModels.Add(obj);
                 }

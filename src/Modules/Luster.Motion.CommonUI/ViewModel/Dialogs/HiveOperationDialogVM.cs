@@ -43,8 +43,21 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
         DispatcherTimer dispatcherTimer = new DispatcherTimer();
         private bool hasCardAccept = false;
 
+        // 剩余点击次数（跨对话框实例共享）
+        private static int _opRemainingClickCount = 3;
+        private static DateTime _opLastResetTime = DateTime.MinValue;
+
         public SystemOperation Operation { get; private set; }
 
+
+        /// <summary>
+        /// 剩余点击次数
+        /// </summary>
+        public int RemainingCount
+        {
+            get => _opRemainingClickCount;
+            set => SetProperty(ref _opRemainingClickCount, value);
+        }
 
         /// <summary>
         /// 刷卡背景色        /// </summary>
@@ -219,13 +232,35 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                         if (cardID.Substring(0, 1) == "0")
                             cardID = cardID.Substring(1, cardID.Length - 1);
 
-                        var ret = sfcHelper.CheckCard(cardID, hiveAPI.machineSN, out string auth);
+                        // 提前计算alarmCode用于CheckCard
+                        string alarmCodeForCard = cmdStr switch
+                        {
+                            "一级供应商" => "F99OOOO-01",
+                            "一+二级供应商" => "F99OOOO-02",
+                            "凌云光" => "F99OOOO-03",
+                            "汇川" => "F99OOOO-04",
+                            "工厂人员" => "F99OOOO-11",
+                            "耗材/物料补充" => "F99OOOO-08",
+                            "非生产时间调试" => "F99OOOO-09",
+                            "周保养" => "F99OOOO-05",
+                            "月保养" => "F99OOOO-06",
+                            "计划关机/待机" => "F99OOOO-07",
+                            "记录非停机异常" => "F99OOOO-10",
+                            _ => "F99OOOO-20",
+                        };
+                        var ret = sfcHelper.CheckCard(cardID, hiveAPI.machineSN, out string auth, alarmCodeForCard, DateTime.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.ff+0800"));
 
                         SendHiveMsg(cmdStr);
                         cardID = "";
 
                         if (ret && (auth == "L1" || auth == "L2" || auth == "L3" || auth == "L6" /*|| auth == "L7" || auth == "L8"*/ || auth == "L9"))
                         {
+                            // 刷卡成功，重置剩余次数
+                            if (RemainingCount != 3)
+                            {
+                                RemainingCount = 3;
+                                _opLastResetTime = DateTime.Now;
+                            }
                             if (hasCardAccept)
                             {
                                 return;
@@ -460,6 +495,15 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
         private DelegateCommand<object> _resumeCommand;
         public DelegateCommand<object> ResumeCommand => _resumeCommand ?? (_resumeCommand = new DelegateCommand<object>((o) =>
         {
+            // 检查剩余点击次数
+            if (RemainingCount <= 0)
+            {
+                IsButtonEnable = false;
+                return;
+            }
+            RemainingCount = _opRemainingClickCount - 1;
+            if (RemainingCount <= 0)
+                IsButtonEnable = false;
             if (!motionController.CanAutoRun(out var msg)) throw new FriendlyException(msg);
             _commonBus.OnLog(LogType.Info, "点击 恢复生产 按钮，设备即将启动");
             if (motionController.Start())
@@ -663,11 +707,27 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
 
         public override void OnDialogOpened(IDialogParameters parameters)
         {
-            beginTime = DateTime.Now.AddMinutes(5);
+            beginTime = DateTime.Now.AddMinutes(2);
             dispatcherTimer.Interval = TimeSpan.FromSeconds(1);
             dispatcherTimer.Tick += Timer_Tick;
             dispatcherTimer.Start();
             IsButtonEnable = true;
+
+            // 剩余点击次数重置逻辑
+            if (RemainingCount == 3 && _opLastResetTime == DateTime.MinValue)
+            {
+                // 首次打开或刷卡重置后，记录起始时间
+                _opLastResetTime = DateTime.Now;
+            }
+            else if (RemainingCount != 3 && (DateTime.Now - _opLastResetTime).TotalMinutes >= 30)
+            {
+                // 30分钟超时，重置次数
+                RemainingCount = 3;
+                _opLastResetTime = DateTime.Now;
+            }
+            // 剩余次数为0时，按钮置灰
+            if (RemainingCount <= 0)
+                IsButtonEnable = false;
 
             // 获取 Operation 参数
             var operation = parameters.GetValue<SystemOperation>("Operation");

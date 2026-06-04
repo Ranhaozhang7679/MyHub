@@ -58,7 +58,7 @@ namespace Luster.Module.Motion.Logic.Functions
         /// 变量的值
         /// </summary>
         [NotEmpty]
-        [Parameter("全局变量对象", 1, CN = "全局变量", EditorType = typeof(IGlobal))]
+        [Parameter("全局变量对象", 1, CN = "全局变量", EditorType = typeof(IGlobalBool))]
         public string GlobalVar { get; set; }
 
         [Parameter("超时了是否蜂鸣并重试", 2, CN = "超时警告重试", DefaultV = false)]

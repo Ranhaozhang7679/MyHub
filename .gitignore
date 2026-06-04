@@ -320,3 +320,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# ignore such as zip
+*.7z
+*.zip
