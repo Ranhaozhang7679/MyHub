@@ -1052,18 +1052,18 @@ namespace Luster.Motion.CommonUI
                             {
                                 var xData = XElement.Load(iniConfig);
                                 _motionEngine.ParseConfig(xData);
-                                // 兼容旧版：如果.data中有PosGroup数据，则加载（新保存的数据在Hardware.dproj中）
-                                var xPos = xData.Element("PosGroup");
-                                if (xPos != null && xPos.HasElements)
-                                {
-                                    _deviceEngine.LoadPosGroup(xPos);
-                                }
+                                //var xPos = xData.Element("PosGroup");
+                                //if (xPos != null)
+                                //{
+                                //    _deviceEngine.LoadPosGroup(xPos);
+                                //}
 
-                                var xModule = xData.Element("ModuleNameGroup");
-                                if (xModule != null && xModule.HasElements)
-                                {
-                                    _deviceEngine.LoadModuleNameGroup(xModule);
-                                }
+                                //var xModule = xData.Element("ModuleNameGroup");
+                                //if (xModule != null)
+                                //{
+                                //    _deviceEngine.LoadModuleNameGroup(xModule);
+                                //}
+
                             }
 
                             LoadRecipeEvent?.Invoke(XElement.Load(recipePath));
@@ -1219,15 +1219,12 @@ namespace Luster.Motion.CommonUI
             _motionEngine.BuildPrimModule();
             XElement xIni = _motionEngine.ExportConfig();
 
-            // 将点位信息保持到组中（PosGroup统一保存在Hardware.dproj中，不再写入.data）
+            // 将点位信息保持到组中
             //_deviceEngine.SavePosGroup(xIni);
 
-            // 将模组信息保持到组中（ModuleNameGroup统一保存在Hardware.dproj中，不再写入.data）
+            // 将模组信息保持到组中
             //_deviceEngine.SaveModuleNameGroup(xIni);
             xIni.Save(iniDataFile);
-
-            // PosGroup统一保存到Hardware.dproj
-            _deviceEngine.Save();
 
             // 此时是主动保存，需要将IsNeedSave置为false
             if (string.IsNullOrEmpty(saveRecipe))

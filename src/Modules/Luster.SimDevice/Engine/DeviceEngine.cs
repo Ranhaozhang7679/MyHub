@@ -371,7 +371,10 @@ namespace Luster.SimDevice.Engine
                 }
 
                 XElement xPosGroup = xRoot.Element(nameof(PosGroup));
-                LoadPosGroup(xPosGroup);
+                if (xPosGroup != null)
+                {
+                    LoadPosGroup(xPosGroup);
+                }
 
                 XElement xModule = xRoot.Element(nameof(ModuleNameGroup));
                 if (xModule != null)
