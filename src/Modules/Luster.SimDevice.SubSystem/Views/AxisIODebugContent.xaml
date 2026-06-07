@@ -638,7 +638,39 @@
                         FontWeight="Bold"
                         Foreground="Black"
                         Header="{lang:Lang Key={x:Static lang:LangKeys.Point}}" />
-                            <DataGridTextColumn
+                                <DataGridTemplateColumn
+                        Width="150"
+                        MinWidth="150"
+                        hc:TitleElement.HorizontalAlignment="Center"
+                        CanUserResize="False"
+                        Header="{lang:Lang Key={x:Static lang:LangKeys.Operation}}"
+                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <hc:ElementGroup HorizontalContentAlignment="Center" Orientation="Horizontal">
+                                                <Button
+                                            Margin="5,0,0,0"
+                                            Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.MoveCommand}"
+                                            CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=SelectedItem}"
+                                            Content="{lang:Lang Key={x:Static lang:LangKeys.Move}}"
+                                            Style="{StaticResource ButtonInfo.Small}" />
+                                                <Button
+                                            Margin="5,0,0,0"
+                                            Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.UpdateCommand}"
+                                            CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=SelectedItem}"
+                                            Content="{lang:Lang Key={x:Static lang:LangKeys.Update}}"
+                                            Style="{StaticResource ButtonWarning.Small}" />
+                                                <Button
+                                            Margin="0,0,0,0"
+                                            Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.RemoveCommand}"
+                                            CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=SelectedItem}"
+                                            Content="{lang:Lang Key={x:Static lang:LangKeys.Delete}}"
+                                            Style="{StaticResource ButtonDanger.Small}" />
+                                            </hc:ElementGroup>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                                <DataGridTextColumn
                         Width="80"
                         MinWidth="80"
                         Binding="{Binding X}"
@@ -688,7 +720,7 @@
                         Header="U2 (mm)"
                         HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
                         IsReadOnly="False" />
-                            <DataGridTextColumn
+                                <DataGridTextColumn
                         Width="80"
                         MinWidth="80"
                         Binding="{Binding Z2}"
@@ -698,40 +730,7 @@
                         Header="Z2 (mm)"
                         HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}"
                         IsReadOnly="False" />
-
-                            <DataGridTemplateColumn
-                        Width="150"
-                        MinWidth="150"
-                        hc:TitleElement.HorizontalAlignment="Center"
-                        CanUserResize="False"
-                        Header="{lang:Lang Key={x:Static lang:LangKeys.Operation}}"
-                        HeaderStyle="{StaticResource DataColumnHeaderStyleCenter}">
-                                <DataGridTemplateColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <hc:ElementGroup HorizontalContentAlignment="Center" Orientation="Horizontal">
-                                            <Button
-                                        Margin="5,0,0,0"
-                                        Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.MoveCommand}"
-                                        CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=SelectedItem}"
-                                        Content="{lang:Lang Key={x:Static lang:LangKeys.Move}}"
-                                        Style="{StaticResource ButtonInfo.Small}" />
-                                            <Button
-                                        Margin="5,0,0,0"
-                                        Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.UpdateCommand}"
-                                        CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=SelectedItem}"
-                                        Content="{lang:Lang Key={x:Static lang:LangKeys.Update}}"
-                                        Style="{StaticResource ButtonWarning.Small}" />
-                                            <Button
-                                        Margin="0,0,0,0"
-                                        Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.RemoveCommand}"
-                                        CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=SelectedItem}"
-                                        Content="{lang:Lang Key={x:Static lang:LangKeys.Delete}}"
-                                        Style="{StaticResource ButtonDanger.Small}" />
-                                        </hc:ElementGroup>
-                                    </DataTemplate>
-                                </DataGridTemplateColumn.CellTemplate>
-                            </DataGridTemplateColumn>
-                        </DataGrid.Columns>
+                            </DataGrid.Columns>
                         <hc:Interaction.Triggers>
                             <hc:EventTrigger EventName="SelectionChanged">
                                 <hc:EventToCommand Command="{Binding SelectedCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=SelectedItem}" />
