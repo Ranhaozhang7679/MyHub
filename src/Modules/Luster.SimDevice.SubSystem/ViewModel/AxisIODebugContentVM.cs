@@ -974,43 +974,57 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
                 var inModels = inList.Select(u => new IOModel(u)).ToList();
                 var outModels = outList.Select(u => new IOModel(u)).ToList();
 
-                // 排序输入IO：含"气缸"的按Index升序靠前，其余按Index升序
-                var cylinderIns = inModels.Where(io => io.Name.Contains("气缸")).OrderBy(io => io.Index).ToList();
-                var otherIns = inModels.Where(io => !io.Name.Contains("气缸")).OrderBy(io => io.Index).ToList();
-                var sortedIns = cylinderIns.Concat(otherIns).ToList();
+                bool IsBackup(string name) => name.Contains("备用") || name.Contains("弃用");
 
-                // 排序输出IO：含"气缸"的根据输入IO中匹配的位置排序，其余按Index升序
-                var cylinderOuts = outModels.Where(io => io.Name.Contains("气缸")).ToList();
-                var otherOuts = outModels.Where(io => !io.Name.Contains("气缸")).OrderBy(io => io.Index).ToList();
-                var sortedCylinderOuts = cylinderOuts
-                    .Select(io =>
-                    {
-                        int sortKey = int.MaxValue;
-                        int idx = io.Name.IndexOf("气缸");
-                        if (idx > 0)
+                // 排序输入IO优先级：气缸 → 非气缸 → 气缸(备用/弃用) → 非气缸(备用/弃用)
+                var cylinderIns = inModels.Where(io => io.Name.Contains("气缸") && !IsBackup(io.Name)).OrderBy(io => io.Index).ToList();
+                var otherIns = inModels.Where(io => !io.Name.Contains("气缸") && !IsBackup(io.Name)).OrderBy(io => io.Index).ToList();
+                var cylinderInsBak = inModels.Where(io => io.Name.Contains("气缸") && IsBackup(io.Name)).OrderBy(io => io.Index).ToList();
+                var otherInsBak = inModels.Where(io => !io.Name.Contains("气缸") && IsBackup(io.Name)).OrderBy(io => io.Index).ToList();
+                var sortedIns = cylinderIns.Concat(otherIns).Concat(cylinderInsBak).Concat(otherInsBak).ToList();
+
+                // 排序输出IO：含"气缸"的根据输入IO中匹配的位置排序
+                var cylinderOuts = outModels.Where(io => io.Name.Contains("气缸") && !IsBackup(io.Name)).ToList();
+                var otherOuts = outModels.Where(io => !io.Name.Contains("气缸") && !IsBackup(io.Name)).OrderBy(io => io.Index).ToList();
+                var cylinderOutsBak = outModels.Where(io => io.Name.Contains("气缸") && IsBackup(io.Name)).ToList();
+                var otherOutsBak = outModels.Where(io => !io.Name.Contains("气缸") && IsBackup(io.Name)).OrderBy(io => io.Index).ToList();
+
+                List<IOModel> SortCylinderOutputs(List<IOModel> cylinders)
+                {
+                    return cylinders
+                        .Select(io =>
                         {
-                            // 提取"气缸"前面的汉字作为定语
-                            string modifier = "";
-                            for (int i = idx - 1; i >= 0; i--)
+                            int sortKey = int.MaxValue;
+                            int idx = io.Name.IndexOf("气缸");
+                            if (idx > 0)
                             {
-                                char c = io.Name[i];
-                                if (c >= 0x4E00 && c <= 0x9FFF)
-                                    modifier = c + modifier;
-                                else
-                                    break;
+                                string modifier = "";
+                                for (int i = idx - 1; i >= 0; i--)
+                                {
+                                    char c = io.Name[i];
+                                    if (c >= 0x4E00 && c <= 0x9FFF)
+                                        modifier = c + modifier;
+                                    else
+                                        break;
+                                }
+                                string phrase = modifier + "气缸";
+                                int matchIdx = sortedIns.FindIndex(inp => inp.Name.Contains(phrase));
+                                if (matchIdx >= 0)
+                                    sortKey = matchIdx;
                             }
-                            string phrase = modifier + "气缸";
-                            int matchIdx = sortedIns.FindIndex(inp => inp.Name.Contains(phrase));
-                            if (matchIdx >= 0)
-                                sortKey = matchIdx;
-                        }
-                        return new { IO = io, SortKey = sortKey };
-                    })
-                    .OrderBy(x => x.SortKey)
-                    .ThenBy(x => x.IO.Index)
-                    .Select(x => x.IO)
+                            return new { IO = io, SortKey = sortKey };
+                        })
+                        .OrderBy(x => x.SortKey)
+                        .ThenBy(x => x.IO.Index)
+                        .Select(x => x.IO)
+                        .ToList();
+                }
+
+                var sortedOuts = SortCylinderOutputs(cylinderOuts)
+                    .Concat(otherOuts)
+                    .Concat(SortCylinderOutputs(cylinderOutsBak))
+                    .Concat(otherOutsBak)
                     .ToList();
-                var sortedOuts = sortedCylinderOuts.Concat(otherOuts).ToList();
 
                 IoInDatas.AddRange(sortedIns);
                 IoOutDatas.AddRange(sortedOuts);
