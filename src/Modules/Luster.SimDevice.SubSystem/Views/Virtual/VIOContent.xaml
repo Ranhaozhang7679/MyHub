@@ -185,10 +185,10 @@
                 Style="{StaticResource BorderRegion}">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="25" />
-                        <ColumnDefinition Width="200" />
+                        <ColumnDefinition Width="27" />
+                        <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="50" />
-                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="200" />
                         <ColumnDefinition Width="60" />
                     </Grid.ColumnDefinitions>
                     <Border HorizontalAlignment="Left">
@@ -270,10 +270,10 @@
                 Style="{StaticResource BorderRegion}">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="25" />
-                        <ColumnDefinition Width="200" />
-                        <ColumnDefinition Width="50" />
+                        <ColumnDefinition Width="27" />
                         <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="50" />
+                        <ColumnDefinition Width="200" />
                         <ColumnDefinition Width="60" />
                     </Grid.ColumnDefinitions>
                     <Border HorizontalAlignment="Left">
@@ -384,6 +384,35 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+
+        <!--  IO列表样式：数字量 UniformSpacingPanel 多列Wrap，模拟量 StackPanel 单列  -->
+        <Style
+            x:Key="IOListBoxStyle"
+            BasedOn="{StaticResource ListBoxCustom}"
+            TargetType="ListBox">
+            <Setter Property="ItemsPanel">
+                <Setter.Value>
+                    <ItemsPanelTemplate>
+                        <hc:UniformSpacingPanel
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            ChildWrapping="Wrap"
+                            Orientation="Vertical" />
+                    </ItemsPanelTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsAnalogMode}" Value="True">
+                    <Setter Property="ItemsPanel">
+                        <Setter.Value>
+                            <ItemsPanelTemplate>
+                                <StackPanel />
+                            </ItemsPanelTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
     </Border.Resources>
     <Grid x:Name="GridIO" Margin="5">
@@ -511,17 +540,7 @@
                     ItemsSource="{Binding InputDatas}"
                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                     ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                    Style="{StaticResource ListBoxCustom}">
-                    <ListBox.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <hc:UniformSpacingPanel
-                                HorizontalAlignment="Left"
-                                VerticalAlignment="Top"
-                                ChildWrapping="Wrap"
-                                Orientation="Vertical"
-                                ScrollViewer.VerticalScrollBarVisibility="Visible" />
-                        </ItemsPanelTemplate>
-                    </ListBox.ItemsPanel>
+                    Style="{StaticResource IOListBoxStyle}">
                     <hc:Interaction.Triggers>
                         <hc:EventTrigger EventName="Loaded">
                             <hc:EventToCommand Command="{Binding LoadedCommand}" PassEventArgsToCommand="True" />
@@ -550,17 +569,7 @@
                     ItemsSource="{Binding IoDatas}"
                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                     ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                    Style="{StaticResource ListBoxCustom}">
-                    <ListBox.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <hc:UniformSpacingPanel
-                                HorizontalAlignment="Left"
-                                VerticalAlignment="Top"
-                                ChildWrapping="Wrap"
-                                Orientation="Vertical"
-                                ScrollViewer.VerticalScrollBarVisibility="Visible" />
-                        </ItemsPanelTemplate>
-                    </ListBox.ItemsPanel>
+                    Style="{StaticResource IOListBoxStyle}">
                     <hc:Interaction.Triggers>
                         <hc:EventTrigger EventName="Loaded">
                             <hc:EventToCommand Command="{Binding LoadedCommand}" PassEventArgsToCommand="True" />

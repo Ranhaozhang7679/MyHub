@@ -432,6 +432,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
 
             IsDigitalOut=IsDigitalIn = str == "Digital";
             IsAnalogIn= IsAnalogOut = str == "Analog";
+            IsAnalogMode = str == "Analog";
 
             // 切换 IO 类型后重新计算分页参数
             CalcItemsSize(_lastSize);
@@ -506,14 +507,15 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
         {
             _lastSize = size;
 
-            // 计算页面能够容纳的IO数量
-            int col = (int)(size.Width / 250);
-            int row = (int)(size.Height / 35);
+            // 计算页面能够容纳的IO数量（减1作为安全余量，防止最后一条被裁剪或换列）
+            int col = (int)(size.Width / 260);
+            int row = Math.Max(1, (int)(size.Height / 38) - 1);
 
             if (IsAnalogIn || IsAnalogOut)
             {
+                // 模拟量强制单列，使用更大的条目高度估算（含 Margin+Padding+Border）
                 col = 1;
-                row = (int)(size.Height / 42);
+                row = Math.Max(1, (int)(size.Height / 46) - 1);
             }
 
             // 更新配置
@@ -559,6 +561,16 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
         {
             get { return _isAnalogOut; }
             set { SetProperty(ref _isAnalogOut, value); }
+        }
+
+        /// <summary>
+        /// 当前是否为模拟量模式（用于 ItemsPanel 切换）
+        /// </summary>
+        private bool _isAnalogMode = false;
+        public bool IsAnalogMode
+        {
+            get => _isAnalogMode;
+            set => SetProperty(ref _isAnalogMode, value);
         }
 
         /// <summary>
