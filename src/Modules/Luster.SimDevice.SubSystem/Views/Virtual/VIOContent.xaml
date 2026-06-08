@@ -427,13 +427,13 @@
                 <hc:ComboBox
                     x:Name="comIo"
                     hc:InfoElement.Necessary="True"
-                    hc:InfoElement.Placeholder="{lang:Lang Key={x:Static lang:LangKeys.ModuleName}}"
-                    hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.ModuleName}}"
+                    hc:InfoElement.Placeholder="{lang:Lang Key={x:Static lang:LangKeys.IOType}}"
+                    hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.IOType}}"
                     SelectedIndex="0"
                     Style="{StaticResource ComboBoxValidationStyle}">
 
-                    <ComboBoxItem>Digital</ComboBoxItem>
-                    <ComboBoxItem>Analog</ComboBoxItem>
+                    <ComboBoxItem Content="{lang:Lang Key={x:Static lang:LangKeys.DigitalIO}}" Tag="Digital" />
+                    <ComboBoxItem Content="{lang:Lang Key={x:Static lang:LangKeys.AnalogIO}}" Tag="Analog" />
 
                     <hc:Interaction.Triggers>
                         <hc:EventTrigger EventName="SelectionChanged">

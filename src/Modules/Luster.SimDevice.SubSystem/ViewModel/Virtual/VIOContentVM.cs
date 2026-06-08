@@ -427,7 +427,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
         public DelegateCommand<object> ChangeIOTypeCommand => _changeIOTypeCommand ?? (_changeIOTypeCommand = new DelegateCommand<object>((type) =>
         {
             var comItem = type as ComboBoxItem;
-            var str = comItem.Content.ToString();
+            var str = comItem.Tag.ToString();
 
 
             IsDigitalOut=IsDigitalIn = str == "Digital";
