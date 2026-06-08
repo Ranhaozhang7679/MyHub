@@ -433,7 +433,7 @@
                     Style="{StaticResource ComboBoxValidationStyle}">
 
                     <ComboBoxItem>Digital</ComboBoxItem>
-                    <ComboBoxItem>Anglog</ComboBoxItem>
+                    <ComboBoxItem>Analog</ComboBoxItem>
 
                     <hc:Interaction.Triggers>
                         <hc:EventTrigger EventName="SelectionChanged">

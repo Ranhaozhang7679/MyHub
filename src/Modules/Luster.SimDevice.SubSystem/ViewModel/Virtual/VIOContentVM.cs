@@ -384,9 +384,9 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
                 if (r.Parameters.TryGetValue<IOType>("IOType", out var ioType))
                 {
                     IsDigitalIn = ioType == IOType.Digital;
+                    IsDigitalOut = ioType == IOType.Digital;
                     IsAnalogIn = ioType == IOType.Analog;
-                    IsDigitalIn = ioType == IOType.Digital;
-                    IsAnalogIn = ioType == IOType.Analog;
+                    IsAnalogOut = ioType == IOType.Analog;
 
                     // 构架IO
                     LoadDatas();
@@ -431,7 +431,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
 
 
             IsDigitalOut=IsDigitalIn = str == "Digital";
-            IsAnalogIn= IsAnalogOut = str == "Anglog";
+            IsAnalogIn= IsAnalogOut = str == "Analog";
 
             // 切换 IO 类型后重新计算分页参数
             CalcItemsSize(_lastSize);
@@ -818,7 +818,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
             {
                 var model = new ExportVIOModel();
                 model.Index = i;
-                model.PortNo = $"AO{i}";
+                model.PortNo = $"AI{i}";
                 model.ModuleName = io.Module;
                 model.Name = io.Name;
                 lists.Add(model);
@@ -838,7 +838,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
             {
                 var model = new ExportVIOModel();
                 model.Index = i;
-                model.PortNo = $"AI{i}";
+                model.PortNo = $"AO{i}";
                 model.ModuleName = io.Module;
                 model.Name = io.Name;
                 lists.Add(model);
