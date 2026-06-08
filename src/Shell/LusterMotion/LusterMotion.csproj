@@ -97,6 +97,9 @@
         <None Update="Config\Error.json">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
+        <None Update="Config\LUSTER SPARE PART LIST.txt">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
         <None Update="Config\Version.json">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>

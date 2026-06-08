@@ -1,0 +1,15 @@
+000;No parts replaced;无更换物品
+FN372;camera;相机
+PT042756581;belt;皮带
+003;coupling;联轴器
+004;sheet metal parts;钣金件
+005;motor;电机
+006;drive;驱动器
+007;nozzle;吸嘴
+008;holding pressure head;保压头
+009;cylinder;气缸
+010;sensor;传感器
+011;light source;光源
+012;manipulator;机械手
+013;solenoid valve;电磁阀
+999;Others;其他
