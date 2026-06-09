@@ -9,6 +9,7 @@
              xmlns:converters ="clr-namespace:DC.Authorization.WPF.Converters">
     <prism:Dialog.WindowStyle>
         <Style TargetType="Window">
+            <Setter Property="WindowStyle" Value="None" />
             <Setter Property="prism:Dialog.WindowStartupLocation" Value="CenterScreen" />
             <!--<Setter Property="ResizeMode" Value="NoResize"/>-->
             <Setter Property="ShowInTaskbar" Value="False"/>
@@ -54,16 +55,23 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Button HorizontalAlignment="Right"
-        Width="28" Height="28"
-        Content="✕"
-        FontSize="12"
-        Cursor="Hand"
-        Command="{Binding CancelCommand}"
-        ToolTip="关闭"
-        Background="DarkGray"
-        BorderThickness="0"
-        Foreground="#666">
+<Button HorizontalAlignment="Right" Grid.Row="0"
+        Width="28" Height="28" Content="✕" FontSize="16"
+        Cursor="Hand" Command="{Binding CancelCommand}" ToolTip="关闭">
+            <Button.Template>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Bd" Background="#01000000" CornerRadius="3">
+                        <TextBlock x:Name="Txt" Text="✕" IsHitTestVisible="False" FontSize="16" Foreground="#666"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Bd" Property="Background" Value="#E81123"/>
+                            <Setter TargetName="Txt" Property="Foreground" Value="White"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Button.Template>
         </Button>
         <StackPanel Grid.Row="1" Orientation="Vertical" HorizontalAlignment="Center" >
             <StackPanel Orientation="Horizontal">
