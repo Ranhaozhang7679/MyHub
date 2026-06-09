@@ -125,7 +125,7 @@ namespace DC.Authorization.WPF.ViewModels
             Account account = parameters.GetValue<Account>("param") ?? throw new ArgumentException($"请传入一个不为null的{nameof(Account)}对象！");
             IsEdit = parameters.GetValue<bool>("edit");
             SelectedRole = account.AccName == null ? null : Roles.Where(x => x.Id == account.RoleId).FirstOrDefault();
-            Username = account.RealName;
+            Username = account.AccName;
             Name = account.RealName;
             Password = account.AccPassword;
             Department = account.Department;

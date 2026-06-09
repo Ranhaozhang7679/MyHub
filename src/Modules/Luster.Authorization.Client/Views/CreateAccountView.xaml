@@ -18,7 +18,7 @@
     <UserControl.Resources>
         <converters:AccountCreateVisibilityConverter x:Key="AccountCreateVisibilityConverter"/>
         <Style x:Key="LabelStyle" TargetType="Label">
-            <Setter Property="Width" Value="70"/>
+            <Setter Property="Width" Value="110"/>
             <Setter Property="Height" Value="30"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="HorizontalAlignment" Value="Right"/>
@@ -67,8 +67,13 @@
         </Button>
         <StackPanel Grid.Row="1" Orientation="Vertical" HorizontalAlignment="Center" >
             <StackPanel Orientation="Horizontal">
-                <Label Style="{StaticResource LabelStyle}">姓名</Label>
-                <TextBox Style="{StaticResource TextBoxStyle}" Text="{Binding Name}"/>
+                <Label Style="{StaticResource LabelStyle}">用户名</Label>
+                <TextBox Style="{StaticResource TextBoxStyle}" ToolTip="登录账户名"  Background="AliceBlue"  Text="{Binding Username}"/>
+                <Label Style="{StaticResource LabelStarStyle}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Style="{StaticResource LabelStyle}">卡号</Label>
+                <TextBox Style="{StaticResource TextBoxStyle}"  Text="{Binding CardID}"/>
                 <Label Style="{StaticResource LabelStarStyle}" />
             </StackPanel>
             <StackPanel Orientation="Horizontal">
@@ -77,24 +82,19 @@
                 <Label Style="{StaticResource LabelStarStyle}" />
             </StackPanel>
             <StackPanel Orientation="Horizontal">
+                <Label Style="{StaticResource LabelStyle}">姓名</Label>
+                <TextBox Style="{StaticResource TextBoxStyle}" Text="{Binding Name}"/>
+                <Label Style="{StaticResource LabelStarStyle}" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
                 <Label Style="{StaticResource LabelStyle}">所在部门</Label>
                 <TextBox Style="{StaticResource TextBoxStyle}"  Text="{Binding Department}"/>
                 <Label Style="{StaticResource LabelStarStyle}" />
             </StackPanel>
             <StackPanel Orientation="Horizontal">
-                <Label Style="{StaticResource LabelStyle}">刷卡ID</Label>
-                <TextBox Style="{StaticResource TextBoxStyle}"  Text="{Binding CardID}"/>
-                <Label Style="{StaticResource LabelStarStyle}" />
-            </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <Label Style="{StaticResource LabelStyle}">时效</Label>
+                <Label Style="{StaticResource LabelStyle}">登录时限(分钟)</Label>
                 <TextBox Style="{StaticResource TextBoxStyle}"  Text="{Binding Limitation}"/>
                 <Label Style="{StaticResource LabelStarStyle}" />
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Visibility="{Binding IsEdit,Converter={StaticResource AccountCreateVisibilityConverter}}">
-                <Label Style="{StaticResource LabelStyle}">账户</Label>
-                <TextBox Style="{StaticResource TextBoxStyle}" ToolTip="登录账户名"  Background="AliceBlue"  Text="{Binding Username}"/>
-                <Label Style="{StaticResource LabelStarStyle}"  />
             </StackPanel>
             <StackPanel Orientation="Horizontal" Visibility="{Binding IsEdit,Converter={StaticResource AccountCreateVisibilityConverter}}">
                 <Label Style="{StaticResource LabelStyle}">密码</Label>
