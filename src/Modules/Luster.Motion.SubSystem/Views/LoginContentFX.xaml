@@ -285,7 +285,7 @@
                                     Background="{DynamicResource RegionBrush}"
                                     IsEditable="False"
                                     ItemsSource="{Binding ListUrl}"
-                                    SelectedValue="{Binding SelectUrl}"
+                                    SelectedItem="{Binding SelectUrl}"
                                     SelectedValuePath="Value">
                                     <hc:Interaction.Triggers>
                                         <hc:EventTrigger EventName="SelectionChanged">

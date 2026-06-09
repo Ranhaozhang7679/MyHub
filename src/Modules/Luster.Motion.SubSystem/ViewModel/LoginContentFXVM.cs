@@ -74,12 +74,22 @@ namespace Luster.Motion.SubSystem.ViewModel
             this._deviceEngine = deviceEngine;
             this._loginService = loginService;
             this._dialogService = dialogService;
+            // 加载登录配置（记忆上次的登录模式、等级、URL）
+            _loginConfig = new LoginConfig();
+            _loginConfig.Load();
+
             ModeList = typeof(DeviceMode).EnumToDataSource();
             LoginModeList = typeof(LoginMode).EnumToDataSource();
             LoginLevelList = typeof(SystemRole).EnumToDataSource();
             BindProject();
             RegisterMuliLang(nameof(ModeList));
             SelectUrl = ListUrl[0];
+            // 从配置恢复上次选中的URL
+            if (!string.IsNullOrEmpty(_loginConfig.SelectedUrl)
+                && ListUrl.Contains(_loginConfig.SelectedUrl))
+            {
+                SelectUrl = _loginConfig.SelectedUrl;
+            }
             if (_hiveAuthProvider != null)
             {
                 _hiveAuthProvider.HiveApiBaseUrl = SelectUrl;
@@ -91,9 +101,6 @@ namespace Luster.Motion.SubSystem.ViewModel
                 UserRole = _userInfo.Role,
             };
 
-            // 加载登录配置（记忆上次的登录模式和等级）
-            _loginConfig = new LoginConfig();
-            _loginConfig.Load();
             SelectLoginMode = (LoginMode)_loginConfig.LoginMode;
             SelectLoginLevel = (SystemRole)_loginConfig.LoginLevel;
             _loginService.TargetRoleLevel = (int)SelectLoginLevel + 1;
@@ -288,7 +295,7 @@ namespace Luster.Motion.SubSystem.ViewModel
         /// <summary>
         /// 当前选择的URL
         /// </summary>
-        private string SelectUrl
+        public string SelectUrl
         {
             get { return _selectUrl; }
             set { SetProperty(ref _selectUrl, value); }
@@ -482,6 +489,9 @@ namespace Luster.Motion.SubSystem.ViewModel
                 {
                     _hiveAuthProvider.HiveApiBaseUrl = keyVal;
                 }
+                // 保存配置
+                _loginConfig.SelectedUrl = keyVal;
+                _loginConfig.Save();
             }
         }));
 
