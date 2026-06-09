@@ -1928,6 +1928,34 @@ namespace Luster.Motion.Integration.SFC
 
 
         /// <summary>
+        /// CG5通过WIP查询排线SN
+        /// </summary>
+        /// <param name="sn">SN编码</param>
+        /// <param name="errMsg">错误信息</param>
+        /// <returns>排线SN</returns>
+        public string QueryCableSN(string sn, out string errMsg)
+        {
+            string cableSN = "";
+            string cmd = $"c=QUERY_RECORD&sn={sn}&p=sen_sn";
+            errMsg = "";
+            HttpSend(cmd, "CG5查询排线SN", r =>
+            {
+                var resultArray = r.Split('\n');
+                if (resultArray.Length > 1 && resultArray[1].Length > 5)
+                {
+                    cableSN = resultArray[1].Substring(5).Trim();
+                    return string.Empty;
+                }
+                else
+                {
+                    return "排线SN查询失败!";
+                }
+            }, out errMsg);
+            return cableSN;
+        }
+
+
+        /// <summary>
         /// CG5查询Flex黑名单
         /// </summary>
         /// <param name="Wip"></param>
