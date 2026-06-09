@@ -22,11 +22,17 @@ namespace Luster.Motion.CommonUI.Models
         /// </summary>
         public int LoginLevel { get; set; } = 1;
 
+        /// <summary>
+        /// 选中的URL地址
+        /// </summary>
+        public string SelectedUrl { get; set; } = string.Empty;
+
         public XElement ExportXml()
         {
             return new XElement("LoginConfig",
                 new XElement("LoginMode", LoginMode),
-                new XElement("LoginLevel", LoginLevel));
+                new XElement("LoginLevel", LoginLevel),
+                new XElement("SelectedUrl", SelectedUrl));
         }
 
         public void ParserXml(XElement xElement)
@@ -35,6 +41,7 @@ namespace Luster.Motion.CommonUI.Models
                 LoginMode = mode;
             if (int.TryParse(xElement.Element("LoginLevel")?.Value, out int level))
                 LoginLevel = level;
+            SelectedUrl = xElement.Element("SelectedUrl")?.Value ?? string.Empty;
         }
 
         /// <summary>
