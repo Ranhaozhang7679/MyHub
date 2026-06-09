@@ -309,7 +309,12 @@
                     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
                         <Button Margin="10" Command="{Binding PreviousPageCommand}">上一页</Button>
                         <Label Margin="10" Content="{Binding LogCurrentPage}"/>
-                        <Button Margin="10"  Command="{Binding NextPageCommand}">下一页</Button>
+                        <Button Margin="10" Command="{Binding NextPageCommand}">下一页</Button>
+                        <Separator Margin="5,0" />
+                        <TextBlock VerticalAlignment="Center" Text="跳转到" />
+                        <TextBox Margin="5,0" Width="50" VerticalAlignment="Center" VerticalContentAlignment="Center" Text="{Binding JumpPageText, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBlock VerticalAlignment="Center" Text="页" />
+                        <Button Margin="5,0,10,0" Command="{Binding JumpPageCommand}" Content="跳转" />
                     </StackPanel>
                 </Grid>
             </TabItem>
