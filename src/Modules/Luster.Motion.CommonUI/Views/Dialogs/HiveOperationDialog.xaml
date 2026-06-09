@@ -80,7 +80,7 @@
             CommandParameter="一+二级供应商"
             Content="一级和二级供应商维修 Repaired by 1st &amp; 2nd tier vendor"
             GroupName="1" />
-        <RadioButton
+        <!--<RadioButton
             Grid.Row="6"
             Margin="0,5,0,0"
             HorizontalAlignment="Left"
@@ -95,6 +95,14 @@
             Command="{Binding Path=DataContext.SetCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
             CommandParameter="汇川"
             Content="基恩士 Repaired by Keyence"
+            GroupName="1" />-->
+        <RadioButton
+            Grid.Row="6"
+            Margin="0,5,0,0"
+            HorizontalAlignment="Left"
+            Command="{Binding Path=DataContext.SetCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            CommandParameter="凌云光维修"
+            Content="凌云光维修 Repaired by Luster"
             GroupName="1" />
         <RadioButton
             Grid.Row="8"

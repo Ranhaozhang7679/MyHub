@@ -1771,6 +1771,11 @@ namespace Luster.Motion.Integration.Web
                     alarmMsg = "Stopped for repair by Keyence";
                     break;
 
+                case "凌云光维修":
+                    alarmCode = "F99OOOO-12";
+                    alarmMsg = "Stopped for repair by Luster";
+                    break;
+
                 case "工厂人员":
                     alarmCode = "F99OOOO-11";
                     alarmMsg = "Stopped for repair by contract manufacturer";
