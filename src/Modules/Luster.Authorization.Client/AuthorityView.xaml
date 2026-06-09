@@ -16,9 +16,10 @@
         <Style TargetType="Window">
             <Setter Property="WindowStyle" Value="None" />
             <Setter Property="prism:Dialog.WindowStartupLocation" Value="CenterScreen" />
-            <!--<Setter Property="ResizeMode" Value="NoResize"/>-->
+            <Setter Property="ResizeMode" Value="NoResize"/>
             <Setter Property="ShowInTaskbar" Value="False"/>
-            <Setter Property="SizeToContent" Value="WidthAndHeight"/>
+            <Setter Property="Width" Value="850"/>
+            <Setter Property="Height" Value="700"/>
         </Style>
     </prism:Dialog.WindowStyle>
     <UserControl.Resources>
@@ -62,8 +63,8 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <!-- 自动高度，用于 Menu -->
-            <RowDefinition MinHeight="600"/>
-            <!-- 剩余空间，用于 TabControl -->
+            <RowDefinition Height="650"/>
+            <!-- 固定高度，用于 TabControl -->
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition MinWidth="800" MaxWidth="1000"/>
@@ -287,7 +288,7 @@
                         <Button Command="{Binding SearchCommand}" FontSize="16" MinWidth="80">查询</Button>
                     </StackPanel>
 
-                    <DataGrid Grid.Row="1" Height="400" ItemsSource="{Binding Logs}" IsReadOnly="True" AutoGenerateColumns="False">
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding Logs}" IsReadOnly="True" AutoGenerateColumns="False">
                         <DataGrid.Columns >
                             <DataGridTextColumn Header="操作时间" Width="2*" Binding="{Binding When, StringFormat={}{0:yyyy/MM/dd HH:mm:ss}}"/>
                             <DataGridTextColumn Header="操作员" Width="*" Binding="{Binding AccountName}"/>
