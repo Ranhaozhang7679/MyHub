@@ -5,8 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DC.Authorization.WPF"
         xmlns:views ="clr-namespace:DC.Authorization.WPF.Views"
-             xmlns:viewmodels="clr-namespace:DC.Authorization.WPF.ViewModels" 
+             xmlns:viewmodels="clr-namespace:DC.Authorization.WPF.ViewModels"
              xmlns:prism="http://prismlibrary.com/" xmlns:converter="clr-namespace:DC.Authorization.WPF.Converters"
+             xmlns:hc="https://handyorg.github.io/handycontrol"
              d:DataContext="{d:DesignInstance Type=viewmodels:AuthorityViewModel}"
         mc:Ignorable="d"
              
@@ -278,10 +279,22 @@
                         <RowDefinition Height="auto"/>
                     </Grid.RowDefinitions>
                     <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10" >
-                        <Label>开始日期</Label>
-                        <mah:DateTimePicker Margin="0,0,10,0" SelectedDateTime="{Binding StartDate}" PickerVisibility="All" SelectedDateFormat="Short"></mah:DateTimePicker>
-                        <Label>结束日期</Label>
-                        <mah:DateTimePicker Margin="0,0,10,0" SelectedDateTime="{Binding EndDate}"></mah:DateTimePicker>
+                        <hc:DateTimePicker
+                            Width="225" Height="30" Margin="0,0,10,0"
+                            DateTimeFormat="yyyy/MM/dd HH:mm:ss"
+                            hc:InfoElement.Placeholder="请选择开始时间"
+                            hc:InfoElement.Title="开始时间:"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="70"
+                            SelectedDateTime="{Binding StartDate}" />
+                        <hc:DateTimePicker
+                            Width="225" Height="30" Margin="0,0,10,0"
+                            DateTimeFormat="yyyy/MM/dd HH:mm:ss"
+                            hc:InfoElement.Placeholder="请选择结束时间"
+                            hc:InfoElement.Title="结束时间:"
+                            hc:InfoElement.TitlePlacement="Left"
+                            hc:InfoElement.TitleWidth="70"
+                            SelectedDateTime="{Binding EndDate}" />
                         <Button Command="{Binding SearchCommand}" FontSize="16" MinWidth="80">查询</Button>
                     </StackPanel>
 
