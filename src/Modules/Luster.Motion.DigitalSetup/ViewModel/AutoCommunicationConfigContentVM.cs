@@ -457,6 +457,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                             if (!deviceFound)
                             {
                                 System.Windows.Application.Current.Dispatcher.Invoke(() => { softwareNet.状态 = "NG"; });
+                                softwareNet.完成时间 = DateTime.Now;
                                 return;
                             }
 
@@ -484,6 +485,7 @@ namespace Luster.Motion.DigitalSetup.ViewModel
                                 bool portOk = commonHelpers.Ping(stdIp, stdPort);
                                 System.Windows.Application.Current.Dispatcher.Invoke(() => { softwareNet.状态 = portOk ? "OK" : "NG"; });
                             }
+                            softwareNet.完成时间 = DateTime.Now;
                         }
                     }
                     catch (Exception ex)
