@@ -493,6 +493,10 @@ namespace Luster.Motion.ReportUI.ViewModel
             double yMax1 = YAxisMax > 0 ? YAxisMax : pressAbsMax * 1.05;
             double xMax = Math.Ceiling(timeMax / xStep1) * xStep1 + xStep1;
 
+            // 分隔符溢出自动适应：步长过小导致刻度过多时，自动计算合理步长
+            double niceStep1 = CalculateNiceStep(yMax1, 8);
+            if (yStep1 < niceStep1) yStep1 = niceStep1;
+
             var axis_x_time = new Axis();
             axis_x_time.Name = "Time/ms";
             axis_x_time.NameTextSize = 12;
@@ -551,6 +555,9 @@ namespace Luster.Motion.ReportUI.ViewModel
 
                 double xMax2tp = Math.Ceiling(timeMax / xStep2tp) * xStep2tp + xStep2tp;
 
+                double niceStep2tp = CalculateNiceStep(yMax2tp, 8);
+                if (yStep2tp < niceStep2tp) yStep2tp = niceStep2tp;
+
                 axis_x2 = new Axis();
                 axis_x2.Name = "Time/ms";
                 axis_x2.NameTextSize = 12;
@@ -599,6 +606,9 @@ namespace Luster.Motion.ReportUI.ViewModel
                 double xStep2pp = XAxisStep2 > 0 ? XAxisStep2 : 0.5;
                 double yStep2pp = YAxisStep2 > 0 ? YAxisStep2 : 0.05;
                 double yMax2pp = YAxisMax2 > 0 ? YAxisMax2 : pressAbsMax * 1.05;
+
+                double niceStep2pp = CalculateNiceStep(yMax2pp, 8);
+                if (yStep2pp < niceStep2pp) yStep2pp = niceStep2pp;
 
                 double posRange = positionMax - positionMin;
                 double posPadding = posRange * 0.05;
