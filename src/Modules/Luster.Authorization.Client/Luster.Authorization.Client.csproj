@@ -27,6 +27,7 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+		<PackageReference Include="HandyControl" />
 		<PackageReference Include="MahApps.Metro"/>
 		<!--<PackageReference Include="Prism.Wpf" Version="9.0.537" />-->
 		<PackageReference Include="Luster.Prism" />
