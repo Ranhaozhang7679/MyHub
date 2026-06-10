@@ -787,6 +787,32 @@ namespace Luster.Motion.Integration.Web
                 }
             }
 
+            // 后处理：保证CT步序时间连续，下一步的Start_Time等于上一步的End_Time
+            // 工站开始和工站结束不做修改，仅处理中间CT步序
+            {
+                string prevEndTime = null;
+                for (int j = 0; j < ctList.Count; j++)
+                {
+                    var item = ctList[j];
+                    var prop = item.GetType().GetProperty("parameter");
+                    if (prop == null) continue;
+                    string param = prop.GetValue(item) as string;
+                    if (param == null) continue;
+
+                    // 记录每一步的End_Time（包括工站开始、中间步序、工站结束）
+                    if (param.EndsWith("_End_Time"))
+                    {
+                        prevEndTime = item.GetType().GetProperty("value").GetValue(item) as string;
+                    }
+                    // 仅替换中间CT步序的Start_Time，工站开始/工站结束保持原值
+                    else if (param.EndsWith("_Start_Time") && prevEndTime != null
+                        && !param.Contains("工站开始") && !param.Contains("工站结束"))
+                    {
+                        ctList[j] = new { parameter = param, value = prevEndTime };
+                    }
+                }
+            }
+
             //foreach (var keyPair in ctConfigs)
             //{
             //    FindStationTIme(currentCTInfos, keyPair.Key, keyPair.Value, out string paraName, out string paraValue);
