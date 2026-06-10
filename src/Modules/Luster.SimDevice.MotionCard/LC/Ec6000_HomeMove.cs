@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Luster.SimDevice.MotionCard.LC
 {
-    class Ec6000_HomeMove
+    public class Ec6000_HomeMove
     {
         /// <summary>
         /// 

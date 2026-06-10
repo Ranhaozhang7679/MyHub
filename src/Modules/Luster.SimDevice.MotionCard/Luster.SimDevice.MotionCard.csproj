@@ -17,9 +17,9 @@
     </ItemGroup>
 
     <!-- 嵌入的 native 库（供 Costura 使用，后续可移除） -->
+    <!-- 注意：ecat_motion.dll 已从嵌入中移除，由 LCDllManager 通过 LoadLibrary 动态加载 -->
     <ItemGroup>
         <EmbeddedResource Include="Costura64\ecat_io.dll" />
-        <EmbeddedResource Include="Costura64\ecat_motion.dll" />
         <EmbeddedResource Include="Costura64\gts.dll" />
         <EmbeddedResource Include="Costura64\gt_rn.dll" />
         <EmbeddedResource Include="Costura64\LAFunc.dll" />
@@ -27,6 +27,11 @@
         <EmbeddedResource Include="Costura64\MachineBuilding.dll" />
         <EmbeddedResource Include="Costura64\PIFunc.dll" />
         <EmbeddedResource Include="Costura64\VFunc.dll" />
+    </ItemGroup>
+
+    <!-- LC 板卡多版本 DLL 及配置，复制到输出目录 -->
+    <ItemGroup>
+        <Content Include="LC\DLLs\**" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
     <!-- 包引用 -->

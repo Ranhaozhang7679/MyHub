@@ -529,7 +529,8 @@ namespace Luster.Motion.TaskFlow.Engine
             if (alarmInfo.AlarmType == AlarmType.WarningTip ||
                 alarmInfo.AlarmType == AlarmType.FailError ||
                 alarmInfo.AlarmType == AlarmType.Timeout ||
-                alarmInfo.AlarmType == AlarmType.PopInfoTip)
+                 alarmInfo.AlarmType == AlarmType.PopInfoTip ||
+                alarmInfo.AlarmType == AlarmType.DeviceError)
             {
                 // 流程暂停
                 Pause(true, () =>
@@ -551,6 +552,9 @@ namespace Luster.Motion.TaskFlow.Engine
             // PLC 报警，需要红灯亮，蜂鸣器响
             if (alarmInfo.AlarmType == AlarmType.PlcAlarm)
             {
+                // PlcAlarm不走Pause流程，但也需要标记待处理
+                if (lockCommand > 0)
+                    _pendingAlarm = true;
                 _lightManager.StopLight(true);
                 //_lightManager.SetBuzzer(true, 400, 400);
             }
@@ -836,6 +840,7 @@ namespace Luster.Motion.TaskFlow.Engine
             //MotionEngine.RunStartStation();
 
             AlarmInfo = null;
+            _pendingAlarm = false;
             RecoveryIOSetInit();
             if (MachineStatus == EngineStatus.Pause)
             {
@@ -857,10 +862,21 @@ namespace Luster.Motion.TaskFlow.Engine
                     /*if (lockCommand > 0) { _deviceEngine.OnLog(LogType.Info, $"暂停lockcommand次数>0,:{lockCommand}，直接退出!"); return; }
                     Interlocked.Increment(ref lockCommand);
                     _deviceEngine.OnLog(LogType.Info, $"lockCommand为{lockCommand}");*/
-                    MotionEngine.Reset(AlarmInfo, (isOK) =>
+                    MotionEngine.Reset(AlarmInfo, (isResetOK) =>
                     {
+                        //现场出现过暂停时轴点位运动正在执行,被加入暂停模块,加入暂停模块后点位运动显示checkmotiondone,调机完成启动时执行这个暂停的模块,
+                        //显示模块未复位成功,但设备继续运行,再次暂停时,再次启动后这个上次未复位成功的点位运动复位成功,走错了路径;
+                        //所以对这段代码进行出错处理
+                        if (!isResetOK)
+                        {
+                            _deviceEngine.OnLog(LogType.Error, "模块复位(Reset)失败，终止恢复流程！");
+                            MotionEngine.OnAlarm(new AlarmInfo(this, AlarmType.FailError, "模块复位失败，请处理后重试！", "O99OOOO-66-03@Reset-Fail"));
+                            Interlocked.Decrement(ref lockCommand);
+                            return;
+                        }
+
                         _deviceEngine.OnLog(LogType.Info, "Reset成功");
-                        MotionEngine.Recovery((isOK) =>
+                        MotionEngine.Recovery((isRecoveryOK) =>
                         {
                             _deviceEngine.OnLog(LogType.Info, "MotionEngine.Recovery成功");
                             // 1.Plc恢复
@@ -870,8 +886,17 @@ namespace Luster.Motion.TaskFlow.Engine
                             Interlocked.Decrement(ref lockCommand);
                             _deviceEngine.OnLog(LogType.Info, $"暂停lockcommand复位：{lockCommand}!");
 
-                            // 2.启动灯
-                            _lightManager.RunningLight();
+                            // 如果Start()期间发生了报警，延迟执行Pause
+                            if (_pendingAlarm)
+                            {
+                                _pendingAlarm = false;
+                                Pause(true, () => { _lightManager.SetBuzzer(true); });
+                            }
+                            else
+                            {
+                                // 2.启动灯
+                                _lightManager.RunningLight();
+                            }
                         });
 
                         // 程序经过暂停->恢复，需要刷新稼动率
@@ -910,6 +935,7 @@ namespace Luster.Motion.TaskFlow.Engine
                 {
                     _deviceEngine.OnLog(LogType.Info, "MotionEngine.Recovery失败");
                     // 防止连续点击
+                    _pendingAlarm = false;
                     Interlocked.Decrement(ref lockCommand);
                     _deviceEngine.OnLog(LogType.Info, $"暂停lockcommand复位：{lockCommand}!");
                     return false;
@@ -944,6 +970,7 @@ namespace Luster.Motion.TaskFlow.Engine
                         if (AlarmInfos.Count > alarmCountBefore)
                         {
                             _deviceEngine.OnLog(LogType.Info, "开始工站执行后产生报警，不允许启动!");
+                            _pendingAlarm = false;
                             Interlocked.Decrement(ref lockCommand);
                             _deviceEngine.OnLog(LogType.Info, $"readylockcommand复位报警：{lockCommand}!");
                             return;
@@ -954,6 +981,7 @@ namespace Luster.Motion.TaskFlow.Engine
                         if (!_deviceEngine.IsHome(out var errMsg))
                         {
                             _deviceEngine.OnLog(LogType.Info, "存在轴未回零完成，不允许启动!");
+                            _pendingAlarm = false;
                             Interlocked.Decrement(ref lockCommand);
                             _deviceEngine.OnLog(LogType.Info, $"readylockcommand复位1：{lockCommand}!");
                             return;
@@ -1000,6 +1028,14 @@ namespace Luster.Motion.TaskFlow.Engine
                         // 7.防止连续点击
                         Interlocked.Decrement(ref lockCommand);
                         _deviceEngine.OnLog(LogType.Info, $"readylockcommand复位2：{lockCommand}!");
+
+                        // 如果Start()期间发生了报警，延迟执行Pause
+                        if (_pendingAlarm)
+                        {
+                            _pendingAlarm = false;
+                            Pause(true, () => { _lightManager.SetBuzzer(true); });
+                        }
+
                         _deviceEngine.OnLog(LogType.Info, $"关闭门锁!");
                         LockDoor(true);
                         startResult = true;
@@ -1054,12 +1090,14 @@ namespace Luster.Motion.TaskFlow.Engine
         /// <returns></returns>
         public bool CanAutoRun(out string mesage)
         {
-            bool isAuto = true;
+            bool isAuto = false;
+            bool ioChecked = false;
             string error = "";
             mesage = "";
             // 如果有配置自动/手动,检查按钮
             ProcessIO(SysConfig.ManualSwitchButton, (r) =>
             {
+                ioChecked = true;
                 isAuto = r.GetDigitalIn();
 
                 if (!isAuto)
@@ -1067,6 +1105,12 @@ namespace Luster.Motion.TaskFlow.Engine
                     error = "机台处于手动状态,不允许自动运行!";
                 }
             });
+
+            // 未配置手动/自动切换按钮时，默认允许自动运行
+            if (!ioChecked)
+            {
+                isAuto = true;
+            }
 
             mesage = error;
             return isAuto;
@@ -1331,9 +1375,14 @@ namespace Luster.Motion.TaskFlow.Engine
             }
         }
         /// <summary>
-        /// 用于防止检查IO时同时触发多次命令 
+        /// 用于防止检查IO时同时触发多次命令
         /// </summary>
         private int lockCommand = 0;
+
+        /// <summary>
+        /// 标记在Start()过程中是否发生了报警，用于延迟处理
+        /// </summary>
+        private volatile bool _pendingAlarm = false;
 
         /// <summary>
         /// 暂停
@@ -1357,7 +1406,12 @@ namespace Luster.Motion.TaskFlow.Engine
 
             // 防止连续点击
             if (lockCommand > 0)
+            {
+                // 报警暂停被Start()阻塞时，标记待处理，等Start()完成后执行
+                if (isAlarm)
+                    _pendingAlarm = true;
                 return;
+            }
             Interlocked.Increment(ref lockCommand);
             _deviceEngine.OnLog(LogType.Info, $"Pauselockcommand置位：{lockCommand}!");
             // 记录停止时间
@@ -1679,6 +1733,11 @@ namespace Luster.Motion.TaskFlow.Engine
         private bool? isAutoMode = null;
 
         /// <summary>
+        /// 手动/自动切换按钮消抖计数器
+        /// </summary>
+        private int manualSwitchDebounceCount = 0;
+
+        /// <summary>
         /// 机台状态监控
         /// </summary>
         private void MachineMonitor()
@@ -1741,9 +1800,16 @@ namespace Luster.Motion.TaskFlow.Engine
             {
                 var canRun = io.GetDigitalIn();
 
+                // 仅在IO值发生变化时记录，避免每100ms重复打印
+                if (isAutoMode != canRun)
+                {
+                    MotionEngine.OnLog(LogType.Debug, $"ManualSwitch IO变化: {isAutoMode}->{canRun}, 消抖计数: {manualSwitchDebounceCount}");
+                }
+
                 // 开机启动时，触发一次
                 if (isAutoMode == null)
                 {
+                    MotionEngine.OnLog(LogType.Info, $"ManualSwitch 首次初始化: IO值={canRun}");
                     CanAutoRunEvent?.Invoke(canRun);
                     isAutoMode = canRun;
                 }
@@ -1751,6 +1817,13 @@ namespace Luster.Motion.TaskFlow.Engine
                 // 触发上升沿或下降延，才进行开门或则锁门动作
                 if (isAutoMode != canRun)
                 {
+                    manualSwitchDebounceCount++;
+                    // 连续3次（300ms）读取到相同变化才确认有效，防止IO信号抖动
+                    if (manualSwitchDebounceCount < 3)
+                    {
+                        return;
+                    }
+
                     CanAutoRunEvent?.Invoke(canRun);
                     //自动打到手动后，先把三色灯颜色改变
                     if (MachineStatus == EngineStatus.Running)
@@ -1775,6 +1848,10 @@ namespace Luster.Motion.TaskFlow.Engine
                     }
                     // 进行门锁功能切换
 
+                }
+                else
+                {
+                    manualSwitchDebounceCount = 0;
                 }
 
                 isAutoMode = canRun;

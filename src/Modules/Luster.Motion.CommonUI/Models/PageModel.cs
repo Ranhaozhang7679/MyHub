@@ -1,4 +1,4 @@
-﻿#region 作者和版权
+#region 作者和版权
 /*************************************************************************************
 * CLR 版本:       4.0.30319.42000
 * 类 名 称:       PageModel
@@ -11,7 +11,7 @@
 * 版    权:    	  <copyright company="凌云光工业">
 * 签    名:       Luster Technology Co.,Ltd.
 * 网    站:       https://www.lusterinc.com/
-* 邮    箱:       pangpangzhang@lusterinc.com 
+* 邮    箱:       pangpangzhang@lusterinc.com
 * 唯一标识：      ef7f2ed6-20c5-4279-8448-7cf9dc304794
 * 登录用户:       张庞庞
 * 所 属 域:       LUSTERINC
@@ -72,6 +72,16 @@ namespace Luster.Motion.CommonUI.Models
         {
             get { return _iconfont; }
             set { SetProperty(ref _iconfont, value); }
+        }
+
+        /// <summary>
+        /// 对应的权限项名称（AuthDictionary 中的字段名），用于 AuthVisibilityConverter
+        /// </summary>
+        private string _authItemName;
+        public string AuthItemName
+        {
+            get { return _authItemName; }
+            set { SetProperty(ref _authItemName, value); }
         }
 
 
@@ -145,46 +155,41 @@ namespace Luster.Motion.CommonUI.Models
 
                     _pages = new ObservableCollection<PageModel>()
                     {
-                          //new PageModel() { Name = "主页",IsSelected=false,Region="MainContent",Iconfont="\xe646",IsVisible=false,IsEnabled=true  },
                           new PageModel() {
                               Name = "Home",page_IsSelected=false,Region="MainContent",
-                              Iconfont="\xe646",page_IsVisible=true,page_IsEnabled=true  },
-                          new PageModel() { 
-                              Name = "HardWare",page_IsSelected=false,Region="SimDeviceControl"
-                          ,Iconfont="\xe647",page_IsVisible=true,page_IsEnabled=true    },
-                          new PageModel() { 
+                              Iconfont="\xe646",page_IsVisible=true,page_IsEnabled=true,
+                              AuthItemName="VizPageHome" },
+                          new PageModel() {
+                              Name = "HardWare",page_IsSelected=false,Region="SimDeviceControl",
+                              Iconfont="\xe647",page_IsVisible=true,page_IsEnabled=true,
+                              AuthItemName="VizPageHardWare" },
+                          new PageModel() {
                               Name = "Flow",page_IsSelected=false,Region="FlowContent",
-                              Iconfont="\xe64a",page_IsVisible=true ,page_IsEnabled=true   },
-                          new PageModel() { 
+                              Iconfont="\xe64a",page_IsVisible=true ,page_IsEnabled=true,
+                              AuthItemName="VizPageFlow" },
+                          new PageModel() {
                               Name = "Alarm" ,page_IsSelected=false, Region = "AlarmContent",
-                              Iconfont="\xe643",page_IsVisible=true,page_IsEnabled=true  },
-                          new PageModel() { 
+                              Iconfont="\xe643",page_IsVisible=true,page_IsEnabled=true,
+                              AuthItemName="VizPageAlarm" },
+                          new PageModel() {
                               Name = "Statistics",page_IsSelected=false,Region="ReportContent" ,
-                              Iconfont="\xe648",page_IsVisible=true ,page_IsEnabled=true  },
-                          new PageModel() { 
+                              Iconfont="\xe648",page_IsVisible=true ,page_IsEnabled=true,
+                              AuthItemName="VizPageStatistics" },
+                          new PageModel() {
                               Name = "Configure",page_IsSelected=false,Region="ConfigureContent",
-                              Iconfont="\xe62c",page_IsVisible=true,page_IsEnabled=true    },
-                          //new PageModel() {
-                          //    Name = "DigitalAss" ,page_IsSelected=false,Region="DigitalAssContent",
-                          //    Iconfont="\xe64a",page_IsVisible=true,page_IsEnabled=true   },
+                              Iconfont="\xe62c",page_IsVisible=true,page_IsEnabled=true,
+                              AuthItemName="VizPageConfigure" },
                           new PageModel() {
                               Name = "IntegratedHardware" ,page_IsSelected=false,Region="IntegratedHardwareContent",
-                              Iconfont="\xe64a",page_IsVisible=true,page_IsEnabled=true   },
-                          new PageModel() { 
+                              Iconfont="\xe64a",page_IsVisible=true,page_IsEnabled=true,
+                              AuthItemName="VizPageIntegratedHardware" },
+                          new PageModel() {
                               Name = "Project" ,page_IsSelected=false,Region="ProjectContent",
-                              Iconfont="\xe61c",page_IsVisible=true,page_IsEnabled=true   },
-                          
+                              Iconfont="\xe61c",page_IsVisible=true,page_IsEnabled=true,
+                              AuthItemName="VizPageProject" },
+
                     };
 
-                    //_pages.Add(new PageModel()
-                    //{
-                    //    Name = "HardWare",
-                    //    IsSelected = false,
-                    //    Region = "DeviceDebugContent",
-                    //    Iconfont = "\xe61c",
-                    //    IsVisible = true,
-                    //    IsEnabled = true
-                    //});
                 }
                 return _pages;
             }

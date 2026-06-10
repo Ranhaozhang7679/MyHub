@@ -186,10 +186,10 @@
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="25" />
-                        <ColumnDefinition Width="180" />
-                        <ColumnDefinition Width="40" />
+                        <ColumnDefinition Width="200" />
+                        <ColumnDefinition Width="50" />
                         <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="30" />
+                        <ColumnDefinition Width="60" />
                     </Grid.ColumnDefinitions>
                     <Border HorizontalAlignment="Left">
                         <TextBlock
@@ -210,7 +210,7 @@
                         Visibility="{Binding IsSelected, Converter={StaticResource Boolean2VisibilityReConverter}}" />
                     <TextBox
                         Grid.Column="1"
-                        Width="180"
+                        Width="200"
                         MaxHeight="22"
                         Style="{StaticResource TextBoxExtend.Small}"
                         Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -222,7 +222,7 @@
                         FontWeight="Bold"
                         Foreground="{StaticResource PrimaryBrush}"
                         Text="{Binding AnalogValue}" />
-                    <hc:ElementGroup Grid.Column="3" Margin="10,0,0,0">
+                    <hc:ElementGroup Grid.Column="3" Margin="5,0,0,0">
                         <hc:ElementGroup.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <Grid>
@@ -234,7 +234,7 @@
                             </ItemsPanelTemplate>
                         </hc:ElementGroup.ItemsPanel>
                         <TextBox
-                            MinWidth="160"
+                            MinWidth="170"
                             IsReadOnly="True"
                             Text="{Binding Express}" />
                         <Button
@@ -253,7 +253,6 @@
             </Border>
             <DataTemplate.Triggers>
                 <DataTrigger Binding="{Binding IsSelected}" Value="True">
-            
                     <Setter TargetName="BorderItem" Property="BorderThickness" Value="2" />
                 </DataTrigger>
             </DataTemplate.Triggers>
@@ -272,10 +271,10 @@
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="25" />
-                        <ColumnDefinition Width="180" />
-                        <ColumnDefinition Width="40" />
+                        <ColumnDefinition Width="200" />
+                        <ColumnDefinition Width="50" />
                         <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="30" />
+                        <ColumnDefinition Width="60" />
                     </Grid.ColumnDefinitions>
                     <Border HorizontalAlignment="Left">
                         <TextBlock
@@ -296,7 +295,7 @@
                         Visibility="{Binding IsSelected, Converter={StaticResource Boolean2VisibilityReConverter}}" />
                     <TextBox
                         Grid.Column="1"
-                        Width="180"
+                        Width="200"
                         MaxHeight="22"
                         Style="{StaticResource TextBoxExtend.Small}"
                         Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -308,7 +307,7 @@
                         FontWeight="Bold"
                         Style="{StaticResource NumericUpDownExtend.Small}"
                         Value="{Binding AnalogValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                    <hc:ElementGroup Grid.Column="3" Margin="10,0,0,0">
+                    <hc:ElementGroup Grid.Column="3" Margin="5,0,0,0">
                         <hc:ElementGroup.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <Grid>
@@ -320,7 +319,7 @@
                             </ItemsPanelTemplate>
                         </hc:ElementGroup.ItemsPanel>
                         <TextBox
-                            MinWidth="160"
+                            MinWidth="170"
                             IsReadOnly="True"
                             Text="{Binding Express}" />
                         <Button

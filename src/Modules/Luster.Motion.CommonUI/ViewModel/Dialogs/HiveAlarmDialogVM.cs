@@ -98,6 +98,15 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
 
 
         /// <summary>
+        /// 剩余点击次数
+        /// </summary>
+        public int RemainingCount
+        {
+            get => _remainingClickCount;
+            set => SetProperty(ref _remainingClickCount, value);
+        }
+
+        /// <summary>
         /// 刷卡背景色        /// </summary>
         private Brush _cardBkColor;
         public Brush CardBkColor
@@ -143,6 +152,11 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
         // Help Request是否已发送
         private bool _helpRequested = false;
 
+        // 剩余点击次数（跨对话框实例共享）
+        private static int _remainingClickCount = 3;
+        private static string _trackedErrorCode = "";
+        private static DateTime _lastResetTime = DateTime.MinValue;
+
         private SubscriptionToken _alarmClosedToken;
 
         public HiveAlarmDialogVM(IMotionController motionController, IDeviceEngine deviceEngine, HiveAPI _hiveApi, IDialogService dialogService, VisionAPI _visionAPI, ICommonBus commonBus, SFCHelper sFCHelper)
@@ -168,7 +182,7 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
 
                 if (!isOpen)   // ReportEnd窗口关闭，按钮恢复可点击状态（如果时间未到）
                 {
-                    IsButtonEnable = !_greenIsOpen && (beginTime - DateTime.Now).TotalSeconds > 0;
+                    IsButtonEnable = !_greenIsOpen && (beginTime - DateTime.Now).TotalSeconds > 0 && RemainingCount > 0;
                 }
             });
 
@@ -201,7 +215,24 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                 ErrorMessage = arrAlarm.Length > 1 ? arrAlarm[1] : "Recipe Config Error,please recheck";
                 ErrorDetail = alarmInfo.Message;
             }
-            // 警告提示也需要转入Hive报警，因为会造成机台切为“报警中”，进而导致停机
+
+            // 剩余点击次数重置逻辑
+            if (ErrorCode != _trackedErrorCode)
+            {
+                // error code 发生变化，重置次数
+                if (RemainingCount != 3)
+                    RemainingCount = 3;
+                _trackedErrorCode = ErrorCode;
+                _lastResetTime = DateTime.Now;
+            }
+            else if (RemainingCount != 3 && (DateTime.Now - _lastResetTime).TotalMinutes >= 30)
+            {
+                // 同一 error code 达到30分钟，重置次数
+                RemainingCount = 3;
+                _lastResetTime = DateTime.Now;
+            }
+
+            // 警告提示也需要转入Hive报警，因为会造成机台切为”报警中”，进而导致停机
             if (alarmInfo != null && alarmInfo.AlarmType == DataStruct.Enums.AlarmType.InfoTip) // WarningTip
             {
                 //如果是信息提示（InfoTip），则不需要转入Hive报警。
@@ -240,7 +271,7 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                         {
                             //目前先改成15min
                             //倒计时15min,未来要改成5min
-                            beginTime = DateTime.Now.AddMinutes(5);
+                            beginTime = DateTime.Now.AddMinutes(2);
                             dispatcherTimer.Interval = TimeSpan.FromSeconds(1);
                             dispatcherTimer.Tick += Timer_Tick;
                             _motionController.FileConfig.HiveHelpRequestTime = DateTime.Now;
@@ -260,6 +291,9 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                     }
 
                 }
+                // 剩余次数为0时，按钮置灰
+                if (RemainingCount <= 0)
+                    IsButtonEnable = false;
                 //回零完成，才允许停止
                 if (isHome)
                 {
@@ -374,7 +408,7 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                     var currentID = cardID.Trim();
                     if (cardID.Substring(0, 1) == "0")
                         cardID = cardID.Substring(1, cardID.Length - 1);
-                    var ret = sfcHelper.CheckCard(cardID, hiveAPI.machineSN, out string auth);
+                    var ret = sfcHelper.CheckCard(cardID, hiveAPI.machineSN, out string auth, ErrorCode, DateTime.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.ff+0800"));
                     currentAuth = auth;
                     cardID = "";
                     //刷卡后，需要判断权限是否满足
@@ -383,7 +417,12 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                     // Hive 2.7要求，L7和L8权限不允许停机
                     if (ret && (auth == "L1" || auth == "L2" || auth == "L3" || auth == "L6" || auth == "L9"))
                     {
-
+                        // 刷卡成功，重置剩余次数
+                        if (RemainingCount != 3)
+                        {
+                            RemainingCount = 3;
+                            _lastResetTime = DateTime.Now;
+                        }
                         CardLog = $"ID:{currentID}" + Environment.NewLine +
                                   $"Badge info sent" + Environment.NewLine +
                                   $"MES info received" + Environment.NewLine +
@@ -454,6 +493,15 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                 );
                 return;
             }
+            // 检查剩余点击次数
+            if (RemainingCount <= 0)
+            {
+                IsButtonEnable = false;
+                return;
+            }
+            RemainingCount = _remainingClickCount - 1;
+            if (RemainingCount <= 0)
+                IsButtonEnable = false;
             //_motionController.Recovery();
             //Thread.Sleep(500);
 

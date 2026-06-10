@@ -80,7 +80,7 @@
             CommandParameter="一+二级供应商"
             Content="一级和二级供应商维修 Repaired by 1st &amp; 2nd tier vendor"
             GroupName="1" />
-        <RadioButton
+        <!--<RadioButton
             Grid.Row="6"
             Margin="0,5,0,0"
             HorizontalAlignment="Left"
@@ -95,6 +95,14 @@
             Command="{Binding Path=DataContext.SetCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
             CommandParameter="汇川"
             Content="基恩士 Repaired by Keyence"
+            GroupName="1" />-->
+        <RadioButton
+            Grid.Row="6"
+            Margin="0,5,0,0"
+            HorizontalAlignment="Left"
+            Command="{Binding Path=DataContext.SetCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+            CommandParameter="凌云光维修"
+            Content="凌云光维修 Repaired by Luster"
             GroupName="1" />
         <RadioButton
             Grid.Row="8"
@@ -274,7 +282,7 @@
             ShowGridLines="True">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*" />
-                <RowDefinition Height="180" />
+                <RowDefinition Height="200" />
             </Grid.RowDefinitions>
             <!-- 新增：左侧状态区（按钮、倒计时继续保留原位置） -->
             <StackPanel Grid.Row="1"
@@ -323,6 +331,14 @@
                 </Grid.ColumnDefinitions>
                 <TextBlock Width="200" HorizontalAlignment="Left" Text="剩余时间 Remaining time:" Grid.ColumnSpan="2"/>
                 <TextBlock HorizontalAlignment="Left" Text="{Binding CountDown}" Grid.Column="2" />
+            </Grid>
+            <Grid HorizontalAlignment="Left" Margin="325,182,0,0" Grid.Row="1" Width="300">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock HorizontalAlignment="Left" Text="剩余次数 Remaining count: "/>
+                <TextBlock Grid.Column="1" HorizontalAlignment="Left" Text="{Binding RemainingCount}" />
             </Grid>
         </Grid>
     </Grid>

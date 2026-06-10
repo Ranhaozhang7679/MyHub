@@ -104,6 +104,7 @@ namespace Luster.SimDevice.SubSystem
 
             containerRegistry.RegisterForNavigation<VFlyingPhotoContent, VFlyingPhotoContentVM>();   //仿真飞怕模块
             containerRegistry.RegisterForNavigation<AxisIODebugContent, AxisIODebugContentVM>();     // 轴点位内容配置
+            containerRegistry.RegisterForNavigation<VPlcIOContent, VPlcIOContentVM>();               // PLC IO 监控
 
             // 注册保养页面  
             containerRegistry.RegisterForNavigation<MaintainContent, MaintainContentVM>();

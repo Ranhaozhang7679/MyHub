@@ -217,6 +217,8 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <TextBlock
                                 Margin="1,0,0,0"
@@ -224,6 +226,26 @@
                                 Text="{Binding Name}" />
                             <Button
                                 Grid.Column="1"
+                                Margin="1,0"
+                                Padding="2"
+                                FontSize="10"
+                                Content="↑"
+                                Command="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.MoveUpCommand}"
+                                CommandParameter="{Binding .}"
+                                Style="{StaticResource ButtonDashed.Small}"
+                                ToolTip="上移" />
+                            <Button
+                                Grid.Column="2"
+                                Margin="1,0"
+                                Padding="2"
+                                FontSize="10"
+                                Content="↓"
+                                Command="{Binding RelativeSource={RelativeSource AncestorType=UserControl}, Path=DataContext.MoveDownCommand}"
+                                CommandParameter="{Binding .}"
+                                Style="{StaticResource ButtonDashed.Small}"
+                                ToolTip="下移" />
+                            <Button
+                                Grid.Column="3"
                                 Margin="3,0"
                                 Padding="2"
                                 hc:IconElement.Geometry="{StaticResource RemoveGeometry}"

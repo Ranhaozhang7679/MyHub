@@ -6,6 +6,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>disable</ImplicitUsings>
         <IsPackable>false</IsPackable>
+        <CleanSQLiteInteropFiles>false</CleanSQLiteInteropFiles>
         
         <ArtifactsDir>$(MSBuildThisFileDirectory)artifacts\</ArtifactsDir>
         

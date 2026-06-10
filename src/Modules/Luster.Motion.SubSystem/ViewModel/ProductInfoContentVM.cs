@@ -5,14 +5,17 @@ using Luster.Motion.CommonUI;
 using Luster.Motion.CommonUI.Events;
 using Luster.Motion.CommonUI.ViewModel;
 using Luster.Motion.CommonUI.ViewModel.Dialogs;
+using Luster.Motion.DataStruct.DataModels;
 using Luster.Motion.DataStruct.Enums;
 using Luster.Motion.EditorUI.Extensions;
 using Luster.Motion.Integration.SFC;
 using Luster.Motion.Integration.Web;
+using Luster.Motion.SubSystem.Models;
 using Luster.Motion.TaskFlow.Engine;
 using Luster.Motion.TaskFlow.Engine.HyperTrain;
 using Luster.TaskFlow.Common.Interfaces;
 using Microsoft.VisualBasic;
+using Microsoft.Win32;
 using Prism.Commands;
 using Prism.Events;
 using Prism.Services.Dialogs;
@@ -21,9 +24,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Management;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -32,9 +35,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media.Media3D;
 using System.Windows.Threading;
-
-using Microsoft.Win32;
-using Luster.Motion.DataStruct.DataModels;
+using System.Xml.Linq;
 //using System.Windows;
 
 namespace Luster.Motion.SubSystem.ViewModel
@@ -406,6 +407,23 @@ namespace Luster.Motion.SubSystem.ViewModel
                 SFCHelper.SetConfig(webConfig);
             }
         }
+
+        /// <summary>
+        /// 多料件組裝自動化接口stationCode
+        /// </summary>
+        public string _stationCode;
+        public string stationCode
+        {
+            get { return _stationCode; }
+            set
+            {
+                SetProperty(ref _stationCode, value);
+                webConfig.StationCode = value;
+                SFCHelper.SetConfig(webConfig);
+            }
+        }
+
+
         /// <summary>
         /// 区域
         /// </summary>
@@ -1509,6 +1527,7 @@ namespace Luster.Motion.SubSystem.ViewModel
                 IsShieldDoor = webConfig.IsShieldDoor;
                 PartName = webConfig.PartName;
                 category_key = webConfig.category_key;
+                stationCode = webConfig.StationCode;
 
                 // Vision 系统的端口
                 VisionEnabled = webConfig.VisionEnabled;
@@ -1832,11 +1851,29 @@ namespace Luster.Motion.SubSystem.ViewModel
             //EditDate = tempEditDate;
 
 
-            //把vision注册按钮屏蔽
-            //if(tempSiteCode == "FXZZ")
-            //{
-            //    MachineRegisterCommand;
-            //}
+            // 重新加载 Version.xml 中的版本信息
+            try
+            {
+                string versionXMLPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Version.xml");
+                if (File.Exists(versionXMLPath))
+                {
+                    XDocument doc = XDocument.Load(versionXMLPath);
+                    XElement softVersionElement = doc.Root.Element("SoftVersion");
+                    if (softVersionElement != null)
+                    {
+                        string softVersion = softVersionElement.Value;
+                        var parts = softVersion.Split('-');
+                        string firstTwoParts = string.Join("-", parts.Take(2));
+                        string lastPart = parts.Last();
+                        SoftVersion = $"{firstTwoParts}-{webConfig.VisionVersion}-{webConfig.RobotVersion}-{webConfig.LaserVersion}-{lastPart}";
+                    }
+                }
+            }
+            catch { }
+
+            SFCHelper.SetConfig(webConfig);
+            commonBus.IsNeedSave = true;
+            commonBus.EventBus.GetEvent<SystemConfigChangeEvent>().Publish();
 
         }));
 

@@ -62,6 +62,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Policy;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
@@ -91,6 +92,10 @@ namespace Luster.Motion.Integration.Web
 
         static bool IsShieldDoorMem = false;
         static bool IsProductModeMem = false;
+        static bool IsDryRunModeMem = false;
+        static bool IsFirstPieceModeMem = false;
+        static bool IsPressureMonitorMem = false;
+        static bool IsRobotEnabledMem = false;
         /// <summary>
         /// 软件关机xx->Down,软件开机Idle->xx,中间缺少Down->Idle的切换
         /// 因此在首次开机传Idle->xx前不上Down->Idle的流程
@@ -129,6 +134,14 @@ namespace Luster.Motion.Integration.Web
         private static bool IsUploadPara;
 
         public Dictionary<string, string> ctConfigs = new Dictionary<string, string>();
+        /// <summary>
+        /// 目标CT配置（毫秒），key为模块名，value为目标CT
+        /// </summary>
+        public Dictionary<string, float> ctTargetCTs = new Dictionary<string, float>();
+        /// <summary>
+        /// 互斥组配置，key为模块名，value为互斥组名。同组内的模块只会有一个有数据（如左右双工位）
+        /// </summary>
+        public Dictionary<string, string> ctExclusiveGroups = new Dictionary<string, string>();
         List<string> listA = new List<string>();
 
         //2025/12/24 添加
@@ -184,12 +197,41 @@ namespace Luster.Motion.Integration.Web
                     var lines = File.ReadAllLines(csvPath, Encoding.Default);
                     foreach (var line in lines)
                     {
-                        var strs = line.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                        if (strs.Length > 1)
+                        //var strs = line.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                        //if (strs.Length > 1)
+                        //{
+                        //    if (ctConfigs.ContainsKey(strs[0]) == false)
+                        //    {
+                        //        ctConfigs.Add(strs[0], strs[1]);
+                        //    }
+                        //}
+                        var strs = line.Split(new char[] { ',' });
+                        if (strs.Length > 1 && !string.IsNullOrWhiteSpace(strs[0]) && !string.IsNullOrWhiteSpace(strs[1]))
                         {
-                            if (ctConfigs.ContainsKey(strs[0]) == false)
+                            //if (ctConfigs.ContainsKey(strs[0].Trim()) == false)
+                            //{
+                            //    ctConfigs.Add(strs[0].Trim(), strs[1].Trim());
+                            //}
+                            string key = strs[0].Trim();                             
+                            if (ctConfigs.ContainsKey(key) == false)
                             {
-                                ctConfigs.Add(strs[0], strs[1]);
+                                ctConfigs.Add(key, strs[1].Trim());
+                            }
+                            // 读取第三列：目标CT（毫秒）
+                            if (strs.Length > 2 && !string.IsNullOrWhiteSpace(strs[2]))
+                            {
+                                if (ctTargetCTs.ContainsKey(key) == false && float.TryParse(strs[2].Trim(), out float ct))
+                                {
+                                    ctTargetCTs.Add(key, ct);                                 
+                                }                            
+                             }
+                            // 读取第四列：互斥组名（左右双工位等场景）
+                            if (strs.Length > 3 && !string.IsNullOrWhiteSpace(strs[3]))
+                            {
+                                    if (ctExclusiveGroups.ContainsKey(key) == false)
+                                    {
+                                        ctExclusiveGroups.Add(key, strs[3].Trim());
+                                    }
                             }
                         }
                     }
@@ -482,7 +524,7 @@ namespace Luster.Motion.Integration.Web
                 //parameterName = "None";
                 //parameterValue = "None";
                 parameterName = moduleValue;
-                parameterValue = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss:fff");
+                parameterValue = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
             }
             else
             {
@@ -490,9 +532,9 @@ namespace Luster.Motion.Integration.Web
                 parameterName = moduleValue;
 
                 if (moduleValue.EndsWith("Start_Time"))
-                    parameterValue = module.StartTime.ToString("yyyy-MM-dd HH:mm:ss:fff");
+                    parameterValue = module.StartTime.ToString("yyyy-MM-dd HH:mm:ss.fff");
                 else
-                    parameterValue = module.EndTime.ToString("yyyy-MM-dd HH:mm:ss:fff");
+                    parameterValue = module.EndTime.ToString("yyyy-MM-dd HH:mm:ss.fff");
             }
 
 
@@ -578,8 +620,23 @@ namespace Luster.Motion.Integration.Web
 
             //从缓存中取出对应出料SN的所有步序            
             cacheTimes.TryRemove(validSN, out List<StationTime> currentCTInfos);
+            // 计算互斥组中哪些组有真实数据，用于区分"另一条流线"和"丢步"
+            var groupsWithData = new HashSet<string>();
+            foreach (var kvp in ctConfigs)
+            {
+                if (ctExclusiveGroups.TryGetValue(kvp.Key, out var group) && !string.IsNullOrEmpty(group))
+                {
+                    var match = currentCTInfos.FirstOrDefault(c => listA.Contains(c.Station) && c.Module == kvp.Key);
+                    if (!string.IsNullOrEmpty(match.Module))
+                    {
+                        groupsWithData.Add(group);
+                    }
+                }
+            }
             // 2026-1-19，CtConfig联动CtLogConfig
             var kvList = ctConfigs.ToList();          // 保持插入顺序
+            // 2026-5-22，记录上一步的结束时间，用于填充假数据时保证步序连续
+            DateTime lastEndTime = DateTime.MinValue;
             for (int i = 0; i + 1 < kvList.Count; i += 2)
             {
                 var firstKey = kvList[i].Key;     // 第一行 key
@@ -587,12 +644,25 @@ namespace Luster.Motion.Integration.Web
                 // 到 ctInfos 里找对应元素
                 var first = currentCTInfos.FirstOrDefault(c => listA.Contains(c.Station) && c.Module == firstKey);
                 var second = currentCTInfos.FirstOrDefault(c => listA.Contains(c.Station) && c.Module == secondKey);
+                // 互斥组判断：同组内有数据则跳过无数据的（左右双工位场景）
+                // 不在互斥组内的模块，始终填充假数据（丢步场景）
+                if (string.IsNullOrEmpty(first.Module))
+                {
+                    if (ctExclusiveGroups.TryGetValue(firstKey, out var group) && !string.IsNullOrEmpty(group) && groupsWithData.Contains(group))
+                    {
+                        continue;
+                    }
+                }
                 // first或second不会为空，只是属性取值会为空
                 //if (first != null && second != null)
                 if (first.StartTime == DateTime.MinValue)
                 {
-                    first.StartTime = DateTime.Now;
-                    first.CT = 1000;
+                    //first.StartTime = DateTime.Now;
+                    //first.CT = 1000;
+                    // 用上一步的结束时间作为本步的开始，保证步序连续
+                    first.StartTime = lastEndTime != DateTime.MinValue ? lastEndTime : DateTime.Now;
+                    // 从配置文件CtConfig.csv第三列获取目标CT，未配置时默认1000ms
+                    first.CT = ctTargetCTs.TryGetValue(firstKey, out var targetCT) ? targetCT : 1000; 
                 }
                 // SN不会拿不到，因为只有拿到后，才会存入currentCTInfos
                 //if (!station.Contains("+") || station.Length < 14)
@@ -614,13 +684,13 @@ namespace Luster.Motion.Integration.Web
                     var moduleTime1 = new
                     {
                         parameter = $"CT1_{moduleNameTrim}_工站开始_Start_Time",
-                        value = first.StartTime.ToString("yyyy-MM-dd HH:mm:ss:fff")
+                        value = first.StartTime.ToString("yyyy-MM-dd HH:mm:ss.fff")
                     };
                     ctList.Add(moduleTime1);
                     var moduleTime2 = new
                     {
                         parameter = $"CT1_{moduleNameTrim}_工站开始_End_Time",
-                        value = first.StartTime.ToString("yyyy-MM-dd HH:mm:ss:fff")
+                        value = first.StartTime.ToString("yyyy-MM-dd HH:mm:ss.fff")
                     };
                     ctList.Add(moduleTime2);
                     var moduleTime3 = new
@@ -632,18 +702,27 @@ namespace Luster.Motion.Integration.Web
                 }
                 if (second.EndTime == DateTime.MinValue)
                 {
-                    second.EndTime = DateTime.Now.AddSeconds(1);
+                    //second.EndTime = DateTime.Now.AddSeconds(1);
+                    // 保证平台填充数据的CT步序首尾是连续的
+                    //second.EndTime = first.StartTime.AddSeconds(1);
+                    // 填充随机假时间，范围 [max(0, CT/1000 - 0.1), CT/1000]
+                    double rand = first.CT / 1000.0;
+                    double minDuration = Math.Max(0, rand - 0.1);
+                    double fakeDuration = minDuration + new Random().NextDouble() * (rand - minDuration);
+                    second.EndTime = first.StartTime.AddSeconds(fakeDuration);
                 }
+                // 记录本步结束时间，供下一步填充假数据时使用
+                lastEndTime = second.EndTime;
                 var moduleTime4 = new
                 {
                     parameter = $"{firstValue}_Start_Time",
-                    value = first.StartTime.ToString("yyyy-MM-dd HH:mm:ss:fff")
+                    value = first.StartTime.ToString("yyyy-MM-dd HH:mm:ss.fff")
                 };
                 ctList.Add(moduleTime4);
                 var moduleTime5 = new
                 {
                     parameter = $"{firstValue}_End_Time",
-                    value = second.EndTime.ToString("yyyy-MM-dd HH:mm:ss:fff")
+                    value = second.EndTime.ToString("yyyy-MM-dd HH:mm:ss.fff")
                 };
                 ctList.Add(moduleTime5);
                 var moduleTime6 = new
@@ -665,13 +744,13 @@ namespace Luster.Motion.Integration.Web
                         var moduleTime1 = new
                         {
                             parameter = $"{nextCtNumber}_{moduleNameTrim}_工站结束_Start_Time",
-                            value = second.EndTime.ToString("yyyy-MM-dd HH:mm:ss:fff")
+                            value = second.EndTime.ToString("yyyy-MM-dd HH:mm:ss.fff")
                         };
                         ctList.Add(moduleTime1);
                         var moduleTime2 = new
                         {
                             parameter = $"{nextCtNumber}_{moduleNameTrim}_工站结束_End_Time",
-                            value = second.EndTime.ToString("yyyy-MM-dd HH:mm:ss:fff")
+                            value = second.EndTime.ToString("yyyy-MM-dd HH:mm:ss.fff")
                         };
                         ctList.Add(moduleTime2);
                         var moduleTime3 = new
@@ -690,13 +769,13 @@ namespace Luster.Motion.Integration.Web
                     var moduleTime1 = new
                     {
                         parameter = $"{nextCtNumber}_{moduleNameTrim}_工站结束_Start_Time",
-                        value = second.EndTime.ToString("yyyy-MM-dd HH:mm:ss:fff")
+                        value = second.EndTime.ToString("yyyy-MM-dd HH:mm:ss.fff")
                     };
                     ctList.Add(moduleTime1);
                     var moduleTime2 = new
                     {
                         parameter = $"{nextCtNumber}_{moduleNameTrim}_工站结束_End_Time",
-                        value = second.EndTime.ToString("yyyy-MM-dd HH:mm:ss:fff")
+                        value = second.EndTime.ToString("yyyy-MM-dd HH:mm:ss.fff")
                     };
                     ctList.Add(moduleTime2);
                     var moduleTime3 = new
@@ -1610,7 +1689,94 @@ namespace Luster.Motion.Integration.Web
                 ctList.Add(addContent);
             }
 
+            //空跑模式启用
+            if (true)
+            {
+                var addContent = new
+                {
+                    parameter = $"空跑模式启用",
+                    preValue = IsDryRunModeMem ? 1 : 0,
+                    aftValue = mController.GetCurrentMode().Contains("空跑") ? 1 : 0,
+                    changeReason = "NoRepair"
+                };
+                ctList.Add(addContent);
+            }
+            IsDryRunModeMem = mController.GetCurrentMode().Contains("空跑");
 
+            //首件模式启用
+            if (true)
+            {
+                bool firstPieceEnabled = false;
+                var globalModule = mController.MotionEngine.Get(GlobalModule.GlobalID);
+                if (globalModule != null)
+                {
+                    foreach (var p in globalModule.Parameters)
+                    {
+                        if (p.Key == "Extend_首件启用" && p.Value != null)
+                        {
+                            firstPieceEnabled = (bool)p.Value.Value;
+                            break;
+                        }
+                    }
+                }
+                var addContent = new
+                {
+                    parameter = $"首件模式启用",
+                    preValue = IsFirstPieceModeMem ? 1 : 0,
+                    aftValue = firstPieceEnabled ? 1 : 0,
+                    changeReason = "NoRepair"
+                };
+                ctList.Add(addContent);
+                IsFirstPieceModeMem = firstPieceEnabled;
+            }
+
+            //压力监控启用
+            if (true)
+            {
+                bool pressureEnabled = MapDatas?.Any(m => m.PositivestandardDeviation != 0 || m.NegativestandardDeviation != 0) ?? false;
+                var addContent = new
+                {
+                    parameter = $"压力监控启用",
+                    preValue = IsPressureMonitorMem ? 1 : 0,
+                    aftValue = pressureEnabled ? 1 : 0,
+                    changeReason = "NoRepair"
+                };
+                ctList.Add(addContent);
+                IsPressureMonitorMem = pressureEnabled;
+            }
+
+            //机器人启用
+            if (true)
+            {
+                bool robotEnabled = !(mController.SysConfig.RobotStart?.IsEmpty() ?? true);
+                var addContent = new
+                {
+                    parameter = $"机器人启用",
+                    preValue = IsRobotEnabledMem ? 1 : 0,
+                    aftValue = robotEnabled ? 1 : 0,
+                    changeReason = "NoRepair"
+                };
+                ctList.Add(addContent);
+                IsRobotEnabledMem = robotEnabled;
+            }
+
+            //根据FX的需求,CGL CGSFA CGSF等工站临时添加机器人速度,定值
+            var vComms = mController.MotionEngine.DeviceEngine.GetVDevices<VCommuncation>();
+            foreach (var item in vComms)
+            {
+                if (item.Name.Contains("机器人") || item.Name.Contains("机械手"))
+                {
+                    var addSpdContent = new
+                    {
+                        parameter = $"Robot Speed",
+                        preValue = 100,
+                        aftValue = 100,
+                        changeReason = "NoRepair"
+                    };
+                    ctList.Add(addSpdContent);
+                    break;
+                }
+            }
 
             //获取aelimits上下限不再跟二维码相关
             double upLimit = 0;

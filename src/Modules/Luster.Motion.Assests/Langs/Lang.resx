@@ -2259,6 +2259,15 @@
   <data name="AxisPosMove" xml:space="preserve">
     <value>点位运动</value>
   </data>
+  <data name="AxisPosArray" xml:space="preserve">
+    <value>双轴点位阵列</value>
+  </data>
+  <data name="DHRoboticsVCM" xml:space="preserve">
+    <value>大寰音圈电机</value>
+  </data>
+  <data name="JunRudderVCM" xml:space="preserve">
+    <value>钧舵音圈电机</value>
+  </data>
   <data name="Acc" xml:space="preserve">
     <value>加速度</value>
   </data>
@@ -3194,6 +3203,9 @@
   </data>
   <data name="BUSOP" xml:space="preserve">
     <value>BUSOP</value>
+  </data>
+  <data name="TaikeAnnotatedCurve" xml:space="preserve">
+    <value>压力曲线堆叠图</value>
   </data>
   <data name="ReadModbus" xml:space="preserve">
     <value>读取Modbus</value>

@@ -16,5 +16,7 @@ namespace DC.Authorization.Models
         public string Description { get; set; } = string.Empty;
         /// <summary>权限类型（操作或显示）</summary>
         public RightType Type { get; set; } = RightType.Operation;
+        /// <summary>排序序号，数值越小越靠前</summary>
+        public int SortOrder { get; set; }
     }
 }

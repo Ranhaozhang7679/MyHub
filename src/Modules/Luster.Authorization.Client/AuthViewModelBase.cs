@@ -36,7 +36,8 @@ namespace DC.Authorization.WPF
                     ModuleName = attr.AuthItem.Module,
                     ViewName = attr.AuthItem.View,
                     Description = attr.AuthItem.Description,
-                    Type = RightType.Operation
+                    Type = RightType.Operation,
+                    SortOrder = attr.AuthItem.Order
                 });
 
             var visibilityRightsFromMethods = methods.SelectMany(m => m.GetCustomAttributes<AuthVisibilityAttribute>());
@@ -52,7 +53,8 @@ namespace DC.Authorization.WPF
                     ModuleName = attr.AuthItem.Module,
                     ViewName = attr.AuthItem.View,
                     Description = attr.AuthItem.Description,
-                    Type = RightType.Visibility
+                    Type = RightType.Visibility,
+                    SortOrder = attr.AuthItem.Order
                 });
 
             var rights = operationRights.Concat(visibilityRights).ToArray();

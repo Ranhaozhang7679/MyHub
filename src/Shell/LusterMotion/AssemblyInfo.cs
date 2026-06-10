@@ -10,5 +10,5 @@ using System.Windows;
                                               // app, or any theme specific resource dictionaries)
 )]
 
-// ²úÆ·°æ±¾ºÅ£¨°²×°³ÌĞòµÈÊ¹ÓÃµÄ°æ±¾£©
-[assembly: AssemblyInformationalVersion("03.17")]
+// äº§å“ç‰ˆæœ¬å·ï¼ˆå®‰è£…ç¨‹åºç­‰ä½¿ç”¨çš„ç‰ˆæœ¬ï¼‰
+[assembly: AssemblyInformationalVersion("03.18")]

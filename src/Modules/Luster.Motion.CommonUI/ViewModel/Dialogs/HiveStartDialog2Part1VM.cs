@@ -251,7 +251,7 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                     if (cardID.Substring(0, 1) == "0")
                         cardID = cardID.Substring(1, cardID.Length - 1);
 
-                    var ret = sfcHelper.CheckCard(cardID, _hiveAPI.machineSN, out string auth);
+                    var ret = sfcHelper.CheckCard(cardID, _hiveAPI.machineSN, out string auth, string.IsNullOrEmpty(_hiveAPI._hiveState.RepairStartAlarmCode) ? "F99OOOO-07" : _hiveAPI._hiveState.HiveCurrentCode, DateTime.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.ff+0800"));
 
                     cardID = "";
 
@@ -272,25 +272,32 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                                   $"Production resumed, you may now input units./";
                         CardBkColor = new SolidColorBrush(Color.FromRgb(141, 212, 113));
                         base.CloseDialog("ok");
-                        _hiveAPI.EndAlarm(auth);
+                        //_hiveAPI.EndAlarm(auth);
 
-                        mController.Start();
-                        // Delay 3000
-                        Task.Delay(0).ContinueWith(task =>
+                        if (mController.Start())
                         {
-                            Application.Current.Dispatcher.Invoke(() =>
+                            _hiveAPI.EndAlarm(auth);
+                            // Delay 3000
+                            Task.Delay(0).ContinueWith(task =>
                             {
-                                _bus.OnLog(Common.DataStruct.Enums.LogType.Info, $"刷卡信息响应成功，[Start]窗口即将关闭");
-                                //base.CloseDialog("ok");
-                                _bus.EventBus.GetEvent<HiveReportStateChangedEvent>().Publish(true);
-                                _dialogService.ShowHiveReportDialog("Hive上传维修信息", r =>
+                                Application.Current.Dispatcher.Invoke(() =>
                                 {
-                                    _bus.OnLog(Common.DataStruct.Enums.LogType.Info, $"用户提交HiveReport信息，[Report]窗口已关闭");
-                                    //0720，取消每次刷卡后都停止，减少回零次数
-                                    //_motionController.Stop();
+                                    _bus.OnLog(Common.DataStruct.Enums.LogType.Info, $"刷卡信息响应成功，[Start]窗口即将关闭");
+                                    //base.CloseDialog("ok");
+                                    _bus.EventBus.GetEvent<HiveReportStateChangedEvent>().Publish(true);
+                                    _dialogService.ShowHiveReportDialog("Hive上传维修信息", r =>
+                                    {
+                                        _bus.OnLog(Common.DataStruct.Enums.LogType.Info, $"用户提交HiveReport信息，[Report]窗口已关闭");
+                                        //0720，取消每次刷卡后都停止，减少回零次数
+                                        //_motionController.Stop();
+                                    });
                                 });
                             });
-                        });
+                        }
+                        else
+                        {
+                            _bus.OnLog(Common.DataStruct.Enums.LogType.Info, $"设备启动失败(开始工站报警)，Hive状态保持Down");
+                        }
                     }
                     else
                     {

@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手动切换亮红灯与竞态条件分析</title>
+    <style>
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface2: #222633;
+            --border: #2e3348;
+            --text: #c9d1d9;
+            --text-dim: #8b949e;
+            --accent: #58a6ff;
+            --red: #f85149;
+            --orange: #d29922;
+            --green: #3fb950;
+            --purple: #bc8cff;
+            --cyan: #56d4dd;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Microsoft YaHei", "Segoe UI", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            padding: 2rem;
+        }
+        .container { max-width: 960px; margin: 0 auto; }
+
+        h1 {
+            font-size: 1.6rem;
+            color: #fff;
+            border-bottom: 2px solid var(--red);
+            padding-bottom: .6rem;
+            margin-bottom: .4rem;
+        }
+        .meta {
+            color: var(--text-dim);
+            font-size: .85rem;
+            margin-bottom: 2rem;
+        }
+
+        h2 {
+            font-size: 1.15rem;
+            color: var(--accent);
+            margin: 2.2rem 0 .8rem;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+        h2::before { content: "▎"; color: var(--accent); }
+
+        h3 {
+            font-size: 1rem;
+            color: var(--purple);
+            margin: 1.4rem 0 .5rem;
+        }
+
+        h4 {
+            font-size: .95rem;
+            color: var(--cyan);
+            margin: 1.2rem 0 .4rem;
+        }
+
+        p, li { margin-bottom: .45rem; }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.2rem 1.5rem;
+            margin: 1rem 0;
+        }
+
+        code {
+            background: var(--surface2);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: "Cascadia Code", "Consolas", monospace;
+            font-size: .88em;
+            color: var(--orange);
+        }
+
+        pre {
+            background: #0d0f14;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1rem 1.2rem;
+            font-family: "Cascadia Code", "Consolas", monospace;
+            font-size: .82rem;
+            line-height: 1.7;
+            overflow-x: auto;
+            margin: .8rem 0;
+        }
+        pre .kw { color: var(--purple); }
+        pre .str { color: var(--green); }
+        pre .cm { color: var(--text-dim); }
+        pre .fn { color: var(--accent); }
+        pre .em { color: var(--red); font-weight: bold; }
+        pre .cy { color: var(--cyan); }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: .8rem 0;
+            font-size: .9rem;
+        }
+        th, td {
+            text-align: left;
+            padding: .55rem .9rem;
+            border-bottom: 1px solid var(--border);
+        }
+        th { color: var(--accent); font-weight: 600; }
+
+        .tag {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 3px;
+            font-size: .78rem;
+            font-weight: 600;
+        }
+        .tag-critical { background: rgba(248,81,73,.15); color: var(--red); border: 1px solid rgba(248,81,73,.3); }
+        .tag-high     { background: rgba(210,153,34,.15); color: var(--orange); border: 1px solid rgba(210,153,34,.3); }
+        .tag-medium   { background: rgba(88,166,255,.15); color: var(--accent); border: 1px solid rgba(88,166,255,.3); }
+        .tag-low      { background: rgba(63,185,80,.15); color: var(--green); border: 1px solid rgba(63,185,80,.3); }
+
+        .log {
+            background: #0d0f14;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1rem 1.2rem;
+            font-family: "Cascadia Code", "Consolas", monospace;
+            font-size: .82rem;
+            line-height: 2;
+            overflow-x: auto;
+        }
+        .log .ts { color: var(--text-dim); }
+        .log .info { color: var(--accent); }
+        .log .error { color: var(--red); }
+        .log .warn { color: var(--orange); }
+        .log .debug { color: var(--purple); }
+
+        .flow {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            align-items: flex-start;
+            margin: 1rem 0;
+            padding-left: 1rem;
+        }
+        .flow-row {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+        }
+        .flow-box {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: .35rem .9rem;
+            font-size: .84rem;
+            white-space: nowrap;
+        }
+        .flow-box.pass { border-color: var(--green); color: var(--green); }
+        .flow-box.fail { border-color: var(--red); color: var(--red); }
+        .flow-box.warn { border-color: var(--orange); color: var(--orange); }
+        .flow-box.info { border-color: var(--cyan); color: var(--cyan); }
+        .flow-arrow { color: var(--text-dim); font-size: .9rem; padding-left: .5rem; }
+        .flow-comment { color: var(--text-dim); font-size: .8rem; margin-left: .3rem; }
+
+        .verdict {
+            background: linear-gradient(135deg, rgba(248,81,73,.06), rgba(210,153,34,.06));
+            border: 1px solid rgba(248,81,73,.25);
+            border-radius: 8px;
+            padding: 1.2rem 1.5rem;
+            margin: 1.2rem 0;
+        }
+        .verdict strong { color: var(--red); }
+
+        .note-box {
+            background: linear-gradient(135deg, rgba(88,166,255,.06), rgba(63,185,80,.06));
+            border: 1px solid rgba(88,166,255,.25);
+            border-radius: 8px;
+            padding: 1.2rem 1.5rem;
+            margin: 1.2rem 0;
+        }
+        .note-box strong { color: var(--accent); }
+
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+            margin: 1rem 0;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: .5rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+        }
+        .tl-item {
+            position: relative;
+            margin-bottom: .6rem;
+            padding-left: 1rem;
+        }
+        .tl-item::before {
+            content: '';
+            position: absolute;
+            left: -1.65rem;
+            top: .55rem;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 2px solid var(--bg);
+        }
+        .tl-item.red::before { background: var(--red); }
+        .tl-item.orange::before { background: var(--orange); }
+        .tl-item.green::before { background: var(--green); }
+        .tl-time {
+            color: var(--cyan);
+            font-family: "Cascadia Code", "Consolas", monospace;
+            font-size: .82rem;
+        }
+        .tl-desc { font-size: .9rem; }
+
+        ul { padding-left: 1.4rem; }
+        ol { padding-left: 1.4rem; }
+
+        .diff {
+            background: #0d0f14;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1rem 1.2rem;
+            font-family: "Cascadia Code", "Consolas", monospace;
+            font-size: .82rem;
+            line-height: 1.7;
+            overflow-x: auto;
+            margin: .8rem 0;
+        }
+        .diff .del { color: var(--red); text-decoration: line-through; opacity: .7; }
+        .diff .add { color: var(--green); }
+        .diff .ctx { color: var(--text-dim); }
+    </style>
+</head>
+<body>
+<div class="container">
+
+<h1>手动切换亮红灯与竞态条件 — 现场日志分析报告</h1>
+<div class="meta">
+    报告日期：2026-05-08 &nbsp;|&nbsp; 分析对象：Luster Motion 2026 &nbsp;|&nbsp; 日志来源：现场生产日志 &nbsp;|&nbsp; 分析人：Claude Code
+</div>
+
+<!-- ============================================================ -->
+<h2>1. 现场背景</h2>
+
+<div class="note-box">
+    <p><strong>机台初始状态：自动运行中（Running + Auto）</strong></p>
+    <p style="margin-top:.5rem;">日志发生前，设备处于自动运行状态。事件链顺序：</p>
+    <ol>
+        <li>设备自动运行中 → <strong>先产生"红灯开始闪烁"</strong>（22.6302s）—— 报警触发</li>
+        <li>约 145ms 后 → ManualSwitchButton IO 读到"手动"信号（22.7758s）—— <strong>非人为操作，疑为 IO 信号抖动/干扰</strong></li>
+        <li>IO 误读触发 Pause(false)（22.7868s）—— <strong>覆盖了报警 Pause</strong></li>
+    </ol>
+    <p style="margin-top:.5rem;"><strong>确认根因：场景 A — 报警与 IO 误读的竞态条件</strong></p>
+    <p style="margin-top:.3rem;">手动/自动切换按钮<strong>未被人为操作</strong>，MachineMonitor 读到的信号变化大概率来自 IO 线路的电磁干扰或信号抖动。报警正在异步处理中，EngineStatus 尚未更新为 Alarm，此时 IO 误读恰好通过状态检查，触发 Pause(false) 覆盖了报警流程。</p>
+</div>
+
+<!-- ============================================================ -->
+<h2>2. 现场日志</h2>
+
+<div class="log">
+<span class="ts">行 3154 | </span><span class="ts">[8]|2026-05-08 00:59:22.6302|</span><span class="debug">DEBUG|红灯开始闪烁</span>
+<span class="ts">         |</span>
+<span class="ts">  ...（中间间隔 86 行日志）...</span>
+<span class="ts">         |</span>
+<span class="ts">行 3240 | </span><span class="ts">[8]|2026-05-08 00:59:22.7758|</span><span class="info">INFO|IO信号:手动/自动切换按钮 触发暂停</span>
+<span class="ts">行 3241 | </span><span class="ts">[8]|2026-05-08 00:59:22.7868|</span><span class="info">INFO|当前lockcommand值5：0!</span>
+<span class="ts">行 3242 | </span><span class="ts">[8]|2026-05-08 00:59:22.7868|</span><span class="info">INFO|Pauselockcommand置位：1!</span>
+</div>
+
+<p style="margin-top:.6rem; color:var(--text-dim); font-size:.88rem;">
+    → "红灯开始闪烁"与"手动/自动切换触发暂停"间隔 <strong>145ms</strong>，中间隔了 86 行日志。
+</p>
+
+<!-- ============================================================ -->
+<h2>3. 日志逐行溯源</h2>
+
+<table>
+    <tr>
+        <th>日志内容</th>
+        <th>代码来源</th>
+        <th>文件位置</th>
+    </tr>
+    <tr>
+        <td><code style="color:var(--purple);">红灯开始闪烁</code></td>
+        <td>PauseLight() → OnLog()</td>
+        <td>LightManager.cs:349</td>
+    </tr>
+    <tr>
+        <td><code style="color:var(--accent);">IO信号:手动/自动切换按钮 触发暂停</code></td>
+        <td>MachineMonitor() ManualSwitchButton 处理</td>
+        <td>MotionController.cs:1805</td>
+    </tr>
+    <tr>
+        <td><code style="color:var(--accent);">当前lockcommand值5：0!</code></td>
+        <td>Pause() 方法入口</td>
+        <td>MotionController.cs:1384</td>
+    </tr>
+    <tr>
+        <td><code style="color:var(--accent);">Pauselockcommand置位：1!</code></td>
+        <td>Pause() lockCommand 递增</td>
+        <td>MotionController.cs:1403-1404</td>
+    </tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>4. 两种可能的场景分析</h2>
+
+<p>"红灯开始闪烁"的来源有两种可能，对应完全不同的场景。</p>
+
+<div class="note-box" style="margin-bottom: 1rem;">
+    <p><strong>结合现场背景（设备在自动运行中），场景 B 为确认根因。</strong>场景 A 作为结构风险保留供参考。</p>
+</div>
+
+<!-- ==================== 场景 A ==================== -->
+<h3>场景 A：红灯来自真正的报警 Pause(true)</h3>
+<p><span class="tag tag-medium">可能性：中</span></p>
+
+<h4>调用链路</h4>
+<div class="flow">
+    <div class="flow-row"><div class="flow-box">某处触发报警</div></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-row"><div class="flow-box">Pause(isAlarm: <strong style="color:var(--red);">true</strong>)</div></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-row"><div class="flow-box">MotionEngine.Pause(true, callback)</div><span class="flow-comment">Task.Run 异步</span></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-row"><div class="flow-box warn">回调执行: PauseLight(true)</div><span class="flow-comment">→ "红灯开始闪烁" 22.6302s</span></div>
+    <div class="flow-arrow">↓ 回调继续</div>
+    <div class="flow-row"><div class="flow-box warn">lockCommand 归零 (0)</div></div>
+    <div class="flow-arrow">↓ 回调结束</div>
+    <div class="flow-row"><div class="flow-box fail">⚠ EngineStatus 尚未设置为 Alarm！</div></div>
+    <div class="flow-arrow">↓ MachineMonitor 轮询命中</div>
+    <div class="flow-row"><div class="flow-box info">检测到手动开关变化</div></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-row"><div class="flow-box">MachineStatus != Alarm → 条件通过</div></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-row"><div class="flow-box fail">Pause(false) 触发 → lockCommand=0 → 执行成功</div></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-row"><div class="flow-box fail">EngineStatus = Pause（非 Alarm）→ 状态不一致</div></div>
+</div>
+
+<h4>关键代码 — MotionEngine.Pause() 的时序问题</h4>
+<pre><span class="cm">// MotionEngine_part2.cs:597-608</span>
+<span class="kw">finally</span>
+{
+    LoadingEvent(total, total, <span class="str">"暂停完成"</span>);
+    <span class="em">action?.Invoke(isSuccess, caughtEx);</span>   <span class="cm">// ① 回调执行</span>
+    <span class="cm">//   ├─ PauseLight(true) → "红灯开始闪烁"  (22.6302s)</span>
+    <span class="cm">//   └─ lockCommand → 0                     (释放锁)</span>
+}
+
+<span class="cm">// ← ⚠ 竞态窗口：lockCommand=0，但 EngineStatus 未更新</span>
+
+<span class="kw">if</span> (isSuccess)
+{
+    <span class="em">EngineStatus = isAlarm ? EngineStatus.Alarm : EngineStatus.Pause;</span>  <span class="cm">// ② 状态在此才设置</span>
+}</pre>
+
+<div class="verdict">
+    <p><strong>竞态条件</strong>：在 ① 回调完成到 ② 状态设置之间，存在一个时间窗口：</p>
+    <ul>
+        <li><code>lockCommand</code> 已归零 → 其他操作可以获取锁</li>
+        <li><code>EngineStatus</code> 还不是 Alarm → 状态检查可以通过</li>
+    </ul>
+    <p style="margin-top:.5rem;">如果 MachineMonitor 恰好在这个窗口内检测到手动开关变化，就会触发 <code>Pause(false)</code>，导致机台进入 <strong>Pause</strong> 状态而非 <strong>Alarm</strong> 状态。</p>
+    <p style="margin-top:.5rem;"><strong>后果</strong>：红灯闪烁但系统认为是普通暂停，恢复时执行 Resume 而非 Reset，报警信息可能未被正确处理。</p>
+</div>
+
+<!-- ==================== 场景 B ==================== -->
+<h3>场景 B：红灯来自手动切换自身（更可能）</h3>
+<p><span class="tag tag-high">可能性：高</span></p>
+
+<h4>关键 Bug — PauseLight() 默认参数</h4>
+<pre><span class="cm">// MotionController.cs:1798-1800</span>
+<span class="kw">if</span> (MachineStatus == EngineStatus.Running)
+{
+    <span class="em">_lightManager.PauseLight();</span>   <span class="cm">// ← 无参调用，默认 isException=true → 红灯！</span>
+}</pre>
+
+<pre><span class="cm">// LightManager.cs:335</span>
+<span class="kw">public void</span> <span class="fn">PauseLight</span>(<span class="kw">bool</span> isException = <span class="cy">true</span>)  <span class="cm">// ← 默认 true = 红灯闪烁</span>
+{
+    <span class="kw">if</span> (isException)
+    {
+        <span class="cm">// 红灯闪烁 + 蜂鸣器</span>
+        OnLog(<span class="str">"红灯开始闪烁"</span>);         <span class="cm">// ← 和报警的日志一模一样！</span>
+        ProcessIO(SysConfig.LightRed, io =&gt; io.<span class="fn">SetDigital</span>(<span class="kw">true</span>));
+        <span class="cm">// ...</span>
+    }
+    <span class="kw">else</span>
+    {
+        <span class="cm">// 黄灯（暂停指示）</span>
+        ProcessIO(SysConfig.LightYellow, io =&gt; io.<span class="fn">SetDigital</span>(<span class="kw">true</span>));
+    }
+}</pre>
+
+<h4>完整执行时序（同一次 MachineMonitor 调用内）</h4>
+<div class="timeline">
+    <div class="tl-item">
+        <div class="tl-time">00:59:22.6200</div>
+        <div class="tl-desc">MachineMonitor 检测到 ManualSwitchButton 信号变化（auto → manual）</div>
+    </div>
+    <div class="tl-item orange">
+        <div class="tl-time">00:59:22.62xx</div>
+        <div class="tl-desc">MachineStatus == Running → 调用 <code>PauseLight()</code>（默认 isException=true）</div>
+    </div>
+    <div class="tl-item red">
+        <div class="tl-time">00:59:22.6302</div>
+        <div class="tl-desc"><strong>PauseLight() 日志 → "红灯开始闪烁"</strong></div>
+    </div>
+    <div class="tl-item">
+        <div class="tl-time">00:59:22.63xx ~ .77xx</div>
+        <div class="tl-desc">PauseLight() 执行 IO 操作（WritePlcValueInt × 2、ProcessIO、SetButtonLight）<br><span style="color:var(--text-dim); font-size:.85rem;">设备通信耗时约 145ms，期间产生大量 IO 日志（86 行间隔）</span></div>
+    </div>
+    <div class="tl-item">
+        <div class="tl-time">00:59:22.7758</div>
+        <div class="tl-desc">PauseLight() 返回 → 继续执行状态检查</div>
+    </div>
+    <div class="tl-item orange">
+        <div class="tl-time">00:59:22.7758</div>
+        <div class="tl-desc"><code>canRun==false && MachineStatus!=Alarm</code> → 条件通过 → 日志 "IO信号:手动/自动切换按钮 触发暂停"</div>
+    </div>
+    <div class="tl-item">
+        <div class="tl-time">00:59:22.7868</div>
+        <div class="tl-desc">MachineManualEvent → Pause(false) → lockCommand=0 → 放行</div>
+    </div>
+    <div class="tl-item">
+        <div class="tl-time">00:59:22.7868</div>
+        <div class="tl-desc">lockCommand 置位为 1 → Pause(false) 开始执行</div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<h2>5. 两种场景对比</h2>
+
+<table>
+    <tr>
+        <th>判断依据</th>
+        <th>场景 A（报警 + 竞态）</th>
+        <th>场景 B（手动切换误亮红灯）</th>
+    </tr>
+    <tr>
+        <td>86 行日志间隔</td>
+        <td>报警 Pause 的异步处理日志</td>
+        <td>PauseLight() IO 操作期间其他线程日志</td>
+    </tr>
+    <tr>
+        <td>145ms 时间差</td>
+        <td>回调到 MachineMonitor 下一轮轮询</td>
+        <td>PauseLight() 内 PLC + 设备通信耗时</td>
+    </tr>
+    <tr>
+        <td>lockCommand=0</td>
+        <td>报警回调已将 lockCommand 归零</td>
+        <td>从未有其他操作，一直是 0</td>
+    </tr>
+    <tr>
+        <td>需要条件</td>
+        <td>竞态窗口恰好被 MachineMonitor 命中</td>
+        <td>无额外条件，代码逻辑直接导致</td>
+    </tr>
+    <tr>
+        <td style="font-weight:600;">可能性</td>
+        <td><span class="tag tag-medium">中</span></td>
+        <td><span class="tag tag-high">高</span></td>
+    </tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>6. 问题汇总与修复建议</h2>
+
+<div class="card" style="border-left: 3px solid var(--red);">
+    <h3 style="margin-top:0;">问题 1：手动切换误亮红灯（确定性问题）</h3>
+    <p><span class="tag tag-high">确定性 Bug</span></p>
+    <p><strong>现象</strong>：手动/自动切换到手动时，三色灯亮红灯闪烁（与报警灯一致），操作员无法区分是"手动切换"还是"报警"。</p>
+    <p><strong>原因</strong>：<code>_lightManager.PauseLight()</code> 默认参数 <code>isException=true</code>，触发红灯。手动切换应亮黄灯。</p>
+    <p><strong>修复</strong>：</p>
+    <div class="diff">
+<span class="ctx">// MotionController.cs:1800</span>
+<span class="ctx">if (MachineStatus == EngineStatus.Running)</span>
+<span class="ctx">{</span>
+<span class="del">    _lightManager.PauseLight();            // isException=true → 红灯</span>
+<span class="add">    _lightManager.PauseLight(false);        // isException=false → 黄灯</span>
+<span class="ctx">}</span>
+    </div>
+</div>
+
+<div class="card" style="border-left: 3px solid var(--orange);">
+    <h3 style="margin-top:0;">问题 2：MotionEngine.Pause() 状态设置时序（结构风险）</h3>
+    <p><span class="tag tag-medium">竞态风险</span></p>
+    <p><strong>现象</strong>：报警 Pause 的回调执行完毕后，<code>EngineStatus</code> 才被设置。在回调返回和状态设置之间存在竞态窗口。</p>
+    <p><strong>风险链路</strong>：</p>
+    <div class="flow">
+        <div class="flow-row"><div class="flow-box">报警 Pause(true) 回调完成</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-row"><div class="flow-box warn">lockCommand → 0（锁释放）</div></div>
+        <div class="flow-arrow">↓ 但 EngineStatus 还是旧值</div>
+        <div class="flow-row"><div class="flow-box fail">⚠ 竞态窗口</div></div>
+        <div class="flow-arrow">↓ 若此时 MachineMonitor 检测到其他事件</div>
+        <div class="flow-row"><div class="flow-box fail">Pause(false) 可以获取锁并通过状态检查</div></div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-row"><div class="flow-box fail">EngineStatus = Pause 覆盖 Alarm</div></div>
+    </div>
+    <p><strong>修复建议</strong>：将状态设置移到回调之前，确保 EngineStatus 先更新，再释放 lockCommand：</p>
+    <div class="diff">
+<span class="ctx">// MotionEngine_part2.cs Pause() 方法末尾</span>
+<span class="ctx">finally</span>
+<span class="ctx">{</span>
+<span class="ctx">    LoadingEvent(total, total, "暂停完成");</span>
+<span class="del">    action?.Invoke(isSuccess, caughtEx);  // 回调在前</span>
+<span class="ctx">}</span>
+<span class="ctx"></span>
+<span class="del">if (isSuccess)</span>
+<span class="del">{</span>
+<span class="del">    EngineStatus = isAlarm ? Alarm : Pause;  // 状态在后</span>
+<span class="del">}</span>
+    </div>
+    <p style="color:var(--text-dim); font-size:.85rem; margin-top:.5rem;">
+        注意：此项修改需要评估回调中的 PauseLight、lockCommand 释放等逻辑是否依赖状态更新顺序，建议充分测试后再上线。
+    </p>
+</div>
+
+<div class="card" style="border-left: 3px solid var(--cyan);">
+    <h3 style="margin-top:0;">问题 3：日志无法区分报警与手动切换（可观测性问题）</h3>
+    <p><span class="tag tag-low">可观测性</span></p>
+    <p><strong>现象</strong>：无论是报警还是手动切换，日志都记录 "红灯开始闪烁"，无法区分来源。</p>
+    <p><strong>建议</strong>：在 LightManager 中增加来源标识，或在 MotionController 的调用处添加上下文日志：</p>
+    <div class="diff">
+<span class="ctx">// MotionController.cs:1798-1801</span>
+<span class="ctx">if (MachineStatus == EngineStatus.Running)</span>
+<span class="ctx">{</span>
+<span class="add">    MotionEngine.OnLog(LogType.Info, "手动切换触发暂停灯");</span>
+<span class="ctx">    _lightManager.PauseLight(false);</span>
+<span class="ctx">}</span>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<h2>7. 建议修复优先级</h2>
+
+<table>
+    <tr>
+        <th>问题</th>
+        <th>优先级</th>
+        <th>影响范围</th>
+        <th>修复复杂度</th>
+    </tr>
+    <tr>
+        <td>PauseLight() 默认参数误亮红灯</td>
+        <td><span class="tag tag-critical">P0 — 立即</span></td>
+        <td>所有有机台型的现场</td>
+        <td>改一行参数</td>
+    </tr>
+    <tr>
+        <td>PauseEngine 状态设置时序</td>
+        <td><span class="tag tag-medium">P1 — 计划</span></td>
+        <td>报警与IO事件并发场景</td>
+        <td>需评估回调依赖</td>
+    </tr>
+    <tr>
+        <td>日志区分报警来源</td>
+        <td><span class="tag tag-low">P2 — 建议</span></td>
+        <td>运维排查效率</td>
+        <td>加一行日志</td>
+    </tr>
+</table>
+
+<!-- ============================================================ -->
+<h2>8. 附录：关键代码位置索引</h2>
+
+<table>
+    <tr><th>代码区域</th><th>文件</th><th>行号</th></tr>
+    <tr><td>"红灯开始闪烁" 日志来源</td><td>LightManager.cs</td><td>349</td></tr>
+    <tr><td>PauseLight() 方法定义（isException 参数）</td><td>LightManager.cs</td><td>335-374</td></tr>
+    <tr><td>ManualSwitchButton 处理（触发 PauseLight）</td><td>MotionController.cs</td><td>1798-1800</td></tr>
+    <tr><td>ManualSwitchButton 触发暂停条件</td><td>MotionController.cs</td><td>1803-1807</td></tr>
+    <tr><td>Pause() 方法（lockcommand 日志）</td><td>MotionController.cs</td><td>1380-1453</td></tr>
+    <tr><td>Pause() 回调（PauseLight + lockCommand 释放）</td><td>MotionController.cs</td><td>1426-1437</td></tr>
+    <tr><td>MotionEngine.Pause() 异步执行（状态设置时序）</td><td>MotionEngine_part2.cs</td><td>597-609</td></tr>
+    <tr><td>MController_MachineManualEvent</td><td>ToolBarContentVM.cs</td><td>476-527</td></tr>
+</table>
+
+</div>
+</body>
+</html>

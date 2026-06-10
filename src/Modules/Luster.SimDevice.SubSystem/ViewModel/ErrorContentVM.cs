@@ -26,16 +26,18 @@ using Luster.Motion.DataStruct.Enums;
 using Luster.Motion.DataStruct.Interfaces;
 using Luster.SimDevice.EngineUI;
 using Luster.SimDevice.EngineUI.Models;
-using Microsoft.Win32;
+using Luster.SimDevice.SubSystem.Langs;
+using Luster.WindowsAPICodePack.Dialogs;
 using Prism.Commands;
 using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Media;
+using System.Windows;
 
 namespace Luster.SimDevice.SubSystem.ViewModel
 {
@@ -153,64 +155,137 @@ namespace Luster.SimDevice.SubSystem.ViewModel
             }
         }
 
-        private void BatchExport(List<ErrorItemModel> items)
+        private List<ErrorItemModel> GetErrorListForType(Type type)
         {
-            var saveFile = new SaveFileDialog();
-            saveFile.Filter = "XLS|*.xls";
-            var result = saveFile.ShowDialog().Value;
-            if (result)
+            var list = new List<ErrorItemModel>();
+            var devices = deviceEngine.GetDevices(type).ToList();
+            foreach (var device in devices)
             {
-                var filename = saveFile.FileName;
-                var excel = new ExcelTool();
-                WriteToSheet(excel, items, "DI");
-                excel.Save(filename);
+                if (device is IDeviceError error && ((device is VIO vio && vio.Behavior == IOBehavior.Input) || device is not VIO))
+                {
+                    foreach (var item in error.Errors)
+                    {
+                        list.Add(new ErrorItemModel(error, item));
+                    }
+                }
             }
+            return list;
+        }
+
+        private string GetDisplayName(MaintainDeviceTypeItem deviceItem)
+        {
+            var displayName = LangProvider.GetLang(deviceItem.ItemName);
+            return string.IsNullOrEmpty(displayName) ? deviceItem.ItemName : displayName;
         }
 
         private void ExportTotalCommand()
         {
-            if (ErrorDatas.Count() > 0)
+            try
             {
-                BatchExport(ErrorDatas.ToList());
+                string exportDir = @"D:\Hive";
+                if (!Directory.Exists(exportDir))
+                    Directory.CreateDirectory(exportDir);
+
+                int exportedCount = 0;
+                foreach (var deviceItem in DeviceItems)
+                {
+                    var errorList = GetErrorListForType(deviceItem.ItemType);
+                    if (errorList.Count > 0)
+                    {
+                        string displayName = GetDisplayName(deviceItem);
+                        string fileName = Path.Combine(exportDir, $"{displayName}.xls");
+                        var excel = new ExcelTool();
+                        WriteToSheet(excel, errorList, "DI");
+                        excel.Save(fileName);
+                        exportedCount++;
+                    }
+                }
+
+                if (exportedCount > 0)
+                    MessageBox.Show($"已导出 {exportedCount} 个文件到 {exportDir}", "导出完成");
+                else
+                    MessageBox.Show("没有可导出的数据", "提示");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"导出失败：{ex.Message}", "错误");
             }
         }
 
-        private void BatchImport(List<ErrorItemModel> items)
+        private void ImportFromFile(string fileName, List<ErrorItemModel> errorList)
         {
-            OpenFileDialog fileDialog = new OpenFileDialog();
-            fileDialog.Filter = "(配置文件)|*.xls;*.xlsx";
-            if (fileDialog.ShowDialog() == true)
+            var excel = new ExcelTool(fileName, false);
+            var diTable = excel.GetTableBySheet("DI", 1, 0);
+            for (int i = 0; i < errorList.Count && i < diTable.Rows.Count; i++)
             {
-                //var fileName = fileDialog.FileName;
-                var excel = new ExcelTool(fileDialog.FileName, false);
-                var diTable = excel.GetTableBySheet("DI", 1, 0);
-                int i = 0;
-                foreach (var item in items)
-                {
-                    item.Name = diTable.Rows[i][1].ToString();
-                    item.ErrorCode = diTable.Rows[i][2].ToString();
-                    item.ErrorForeignMessage = diTable.Rows[i][3].ToString();
-                    if (diTable.Columns.Count > 4)
-                        item.AlarmCategory = diTable.Rows[i][4]?.ToString();
-                    if (diTable.Columns.Count > 5)
-                        item.RepairAction = diTable.Rows[i][5]?.ToString();
-                    i++;
-                }
-                //for (int i = 0; i < diTable.Rows.Count; i++)
-                //{
-                //    var item = items.Where(x => x.DeviceName == diTable.Rows[i][0].ToString()).First();
-                //    item.Name = diTable.Rows[i][1].ToString();
-                //    item.ErrorCode = diTable.Rows[i][2].ToString();
-                //    item.ErrorForeignMessage = diTable.Rows[i][3].ToString();
-                //}
+                errorList[i].Name = diTable.Rows[i][1].ToString();
+                errorList[i].ErrorCode = diTable.Rows[i][2].ToString();
+                errorList[i].ErrorForeignMessage = diTable.Rows[i][3].ToString();
+                if (diTable.Columns.Count > 4)
+                    errorList[i].AlarmCategory = diTable.Rows[i][4]?.ToString();
+                if (diTable.Columns.Count > 5)
+                    errorList[i].RepairAction = diTable.Rows[i][5]?.ToString();
             }
         }
 
         private void ImportTotalCommand()
         {
-            if (ErrorDatas.Count() > 0)
+            try
             {
-                BatchImport(ErrorDatas.ToList());
+                var dialog = new CommonOpenFileDialog();
+                dialog.IsFolderPicker = true;
+                dialog.Title = "选择包含报警配置文件的文件夹";
+                if (dialog.ShowDialog() != CommonFileDialogResult.Ok)
+                {
+                    MessageBox.Show("未选择导入文件夹，操作已取消", "提示");
+                    return;
+                }
+
+                string selectedFolder = dialog.FileName;
+                int importedCount = 0;
+
+                foreach (var deviceItem in DeviceItems)
+                {
+                    string displayName = GetDisplayName(deviceItem);
+                    string fileName = Path.Combine(selectedFolder, $"{displayName}.xls");
+                    if (!File.Exists(fileName))
+                        fileName = Path.Combine(selectedFolder, $"{displayName}.xlsx");
+
+                    if (!File.Exists(fileName))
+                        continue;
+
+                    // 获取设备列表，从文件导入数据
+                    var errorList = GetErrorListForType(deviceItem.ItemType);
+                    if (errorList.Count == 0)
+                        continue;
+
+                    ImportFromFile(fileName, errorList);
+
+                    // 如果是当前选中的设备类型，清空界面并用导入的数据重新填充
+                    if (SelectedDeviceItem != null && deviceItem.ItemType == SelectedDeviceItem.ItemType)
+                    {
+                        ErrorDatas.Clear();
+                        foreach (var item in errorList)
+                            ErrorDatas.Add(item);
+                    }
+
+                    importedCount++;
+                }
+
+                deviceEngine.Save();
+
+                if (importedCount > 0)
+                    MessageBox.Show($"已导入 {importedCount} 个文件的配置", "导入完成");
+                else
+                    MessageBox.Show("未找到匹配的配置文件", "提示");
+            }
+            catch (System.IO.IOException)
+            {
+                MessageBox.Show("导入文件失败：文件正在被其他程序占用，请关闭文件后重试", "错误");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"导入失败：{ex.Message}", "错误");
             }
         }
 

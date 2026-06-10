@@ -8,6 +8,7 @@
     xmlns:lang="clr-namespace:Luster.Motion.Assests.Langs;assembly=Luster.Motion.Assests"
     xmlns:local="clr-namespace:Luster.Motion.SubSystem.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:auth="clr-namespace:DC.Authorization.WPF.Helper;assembly=DC.Authorization.WPF"
     xmlns:prism="http://prismlibrary.com/" xmlns:viewmodel="clr-namespace:Luster.Motion.SubSystem.ViewModel" d:DataContext="{d:DesignInstance Type=viewmodel:ToolBarContentVM}"
     Height="112"
     Margin="0,0,0,0"
@@ -273,7 +274,7 @@
                         Grid.Row="1"
                         Fill="White"
                         PreviewMouseDown="btnMode_PreviewMouseDown"
-                        Visibility="{Binding ModeEnabled, Converter={StaticResource Boolean2VisibilityConverter}}">
+                        Visibility="{Binding ModeSwitchVisible}">
                         <Path.Data>
                             <PathGeometry>
                                 <PathFigure IsClosed="True" StartPoint="35,0">
@@ -306,7 +307,7 @@
                                 IsChecked="{Binding page_IsSelected}"
                                 IsEnabled="{Binding page_IsEnabled}"
                                 Style="{StaticResource defaultRadioStyle}"
-                                Visibility="{Binding page_IsVisible, Converter={StaticResource Boolean2VisibilityConverter}}">
+                                Visibility="{Binding AuthItemName, Converter={StaticResource AuthVisibilityConverter}}">
                                 <StackPanel>
                                     <TextBlock
                                         Name="txticon"
@@ -352,7 +353,7 @@
                                 IsChecked="{Binding cmd_IsSelected}"
                                 IsEnabled="{Binding cmd_IsEnabled}"
                                 Style="{StaticResource CommandRadioStyle}"
-                                Visibility="{Binding cmd_IsVisible, Converter={StaticResource Boolean2VisibilityConverter}}">
+                                Visibility="{Binding AuthItemName, Converter={StaticResource AuthVisibilityConverter}}">
                                 <StackPanel>
                                     <TextBlock
                                         HorizontalAlignment="Center"
