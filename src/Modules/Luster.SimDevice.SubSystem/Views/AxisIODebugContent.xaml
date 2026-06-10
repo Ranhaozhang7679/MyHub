@@ -513,8 +513,16 @@
                                                 Content="{lang:Lang Key={x:Static lang:LangKeys.Stop}}" />
                                             <Button
                                                 HorizontalAlignment="Stretch"
-                                                Command="{Binding JogCommandAdd}"
-                                                Content="+Jog" />
+                                                Content="+Jog">
+                                                <hc:Interaction.Triggers>
+                                                    <hc:EventTrigger EventName="PreviewMouseLeftButtonDown">
+                                                        <hc:EventToCommand Command="{Binding JogCommandAdd}" />
+                                                    </hc:EventTrigger>
+                                                    <hc:EventTrigger EventName="PreviewMouseLeftButtonUp">
+                                                        <hc:EventToCommand Command="{Binding StopCommand}" />
+                                                    </hc:EventTrigger>
+                                                </hc:Interaction.Triggers>
+                                            </Button>
                                             <Button
                                                 HorizontalAlignment="Stretch"
                                                 Command="{Binding ClearErrorCommand}"
@@ -528,8 +536,16 @@
                                                 Foreground="{StaticResource DangerBrush}" />
                                             <Button
                                                 HorizontalAlignment="Stretch"
-                                                Command="{Binding JogCommandSub}"
-                                                Content="-Jog" />
+                                                Content="-Jog">
+                                                <hc:Interaction.Triggers>
+                                                    <hc:EventTrigger EventName="PreviewMouseLeftButtonDown">
+                                                        <hc:EventToCommand Command="{Binding JogCommandSub}" />
+                                                    </hc:EventTrigger>
+                                                    <hc:EventTrigger EventName="PreviewMouseLeftButtonUp">
+                                                        <hc:EventToCommand Command="{Binding StopCommand}" />
+                                                    </hc:EventTrigger>
+                                                </hc:Interaction.Triggers>
+                                            </Button>
                                         </UniformGrid>
                                     </StackPanel>
                                 </Border>

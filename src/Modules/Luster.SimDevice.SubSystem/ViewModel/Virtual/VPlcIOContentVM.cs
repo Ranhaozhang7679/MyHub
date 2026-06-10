@@ -748,7 +748,11 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
 
         private void OnAddInput()
         {
-            if (SelectedTab == null) return;
+            if (SelectedTab == null)
+            {
+                dialogService.ShowErrorTip("请先添加模块");
+                return;
+            }
             SelectedTab.Addresses.Add(new PlcIOModel("", "", false));
             RefreshPages();
             SaveToFile();
@@ -756,7 +760,11 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
 
         private void OnAddOutput()
         {
-            if (SelectedTab == null) return;
+            if (SelectedTab == null)
+            {
+                dialogService.ShowErrorTip("请先添加模块");
+                return;
+            }
             SelectedTab.Addresses.Add(new PlcIOModel("", "", true));
             RefreshPages();
             SaveToFile();
@@ -843,7 +851,11 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
 
         private void OnBatchImport()
         {
-            if (SelectedTab == null) return;
+            if (SelectedTab == null)
+            {
+                dialogService.ShowErrorTip("请先添加模块");
+                return;
+            }
 
             var openFile = new OpenFileDialog();
             openFile.Filter = "XLS|*.xls";
@@ -855,6 +867,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
                 var table = excel.GetTableBySheet(0, 1, 0);
 
                 SelectedTab.Addresses.Clear();
+                int importedCount = 0;
 
                 for (int i = 0; i < table.Rows.Count; i++)
                 {
@@ -869,6 +882,13 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
                     bool isOutput = typeStr == "1";
 
                     SelectedTab.Addresses.Add(new PlcIOModel(address, name, isOutput));
+                    importedCount++;
+                }
+
+                if (importedCount == 0)
+                {
+                    dialogService.ShowErrorTip("导入失败：未解析到有效数据，请确保数据包含地址、名称、分类三列实际内容");
+                    return;
                 }
 
                 RefreshPages();
