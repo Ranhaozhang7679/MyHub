@@ -1931,20 +1931,31 @@ namespace Luster.Motion.Integration.SFC
         /// CG5通过WIP查询排线SN
         /// </summary>
         /// <param name="sn">SN编码</param>
+        /// <param name="cableSNLength">排线SN长度</param>
         /// <param name="errMsg">错误信息</param>
         /// <returns>排线SN</returns>
-        public string QueryCableSN(string sn, out string errMsg)
+        public string QueryCableSN(string sn, int cableSNLength, out string errMsg)
         {
             string cableSN = "";
-            string cmd = $"c=QUERY_RECORD&sn={sn}&p=sen_sn";
+            string cmd = $"c=QUERY_RECORD&sn={sn}&p=flex_6";
             errMsg = "";
+            const string keyName = "SFC_OK";
+            const string dataKey = "flex_6=";
             HttpSend(cmd, "CG5查询排线SN", r =>
             {
-                var resultArray = r.Split('\n');
-                if (resultArray.Length > 1 && resultArray[1].Length > 5)
+                if (r.Contains(keyName))
                 {
-                    cableSN = resultArray[1].Substring(5).Trim();
-                    return string.Empty;
+                    int dataIndex = r.IndexOf(dataKey);
+                    if (dataIndex >= 0)
+                    {
+                        int startIndex = dataIndex + dataKey.Length;
+                        if (r.Length >= startIndex + cableSNLength)
+                        {
+                            cableSN = r.Substring(startIndex, cableSNLength).Trim();
+                            return string.Empty;
+                        }
+                    }
+                    return "排线SN解析失败!";
                 }
                 else
                 {

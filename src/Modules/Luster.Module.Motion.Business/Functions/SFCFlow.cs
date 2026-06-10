@@ -327,6 +327,10 @@ namespace Luster.Module.Motion.Business.Functions
         [Parameter("CableSN", 20, CN = "排线SN", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
         public string CableSN { get; set; }
 
+        [DependOn("SfcMode", SFCType.O)]
+        [Parameter("排线SN长度", 9, CN = "排线SN长度", DefaultV = 24)]
+        public int CableSNLength { get; set; }
+
         [DependOn("SfcMode", SFCType.B)]
         [Parameter("上传/不上传", 20, CN = "查询卷料是否上传", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
         public string RollResult { get; set; }
@@ -964,7 +968,7 @@ namespace Luster.Module.Motion.Business.Functions
                     break;
                 // CG5通过WIP查询排线SN
                 case SFCType.O:
-                    CableSN = _sfcHelper.QueryCableSN(SN, out errMsg);
+                    CableSN = _sfcHelper.QueryCableSN(SN, CableSNLength, out errMsg);
                     if (!string.IsNullOrEmpty(errMsg))
                     {
                         MyOwner.OnAlarm(AlarmType.InfoTip, errMsg, AlarmCode);
