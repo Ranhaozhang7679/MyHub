@@ -221,6 +221,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Dialog
                         CommType = "网口通信";
                         IpAddress = tcp.Network.Ip;
                         Port = tcp.Network.Port;
+                        PortText = Port.ToString();
                         SocketRole = (SocketRole)Enum.Parse(typeof(SocketRole), tcp.Network.SocketRole);
                     }
                     else if (_current.Communication is CommSerial serial)
@@ -266,7 +267,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Dialog
 
                 comm = new CommTCP()
                 {
-                    Network = new LNetwork() { Ip = IpAddress, SocketRole = this.SocketRole.ToString() }
+                    Network = new LNetwork() { Ip = IpAddress, Port = Port, SocketRole = this.SocketRole.ToString() }
                 };
                 if (string.IsNullOrWhiteSpace(PortText) || Port <= 0)
                 {
