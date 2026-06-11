@@ -525,7 +525,7 @@ namespace Luster.Module.Motion.Device.Functions
             for (int i = 0; i < pressureSamples.Count; i++)
             {
                 int num = i + 1;
-                int timenum = (int)(i < timeSamples.Count ? timeSamples[i] : (timeSamples.Count > 0 ? timeSamples[timeSamples.Count - 1] + (i - timeSamples.Count + 1) * 5L : num * 5L));
+                int timenum = (int)(i < timeSamples.Count ? timeSamples[i] : (timeSamples.Count > 0 ? timeSamples[timeSamples.Count - 1] + (i - timeSamples.Count + 1) * 24L : num * 24L));
                 double press = pressureSamples[i] / 1000;
                 double position1 = 0;
                 if (i < positionSamples.Count)
@@ -568,7 +568,7 @@ namespace Luster.Module.Motion.Device.Functions
                     double[] posArr = new double[pressureSamples.Count];
                     for (int i = 0; i < pressureSamples.Count; i++)
                     {
-                        timeArr[i] = i < timeSamples.Count ? timeSamples[i] : (timeSamples.Count > 0 ? timeSamples[timeSamples.Count - 1] + (i - timeSamples.Count + 1) * 5L : (i + 1) * 5L);
+                        timeArr[i] = i < timeSamples.Count ? timeSamples[i] : (timeSamples.Count > 0 ? timeSamples[timeSamples.Count - 1] + (i - timeSamples.Count + 1) * 24L : (i + 1) * 24L);
                         pressArr[i] = pressureSamples[i] / 1000;
                         posArr[i] = i < positionSamples.Count ? positionSamples[i] : 0;
                     }
@@ -821,10 +821,10 @@ namespace Luster.Module.Motion.Device.Functions
                             position = _axis.GetCurrentPos() + _axis1.GetCurrentPos() - positionZ;
                         }
                         positionSamples.Add(position);
-                        // Stopwatch补偿：保证5ms采样周期
+                        // Stopwatch补偿：保证24ms采样周期
                         // long elapsed = sw.ElapsedMilliseconds;
                         long elapsed = stopwatch.ElapsedMilliseconds;
-                        long nextTarget = timeSamples.Count * 5L;
+                        long nextTarget = timeSamples.Count * 24L;
                         long sleepMs = nextTarget - elapsed;
                         if (sleepMs > 0)
                         {
