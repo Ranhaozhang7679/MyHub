@@ -196,21 +196,21 @@ namespace Luster.Module.Motion.Business.Functions
         /// <summary>
         /// 源CSV路径
         /// </summary>
-        [NotEmpty]
+        [DependOn("PDCAMode", PDCAType.CopyCSV)]
         [Parameter("源CSV文件夹路径", 24, CN = "源CSV路径", CanRef = ParamRef.Ref)]
         public string SourceCSVPath { get; set; }
 
         /// <summary>
         /// 目标CSV路径
         /// </summary>
-        [NotEmpty]
+        [DependOn("PDCAMode", PDCAType.CopyCSV)]
         [Parameter("目标CSV文件夹路径", 25, CN = "目标CSV路径")]
         public LStringEx DesCSVPath { get; set; }
 
         /// <summary>
         /// CSV文件名称规则
         /// </summary>
-        [NotEmpty]
+        [DependOn("PDCAMode", PDCAType.CopyCSV)]
         [Parameter("CSV名称规则", 26, CN = "CSV名称规则")]
         public string CSVRol { get; set; }
 
