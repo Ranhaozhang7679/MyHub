@@ -646,12 +646,28 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
                     {
                         try
                         {
-                            #region 先删除轴的点位（带引用检查），再删除点位组
+                            #region 预检查所有轴点位是否可删除
                             foreach (var item in SubAxisList)
                             {
                                 var newName = $"{item.AxisType}_{model.Name}";
                                 var axisPos = item.Tag.Positions.FirstOrDefault(u => u.Name == newName);
-                                deviceEngine.RemoveAxisPos(axisPos);
+                                var errMsg = deviceEngine.CheckAxisPosCanDelete(axisPos);
+                                if (!string.IsNullOrEmpty(errMsg))
+                                {
+                                    throw new FriendlyException(errMsg);
+                                }
+                            }
+                            #endregion
+
+                            #region 全部通过，统一删除轴点位
+                            foreach (var item in SubAxisList)
+                            {
+                                var newName = $"{item.AxisType}_{model.Name}";
+                                var axisPos = item.Tag.Positions.FirstOrDefault(u => u.Name == newName);
+                                if (axisPos != null)
+                                {
+                                    deviceEngine.RemoveAxisPos(axisPos);
+                                }
                             }
                             #endregion
 
