@@ -2363,7 +2363,7 @@ namespace Luster.Motion.Integration.Web
             {
                 if (arg1.Result.IsToss && !arg1.Result.Result && !arg1.Result.IsPreviousStationUndo)
                 {
-                    AlarmEvent("retry", arg1.Result.NgCode, arg1.Result.ErrMsg);
+                    AlarmEvent("tossing", arg1.Result.NgCode, arg1.Result.ErrMsg);
                 }
             }
         }
