@@ -186,6 +186,10 @@ namespace Luster.Module.Motion.Device.Functions
         [Parameter("抬起扭矩限制(千分比)", 33, CN = "抬起扭矩", DefaultV = 500)]
         public int TorqueLimit2 { get; set; }
 
+        [DependOn("ActionType", VCMActionType.SoftLanding)]
+        [Parameter("压力采集周期(ms)", 34, CN = "采集周期", DefaultV = 24)]
+        public int SamplePeriod { get; set; }
+
 
         // ===== 输出参数 =====
         [Parameter("执行结果", 40, CN = "执行结果", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
@@ -525,7 +529,7 @@ namespace Luster.Module.Motion.Device.Functions
             for (int i = 0; i < pressureSamples.Count; i++)
             {
                 int num = i + 1;
-                int timenum = (int)(i < timeSamples.Count ? timeSamples[i] : (timeSamples.Count > 0 ? timeSamples[timeSamples.Count - 1] + (i - timeSamples.Count + 1) * 24L : num * 24L));
+                int timenum = (int)(i < timeSamples.Count ? timeSamples[i] : (timeSamples.Count > 0 ? timeSamples[timeSamples.Count - 1] + (i - timeSamples.Count + 1) * (long)SamplePeriod : num * (long)SamplePeriod));
                 double press = pressureSamples[i] / 1000;
                 double position1 = 0;
                 if (i < positionSamples.Count)
@@ -568,7 +572,7 @@ namespace Luster.Module.Motion.Device.Functions
                     double[] posArr = new double[pressureSamples.Count];
                     for (int i = 0; i < pressureSamples.Count; i++)
                     {
-                        timeArr[i] = i < timeSamples.Count ? timeSamples[i] : (timeSamples.Count > 0 ? timeSamples[timeSamples.Count - 1] + (i - timeSamples.Count + 1) * 24L : (i + 1) * 24L);
+                        timeArr[i] = i < timeSamples.Count ? timeSamples[i] : (timeSamples.Count > 0 ? timeSamples[timeSamples.Count - 1] + (i - timeSamples.Count + 1) * (long)SamplePeriod : (i + 1) * (long)SamplePeriod);
                         pressArr[i] = pressureSamples[i] / 1000;
                         posArr[i] = i < positionSamples.Count ? positionSamples[i] : 0;
                     }
@@ -824,7 +828,7 @@ namespace Luster.Module.Motion.Device.Functions
                         // Stopwatch补偿：保证24ms采样周期
                         // long elapsed = sw.ElapsedMilliseconds;
                         long elapsed = stopwatch.ElapsedMilliseconds;
-                        long nextTarget = timeSamples.Count * 24L;
+                        long nextTarget = timeSamples.Count * (long)SamplePeriod;
                         long sleepMs = nextTarget - elapsed;
                         if (sleepMs > 0)
                         {
