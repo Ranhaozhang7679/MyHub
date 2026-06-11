@@ -644,17 +644,24 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
                 {
                     if (r.Result == ButtonResult.OK)
                     {
-                        deviceEngine.RemovePosGroup(model.Name);
-                        UpdatePosGruops();
-
-                        #region 同步删除轴的点位
-                        foreach (var item in SubAxisList)
+                        try
                         {
-                            var newName = $"{item.AxisType}_{model.Name}";
-                            var axisPos = item.Tag.Positions.FirstOrDefault(u => u.Name == newName);
-                            deviceEngine.RemoveAxisPos(axisPos);
+                            #region 先删除轴的点位（带引用检查），再删除点位组
+                            foreach (var item in SubAxisList)
+                            {
+                                var newName = $"{item.AxisType}_{model.Name}";
+                                var axisPos = item.Tag.Positions.FirstOrDefault(u => u.Name == newName);
+                                deviceEngine.RemoveAxisPos(axisPos);
+                            }
+                            #endregion
+
+                            deviceEngine.RemovePosGroup(model.Name);
+                            UpdatePosGruops();
                         }
-                        #endregion //同步删除轴的点位
+                        catch (FriendlyException)
+                        {
+                            throw;
+                        }
                     }
                 });
             }
