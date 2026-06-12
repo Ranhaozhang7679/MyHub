@@ -211,8 +211,22 @@ namespace Luster.Module.Motion.Business.Functions
         /// CSV文件名称规则
         /// </summary>
         [DependOn("PDCAMode", PDCAType.CopyCSV)]
-        [Parameter("CSV名称规则", 26, CN = "CSV名称规则")]
+        [Parameter("CSV名称规则", 26, CN = "CSV名称规则", CanRef = ParamRef.Ref)]
         public string CSVRol { get; set; }
+
+        /// <summary>
+        /// 是否上传csv文件
+        /// </summary>
+        [DependOn("PDCAMode", PDCAType.CopyCSV)]
+        [Parameter("是否上传csv文件", 18, CN = "是否上传csv文件", DefaultV = false)]
+        public bool IsUploadCsv { get; set; }
+
+        /// <summary>
+        /// 是否上传力控图片
+        /// </summary>
+        [DependOn("PDCAMode", PDCAType.CopyCSV)]
+        [Parameter("是否上传力控图片", 18, CN = "是否上传力控图片", DefaultV = false)]
+        public bool IsUploadDHPic { get; set; }
 
 
         /// <summary>
@@ -983,17 +997,38 @@ namespace Luster.Module.Motion.Business.Functions
                         Directory.CreateDirectory(dstCSVFolder);
                     }
 
-                    string[] csvList = Directory.GetFiles(srcCSVFolder, "*.csv");
-                    foreach (var fPath in csvList)
+                    if (IsUploadCsv)
                     {
-                        var fName = Path.GetFileName(fPath);
-                        // 文件名规则过滤：未配置规则则拷贝所有CSV，配置了则只拷贝匹配的
-                        if (string.IsNullOrEmpty(CSVRol) || fName.IndexOf(CSVRol, StringComparison.OrdinalIgnoreCase) >= 0)
+                        string[] csvList = Directory.GetFiles(srcCSVFolder, "*.csv");
+                        foreach (var fPath in csvList)
                         {
-                            File.Copy(fPath, Path.Combine(dstCSVFolder, fName), true);
-                            MyOwner.OnLog(LogType.Warning, $"PDCAELimit CSV复制OK;{Path.Combine(srcCSVFolder, fName)}->{Path.Combine(dstCSVFolder, fName)}\r\n");
+                            var fName = Path.GetFileName(fPath);
+                            // 文件名规则过滤：未配置规则则拷贝所有CSV，配置了则只拷贝匹配的
+                            if (string.IsNullOrEmpty(CSVRol) || fName.IndexOf(CSVRol, StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                File.Copy(fPath, Path.Combine(dstCSVFolder, fName), true);
+                                MyOwner.OnLog(LogType.Warning, $"PDCAELimit CSV复制OK;{Path.Combine(srcCSVFolder, fName)}->{Path.Combine(dstCSVFolder, fName)}\r\n");
+                            }
                         }
                     }
+
+                    if (IsUploadDHPic)
+                    {
+                        string[] DHpicList = Directory.GetFiles(srcCSVFolder, "*.jpg")
+                                                   .Concat(Directory.GetFiles(srcCSVFolder, "*.png"))
+                                                   .ToArray();
+                        foreach (var fPath in DHpicList)
+                        {
+                            var fName = Path.GetFileName(fPath);
+                            // 文件名规则过滤：未配置规则则拷贝所有CSV，配置了则只拷贝匹配的
+                            if (string.IsNullOrEmpty(CSVRol) || fName.IndexOf(CSVRol, StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                File.Copy(fPath, Path.Combine(dstCSVFolder, fName), true);
+                                MyOwner.OnLog(LogType.Warning, $"PDCAELimit CSV复制OK;{Path.Combine(srcCSVFolder, fName)}->{Path.Combine(dstCSVFolder, fName)}\r\n");
+                            }
+                        }
+                    }
+
 
                     return true;
                 }
