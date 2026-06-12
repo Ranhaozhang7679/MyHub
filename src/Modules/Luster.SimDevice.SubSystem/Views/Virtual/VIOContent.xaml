@@ -398,7 +398,8 @@
                             HorizontalAlignment="Left"
                             VerticalAlignment="Top"
                             ChildWrapping="Wrap"
-                            Orientation="Vertical" />
+                            Orientation="Vertical"
+                            ScrollViewer.VerticalScrollBarVisibility="Visible" />
                     </ItemsPanelTemplate>
                 </Setter.Value>
             </Setter>

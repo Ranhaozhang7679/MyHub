@@ -507,9 +507,9 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
         {
             _lastSize = size;
 
-            // 计算页面能够容纳的IO数量（减1作为安全余量，防止最后一条被裁剪或换列）
-            int col = (int)(size.Width / 260);
-            int row = Math.Max(1, (int)(size.Height / 38) - 1);
+            // 计算页面能够容纳的IO数量
+            int col = (int)(size.Width / 250);
+            int row = (int)(size.Height / 35);
 
             if (IsAnalogIn || IsAnalogOut)
             {
