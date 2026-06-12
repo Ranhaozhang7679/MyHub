@@ -459,10 +459,9 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                 result.Parameters.Add("Curve", Curve);
             }
 
-            if (Curve < 0 || Curve >= (GridEnable ? TrayRows * TrayCols : 400))
+            if (Curve < 0 || Curve >= 400)
             {
-                int maxIndex = GridEnable ? TrayRows * TrayCols : 400;
-                WarningContent = $"输入的值为{Curve}:不在0~{maxIndex - 1}范围内";
+                WarningContent = $"输入的值为{Curve}:不在0~399范围内";
                 return;
             }
             else
