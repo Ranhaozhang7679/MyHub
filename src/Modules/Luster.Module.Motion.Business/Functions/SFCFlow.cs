@@ -50,13 +50,13 @@ namespace Luster.Module.Motion.Business.Functions
 
             [Description("加入载具黑名单")]
             AddBlackCarrier,
-            [Description("卷料工单查询")]
+            [Description("卷料工单查询(查询Lot余量)")]
             A,
-            [Description("卷料是否可以组装CCDFlag=2")]
+            [Description("卷料是否可以组装CCDFlag=2(自动化组装批次料)")]
             B,
             [Description("卷料组装绑定CCDFlag=0")]
             C,
-            [Description("卷料绑定确认")]
+            [Description("卷料绑定确认(查询批次料是否link到Wip)")]
             D,
             [Description("CG1查询黑名单")]
             E,

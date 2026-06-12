@@ -870,7 +870,7 @@ namespace Luster.Motion.TaskFlow.Engine
                         if (!isResetOK)
                         {
                             _deviceEngine.OnLog(LogType.Error, "模块复位(Reset)失败，终止恢复流程！");
-                            MotionEngine.OnAlarm(new AlarmInfo(this, AlarmType.FailError, "模块复位失败，请处理后重试！", "Reset-Fail"));
+                            MotionEngine.OnAlarm(new AlarmInfo(this, AlarmType.FailError, "模块复位失败，请处理后重试！", "O99OOOO-66-03@Reset-Fail"));
                             Interlocked.Decrement(ref lockCommand);
                             return;
                         }

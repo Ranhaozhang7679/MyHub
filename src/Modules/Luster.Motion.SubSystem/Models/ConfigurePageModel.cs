@@ -101,7 +101,7 @@ namespace Luster.Motion.SubSystem.Models
                         {
                               new ConfigurePageModel() { Name = "MachineConfigure",IsSelected=false,Region="SoftConfigureContent",Iconfont="\xe609"  },
                               new ConfigurePageModel() { Name = "PLCConfigure",IsSelected=false,Region="PlcAlarmContent",Iconfont="\xe609"  },
-                              new ConfigurePageModel() { Name = "SoftConfigure",IsSelected=false,Region="UserContent",Iconfont="\xe609"   },
+                              //new ConfigurePageModel() { Name = "SoftConfigure",IsSelected=false,Region="UserContent",Iconfont="\xe609"   },
                               new ConfigurePageModel() { Name = "Cockpit",IsSelected=false,Region="ProductInfoContent",Iconfont="\xe609"   },
                               new ConfigurePageModel() { Name = "RobotInfo" ,IsSelected=false, Region = "RobotConfigureContent",Iconfont="\xe609" },
                               new ConfigurePageModel() { Name = "FileConfig" ,IsSelected=false, Region = "FileConfigContent",Iconfont="\xe609" },

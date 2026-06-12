@@ -45,7 +45,6 @@ namespace Luster.Module.Motion.Device.Functions
         [Parameter("轴设备选择", 0, CN = "轴名称", EditorType = typeof(VAxis))]
         public VDevice DeviceParam { get; set; }
 
-        [NotEmpty]
         [Parameter("伺服Z轴设备选择", 1, CN = "伺服Z轴名称", EditorType = typeof(VAxis))]
         public VDevice DeviceParam1 { get; set; }
 
@@ -187,6 +186,10 @@ namespace Luster.Module.Motion.Device.Functions
         [Parameter("抬起扭矩限制(千分比)", 33, CN = "抬起扭矩", DefaultV = 500)]
         public int TorqueLimit2 { get; set; }
 
+        [DependOn("ActionType", VCMActionType.SoftLanding)]
+        [Parameter("压力采集周期(ms)", 34, CN = "采集周期", DefaultV = 24)]
+        public int SamplePeriod { get; set; }
+
 
         // ===== 输出参数 =====
         [Parameter("执行结果", 40, CN = "执行结果", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
@@ -258,12 +261,10 @@ namespace Luster.Module.Motion.Device.Functions
                 return false;
             }
 
-            GetVDevice<VAxis>(DeviceParam1, out _axis1);
-            if (_axis1 == null)
+            // 伺服Z轴可选，不填则按设置的点位运动
+            if (DeviceParam1 != null && !string.IsNullOrEmpty(DeviceParam1.Name))
             {
-                errMsg = $"设备:{DeviceParam1.Name}未找到";
-                OutFailReason = errMsg;
-                return false;
+                GetVDevice<VAxis>(DeviceParam1, out _axis1);
             }
 
             try
@@ -528,7 +529,7 @@ namespace Luster.Module.Motion.Device.Functions
             for (int i = 0; i < pressureSamples.Count; i++)
             {
                 int num = i + 1;
-                int timenum = (int)(i < timeSamples.Count ? timeSamples[i] : (timeSamples.Count > 0 ? timeSamples[timeSamples.Count - 1] + (i - timeSamples.Count + 1) * 5L : num * 5L));
+                int timenum = (int)(i < timeSamples.Count ? timeSamples[i] : (timeSamples.Count > 0 ? timeSamples[timeSamples.Count - 1] + (i - timeSamples.Count + 1) * (long)SamplePeriod : num * (long)SamplePeriod));
                 double press = pressureSamples[i] / 1000;
                 double position1 = 0;
                 if (i < positionSamples.Count)
@@ -571,7 +572,7 @@ namespace Luster.Module.Motion.Device.Functions
                     double[] posArr = new double[pressureSamples.Count];
                     for (int i = 0; i < pressureSamples.Count; i++)
                     {
-                        timeArr[i] = i < timeSamples.Count ? timeSamples[i] : (timeSamples.Count > 0 ? timeSamples[timeSamples.Count - 1] + (i - timeSamples.Count + 1) * 5L : (i + 1) * 5L);
+                        timeArr[i] = i < timeSamples.Count ? timeSamples[i] : (timeSamples.Count > 0 ? timeSamples[timeSamples.Count - 1] + (i - timeSamples.Count + 1) * (long)SamplePeriod : (i + 1) * (long)SamplePeriod);
                         pressArr[i] = pressureSamples[i] / 1000;
                         posArr[i] = i < positionSamples.Count ? positionSamples[i] : 0;
                     }
@@ -606,7 +607,7 @@ namespace Luster.Module.Motion.Device.Functions
             positionSamples = new System.Collections.Generic.List<double>();
             try
             {
-                positionZ = _axis1.GetCurrentPos();
+                positionZ = _axis1?.GetCurrentPos() ?? 0;
                 int InitalRaw = ReadRawCurrent();
                 // Step 0: 设定扭矩限制为最大
                 WriteTorqueLimit(MaxTorque);
@@ -816,7 +817,7 @@ namespace Luster.Module.Motion.Device.Functions
                         //timeSamples.Add(sw.ElapsedMilliseconds);
                         timeSamples.Add(stopwatch.ElapsedMilliseconds);
                         double position = 0;
-                        if (StartGetZ1Position)
+                        if (StartGetZ1Position || _axis1 == null)
                         {
                             position = _axis.GetCurrentPos();
                         }
@@ -825,10 +826,10 @@ namespace Luster.Module.Motion.Device.Functions
                             position = _axis.GetCurrentPos() + _axis1.GetCurrentPos() - positionZ;
                         }
                         positionSamples.Add(position);
-                        // Stopwatch补偿：保证5ms采样周期
+                        // Stopwatch补偿：保证24ms采样周期
                         // long elapsed = sw.ElapsedMilliseconds;
                         long elapsed = stopwatch.ElapsedMilliseconds;
-                        long nextTarget = timeSamples.Count * 5L;
+                        long nextTarget = timeSamples.Count * (long)SamplePeriod;
                         long sleepMs = nextTarget - elapsed;
                         if (sleepMs > 0)
                         {

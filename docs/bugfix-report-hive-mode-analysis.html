@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hive Mode 字段分析报告 - 空跑模式上传 mode=6 问题</title>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --card: #161b22;
+            --border: #30363d;
+            --fg: #e6edf3;
+            --muted: #8b949e;
+            --accent: #58a6ff;
+            --red: #f85149;
+            --green: #3fb950;
+            --orange: #d29922;
+            --purple: #bc8cff;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.7;
+            padding: 2rem;
+        }
+        .container { max-width: 960px; margin: 0 auto; }
+        h1 {
+            font-size: 1.6rem;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: .6rem;
+            margin-bottom: 1.5rem;
+        }
+        h2 {
+            font-size: 1.2rem;
+            color: var(--accent);
+            margin: 1.8rem 0 .8rem;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+        h2::before { content: "■"; font-size: .7rem; }
+        h3 {
+            font-size: 1.05rem;
+            color: var(--purple);
+            margin: 1.2rem 0 .5rem;
+        }
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.2rem 1.5rem;
+            margin: 1rem 0;
+        }
+        .card.alert {
+            border-left: 4px solid var(--red);
+            background: linear-gradient(90deg, rgba(248,81,73,.08), var(--card));
+        }
+        .card.success {
+            border-left: 4px solid var(--green);
+            background: linear-gradient(90deg, rgba(63,185,80,.08), var(--card));
+        }
+        .card.info {
+            border-left: 4px solid var(--accent);
+            background: linear-gradient(90deg, rgba(88,166,255,.08), var(--card));
+        }
+        .card.warn {
+            border-left: 4px solid var(--orange);
+            background: linear-gradient(90deg, rgba(210,153,34,.08), var(--card));
+        }
+        .tag {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: .78rem;
+            font-weight: 600;
+        }
+        .tag-red { background: rgba(248,81,73,.2); color: var(--red); }
+        .tag-green { background: rgba(63,185,80,.2); color: var(--green); }
+        .tag-blue { background: rgba(88,166,255,.2); color: var(--accent); }
+        .tag-orange { background: rgba(210,153,34,.2); color: var(--orange); }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: .8rem 0;
+            font-size: .92rem;
+        }
+        th, td {
+            padding: .5rem .8rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        th { color: var(--muted); font-weight: 600; font-size: .85rem; }
+        code {
+            font-family: "Cascadia Code", "Consolas", monospace;
+            background: rgba(110,118,129,.2);
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: .88rem;
+        }
+        pre {
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: .6rem 0;
+            font-size: .88rem;
+            line-height: 1.5;
+        }
+        .hl-key { color: #79c0ff; }
+        .hl-str { color: #a5d6ff; }
+        .hl-val { color: #ff7b72; }
+        .hl-cmt { color: #8b949e; }
+        .hl-bool { color: var(--green); }
+        .arrow { color: var(--accent); margin: 0 .4rem; }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: .82rem;
+            font-weight: 600;
+        }
+        .badge .dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+        }
+        .badge-red .dot { background: var(--red); }
+        .badge-red { background: rgba(248,81,73,.15); color: var(--red); }
+        .badge-green .dot { background: var(--green); }
+        .badge-green { background: rgba(63,185,80,.15); color: var(--green); }
+        .badge-orange .dot { background: var(--orange); }
+        .badge-orange { background: rgba(210,153,34,.15); color: var(--orange); }
+        .timeline {
+            position: relative;
+            padding-left: 1.5rem;
+            margin: 1rem 0;
+        }
+        .timeline::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+        }
+        .timeline-item {
+            position: relative;
+            padding: .3rem 0 .8rem .8rem;
+            font-size: .92rem;
+        }
+        .timeline-item::before {
+            content: "";
+            position: absolute;
+            left: -1.5rem;
+            top: .55rem;
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            border: 2px solid var(--accent);
+            background: var(--bg);
+        }
+        .timeline-item.red::before { border-color: var(--red); }
+        .timeline-item .time { color: var(--muted); font-size: .85rem; margin-right: .5rem; }
+        .diff-table td:nth-child(2) { color: var(--red); text-decoration: line-through; }
+        .diff-table td:nth-child(3) { color: var(--green); }
+        .footer {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: .82rem;
+        }
+        .nowrap { white-space: nowrap; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+<h1>Hive Mode 字段分析报告</h1>
+
+<table>
+    <tr><th style="width:120px">问题</th><td>空跑模式下 Hive 上传 <code>"mode":6</code>，预期应为 <code>"mode":5</code></td></tr>
+    <tr><th>项目</th><td>CG11（G:\_\0507\6）</td></tr>
+    <tr><th>发生时间</th><td>2026-05-07 20:26:26</td></tr>
+    <tr><th>分析日期</th><td>2026-05-08</td></tr>
+    <tr><th>严重程度</th><td><span class="badge badge-red"><span class="dot"></span>数据错误 — 影响Hive端模式识别</span></td></tr>
+</table>
+
+<!-- ============ 根因 ============ -->
+<h2>根因分析</h2>
+
+<div class="card alert">
+    <strong>参数名不匹配：</strong>代码中硬编码查找的参数 Key 与配方中实际定义的参数 Key 不一致。
+</div>
+
+<p style="margin-top:1rem">
+    <code>DryRunEnable()</code> 在全局参数字典中查找 Key 为 <code>"Extend_空跑模式"</code> 的参数，
+    但 CG11 配方中<strong>不存在</strong>这个参数。配方中实际代表空跑模式的参数 Key 是 <code>"Extend_生产模式"</code>。
+</p>
+
+<h3>证据 1 — 配方参数定义</h3>
+<p>文件：<code>G:\_\0507\6\Project\Project.data</code></p>
+<pre><span class="hl-cmt">&lt;!-- 全局参数定义 --&gt;</span>
+<span class="hl-val">&lt;Extend_生产模式</span>
+    <span class="hl-key">CN=</span><span class="hl-str">"空跑模式"</span>
+    <span class="hl-key">DefaultV=</span><span class="hl-bool">"false"</span>
+    <span class="hl-key">Alias=</span><span class="hl-str">"空跑模式"</span>
+    <span class="hl-key">Type=</span><span class="hl-str">"Bool"</span> <span class="hl-val">/&gt;</span>
+
+<span class="hl-cmt">&lt;!-- 注意：不存在名为 Extend_空跑模式 的参数 --&gt;</span></pre>
+
+<h3>证据 2 — 配方中的变量引用</h3>
+<p>配方中所有对空跑模式的引用均使用 <code>ParamKey="Extend_生产模式"</code>：</p>
+<pre><span class="hl-key">&lt;Variable</span>
+    <span class="hl-key">ID=</span><span class="hl-str">"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"</span>
+    <span class="hl-key">ParamKey=</span><span class="hl-str">"Extend_生产模式"</span>
+    <span class="hl-key">Alias=</span><span class="hl-str">"Global.空跑模式"</span> <span class="hl-val">/&gt;</span></pre>
+
+<h3>证据 3 — 代码硬编码的参数名</h3>
+<p>文件：<code>src\Modules\Luster.Motion.Integration\Web\HiveAPI.cs:160</code></p>
+<pre><span class="hl-key">private string</span> DRYRUNNAME = <span class="hl-str">"Extend_空跑模式"</span>;  <span class="hl-cmt">// ← 不存在！配方用的是 Extend_生产模式</span></pre>
+
+<!-- ============ 影响链 ============ -->
+<h2>影响链（mode 值判断逻辑）</h2>
+
+<p>文件：<code>HiveAPI.cs:1681-1686</code></p>
+
+<table>
+    <tr>
+        <th>优先级</th>
+        <th>条件</th>
+        <th>查找的参数 Key</th>
+        <th>配方实际值</th>
+        <th>结果</th>
+    </tr>
+    <tr>
+        <td>1</td>
+        <td><code>PDCAEnable()</code></td>
+        <td><code>Extend_PDCA启用</code></td>
+        <td><code>False</code></td>
+        <td><span class="tag tag-orange">skip</span></td>
+    </tr>
+    <tr>
+        <td>2</td>
+        <td><code>CPKEnable()</code></td>
+        <td><code>Extend_CPK启用</code></td>
+        <td><code>False</code></td>
+        <td><span class="tag tag-orange">skip</span></td>
+    </tr>
+    <tr>
+        <td>3</td>
+        <td><code>GRREnable()</code></td>
+        <td><code>Extend_GRR启用</code></td>
+        <td><code>False</code></td>
+        <td><span class="tag tag-orange">skip</span></td>
+    </tr>
+    <tr style="background:rgba(248,81,73,.08)">
+        <td>4</td>
+        <td><code>DryRunEnable()</code></td>
+        <td><code style="color:var(--red)">Extend_空跑模式</code></td>
+        <td><strong>参数不存在</strong></td>
+        <td><span class="tag tag-red">false → skip</span></td>
+    </tr>
+    <tr style="background:rgba(248,81,73,.12)">
+        <td colspan="4" style="text-align:right"><code>else</code></td>
+        <td><span class="badge badge-red"><span class="dot"></span>mode = 6</span></td>
+    </tr>
+</table>
+
+<!-- ============ 时间线 ============ -->
+<h2>事件时间线</h2>
+
+<div class="timeline">
+    <div class="timeline-item">
+        <span class="time">20:14:03 ~ 20:14:27</span>
+        系统处于 <strong>生产模式</strong>，PDCA=True, 空跑模式=False
+    </div>
+    <div class="timeline-item">
+        <span class="time">20:14:42</span>
+        模式切换开始：<code>[Global] 参数PDCA启用 原始值:True → 新值:False</code>
+    </div>
+    <div class="timeline-item">
+        <span class="time">20:14:43</span>
+        模式切换完成：<strong>生产模式 → 空跑模式</strong>，设置 <code>Extend_生产模式=True</code>（别名"空跑模式"）
+    </div>
+    <div class="timeline-item">
+        <span class="time">20:16:16</span>
+        TaskFlow 模块将 <code>Extend_mode</code> 设为 3（空跑模式内部编码）
+    </div>
+    <div class="timeline-item red">
+        <span class="time">20:26:26</span>
+        <strong>HiveCT 模块触发上传</strong>：<code>"mode":6</code> — 因为 <code>DryRunEnable()</code> 查找的 <code>Extend_空跑模式</code> 不存在
+    </div>
+</div>
+
+<!-- ============ 日志原文 ============ -->
+<h2>关键日志原文</h2>
+
+<h3>Hive 上传日志 (hour_20.txt)</h3>
+<div class="card">
+<pre>{
+  <span class="hl-key">"unit_sn"</span>: <span class="hl-str">"24242352353"</span>,
+  <span class="hl-key">"pass"</span>: <span class="hl-bool">true</span>,
+  <span class="hl-key">"input_time"</span>: <span class="hl-str">"2026-05-07T20:26:19.90+0800"</span>,
+  <span class="hl-key">"output_time"</span>: <span class="hl-str">"2026-05-07T20:26:26.82+0800"</span>,
+  <span class="hl-key">"data"</span>: { <span class="hl-val">"mode": 6</span> }   <span class="hl-cmt">&lt;!-- 期望: 5, 实际: 6 --&gt;</span>
+}</pre>
+</div>
+
+<h3>系统运行日志 (STEP2026-05-07_23.log)</h3>
+<div class="card">
+<pre><span class="hl-cmt">模式切换日志：</span>
+[1]|20:14:43 | 模式切换 ... 生产模式-&gt;<span class="hl-val">空跑模式</span>
+  变量:空跑模式 = True  变量:SFC启用 = False  变量:<span class="hl-val">PDCA启用 = False</span>
+
+<span class="hl-cmt">参数变更日志：</span>
+[1]|20:14:42 | [Global]参数PDCA启用 原始值:True,新值:False
+
+<span class="hl-cmt">表达式求值：</span>
+[50]|20:16:16 | Express:!Global_PDCA启用&amp;&amp;Global_空跑模式,
+  Value:<span class="hl-bool">Global_PDCA启用=False</span>,<span class="hl-bool">Global_空跑模式=True</span></pre>
+</div>
+
+<!-- ============ Mode 映射表 ============ -->
+<h2>Hive Mode 值映射表</h2>
+
+<div class="card">
+<table>
+    <tr><th>mode 值</th><th>含义</th><th>判断条件</th><th>当前状态</th></tr>
+    <tr><td>0</td><td>PDCA 模式</td><td><code>PDCAEnable()</code></td><td><span class="tag tag-orange">未命中</span></td></tr>
+    <tr><td>1</td><td>CPK 模式</td><td><code>CPKEnable()</code></td><td><span class="tag tag-orange">未命中</span></td></tr>
+    <tr><td>2</td><td>GRR 模式</td><td><code>GRREnable()</code></td><td><span class="tag tag-orange">未命中</span></td></tr>
+    <tr><td>5</td><td>空跑模式（期望）</td><td><code>DryRunEnable()</code></td><td><span class="tag tag-red">参数名不匹配 → false</span></td></tr>
+    <tr style="background:rgba(248,81,73,.08)"><td><strong>6</strong></td><td><strong>生产模式（默认）</strong></td><td><code>else</code></td><td><span class="badge badge-red"><span class="dot"></span>实际命中</span></td></tr>
+</table>
+</div>
+
+<!-- ============ 修复方案 ============ -->
+<h2>修复方案</h2>
+
+<h3>方案 A — 直接修复（快速）</h3>
+<div class="card success">
+    <p>将 <code>DRYRUNNAME</code> 改为配方中实际使用的参数 Key：</p>
+    <table class="diff-table" style="max-width:600px">
+        <tr><th style="width:100px"></th><th>值</th><th></th></tr>
+        <tr>
+            <td style="color:var(--muted)">修改前</td>
+            <td><code>private string DRYRUNNAME = "Extend_空跑模式";</code></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td style="color:var(--muted)">修改后</td>
+            <td></td>
+            <td><code>private string DRYRUNNAME = "Extend_生产模式";</code></td>
+        </tr>
+    </table>
+    <p style="margin-top:.5rem;color:var(--orange);font-size:.88rem">
+        ⚠ 注意：此方案仅适用于当前项目。若其他项目的配方使用不同参数名，需逐一适配。
+    </p>
+</div>
+
+<h3>方案 B — 从配置动态读取（推荐）</h3>
+<div class="card success">
+    <p>从 <code>SystemConfig.xml</code> 的 <code>ListGlobalVar</code> 或 <code>RunModeModel</code> 中动态获取空跑模式对应的参数 Key，避免硬编码：</p>
+    <pre><span class="hl-cmt">// 思路：遍历 RunModeModel，找到 Mode 包含 "空跑" 的配置项，</span>
+<span class="hl-cmt">// 从其 SelectGlobalVar 中提取 IsSelected=True 的 GlobalKey</span>
+<span class="hl-key">var</span> emptyRunMode = sysConfig.ListRunMode
+    .FirstOrDefault(m =&gt; m.Mode.Contains(<span class="hl-str">"空跑"</span>));
+<span class="hl-key">var</span> dryRunKey = emptyRunMode?.SelectGlobalVar
+    .FirstOrDefault(g =&gt; g.GlobalName == <span class="hl-str">"空跑模式"</span>)?.GlobalKey;</pre>
+</div>
+
+<h3>方案 C — 配方修正（可选）</h3>
+<div class="card info">
+    <p>将配方中 <code>Extend_生产模式</code> 的参数 Key 改为 <code>Extend_空跑模式</code>，使参数名与语义一致。但这需要同步修改所有引用该参数的配方节点，影响范围较大。</p>
+</div>
+
+<!-- ============ 涉及文件 ============ -->
+<h2>涉及文件</h2>
+
+<table>
+    <tr><th>文件</th><th>说明</th></tr>
+    <tr><td class="nowrap"><code>HiveAPI.cs:160</code></td><td><code>DRYRUNNAME</code> 硬编码参数名</td></tr>
+    <tr><td class="nowrap"><code>HiveAPI.cs:1681-1686</code></td><td>mode 值判断逻辑</td></tr>
+    <tr><td class="nowrap"><code>HiveAPI.cs:2453-2468</code></td><td><code>DryRunEnable()</code> 方法</td></tr>
+    <tr><td class="nowrap"><code>SystemConfig.xml</code></td><td>RunModeModel 模式切换配置</td></tr>
+    <tr><td class="nowrap"><code>Project.data</code></td><td>配方全局参数定义</td></tr>
+    <tr><td class="nowrap"><code>MotionController.cs:2303-2420</code></td><td><code>SetCurrentMode()</code> 模式切换实现</td></tr>
+    <tr><td class="nowrap"><code>HiveCT.cs</code></td><td>触发 Hive CT 上传的 TaskFlow 模块</td></tr>
+</table>
+
+<div class="footer">
+    分析工具：Claude Code &nbsp;|&nbsp; 源码版本：develop (b7e187b) &nbsp;|&nbsp; 报告生成：2026-05-08
+</div>
+
+</div>
+</body>
+</html>

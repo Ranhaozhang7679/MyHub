@@ -1771,6 +1771,11 @@ namespace Luster.Motion.Integration.Web
                     alarmMsg = "Stopped for repair by Keyence";
                     break;
 
+                case "凌云光维修":
+                    alarmCode = "F99OOOO-12";
+                    alarmMsg = "Stopped for repair by Luster";
+                    break;
+
                 case "工厂人员":
                     alarmCode = "F99OOOO-11";
                     alarmMsg = "Stopped for repair by contract manufacturer";
@@ -2167,11 +2172,14 @@ namespace Luster.Motion.Integration.Web
             string urlSim = Path.Combine(URLSimulator, "capture/v6/softwareversions");
             if (!isConnected /*|| !PDCAEnable()*/) return;
 
+            //读取error code list信息
+            var (errorCodeHash, errorCodeCount) = GetErrorCodeListInfo();
+
             //所有版本需要一起发送
             var motionSw = new
             {
                 //app_id = sysConfig.HiveAppId,
-                //sequence = sysConfig.UniteCode,              
+                //sequence = sysConfig.UniteCode,
                 //ts = DateTime.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.ff+0800"),
                 //data = new
                 //{
@@ -2191,16 +2199,23 @@ namespace Luster.Motion.Integration.Web
                 },
                 sub_module = new
                 {
-                    repair_sop = new
+                    error_code_list = new
                     {
-                        version = repairVersion,
-                        hash_key = Sha1Signature(repairVersion),
+                        version = "1.0.0.0",
+                        hash_key = errorCodeHash,
+                        count = errorCodeCount,
                     },
+                    //repair_sop = new
+                    //{
+                    //    version = repairVersion,
+                    //    hash_key = Sha1Signature(repairVersion),
+                    //},
                     spare_part_list = new
                     {
                         version = spareVersion,
                         hash_key = Sha1Signature(spareVersion),
-                    }
+                        count = 15,
+                    }                   
                 },
                 attributes = new
                 {
@@ -2249,6 +2264,9 @@ namespace Luster.Motion.Integration.Web
             string urlSim = Path.Combine(URLSimulator, "capture/v6/softwareversions");
             if (!isConnected /*|| !PDCAEnable()*/) return;
 
+            //读取error code list信息
+            var (errorCodeHash2, errorCodeCount2) = GetErrorCodeListInfo();
+
             //所有版本需要一起发送
             var motionSw = new
             {
@@ -2259,10 +2277,11 @@ namespace Luster.Motion.Integration.Web
                 },
                 sub_module = new
                 {
-                    repair_sop = new
+                    error_code_list = new
                     {
-                        version = repairVersion,
-                        hash_key = Sha1Signature(repairVersion),
+                        version = "1.0.0.0",
+                        hash_key = errorCodeHash2,
+                        count = errorCodeCount2,
                     },
                     spare_part_list = new
                     {
@@ -2344,7 +2363,7 @@ namespace Luster.Motion.Integration.Web
             {
                 if (arg1.Result.IsToss && !arg1.Result.Result && !arg1.Result.IsPreviousStationUndo)
                 {
-                    AlarmEvent("retry", arg1.Result.NgCode + "-K1", arg1.Result.ErrMsg);
+                    AlarmEvent("tossing", arg1.Result.NgCode, arg1.Result.ErrMsg);
                 }
             }
         }
@@ -2353,7 +2372,7 @@ namespace Luster.Motion.Integration.Web
         {
             if (!stationResult.IsPreviousStationUndo)
             {
-                AlarmEvent("tossing", stationResult.NgCode + "-S1", stationResult.ErrMsg);
+                AlarmEvent("tossing", stationResult.NgCode, stationResult.ErrMsg);
             }
 
         }
@@ -2500,6 +2519,40 @@ namespace Luster.Motion.Integration.Web
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// 读取D:\Hive下LUSTER ERROR LIST的csv文件，取前4列内容计算hash，返回(hashKey, 数据行数)
+        /// </summary>
+        private (string hashKey, int count) GetErrorCodeListInfo()
+        {
+            try
+            {
+                var dir = "D:\\Hive";
+                if (!Directory.Exists(dir)) return ("", 0);
+                var file = Directory.GetFiles(dir, "*LUSTER ERROR LIST*").FirstOrDefault();
+                if (file == null) return ("", 0);
+
+                var lines = File.ReadAllLines(file, Encoding.UTF8);
+                if (lines.Length <= 1) return ("", 0);
+
+                var sb = new StringBuilder();
+                for (int i = 1; i < lines.Length; i++) // 跳过表头
+                {
+                    if (string.IsNullOrWhiteSpace(lines[i])) continue;
+                    var cols = lines[i].Split(',');
+                    for (int c = 0; c < 4 && c < cols.Length; c++)
+                    {
+                        sb.Append(cols[c].Trim());
+                    }
+                }
+                return (Sha1Signature(sb.ToString()), lines.Length - 1);
+            }
+            catch (Exception ex)
+            {
+                LogTool.Error($"读取ErrorCodeList失败: {ex.Message}");
+                return ("", 0);
+            }
         }
 
 

@@ -145,9 +145,9 @@ namespace Luster.Motion.ReportUI.ViewModel
             set => SetProperty(ref _yAxisStep, value);
         }
 
-        private double _yAxisMax = 0.12;
+        private double _yAxisMax = 0.3;
         /// <summary>
-        /// 图表1 Y轴上限（kgf）
+        /// 图表1 Y轴上限（kgf），设置为0时自动调整
         /// </summary>
         public double YAxisMax
         {
@@ -156,7 +156,7 @@ namespace Luster.Motion.ReportUI.ViewModel
         }
 
         // === 图表2 参数 ===
-        private double _xAxisStep2 = 0.5;
+        private double _xAxisStep2 = 50;
         /// <summary>
         /// 图表2 X轴刻度间隔
         /// </summary>
@@ -178,7 +178,7 @@ namespace Luster.Motion.ReportUI.ViewModel
 
         private double _yAxisMax2 = 5.0;
         /// <summary>
-        /// 图表2 Y轴上限
+        /// 图表2 Y轴上限，设置为0时自动调整
         /// </summary>
         public double YAxisMax2
         {
@@ -190,7 +190,11 @@ namespace Luster.Motion.ReportUI.ViewModel
         public bool OnlyShowPositiveIsEnabled
         {
             get => _onlyShowPositiveIsEnabled;
-            set => SetProperty(ref _onlyShowPositiveIsEnabled, value);
+            set
+            {
+                if (SetProperty(ref _onlyShowPositiveIsEnabled, value))
+                    RedrawChart();
+            }
         }
         //是否启用平滑曲线
         private bool _smoothCurveProcessingsEnabled = true;
@@ -268,14 +272,14 @@ namespace Luster.Motion.ReportUI.ViewModel
                     Chart2Title = "Time-Position";
                     Chart2XLabel = "X间隔(ms):";
                     Chart2YLabel = "Y间隔(mm):";
-                    Chart2YMaxLabel = "Y上限(mm):";
+                    Chart2YMaxLabel = "Y上限(mm,0自动):";
                 }
                 else
                 {
                     Chart2Title = "Position-Press";
                     Chart2XLabel = "X间隔(mm):";
                     Chart2YLabel = "Y间隔(kgf):";
-                    Chart2YMaxLabel = "Y上限(kgf):";
+                    Chart2YMaxLabel = "Y上限(kgf,0自动):";
                 }
                 RedrawChart();
             }));
@@ -489,6 +493,10 @@ namespace Luster.Motion.ReportUI.ViewModel
             double yMax1 = YAxisMax > 0 ? YAxisMax : pressAbsMax * 1.05;
             double xMax = Math.Ceiling(timeMax / xStep1) * xStep1 + xStep1;
 
+            // 分隔符溢出自动适应：步长过小导致刻度过多时，自动计算合理步长
+            double niceStep1 = CalculateNiceStep(yMax1, 8);
+            if (yStep1 < niceStep1) yStep1 = niceStep1;
+
             var axis_x_time = new Axis();
             axis_x_time.Name = "Time/ms";
             axis_x_time.NameTextSize = 12;
@@ -547,6 +555,9 @@ namespace Luster.Motion.ReportUI.ViewModel
 
                 double xMax2tp = Math.Ceiling(timeMax / xStep2tp) * xStep2tp + xStep2tp;
 
+                double niceStep2tp = CalculateNiceStep(yMax2tp, 8);
+                if (yStep2tp < niceStep2tp) yStep2tp = niceStep2tp;
+
                 axis_x2 = new Axis();
                 axis_x2.Name = "Time/ms";
                 axis_x2.NameTextSize = 12;
@@ -564,7 +575,7 @@ namespace Luster.Motion.ReportUI.ViewModel
                 axis_y2.Name = "Position/mm";
                 axis_y2.NameTextSize = 12;
                 axis_y2.TextSize = 10;
-                axis_y2.MinLimit = 0;
+                axis_y2.MinLimit = _onlyShowPositiveIsEnabled ? 0 : -yMax2tp;
                 axis_y2.MaxLimit = yMax2tp;
                 axis_y2.MinStep = yStep2tp;
                 axis_y2.ForceStepToMin = true;
@@ -595,6 +606,9 @@ namespace Luster.Motion.ReportUI.ViewModel
                 double xStep2pp = XAxisStep2 > 0 ? XAxisStep2 : 0.5;
                 double yStep2pp = YAxisStep2 > 0 ? YAxisStep2 : 0.05;
                 double yMax2pp = YAxisMax2 > 0 ? YAxisMax2 : pressAbsMax * 1.05;
+
+                double niceStep2pp = CalculateNiceStep(yMax2pp, 8);
+                if (yStep2pp < niceStep2pp) yStep2pp = niceStep2pp;
 
                 double posRange = positionMax - positionMin;
                 double posPadding = posRange * 0.05;

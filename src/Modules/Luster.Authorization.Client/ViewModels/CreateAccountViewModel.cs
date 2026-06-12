@@ -67,6 +67,11 @@ namespace DC.Authorization.WPF.ViewModels
                 MessageBox.Show(string.Join("\r\n", result.Item2), "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
+            if (_accountRepository.AccountNameExists(Username))
+            {
+                MessageBox.Show($"用户名 \"{Username}\" 已存在，请更换！", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
             SetControlValues(_inputAccount);
             _accountRepository.Create(_inputAccount);
             MessageBox.Show("创建成功", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -79,6 +84,11 @@ namespace DC.Authorization.WPF.ViewModels
             if (!result.Item1)
             {
                 MessageBox.Show(string.Join("\r\n", result.Item2), "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+            if (_accountRepository.AccountNameExists(Username, _inputAccount.Id))
+            {
+                MessageBox.Show($"用户名 \"{Username}\" 已存在，请更换！", "提示", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             SetControlValues(_inputAccount);
@@ -125,7 +135,7 @@ namespace DC.Authorization.WPF.ViewModels
             Account account = parameters.GetValue<Account>("param") ?? throw new ArgumentException($"请传入一个不为null的{nameof(Account)}对象！");
             IsEdit = parameters.GetValue<bool>("edit");
             SelectedRole = account.AccName == null ? null : Roles.Where(x => x.Id == account.RoleId).FirstOrDefault();
-            Username = account.RealName;
+            Username = account.AccName;
             Name = account.RealName;
             Password = account.AccPassword;
             Department = account.Department;

@@ -653,7 +653,7 @@ namespace Luster.Control.Wpf.Motion.Flow
 
             double v = GlobalScaleDelta + scaleDelta;
 
-            if (v < 0.6 || v > 2)
+            if (v < 0.1 || v > 2)
             {
                 return;
             }

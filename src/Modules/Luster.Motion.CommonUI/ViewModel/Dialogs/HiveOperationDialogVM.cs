@@ -232,7 +232,24 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                         if (cardID.Substring(0, 1) == "0")
                             cardID = cardID.Substring(1, cardID.Length - 1);
 
-                        var ret = sfcHelper.CheckCard(cardID, hiveAPI.machineSN, out string auth);
+                        // 提前计算alarmCode用于CheckCard
+                        string alarmCodeForCard = cmdStr switch
+                        {
+                            "一级供应商" => "F99OOOO-01",
+                            "一+二级供应商" => "F99OOOO-02",
+                            //"凌云光" => "F99OOOO-03",
+                            //"汇川" => "F99OOOO-04",
+                            "凌云光维修" => "F99OOOO-12",
+                            "工厂人员" => "F99OOOO-11",
+                            "耗材/物料补充" => "F99OOOO-08",
+                            "非生产时间调试" => "F99OOOO-09",
+                            "周保养" => "F99OOOO-05",
+                            "月保养" => "F99OOOO-06",
+                            "计划关机/待机" => "F99OOOO-07",
+                            "记录非停机异常" => "F99OOOO-10",
+                            _ => "F99OOOO-20",
+                        };
+                        var ret = sfcHelper.CheckCard(cardID, hiveAPI.machineSN, out string auth, alarmCodeForCard, DateTime.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.ff+0800"));
 
                         SendHiveMsg(cmdStr);
                         cardID = "";
@@ -365,16 +382,22 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                     alarmMsg = "Stopped for repair by 2 vendors";
                     break;
 
-                case "凌云光":
-                    stopReason = EStopReason.Luster_Vision;
-                    alarmCode = "F99OOOO-03";
-                    alarmMsg = "Stopped for repair by Cognex";
-                    break;
+                //case "凌云光":
+                //    stopReason = EStopReason.Luster_Vision;
+                //    alarmCode = "F99OOOO-03";
+                //    alarmMsg = "Stopped for repair by Cognex";
+                //    break;
 
-                case "汇川":
-                    stopReason = EStopReason.Inovance_PLC;
-                    alarmCode = "F99OOOO-04";
-                    alarmMsg = "Stopped for repair by Keyence";
+                //case "汇川":
+                //    stopReason = EStopReason.Inovance_PLC;
+                //    alarmCode = "F99OOOO-04";
+                //    alarmMsg = "Stopped for repair by Keyence";
+                //    break;
+
+                case "凌云光维修":
+                    stopReason = EStopReason.Luster_Repair;
+                    alarmCode = "F99OOOO-12";
+                    alarmMsg = "Stopped for repair by Luster";
                     break;
 
                 case "工厂人员":
@@ -438,7 +461,7 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
 
                 //发送视觉指令，开启视觉编辑功能
                 //Need To Do
-                if (stopReason == EStopReason.Luster_Vision)
+                if (stopReason == EStopReason.Luster_Repair)
                 {
                 }
 
@@ -522,16 +545,22 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                     alarmMsg = "Stopped for repair by 2 vendors";
                     break;
 
-                case "凌云光":
-                    stopReason = EStopReason.Luster_Vision;
-                    alarmCode = "F99OOOO-03";
-                    alarmMsg = "Stopped for repair by Cognex";
-                    break;
+                //case "凌云光":
+                //    stopReason = EStopReason.Luster_Vision;
+                //    alarmCode = "F99OOOO-03";
+                //    alarmMsg = "Stopped for repair by Cognex";
+                //    break;
 
-                case "汇川":
-                    stopReason = EStopReason.Inovance_PLC;
-                    alarmCode = "F99OOOO-04";
-                    alarmMsg = "Stopped for repair by Keyence";
+                //case "汇川":
+                //    stopReason = EStopReason.Inovance_PLC;
+                //    alarmCode = "F99OOOO-04";
+                //    alarmMsg = "Stopped for repair by Keyence";
+                //    break;
+
+                case "凌云光维修":
+                    stopReason = EStopReason.Luster_Repair;
+                    alarmCode = "F99OOOO-12";
+                    alarmMsg = "Stopped for repair by Luster";
                     break;
 
                 case "耗材/物料补充":
@@ -736,8 +765,9 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
         {
             Onest_Tier_Vendor,
             OnestATwond_Tier_Vendor,
-            Luster_Vision,
-            Inovance_PLC,
+            //Luster_Vision,
+            //Inovance_PLC,
+            Luster_Repair,
             Consumable_material_replenishment,
             Finetuning_during_nonproduction_time,
             WeeklyMaintenance,
