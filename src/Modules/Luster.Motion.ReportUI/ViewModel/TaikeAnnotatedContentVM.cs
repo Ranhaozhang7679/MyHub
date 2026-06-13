@@ -186,7 +186,7 @@ namespace Luster.Motion.ReportUI.ViewModel
             set => SetProperty(ref _yAxisMax2, value);
         }
         //只显示Y+
-        private bool _onlyShowPositiveIsEnabled = true;
+        private bool _onlyShowPositiveIsEnabled = false;
         public bool OnlyShowPositiveIsEnabled
         {
             get => _onlyShowPositiveIsEnabled;
@@ -197,7 +197,7 @@ namespace Luster.Motion.ReportUI.ViewModel
             }
         }
         //是否启用平滑曲线
-        private bool _smoothCurveProcessingsEnabled = true;
+        private bool _smoothCurveProcessingsEnabled = false;
         public bool SmoothCurveProcessingsEnabled
         {
             get => _smoothCurveProcessingsEnabled;
@@ -444,7 +444,7 @@ namespace Luster.Motion.ReportUI.ViewModel
             if (_smoothCurveProcessingsEnabled)
             {
                 _rawDataCache1 = Smoothing.Pxcl(_rawDataCache, _sliderValue);
-            }         
+            }
             if (_dispatcher == null) _dispatcher = Application.Current?.Dispatcher;
 
             double timeMax = _cachedTimeMax;
@@ -463,7 +463,7 @@ namespace Luster.Motion.ReportUI.ViewModel
                 foreach (var cachedValues in _rawDataCache1)
                 {
                     var line = new LineSeries<ObservablePoint>();
-                    line.Stroke = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
+                    line.Stroke = new SolidColorPaint(Colors.Red.ToSKColor(), 1);
                     line.LineSmoothness = 0;
                     line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
                     line.GeometrySize = 0;
@@ -478,7 +478,7 @@ namespace Luster.Motion.ReportUI.ViewModel
                 foreach (var cachedValues in _rawDataCache)
                 {
                     var line = new LineSeries<ObservablePoint>();
-                    line.Stroke = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
+                    line.Stroke = new SolidColorPaint(Colors.Red.ToSKColor(), 1);
                     line.LineSmoothness = 0;
                     line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
                     line.GeometrySize = 0;
@@ -514,7 +514,7 @@ namespace Luster.Motion.ReportUI.ViewModel
             axis_y_press1.Name = "Press/kgf";
             axis_y_press1.NameTextSize = 12;
             axis_y_press1.TextSize = 10;
-            axis_y_press1.MinLimit = _onlyShowPositiveIsEnabled ? 0:- yMax1;
+            axis_y_press1.MinLimit = _onlyShowPositiveIsEnabled ? 0 : -yMax1;
             axis_y_press1.MaxLimit = yMax1;
             axis_y_press1.MinStep = yStep1;
             axis_y_press1.ForceStepToMin = true;
@@ -538,7 +538,7 @@ namespace Luster.Motion.ReportUI.ViewModel
                     foreach (var cachedValues in _rawTimePositionCache)
                     {
                         var line = new LineSeries<ObservablePoint>();
-                        line.Stroke = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
+                        line.Stroke = new SolidColorPaint(Colors.Red.ToSKColor(), 1);
                         line.LineSmoothness = 0;
                         line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
                         line.GeometrySize = 0;
@@ -592,7 +592,7 @@ namespace Luster.Motion.ReportUI.ViewModel
                     foreach (var cachedValues in _rawPositionPressCache)
                     {
                         var line = new LineSeries<ObservablePoint>();
-                        line.Stroke = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
+                        line.Stroke = new SolidColorPaint(Colors.Red.ToSKColor(), 1);
                         line.LineSmoothness = 0;
                         line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
                         line.GeometrySize = 0;
@@ -996,7 +996,7 @@ namespace Luster.Motion.ReportUI.ViewModel
         /// </summary>
         /// <param name="observablePoint"></param>
         /// <returns></returns>
-        public static List<List<ObservablePoint>> Pxcl(List<List<ObservablePoint>> observablePoint,int Windowsize)
+        public static List<List<ObservablePoint>> Pxcl(List<List<ObservablePoint>> observablePoint, int Windowsize)
         {
             List<List<ObservablePoint>> date = new List<List<ObservablePoint>>();
             foreach (List<ObservablePoint> sj in observablePoint)
@@ -1011,7 +1011,7 @@ namespace Luster.Motion.ReportUI.ViewModel
                 for (int i = 0; i < doubles.Length; i++)
                 {
                     ObservablePoint tempdata = sj[i];
-                    tempdata.Y= doubles[i];
+                    tempdata.Y = doubles[i];
                     hc.Add(tempdata);
                 }
                 date.Add(hc);
