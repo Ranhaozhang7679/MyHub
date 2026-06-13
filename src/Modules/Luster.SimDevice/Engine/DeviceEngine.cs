@@ -371,7 +371,10 @@ namespace Luster.SimDevice.Engine
                 }
 
                 XElement xPosGroup = xRoot.Element(nameof(PosGroup));
-                LoadPosGroup(xPosGroup);
+                if (xPosGroup != null)
+                {
+                    LoadPosGroup(xPosGroup);
+                }
 
                 XElement xModule = xRoot.Element(nameof(ModuleNameGroup));
                 if (xModule != null)
@@ -1588,6 +1591,15 @@ namespace Luster.SimDevice.Engine
         #endregion
 
         #region 点位删除
+        /// <summary>
+        /// 检查轴点位是否可以被删除（不实际删除）
+        /// </summary>
+        public string CheckAxisPosCanDelete(AxisPosition axisPos)
+        {
+            if (axisPos == null) return null;
+            return AxisPosDeleteEvent?.Invoke(axisPos);
+        }
+
         public void RemoveAxisPos(AxisPosition axisPos)
         {
             if (axisPos.Axis == null)

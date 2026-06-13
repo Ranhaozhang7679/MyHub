@@ -27,9 +27,12 @@ using Luster.Motion.DataStruct.DataModels;
 using Luster.Motion.DataStruct.Enums;
 using Luster.TaskFlow.Motion;
 using Luster.TaskFlow.Motion.Logic;
+using Prism.Commands;
+using Prism.Mvvm;
 using Prism.Services.Dialogs;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -51,6 +54,22 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
 {
     public class AlarmDialogVM : MotionDialogVM
     {
+        /// <summary>
+        /// 网格子项模型
+        /// </summary>
+        public class GridItemModel : BindableBase
+        {
+            private bool _isSelected;
+            public bool IsSelected
+            {
+                get => _isSelected;
+                set => SetProperty(ref _isSelected, value);
+            }
+
+            public string DisplayText { get; set; }
+
+            public int Index { get; set; }
+        }
         private Dispatcher _dispatcher;
         /// <summary>
         /// 报警开始时间
@@ -59,6 +78,11 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
 
         // 流程引擎
         private IMotionEngine _motionEngine;
+
+        /// <summary>
+        /// 料盘行列数上限
+        /// </summary>
+        private const int MaxTrayDimension = 50;
 
         /// <summary>
         /// 报警类型
@@ -89,7 +113,13 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
         public int Curve
         {
             get { return _curve; }
-            set { SetProperty(ref _curve, value); }
+            set
+            {
+                if (SetProperty(ref _curve, value))
+                {
+                    SyncGridSelection();
+                }
+            }
         }
 
 
@@ -103,6 +133,46 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
             get { return _curveEnable; }
             set { SetProperty(ref _curveEnable, value); }
         }
+
+        /// <summary>
+        /// 料盘行数
+        /// </summary>
+        private int _trayRows;
+        public int TrayRows
+        {
+            get => _trayRows;
+            set => SetProperty(ref _trayRows, value);
+        }
+
+        /// <summary>
+        /// 料盘列数
+        /// </summary>
+        private int _trayCols;
+        public int TrayCols
+        {
+            get => _trayCols;
+            set => SetProperty(ref _trayCols, value);
+        }
+
+        /// <summary>
+        /// 网格是否显示
+        /// </summary>
+        private bool _gridEnable;
+        public bool GridEnable
+        {
+            get => _gridEnable;
+            set => SetProperty(ref _gridEnable, value);
+        }
+
+        /// <summary>
+        /// 网格子项集合
+        /// </summary>
+        public ObservableCollection<GridItemModel> GridItems { get; } = new ObservableCollection<GridItemModel>();
+
+        /// <summary>
+        /// 选中网格子项命令
+        /// </summary>
+        public DelegateCommand<GridItemModel> SelectGridItemCommand { get; }
 
         /// <summary>
         /// 报警信息
@@ -182,14 +252,14 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
         //总线
         ICommonBus commonBus;
 
-        public AlarmDialogVM(Dispatcher dispatcher, IMotionEngine mEngine, ICommonBus _commonBus) : base() 
+        public AlarmDialogVM(Dispatcher dispatcher, IMotionEngine mEngine, ICommonBus _commonBus) : base()
         {
             _dispatcher = dispatcher;
             commonBus = _commonBus;
             _motionEngine = mEngine;
             DirPath = Path.Combine(commonBus.CurrentRecipe.ProjInfo.ProjPath, "ModuleConfig");
             points =ReadPoints();
-           
+            SelectGridItemCommand = new DelegateCommand<GridItemModel>(OnSelectGridItem);
         }
 
 
@@ -213,6 +283,57 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
         private List<MyPoint> points;
 
         /// <summary>
+        /// 选中网格子项
+        /// </summary>
+        private void OnSelectGridItem(GridItemModel item)
+        {
+            if (item == null) return;
+
+            foreach (var gi in GridItems)
+            {
+                gi.IsSelected = false;
+            }
+
+            item.IsSelected = true;
+            Curve = item.Index;
+        }
+
+        /// <summary>
+        /// 同步网格选中状态（当 Curve 从输入框手动修改时调用）
+        /// </summary>
+        private void SyncGridSelection()
+        {
+            if (!GridEnable) return;
+            foreach (var gi in GridItems)
+            {
+                gi.IsSelected = (gi.Index == Curve);
+            }
+        }
+
+        /// <summary>
+        /// 初始化网格数据
+        /// </summary>
+        private void InitGridItems()
+        {
+            GridItems.Clear();
+            if (!GridEnable || TrayRows <= 0 || TrayCols <= 0) return;
+
+            for (int row = 0; row < TrayRows; row++)
+            {
+                for (int col = 0; col < TrayCols; col++)
+                {
+                    int index = row * TrayCols + col;
+                    GridItems.Add(new GridItemModel
+                    {
+                        DisplayText = $"{row + 1},{col + 1}",
+                        Index = index,
+                        IsSelected = (index == Curve)
+                    });
+                }
+            }
+        }
+
+        /// <summary>
         /// 弹窗打开
         /// </summary>
         /// <param name="parameters"></param>
@@ -228,12 +349,32 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                 AlarmType = alarmInfo.AlarmType;
 
                 CurveEnable = false;
+                GridEnable = false;
                 var gModule = _motionEngine.Get(GlobalModule.GlobalID);
                 if (gModule.Parameters.ContainsKey("Extend_料盘穴位索引")/* && AlarmMsg.Contains("料盘取料NG")*/)
                 {
                     CurveEnable = true;//穴位输入框显示隐藏
                     var gItem = gModule.Parameters["Extend_料盘穴位索引"];
                     Curve = Convert.ToInt32(gItem.Value);
+
+                    // 读取行列配置
+                    if (gModule.Parameters.ContainsKey("Extend_料盘穴位行数")
+                        && gModule.Parameters.ContainsKey("Extend_料盘穴位列数"))
+                    {
+                        int rows = Convert.ToInt32(gModule.Parameters["Extend_料盘穴位行数"].Value);
+                        int cols = Convert.ToInt32(gModule.Parameters["Extend_料盘穴位列数"].Value);
+                        if (rows > 0 && cols > 0 && rows <= MaxTrayDimension && cols <= MaxTrayDimension)
+                        {
+                            TrayRows = rows;
+                            TrayCols = cols;
+                            GridEnable = true;
+                            InitGridItems();
+                        }
+                        else if (rows > MaxTrayDimension || cols > MaxTrayDimension)
+                        {
+                            WarningContent = $"料盘行数({rows})或列数({cols})超过上限{MaxTrayDimension}，网格选择器不可用";
+                        }
+                    }
                 }
                 switch (AlarmType)
                 {

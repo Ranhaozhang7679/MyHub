@@ -370,12 +370,28 @@ namespace Luster.Motion.DataStruct.FXVirtual
 
         public double GetAnalogOut(int index)
         {
-            throw new NotImplementedException();
+            double res = 0;
+            ExecuteWithAspectHandling(() =>
+            {
+                res = FXTCP.Insatnce.GetAnalogOut(index);
+            }, true);
+            if (AspectMode != AllTcp)
+            {
+                return _innerCard.GetAnalogOut(index);
+            }
+            return res;
         }
 
         public void SetAnalogOut(int index, double analogVal)
         {
-            throw new NotImplementedException();
+            ExecuteWithAspectHandling(() =>
+            {
+                FXTCP.Insatnce.SetAnalogOut(index, analogVal);
+            });
+            if (AspectMode != AllTcp)
+            {
+                _innerCard.SetAnalogOut(index, analogVal);
+            }
         }
 
         public void SDORead(short slave, short index, short subindex, short data_size, out int value, short count)
