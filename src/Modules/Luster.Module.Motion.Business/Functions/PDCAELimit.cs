@@ -1013,7 +1013,7 @@ namespace Luster.Module.Motion.Business.Functions
                             if (string.IsNullOrEmpty(CSVRol) || fName.IndexOf(CSVRol, StringComparison.OrdinalIgnoreCase) >= 0)
                             {
                                 File.Copy(fPath, Path.Combine(dstCSVFolder, fName), true);
-                                MyOwner.OnLog(LogType.Warning, $"PDCAELimit CSV复制OK;{Path.Combine(srcCSVFolder, fName)}->{Path.Combine(dstCSVFolder1, fName)}\r\n");
+                                MyOwner.OnLog(LogType.Warning, $"PDCAELimit CSV复制OK;{Path.Combine(srcCSVFolder, fName)}->{Path.Combine(dstCSVFolder, fName)}\r\n");
                             }
                         }
                     }
