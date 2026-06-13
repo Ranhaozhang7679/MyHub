@@ -9,8 +9,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:prism="http://prismlibrary.com/"
     Width="800"
-    Height="600"
-    d:DesignHeight="600"
+    d:DesignHeight="Auto"
     d:DesignWidth="800"
     prism:ViewModelLocator.AutoWireViewModel="True"
     Background="{DynamicResource RegionBrush}"
@@ -28,7 +27,7 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="40" />
         </Grid.RowDefinitions>
@@ -53,6 +52,7 @@
                         <RowDefinition Height="50" />
                         <RowDefinition Height="50" />
                         <RowDefinition Height="50" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                   
                 <TextBlock Grid.Row="0"
@@ -83,14 +83,63 @@
                     <TextBox Grid.Row="3"
                     Margin="10"
                     FontSize="16"
-                     Background="Gray"
-                     Text="{Binding Curve}"
+                     Background="LightGray"
+                     Text="{Binding Curve, UpdateSourceTrigger=PropertyChanged}"
                      Visibility="{Binding CurveEnable, Converter={StaticResource Boolean2VisibilityConverter}}"   
                      IsEnabled="True"
                      hc:Poptip.Content="{Binding WarningContent}"
                      />
 
-
+                    <!-- 二维网格选择器 -->
+                    <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto" MaxHeight="300" Margin="10,5,10,20" Visibility="{Binding GridEnable, Converter={StaticResource
+                    Boolean2VisibilityConverter}}">
+                    <ItemsControl Margin="10,5"
+                    ItemsSource="{Binding GridItems}"
+                    Visibility="{Binding GridEnable, Converter={StaticResource
+                    Boolean2VisibilityConverter}}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <UniformGrid Columns="{Binding DataContext.TrayCols, RelativeSource={RelativeSource AncestorType=ItemsControl}}" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border BorderBrush="Gray" BorderThickness="1" Margin="1">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="White"/>
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                    <Setter Property="Background" Value="#4CAF50"/>
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <Button Content="{Binding DisplayText}"
+                      FontSize="12"
+                      Background="Transparent"
+                      BorderThickness="0"
+                      Command="{Binding DataContext.SelectGridItemCommand,
+                      RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                      CommandParameter="{Binding}"
+                      Cursor="Hand">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Setter Property="Foreground" Value="Black"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                        <Setter Property="Foreground" Value="White"/>
+                                                        <Setter Property="FontWeight" Value="Bold"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style>
+                                    </Button>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    </ScrollViewer>
 
                 </Grid>
             </StackPanel>

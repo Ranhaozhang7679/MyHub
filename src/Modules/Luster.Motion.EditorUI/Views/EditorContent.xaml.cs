@@ -216,6 +216,9 @@ namespace Luster.Motion.EditorUI.Views
 
             // 新窗口打开
             AddOpenInNewWindow(flowItem);
+
+            // 查找同名工站
+            AddFindDuplicate(flowItem);
         }
 
 
@@ -282,6 +285,22 @@ namespace Luster.Motion.EditorUI.Views
                     refItem.Icon = GetFontText("\xe6b1", Brushes.Blue);
                     contextMenu.Items.Add(refItem);
                 }
+            }
+        }
+
+        /// <summary>
+        /// 查找同名工站
+        /// </summary>
+        private void AddFindDuplicate(FlowItem flowItem)
+        {
+            if (flowEditor.IsDataFlow && flowItem.Motion.TaskFunction is IStation)
+            {
+                contextMenu.Items.Add(new Separator());
+                MenuItem item = new MenuItem();
+                item.Header = "查找同名工站";
+                BuildCommand(item, "FindDuplicateCommand");
+                item.Icon = GetFontText("\xe693", Brushes.Orange);
+                contextMenu.Items.Add(item);
             }
         }
 
