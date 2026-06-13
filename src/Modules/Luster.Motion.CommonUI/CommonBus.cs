@@ -1052,17 +1052,18 @@ namespace Luster.Motion.CommonUI
                             {
                                 var xData = XElement.Load(iniConfig);
                                 _motionEngine.ParseConfig(xData);
-                                var xPos = xData.Element("PosGroup");
-                                if (xPos != null)
-                                {
-                                    _deviceEngine.LoadPosGroup(xPos);
-                                }
+                                //var xPos = xData.Element("PosGroup");
+                                //if (xPos != null)
+                                //{
+                                //    _deviceEngine.LoadPosGroup(xPos);
+                                //}
 
-                                var xModule = xData.Element("ModuleNameGroup");
-                                if (xModule != null)
-                                {
-                                    _deviceEngine.LoadModuleNameGroup(xModule);
-                                }
+                                //var xModule = xData.Element("ModuleNameGroup");
+                                //if (xModule != null)
+                                //{
+                                //    _deviceEngine.LoadModuleNameGroup(xModule);
+                                //}
+
                             }
 
                             LoadRecipeEvent?.Invoke(XElement.Load(recipePath));
@@ -1219,10 +1220,10 @@ namespace Luster.Motion.CommonUI
             XElement xIni = _motionEngine.ExportConfig();
 
             // 将点位信息保持到组中
-            _deviceEngine.SavePosGroup(xIni);
+            //_deviceEngine.SavePosGroup(xIni);
 
             // 将模组信息保持到组中
-            _deviceEngine.SaveModuleNameGroup(xIni);
+            //_deviceEngine.SaveModuleNameGroup(xIni);
             xIni.Save(iniDataFile);
 
             // 此时是主动保存，需要将IsNeedSave置为false

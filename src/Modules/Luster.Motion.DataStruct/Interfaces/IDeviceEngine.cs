@@ -388,6 +388,7 @@ namespace Luster.Motion.DataStruct
         #endregion
 
         #region 点位删除
+        string CheckAxisPosCanDelete(AxisPosition axisPos);
         void RemoveAxisPos(AxisPosition axisPos);
 
         /// <summary>

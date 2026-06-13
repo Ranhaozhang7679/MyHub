@@ -519,72 +519,78 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
             var model = obj as PosGroupModel;
             if (model != null)
             {
-                VAxisPos vPos = new VAxisPos();
-                VAxisPos vPosTypeZZero = new VAxisPos();
-                VAxisPos vPosTypeZ = new VAxisPos();
-                foreach (var item in model.Tag)
+                dialogService.ShowConfirm($"点位:{model.Name}，确认运动到该点位?", r =>
                 {
-                    if ((item.Axis.AxisType == AxisType.Z) || (item.Axis.AxisType == AxisType.Z2))
+                    if (r.Result == ButtonResult.OK)
                     {
-                        AxisPosition tmp = new AxisPosition()
+                        VAxisPos vPos = new VAxisPos();
+                        VAxisPos vPosTypeZZero = new VAxisPos();
+                        VAxisPos vPosTypeZ = new VAxisPos();
+                        foreach (var item in model.Tag)
                         {
-                            Key = Guid.NewGuid(),
-                            Axis = item.Axis,
-                            AxisNo = item.AxisNo,
-                            MovePriority = Priority.High,
-                            Name = $"{item.Axis.Name}零点",
-                            Position = 0
-                        };
-                        vPosTypeZZero.Add(new AxisPosItem()
-                        {
-                            PosKey = Guid.NewGuid(),
-                            AxisPostion = tmp,
-                            MovePriority = item.MovePriority,
-                            Acc = item.Axis.Acc,
-                            Dec = item.Axis.Dec,
-                            Speed = item.Axis.MoveSpeed,
-                            MoveMode = MoveMode.Abs,
-                        });
-                        vPosTypeZ.Add(new AxisPosItem()
-                        {
-                            PosKey = Guid.NewGuid(),
-                            AxisPostion = item,
-                            MovePriority = item.MovePriority,
-                            Acc = item.Axis.Acc,
-                            Dec = item.Axis.Dec,
-                            Speed = item.Axis.MoveSpeed,
-                            MoveMode = MoveMode.Abs,
-                        });
-                    }
-                    else
-                    { 
-                        vPos.Add(new AxisPosItem()
-                        {
-                            PosKey = Guid.NewGuid(),
-                            AxisPostion = item,
-                            MovePriority = item.MovePriority,
-                            Acc = item.Axis.Acc,
-                            Dec = item.Axis.Dec,
-                            Speed = item.Axis.MoveSpeed,
-                            MoveMode = MoveMode.Abs,
-                        });
-                    }
-                }
+                            if ((item.Axis.AxisType == AxisType.Z) || (item.Axis.AxisType == AxisType.Z2))
+                            {
+                                AxisPosition tmp = new AxisPosition()
+                                {
+                                    Key = Guid.NewGuid(),
+                                    Axis = item.Axis,
+                                    AxisNo = item.AxisNo,
+                                    MovePriority = Priority.High,
+                                    Name = $"{item.Axis.Name}零点",
+                                    Position = 0
+                                };
+                                vPosTypeZZero.Add(new AxisPosItem()
+                                {
+                                    PosKey = Guid.NewGuid(),
+                                    AxisPostion = tmp,
+                                    MovePriority = item.MovePriority,
+                                    Acc = item.Axis.Acc,
+                                    Dec = item.Axis.Dec,
+                                    Speed = item.Axis.MoveSpeed,
+                                    MoveMode = MoveMode.Abs,
+                                });
+                                vPosTypeZ.Add(new AxisPosItem()
+                                {
+                                    PosKey = Guid.NewGuid(),
+                                    AxisPostion = item,
+                                    MovePriority = item.MovePriority,
+                                    Acc = item.Axis.Acc,
+                                    Dec = item.Axis.Dec,
+                                    Speed = item.Axis.MoveSpeed,
+                                    MoveMode = MoveMode.Abs,
+                                });
+                            }
+                            else
+                            {
+                                vPos.Add(new AxisPosItem()
+                                {
+                                    PosKey = Guid.NewGuid(),
+                                    AxisPostion = item,
+                                    MovePriority = item.MovePriority,
+                                    Acc = item.Axis.Acc,
+                                    Dec = item.Axis.Dec,
+                                    Speed = item.Axis.MoveSpeed,
+                                    MoveMode = MoveMode.Abs,
+                                });
+                            }
+                        }
 
-                Task.Run(() =>
-                {
-                    // 开始运动
-                    if (vPosTypeZZero.Count > 0) //Z类型轴回零点
-                    {
-                        vPosTypeZZero.MovePostion(deviceEngine);
-                    }
-                    if (vPos.Count > 0) //其他轴运行到点位
-                    { 
-                        vPos.MovePostion(deviceEngine);
-                    }
-                    if (vPosTypeZ.Count > 0) //Z类型轴运动到点位
-                    {
-                        vPosTypeZ.MovePostion(deviceEngine);
+                        Task.Run(() =>
+                        {
+                            // 开始运动
+                            if (vPosTypeZZero.Count > 0) //Z类型轴回零点
+                            {
+                                vPosTypeZZero.MovePostion(deviceEngine);
+                            }
+                            if (vPos.Count > 0) //其他轴运行到点位
+                            {
+                                vPos.MovePostion(deviceEngine);
+                            }
+                            if (vPosTypeZ.Count > 0) //Z类型轴运动到点位
+                            {
+                                vPosTypeZ.MovePostion(deviceEngine);
+                            }
+                        });
                     }
                 });
             }
@@ -638,17 +644,40 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
                 {
                     if (r.Result == ButtonResult.OK)
                     {
-                        deviceEngine.RemovePosGroup(model.Name);
-                        UpdatePosGruops();
-
-                        #region 同步删除轴的点位
-                        foreach (var item in SubAxisList)
+                        try
                         {
-                            var newName = $"{item.AxisType}_{model.Name}";
-                            var axisPos = item.Tag.Positions.FirstOrDefault(u => u.Name == newName);
-                            deviceEngine.RemoveAxisPos(axisPos);
+                            #region 预检查所有轴点位是否可删除
+                            foreach (var item in SubAxisList)
+                            {
+                                var newName = $"{item.AxisType}_{model.Name}";
+                                var axisPos = item.Tag.Positions.FirstOrDefault(u => u.Name == newName);
+                                var errMsg = deviceEngine.CheckAxisPosCanDelete(axisPos);
+                                if (!string.IsNullOrEmpty(errMsg))
+                                {
+                                    throw new FriendlyException(errMsg);
+                                }
+                            }
+                            #endregion
+
+                            #region 全部通过，统一删除轴点位
+                            foreach (var item in SubAxisList)
+                            {
+                                var newName = $"{item.AxisType}_{model.Name}";
+                                var axisPos = item.Tag.Positions.FirstOrDefault(u => u.Name == newName);
+                                if (axisPos != null)
+                                {
+                                    deviceEngine.RemoveAxisPos(axisPos);
+                                }
+                            }
+                            #endregion
+
+                            deviceEngine.RemovePosGroup(model.Name);
+                            UpdatePosGruops();
                         }
-                        #endregion //同步删除轴的点位
+                        catch (FriendlyException)
+                        {
+                            throw;
+                        }
                     }
                 });
             }
@@ -965,8 +994,63 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
                     outList = outList.Where(u => u.Module.Contains(key)).ToList();
                 }
 
-                IoInDatas.AddRange(inList.Select(u => new IOModel(u)).ToList());
-                IoOutDatas.AddRange(outList.Select(u => new IOModel(u)).ToList());
+                var inModels = inList.Select(u => new IOModel(u)).ToList();
+                var outModels = outList.Select(u => new IOModel(u)).ToList();
+
+                bool IsBackup(string name) => name.Contains("备用") || name.Contains("弃用");
+
+                // 排序输入IO优先级：气缸 → 非气缸 → 气缸(备用/弃用) → 非气缸(备用/弃用)
+                var cylinderIns = inModels.Where(io => io.Name.Contains("气缸") && !IsBackup(io.Name)).OrderBy(io => io.Index).ToList();
+                var otherIns = inModels.Where(io => !io.Name.Contains("气缸") && !IsBackup(io.Name)).OrderBy(io => io.Index).ToList();
+                var cylinderInsBak = inModels.Where(io => io.Name.Contains("气缸") && IsBackup(io.Name)).OrderBy(io => io.Index).ToList();
+                var otherInsBak = inModels.Where(io => !io.Name.Contains("气缸") && IsBackup(io.Name)).OrderBy(io => io.Index).ToList();
+                var sortedIns = cylinderIns.Concat(otherIns).Concat(cylinderInsBak).Concat(otherInsBak).ToList();
+
+                // 排序输出IO：含"气缸"的根据输入IO中匹配的位置排序
+                var cylinderOuts = outModels.Where(io => io.Name.Contains("气缸") && !IsBackup(io.Name)).ToList();
+                var otherOuts = outModels.Where(io => !io.Name.Contains("气缸") && !IsBackup(io.Name)).OrderBy(io => io.Index).ToList();
+                var cylinderOutsBak = outModels.Where(io => io.Name.Contains("气缸") && IsBackup(io.Name)).ToList();
+                var otherOutsBak = outModels.Where(io => !io.Name.Contains("气缸") && IsBackup(io.Name)).OrderBy(io => io.Index).ToList();
+
+                List<IOModel> SortCylinderOutputs(List<IOModel> cylinders)
+                {
+                    return cylinders
+                        .Select(io =>
+                        {
+                            int sortKey = int.MaxValue;
+                            int idx = io.Name.IndexOf("气缸");
+                            if (idx > 0)
+                            {
+                                string modifier = "";
+                                for (int i = idx - 1; i >= 0; i--)
+                                {
+                                    char c = io.Name[i];
+                                    if (c >= 0x4E00 && c <= 0x9FFF)
+                                        modifier = c + modifier;
+                                    else
+                                        break;
+                                }
+                                string phrase = modifier + "气缸";
+                                int matchIdx = sortedIns.FindIndex(inp => inp.Name.Contains(phrase));
+                                if (matchIdx >= 0)
+                                    sortKey = matchIdx;
+                            }
+                            return new { IO = io, SortKey = sortKey };
+                        })
+                        .OrderBy(x => x.SortKey)
+                        .ThenBy(x => x.IO.Index)
+                        .Select(x => x.IO)
+                        .ToList();
+                }
+
+                var sortedOuts = SortCylinderOutputs(cylinderOuts)
+                    .Concat(otherOuts)
+                    .Concat(SortCylinderOutputs(cylinderOutsBak))
+                    .Concat(otherOutsBak)
+                    .ToList();
+
+                IoInDatas.AddRange(sortedIns);
+                IoOutDatas.AddRange(sortedOuts);
 
                 // IO界面刷新
                 pauseReset.Set();
