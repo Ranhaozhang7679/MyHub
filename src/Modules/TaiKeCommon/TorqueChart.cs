@@ -1196,54 +1196,18 @@ namespace TaiKeCommon
             double timeMax = timeData.Max();
             if (timeMax - timeMin < 1e-6) timeMax = timeMin + 1;
 
-            // 动态计算压力Y轴范围（支持正负）
-            double pressDataMin = pressData.Min();
-            double pressDataMax = pressData.Max();
-            double pressRange = pressDataMax - pressDataMin;
-            if (pressRange < 1e-6) pressRange = 0.1;
-            double pressPadding = pressRange * 0.15;
-            double pressMin = pressDataMin - pressPadding;
-            double pressMax = pressDataMax + pressPadding;
+            // 固定静态Y轴范围：左右轴均关于0对称，保证原点(0)落在同一水平线上
+            // 左轴(Force)
+            double pressMax = 0.5;
+            double pressMin = -pressMax;
+            double pressStep = 0.1;         // 左轴固定刻度
+            // 右轴(Move)
+            double posMax = 8.0;
+            double posMin = -posMax;
+            double posStep = 2.0;           // 右轴固定刻度
 
-            // 动态计算位置Y轴范围（支持正负）
-            double posMin = 0, posMax = 1;
-            if (hasPosData)
-            {
-                double posDataMin = posData.Min();
-                double posDataMax = posData.Max();
-                double posRange = posDataMax - posDataMin;
-                if (posRange < 1e-6) posRange = 0.1;
-                double posPadding = posRange * 0.15;
-                posMin = posDataMin - posPadding;
-                posMax = posDataMax + posPadding;
-            }
-
-            // 计算合适的刻度步长
-            double CalcNiceStep(double range, int targetTicks = 6)
-            {
-                double rough = range / targetTicks;
-                double mag = Math.Pow(10, Math.Floor(Math.Log10(rough)));
-                double residual = rough / mag;
-                double nice;
-                if (residual <= 1.5) nice = 1;
-                else if (residual <= 3) nice = 2;
-                else if (residual <= 7) nice = 5;
-                else nice = 10;
-                return nice * mag;
-            }
-
-            double pressStep = CalcNiceStep(pressMax - pressMin);
-            double posStep = hasPosData ? CalcNiceStep(posMax - posMin) : 1;
-            double timeStep = CalcNiceStep(timeMax);
-
-            // 对齐到刻度线
-            pressMin = Math.Floor(pressMin / pressStep) * pressStep;
-            pressMax = Math.Ceiling(pressMax / pressStep) * pressStep;
-            if (hasPosData)
-            {
-                posMin = Math.Floor(posMin / posStep) * posStep;
-                posMax = Math.Ceiling(posMax / posStep) * posStep;
-            }
+            // X轴(时间)固定刻度（timeMax仍取自数据以容纳全部曲线，避免截断）
+            double timeStep = 500;
             timeMax = Math.Ceiling(timeMax / timeStep) * timeStep;
 
             using (var bitmap = new SKBitmap(width, height))
@@ -1275,7 +1239,17 @@ namespace TaiKeCommon
                 {
                     float px = marginLeft + (float)(x / timeMax * plotWidth);
                     canvas.DrawLine(px, topY, px, botY, gridPaint);
+                    canvas.DrawLine(px, botY, px, botY + 5, axisPaint);   // X轴主刻度线
                     canvas.DrawText(x.ToString("0"), px - 10, botY + 18, tickPaint);
+                }
+
+                // X轴次刻度线（细分）
+                double timeMinorStep = 100;
+                for (double x = 0; x <= timeMax + 1e-9; x += timeMinorStep)
+                {
+                    if (Math.Abs(x - Math.Round(x / timeStep) * timeStep) < 1e-6) continue; // 跳过主刻度
+                    float px = marginLeft + (float)(x / timeMax * plotWidth);
+                    canvas.DrawLine(px, botY, px, botY + 3, axisPaint);
                 }
 
                 // ===== 左Y轴（压力）网格和刻度 =====
@@ -1283,13 +1257,25 @@ namespace TaiKeCommon
                 {
                     float py = botY - (float)((y - pressMin) / (pressMax - pressMin) * plotHeight);
                     canvas.DrawLine(marginLeft, py, marginLeft + plotWidth, py, gridPaint);
+                    canvas.DrawLine(marginLeft - 5, py, marginLeft, py, axisPaint);   // 左Y轴主刻度线
                     canvas.DrawText(y.ToString("0.##"), marginLeft - 50, py + 5, tickPaint);
                 }
+
+                // 左Y轴次刻度线（细分）
+                double pressMinorStep = 0.02;
+                for (double y = pressMin; y <= pressMax + 1e-9; y += pressMinorStep)
+                {
+                    if (Math.Abs(y - Math.Round(y / pressStep) * pressStep) < 1e-6) continue;
+                    float py = botY - (float)((y - pressMin) / (pressMax - pressMin) * plotHeight);
+                    canvas.DrawLine(marginLeft - 3, py, marginLeft, py, axisPaint);
+                }
+
+                var yLabelPaint = new SKPaint { Color = SKColors.Black, TextSize = 16, IsAntialias = true };
 
                 // 左Y轴标签
                 canvas.Save();
                 canvas.RotateDegrees(-90, marginLeft - 55, topY + plotHeight / 2);
-                canvas.DrawText("Force(Kgf)", marginLeft - 55, topY + plotHeight / 2, labelPaint);
+                canvas.DrawText("Force(Kgf)", marginLeft - 55, topY + plotHeight / 2, yLabelPaint);
                 canvas.Restore();
 
                 // ===== 右Y轴（位置）刻度 =====
@@ -1298,13 +1284,23 @@ namespace TaiKeCommon
                     for (double y = Math.Ceiling(posMin / posStep) * posStep; y <= posMax + 1e-9; y += posStep)
                     {
                         float py = botY - (float)((y - posMin) / (posMax - posMin) * plotHeight);
+                        canvas.DrawLine(marginLeft + plotWidth, py, marginLeft + plotWidth + 5, py, axisPaint);   // 右Y轴主刻度线
                         canvas.DrawText(y.ToString("0.##"), marginLeft + plotWidth + 5, py + 5, tickPaint);
+                    }
+
+                    // 右Y轴次刻度线（细分）
+                    double posMinorStep = 0.5;
+                    for (double y = posMin; y <= posMax + 1e-9; y += posMinorStep)
+                    {
+                        if (Math.Abs(y - Math.Round(y / posStep) * posStep) < 1e-6) continue;
+                        float py = botY - (float)((y - posMin) / (posMax - posMin) * plotHeight);
+                        canvas.DrawLine(marginLeft + plotWidth, py, marginLeft + plotWidth + 3, py, axisPaint);
                     }
 
                     // 右Y轴标签
                     canvas.Save();
                     canvas.RotateDegrees(90, marginLeft + plotWidth + 55, topY + plotHeight / 2);
-                    canvas.DrawText("Move(mm)", marginLeft + plotWidth + 55, topY + plotHeight / 2, labelPaint);
+                    canvas.DrawText("Move(mm)", marginLeft + plotWidth + 55, topY + plotHeight / 2, yLabelPaint);
                     canvas.Restore();
                 }
 
@@ -1405,14 +1401,14 @@ namespace TaiKeCommon
 
                 // X轴分隔线和刻度
                 int xStep = 1000;
-                for (double x = Math.Ceiling((timeMin / xStep) * xStep) ; x <= timeMax ; x += xStep )
+                for (double x = Math.Ceiling((timeMin / xStep) * xStep); x <= timeMax; x += xStep)
                 {
                     double b = (x - timeMin) / (timeMax - timeMin) * plotWidth;
-                    float c= (float)((x - timeMin) / (timeMax - timeMin) * plotWidth);
+                    float c = (float)((x - timeMin) / (timeMax - timeMin) * plotWidth);
                     float px = marginLeft + (float)((x - timeMin) / (timeMax - timeMin) * plotWidth);
                     canvas.DrawLine(px, marginTop, px, height - marginBottom, new SKPaint { Color = SKColors.LightGray, StrokeWidth = 1 });
                     var tickPaint = new SKPaint { Color = SKColors.Black, TextSize = 16, IsAntialias = true };
-                    canvas.DrawText((x/1000).ToString("0.0"), px, height - marginBottom + 20, tickPaint);
+                    canvas.DrawText((x / 1000).ToString("0.0"), px, height - marginBottom + 20, tickPaint);
                 }
 
                 // Y轴分隔线和刻度
