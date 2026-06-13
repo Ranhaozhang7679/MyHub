@@ -1268,7 +1268,7 @@ namespace TaiKeCommon
 
                 // ===== 标题 =====
                 var titlePaint = new SKPaint { Color = SKColors.Black, TextSize = 20, IsAntialias = true };
-                canvas.DrawText("Time-Pressure/Position Curve", marginLeft + plotWidth / 2 - 120, topY - 10, titlePaint);
+                canvas.DrawText("Force_Arc&&Move_Arc", marginLeft + plotWidth / 2 - 120, topY - 10, titlePaint);
 
                 // ===== X轴网格和刻度 =====
                 for (double x = 0; x <= timeMax; x += timeStep)
@@ -1283,13 +1283,13 @@ namespace TaiKeCommon
                 {
                     float py = botY - (float)((y - pressMin) / (pressMax - pressMin) * plotHeight);
                     canvas.DrawLine(marginLeft, py, marginLeft + plotWidth, py, gridPaint);
-                    canvas.DrawText(y.ToString("0.##"), marginLeft - 50, py + 5, tickPaintBlue);
+                    canvas.DrawText(y.ToString("0.##"), marginLeft - 50, py + 5, tickPaint);
                 }
 
                 // 左Y轴标签
                 canvas.Save();
                 canvas.RotateDegrees(-90, marginLeft - 55, topY + plotHeight / 2);
-                canvas.DrawText("Press/N", marginLeft - 55, topY + plotHeight / 2, labelPaint);
+                canvas.DrawText("Force(Kgf)", marginLeft - 55, topY + plotHeight / 2, labelPaint);
                 canvas.Restore();
 
                 // ===== 右Y轴（位置）刻度 =====
@@ -1298,30 +1298,30 @@ namespace TaiKeCommon
                     for (double y = Math.Ceiling(posMin / posStep) * posStep; y <= posMax + 1e-9; y += posStep)
                     {
                         float py = botY - (float)((y - posMin) / (posMax - posMin) * plotHeight);
-                        canvas.DrawText(y.ToString("0.##"), marginLeft + plotWidth + 5, py + 5, tickPaintRed);
+                        canvas.DrawText(y.ToString("0.##"), marginLeft + plotWidth + 5, py + 5, tickPaint);
                     }
 
                     // 右Y轴标签
                     canvas.Save();
                     canvas.RotateDegrees(90, marginLeft + plotWidth + 55, topY + plotHeight / 2);
-                    canvas.DrawText("Position/mm", marginLeft + plotWidth + 55, topY + plotHeight / 2, labelPaintRed);
+                    canvas.DrawText("Move(mm)", marginLeft + plotWidth + 55, topY + plotHeight / 2, labelPaint);
                     canvas.Restore();
                 }
 
                 // ===== 坐标轴线 =====
                 // 左Y轴（蓝色）
-                canvas.DrawLine(marginLeft, topY, marginLeft, botY, axisPaintBlue);
+                canvas.DrawLine(marginLeft, topY, marginLeft, botY, axisPaint);
                 // X轴（黑色）
                 canvas.DrawLine(marginLeft, botY, marginLeft + plotWidth, botY, axisPaint);
                 // 右Y轴（红色）
                 if (hasPosData)
-                    canvas.DrawLine(marginLeft + plotWidth, topY, marginLeft + plotWidth, botY, axisPaintRed);
+                    canvas.DrawLine(marginLeft + plotWidth, topY, marginLeft + plotWidth, botY, axisPaint);
 
                 // X轴标签
                 var xLabelPaint = new SKPaint { Color = SKColors.Black, TextSize = 16, IsAntialias = true };
-                canvas.DrawText("Time/ms", marginLeft + plotWidth / 2 - 30, botY + 40, xLabelPaint);
+                canvas.DrawText("Time(ms)", marginLeft + plotWidth / 2 - 30, botY + 40, xLabelPaint);
 
-                // ===== 画压力曲线（蓝色） =====
+                // ===== 画压力曲线（红色） =====
                 if (timeData.Length > 1 && pressData.Length == timeData.Length)
                 {
                     for (int i = 1; i < timeData.Length; i++)
@@ -1330,11 +1330,11 @@ namespace TaiKeCommon
                         float y0 = botY - (float)((pressData[i - 1] - pressMin) / (pressMax - pressMin) * plotHeight);
                         float x1 = marginLeft + (float)((timeData[i]) / timeMax * plotWidth);
                         float y1 = botY - (float)((pressData[i] - pressMin) / (pressMax - pressMin) * plotHeight);
-                        canvas.DrawLine(x0, y0, x1, y1, curvePaint);
+                        canvas.DrawLine(x0, y0, x1, y1, curvePaintRed);
                     }
                 }
 
-                // ===== 画位置曲线（红色） =====
+                // ===== 画位置曲线（蓝色） =====
                 if (hasPosData)
                 {
                     int posLen = Math.Min(timeData.Length, posData.Length);
@@ -1346,7 +1346,7 @@ namespace TaiKeCommon
                             float y0 = botY - (float)((posData[i - 1] - posMin) / (posMax - posMin) * plotHeight);
                             float x1 = marginLeft + (float)((timeData[i]) / timeMax * plotWidth);
                             float y1 = botY - (float)((posData[i] - posMin) / (posMax - posMin) * plotHeight);
-                            canvas.DrawLine(x0, y0, x1, y1, curvePaintRed);
+                            canvas.DrawLine(x0, y0, x1, y1, curvePaint);
                         }
                     }
                 }
@@ -1361,11 +1361,11 @@ namespace TaiKeCommon
                     canvas.DrawRect(legendX - 10, legendY - 15, 180, 45, legendBgPaint);
                     canvas.DrawRect(legendX - 10, legendY - 15, 180, 45, legendBorderPaint);
                     // 压力图例
-                    canvas.DrawLine(legendX, legendY, legendX + 25, legendY, curvePaint);
-                    canvas.DrawText("Press/N", legendX + 30, legendY + 5, tickPaintBlue);
+                    canvas.DrawLine(legendX, legendY, legendX + 25, legendY, curvePaintRed);
+                    canvas.DrawText("Force_Arc", legendX + 30, legendY + 5, tickPaintRed);
                     // 位置图例
-                    canvas.DrawLine(legendX, legendY + 20, legendX + 25, legendY + 20, curvePaintRed);
-                    canvas.DrawText("Position/mm", legendX + 30, legendY + 25, tickPaintRed);
+                    canvas.DrawLine(legendX, legendY + 20, legendX + 25, legendY + 20, curvePaint);
+                    canvas.DrawText("Move_Arc", legendX + 30, legendY + 25, tickPaintBlue);
                 }
 
                 // 保存PNG
