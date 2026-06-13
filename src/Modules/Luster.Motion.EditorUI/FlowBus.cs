@@ -1532,6 +1532,15 @@ namespace Luster.Motion.EditorUI
             }
         }
 
+        /// <summary>
+        /// 获取与指定模块同名的所有工站（排除自身）
+        /// </summary>
+        public List<IMotionModule> GetDuplicateStations(IMotionModule selectedStation)
+        {
+            var stations = _engine.GetStations();
+            return stations.Where(u => u.Alias == selectedStation.Alias && u.ID != selectedStation.ID).ToList();
+        }
+
         public List<IMotionModule> GetRefGlobalModules(ParameterAttribute gParameter)
         {
             List<IMotionModule> refList = new List<IMotionModule>();
