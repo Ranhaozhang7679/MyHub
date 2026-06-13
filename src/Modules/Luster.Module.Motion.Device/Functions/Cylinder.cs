@@ -95,7 +95,8 @@ namespace Luster.Module.Motion.Device.Functions
 
         public override bool DoExcute(out string errMsg)
         {
-            if (!IsUse)
+            // 仅在空跑模式下且 IsUse=true 时跳过气缸动作，生产/调试等模式始终执行
+            if (!(IsEmptyMode && IsUse))
             {
                 GetVDevice<VCylinder>(Device, out var cylinder);
                 DateTime beginTime = DateTime.Now;
