@@ -1215,17 +1215,17 @@ namespace TaiKeCommon
             {
                 canvas.Clear(SKColors.White);
 
-                var gridPaint = new SKPaint { Color = SKColors.LightGray, StrokeWidth = 1 };
+                var gridPaint = new SKPaint { Color = SKColors.Black, StrokeWidth = 1 };
                 var tickPaint = new SKPaint { Color = SKColors.Black, TextSize = 14, IsAntialias = true };
-                var tickPaintBlue = new SKPaint { Color = SKColors.Blue, TextSize = 14, IsAntialias = true };
-                var tickPaintRed = new SKPaint { Color = SKColors.Red, TextSize = 14, IsAntialias = true };
-                var labelPaint = new SKPaint { Color = SKColors.Blue, TextSize = 16, IsAntialias = true };
-                var labelPaintRed = new SKPaint { Color = SKColors.Red, TextSize = 16, IsAntialias = true };
+                var tickPaintBlue = new SKPaint { Color = SKColors.Black, TextSize = 14, IsAntialias = true };
+                var tickPaintRed = new SKPaint { Color = SKColors.Black, TextSize = 14, IsAntialias = true };
+                var labelPaint = new SKPaint { Color = SKColors.Black, TextSize = 16, IsAntialias = true };
+                var labelPaintRed = new SKPaint { Color = SKColors.Black, TextSize = 16, IsAntialias = true };
                 var curvePaint = new SKPaint { Color = SKColors.Blue, StrokeWidth = 2, IsAntialias = true };
                 var curvePaintRed = new SKPaint { Color = SKColors.Red, StrokeWidth = 2, IsAntialias = true };
                 var axisPaint = new SKPaint { Color = SKColors.Black, StrokeWidth = 2, IsAntialias = true };
-                var axisPaintBlue = new SKPaint { Color = SKColors.Blue, StrokeWidth = 2, IsAntialias = true };
-                var axisPaintRed = new SKPaint { Color = SKColors.Red, StrokeWidth = 2, IsAntialias = true };
+                var axisPaintBlue = new SKPaint { Color = SKColors.Black, StrokeWidth = 2, IsAntialias = true };
+                var axisPaintRed = new SKPaint { Color = SKColors.Black, StrokeWidth = 2, IsAntialias = true };
 
                 int topY = marginTop;
                 int botY = marginTop + plotHeight;
