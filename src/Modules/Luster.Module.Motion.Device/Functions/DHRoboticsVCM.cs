@@ -431,11 +431,34 @@ namespace Luster.Module.Motion.Device.Functions
 
         #endregion
 
+        #region 运动辅助
+
+        /// <summary>
+        /// 固定速度绝对运动(不受当前模式速度百分比影响)
+        /// 说明: VAxis.MoveAbs(double...) 重载未把 IsFixedSpd 透传到底层 GetSpeed,
+        ///       故改用 VAxisDevice 重载, 显式传 IsFixedSpd = true 使速度不被百分比缩放
+        /// </summary>
+        private void MoveAbsFixed(double position, double speed, double acc, double dec)
+        {
+            _axis.MoveAbs(new VAxisDevice()
+            {
+                Compensate = 0,
+                DeviceID = _axis.ID,
+                Axis = _axis,
+                Position = position,
+                Speed = speed,
+                Acc = acc,
+                Dec = dec,
+            }, true);
+        }
+
+        #endregion
+
         #region 硬着陆
 
         private void ExecuteHardLanding()
         {
-            _axis.MoveAbs(TargetPosition[0].Position, MoveSpeed, MoveAcc, MoveDec);
+            MoveAbsFixed(TargetPosition[0].Position, MoveSpeed, MoveAcc, MoveDec);
             _axis.CheckMotionDone();
 
             double actualPos = _axis.GetCurrentPos();
@@ -582,7 +605,7 @@ namespace Luster.Module.Motion.Device.Functions
 
                 //pressureSamples.Add(ReadPressure()); //记录力控数据
                 // Step 10: 快速段 - 快速接近产品上方(PP位置)
-                _axis.MoveAbs(PPPosition[0].Position, PPVelocity, MoveAcc, MoveDec);
+                MoveAbsFixed(PPPosition[0].Position, PPVelocity, MoveAcc, MoveDec);
 
                 _axis.CheckMotionDone();
                 XYLC = true;
@@ -596,7 +619,7 @@ namespace Luster.Module.Motion.Device.Functions
                 Thread.Sleep(20);
 
                 // Step 30: 慢速段 - 低速接触产品(PT位置)
-                _axis.MoveAbs(PTPosition[0].Position, PTVelocity, MoveAcc, MoveDec);
+                MoveAbsFixed(PTPosition[0].Position, PTVelocity, MoveAcc, MoveDec);
 
                 // 等待力矩到达(接触判定)
                 double lastPos = _axis.GetCurrentPos();
@@ -662,7 +685,7 @@ namespace Luster.Module.Motion.Device.Functions
                 //方案3
                 _axis.Stop();
                 Double currentpos = _axis.GetCurrentPos();
-                _axis.MoveAbs(currentpos, PTVelocity, MoveAcc, MoveDec);
+                MoveAbsFixed(currentpos, PTVelocity, MoveAcc, MoveDec);
                 //由于很小的力矩导致我点位运动直接失败，但是又不能一下设置最大，会过冲，所以尝试缓慢增加
                 WriteTorqueLimit(TorqueLimit2);
                 Thread.Sleep(TimeOut1);
