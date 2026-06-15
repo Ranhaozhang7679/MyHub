@@ -38,8 +38,6 @@ namespace Luster.Module.Motion.DataProc
             AddFunction<ConditionTimer>();
             AddFunction<TableInsert>();
             AddFunction<GetSlopeIntercept>();
-
-            AddFunction<CopyFile>();
         }
     }
 

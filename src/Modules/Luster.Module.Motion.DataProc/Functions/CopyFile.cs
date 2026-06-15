@@ -99,6 +99,7 @@ namespace Luster.Module.Motion.DataProc.Functions
                     return false;
                 }
                 CopyFolder(SourcePath, DstPath);
+                Result = true;
             }
             catch (Exception ex)
             {
