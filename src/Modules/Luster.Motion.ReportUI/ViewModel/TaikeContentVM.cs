@@ -1471,6 +1471,10 @@ namespace Luster.Motion.ReportUI.ViewModel
 
             folderBrowserDialog.Description = "请选择时间压力数据文件夹";
 
+            // 记录所有曲线的最大值，用于动态调整坐标轴范围，确保所有曲线都能显示
+            double pressTimeMax = 0;
+            double pressValueMax = 0;
+
             if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 string[] files = Directory.GetFiles(folderBrowserDialog.SelectedPath);
@@ -1488,11 +1492,33 @@ namespace Luster.Motion.ReportUI.ViewModel
 
                     List<double> time = new List<double>();
                     List<double> press = new List<double>();
-                    List<TotalPressModel> _taikeModel = CSVTool.OpenCSV<TotalPressModel>(file);
-                    foreach (var item in _taikeModel)
+                    try
                     {
-                        time.Add(item.Time);
-                        press.Add(item.Press);
+                        // 直接按列读取 CSV，避免 CSVTool.OpenCSV 因列数不匹配（缺 Position 列）抛 IndexOutOfRangeException
+                        // 兼容两种格式：No,Time,Press 或 No,Time,Press,Position
+                        var lines = File.ReadAllLines(file);
+                        for (int li = 1; li < lines.Length; li++)  // 跳过标题行
+                        {
+                            var row = lines[li];
+                            if (string.IsNullOrWhiteSpace(row)) continue;
+                            var cells = row.Split(',');
+                            if (cells.Length < 3) continue;
+                            // 第2列 Time，第3列 Press
+                            if (double.TryParse(cells[1], out double t) &&
+                                double.TryParse(cells[2], out double p))
+                            {
+                                time.Add(t);
+                                press.Add(p);
+                                // 更新最大值（用于动态坐标轴）
+                                if (t > pressTimeMax) pressTimeMax = t;
+                                if (p > pressValueMax) pressValueMax = p;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Trace.WriteLine($"读取文件失败 {file}: {ex.Message}");
+                        continue;  // 当前文件失败时跳过，不影响其他曲线
                     }
 
                     var torq_line_values = new List<ObservablePoint>();
@@ -1504,7 +1530,7 @@ namespace Luster.Motion.ReportUI.ViewModel
 
                     torq_line.Values = torq_line_values;
                     torq_line.ScalesXAt = 0;
-                    torq_line.ScalesYAt = 1;
+                    torq_line.ScalesYAt = 0;  // 仅有1个Y轴(axis_yp)，索引必须为0；之前为1会引用不存在的Y轴导致曲线无法显示
                     chart_series_press.Add(torq_line);
                 }
             }
@@ -1514,6 +1540,14 @@ namespace Luster.Motion.ReportUI.ViewModel
                 ((CartesianChart)pressControls[0]).Series = chart_series_press;
             }));
 
+            // 根据实际数据动态调整坐标轴范围，避免固定 MaxLimit 导致超出范围的曲线被截断
+            // X 轴(time)：向上取整到 100 的倍数，并留 100 余量
+            axis_xp.MinLimit = 0;
+            axis_xp.MaxLimit = Math.Ceiling((pressTimeMax + 100) / 100.0) * 100;
+            // Y 轴(press)：向上取整到 0.2 的倍数，并留 0.1 余量
+            axis_yp.MinLimit = 0;
+            axis_yp.MaxLimit = Math.Ceiling((pressValueMax + 0.1) / 0.2) * 0.2;
+
             axis_xp.Name = "time/ms";
             axis_yp.Name = "Press/kgf";
             axis_xp.NameTextSize = 12;
@@ -1521,8 +1555,8 @@ namespace Luster.Motion.ReportUI.ViewModel
             axis_yp.NameTextSize = 12;
             axis_yp.TextSize = 12;
 
-            ((CartesianChart)pressControls[0]).XAxes = new List<Axis>() { axis_xp}; // , axis_xp 
-            ((CartesianChart)pressControls[0]).YAxes = new List<Axis>() { axis_yp}; // , axis_yp 
+            ((CartesianChart)pressControls[0]).XAxes = new List<Axis>() { axis_xp}; // , axis_xp
+            ((CartesianChart)pressControls[0]).YAxes = new List<Axis>() { axis_yp}; // , axis_yp
 
             ((CartesianChart)pressControls[0]).LegendPosition = LiveChartsCore.Measure.LegendPosition.Hidden;
             ((CartesianChart)pressControls[0]).LegendTextSize = 12;
