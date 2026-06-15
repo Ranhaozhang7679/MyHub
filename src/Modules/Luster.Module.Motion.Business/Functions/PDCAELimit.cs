@@ -275,16 +275,8 @@ namespace Luster.Module.Motion.Business.Functions
                     CopyFolder();
                     break;
 
-                case PDCAType.CopyCSV:
-                    {
-                        // 异步拷贝CSV文件
-                        var bRes = CopyCSVAsync(OutWIP).GetAwaiter().GetResult();
-                        iResult = bRes ? 1 : 2;
-                    }
-                    break;
-
             }
-            if (PDCAMode == PDCAType.CCTV || PDCAMode == PDCAType.CopyCSV)
+            if (PDCAMode == PDCAType.CCTV)
             {
                 return true;
             }
@@ -466,6 +458,18 @@ namespace Luster.Module.Motion.Business.Functions
                     else
                         iResult = 2;
                     break;
+
+                case PDCAType.CopyCSV:
+                    if (IsConnectMacMini)
+                    {
+                        // 异步拷贝CSV文件
+                        var bRes = CopyCSVAsync(OutWIP).GetAwaiter().GetResult();
+                        iResult = bRes ? 1 : 2;
+                    }
+                    else
+                        iResult = 2;
+                    break;
+
                 case PDCAType.Whole:
 
                     //1.第一步 发送Start
@@ -1063,7 +1067,9 @@ namespace Luster.Module.Motion.Business.Functions
                 try
                 {
                     srcCSVFolder = SourceCSVPath.Trim();
-                    dstCSVFolder = Path.Combine(DesCSVPath.GetString(Owner), wip).Trim();
+                    dstCSVFolder = Path.Combine(DesImagePath.GetString(Owner), wip).Trim();
+
+                    MyOwner.OnLog(LogType.Info, $"PDCAELimit模块:{MyOwner.Alias} 源CSV路径:{srcCSVFolder}  目标路径{dstCSVFolder}");
 
                     if (!Directory.Exists(srcCSVFolder))
                     {
