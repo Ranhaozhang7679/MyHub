@@ -689,7 +689,34 @@ namespace Luster.Motion.Assests.Langs {
                 return ResourceManager.GetString("AxisPosMove", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   查找类似 双轴点位阵列 的本地化字符串。
+        /// </summary>
+        public static string AxisPosArray {
+            get {
+                return ResourceManager.GetString("AxisPosArray", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   查找类似 大寰音圈电机 的本地化字符串。
+        /// </summary>
+        public static string DHRoboticsVCM {
+            get {
+                return ResourceManager.GetString("DHRoboticsVCM", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   查找类似 钧舵音圈电机 的本地化字符串。
+        /// </summary>
+        public static string JunRudderVCM {
+            get {
+                return ResourceManager.GetString("JunRudderVCM", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   查找类似 轴优先级 的本地化字符串。
         /// </summary>

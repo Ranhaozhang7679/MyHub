@@ -9,14 +9,14 @@ namespace DC.Authorization.WPF.Repositories
 {
     public class AccountRepository : IAccountRepository
     {
-        public List<Account> Load(bool skipDefaultAdmin = true)
+        public List<Account> Load(bool skipAdmin = true)
         {
             using var conn = new SQLiteConnection(DbConfig.ConnectionString);
             conn.Open();
             using var cmd = conn.CreateCommand();
             cmd.CommandText =
 $@"SELECT acc.id,auth_name,auth_pwd,acc.role_id,real_name,tel_no,department,status,rl.role_name,rl.role_admin,acc.session_expire_min
-FROM account_info ACC JOIN role_info RL ON acc.role_id = rl.role_id WHERE status<>-1 {(skipDefaultAdmin ? " AND id<>1" : string.Empty)}";
+FROM account_info ACC JOIN role_info RL ON acc.role_id = rl.role_id WHERE status<>-1 {(skipAdmin ? " AND rl.role_admin=0" : string.Empty)}";
             using var reader = cmd.ExecuteReader();
             var res = new List<Account>();
             while (reader.Read())

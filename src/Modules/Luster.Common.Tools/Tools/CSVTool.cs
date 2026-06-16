@@ -342,10 +342,20 @@ namespace Luster.Common.Tools
                 // 读取内容
                 while ((line = reader.ReadLine()) != null)
                 {
+                    // 容错：跳过空行（文件末尾可能存在空行）
+                    if (string.IsNullOrWhiteSpace(line)) continue;
+
                     var data = line.Split(',');
                     var obj = Activator.CreateInstance<T>();
                     for (var i = 0; i < properties.Count; i++)
                     {
+                        // 容错：CSV 列数不足时停止解析，缺失属性保留类型默认值
+                        // 例如现场部分 Press 数据仅含 No,Time,Press 三列，但 TotalPressModel 还有 Position 列
+                        if (i >= data.Length) break;
+
+                        // 容错：单元格为空时跳过赋值，避免 Convert.ChangeType 抛异常
+                        if (string.IsNullOrWhiteSpace(data[i])) continue;
+
                         var vaule = Convert.ChangeType(data[i], properties[i].PropertyType);
                         properties[i].SetValue(obj, vaule);
                     }
@@ -355,5 +365,33 @@ namespace Luster.Common.Tools
             }
             return list;
         }
+
+        public static int GetCSVColNum(string fileName, int dataStartRow = 1)
+        {
+            int num = 0;
+            if (!File.Exists(fileName))
+                throw new FileNotFoundException("file:" + fileName + " is not exist!");
+
+            // 读取标题，获取顺序
+            using (var reader = new StreamReader(fileName, Encoding.UTF8))
+            {
+                // 读取标题
+                string line = string.Empty;
+                for (int i = 0; i < dataStartRow; i++)
+                {
+                    line = reader.ReadLine();
+                }
+
+                // 读取内容
+                while ((line = reader.ReadLine()) != null)
+                {
+                    var data = line.Split(',');
+                    num = data.Length;
+                }
+                reader.Close();
+            }
+            return num;
+        }
+
     }
 }

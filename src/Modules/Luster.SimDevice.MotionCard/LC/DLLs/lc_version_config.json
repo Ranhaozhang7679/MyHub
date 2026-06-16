@@ -1,0 +1,29 @@
+{
+    "ActiveVersion": "2023-03-08",
+    "Versions": [
+        {
+            "Id": "2023-03-08",
+            "DllSubPath": "LC/DLLs/2023-03-08/ecat_motion.dll",
+            "Description": "机台 ZZGKJ-20230403S 采集于 2026-05-18",
+            "ExpectedDllVersion": "2022-12-01 1.1.19",
+            "ExpectedFpgaVersion": "2023-03-08 V434",
+            "ExpectedDspVersion": "2023-03-08 2.0.20"
+        },
+        {
+            "Id": "v440",
+            "DllSubPath": "LC/DLLs/v440/ecat_motion.dll",
+            "Description": "备选版本-未知",
+            "ExpectedDllVersion": "",
+            "ExpectedFpgaVersion": "",
+            "ExpectedDspVersion": ""
+        },
+        {
+            "Id": "2025-10-11",
+            "DllSubPath": "LC/DLLs/2025-10-11/ecat_motion.dll",
+            "Description": "机台 ZZIPC-20240408S 采集于 2026-05-18",
+            "ExpectedDllVersion": "2025-10-11 1.1.37",
+            "ExpectedFpgaVersion": "2025-10-11 V456",
+            "ExpectedDspVersion": "2025-10-11 2.0.37"
+        }
+    ]
+}

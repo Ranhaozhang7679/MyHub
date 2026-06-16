@@ -62,7 +62,7 @@ namespace Luster.Module.Motion.Logic.Functions
     public class SetVariable : MotionFunction, IRefFunction
     {
         [NotEmpty]
-        [Parameter("全局变量", 1, CN = "全局变量", EditorType = typeof(IGlobal))]
+        [Parameter("全局变量", 1, CN = "全局变量", EditorType = typeof(IGlobalByType))]
         public string GlobalVar { get; set; }
 
         [Parameter("变量类型", 2, CN = "变量类型", DefaultV = GlobalType.Bool)]

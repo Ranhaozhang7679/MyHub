@@ -1227,7 +1227,7 @@ namespace Luster.Motion.DataStruct.Network
                         }
                         else
                         {
-                            commands = GetWriteRegisterCommand<T>(datas, addr, 16, startAddr);
+                            commands = GetWriteRegisterCommand<T>(datas, addr, func, startAddr);
                         }
                     }
 

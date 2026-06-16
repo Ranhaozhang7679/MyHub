@@ -20,6 +20,7 @@ namespace DC.Authorization.WPF.ViewModels
     public class AuthorityViewModel : BindableBase, IDialogAware
     {
         private ObservableCollection<Role> _roles = new ObservableCollection<Role>();
+        private ObservableCollection<Role> _rolesForRights = new ObservableCollection<Role>();
         private IAuthorizationFacade _authorizationFacade;
         private IRightRepository _rightRepository;
         private ILoginService _loginService;
@@ -57,7 +58,8 @@ namespace DC.Authorization.WPF.ViewModels
             _roleRepository = roleRepository;
             _accountRepository = accountRepository;
             _roles.AddRange(_roleRepository.Load()/*.Where(x => !x.IsAdmin)*/);
-            _accounts.AddRange(_accountRepository.Load()/*.Where(x => x.Id != 1)*/);
+            _rolesForRights.AddRange(_roles.Where(r => !r.IsAdmin));
+            _accounts.AddRange(_accountRepository.Load(false).Where(x => !x.IsAdmin));
             _dialogService = dialogService;
             _auditLogRepository = auditLogRepository;
             _logs.AddRange(_auditLogRepository.Query(new QueryModel()));
@@ -90,6 +92,8 @@ namespace DC.Authorization.WPF.ViewModels
         {
             get => _roles; set { SetProperty(ref _roles, value); }
         }
+        /// <summary>权限配置下拉框使用的角色列表（排除超级管理员）</summary>
+        public ObservableCollection<Role> RolesForRights => _rolesForRights;
         public ObservableCollection<Account> Accounts
         {
             get { return _accounts; }
@@ -115,7 +119,7 @@ namespace DC.Authorization.WPF.ViewModels
                 if (res.Result == ButtonResult.OK)
                 {
                     Accounts.Clear();
-                    Accounts.AddRange(_accountRepository.Load().Where(x => x.Id != 1));
+                    Accounts.AddRange(_accountRepository.Load(false).Where(x => !x.IsAdmin));
                 }
             });
         }
@@ -143,9 +147,9 @@ namespace DC.Authorization.WPF.ViewModels
         private List<string> AccountDeleteValidate()
         {
             List<string> warnings = new List<string>();
-            if (SelectedAccount.Id == 1)
+            if (SelectedAccount.IsAdmin)
             {
-                warnings.Add("系统管理员无法删除");
+                warnings.Add("管理员账户无法删除");
             }
             return warnings;
         }
@@ -166,7 +170,7 @@ namespace DC.Authorization.WPF.ViewModels
                 if (res.Result == ButtonResult.OK)
                 {
                     Accounts.Clear();
-                    Accounts.AddRange(_accountRepository.Load().Where(x => x.Id != 1));
+                    Accounts.AddRange(_accountRepository.Load(false).Where(x => !x.IsAdmin));
                 }
             });
         }
@@ -241,15 +245,19 @@ namespace DC.Authorization.WPF.ViewModels
             {
                 return;
             }
-            Logs.Clear();
-            LogCurrentPage--;
             QueryModel queryModel = new QueryModel()
             {
                 StartTime = _startDate,
                 EndTime = endDate,
-                PageIndex = LogCurrentPage - 1
+                PageIndex = LogCurrentPage - 2
             };
-            Logs.AddRange(_auditLogRepository.Query(queryModel));
+            var result = _auditLogRepository.Query(queryModel);
+            if (result != null && result.Count > 0)
+            {
+                Logs.Clear();
+                LogCurrentPage--;
+                Logs.AddRange(result);
+            }
         }
 
         private DelegateCommand _nextPageCommand;
@@ -261,15 +269,19 @@ namespace DC.Authorization.WPF.ViewModels
             {
                 return;
             }
-            Logs.Clear();
-            LogCurrentPage++;
             QueryModel queryModel = new QueryModel()
             {
                 StartTime = _startDate,
                 EndTime = endDate,
-                PageIndex = LogCurrentPage - 1
+                PageIndex = LogCurrentPage
             };
-            Logs.AddRange(_auditLogRepository.Query(queryModel));
+            var result = _auditLogRepository.Query(queryModel);
+            if (result != null && result.Count > 0)
+            {
+                Logs.Clear();
+                LogCurrentPage++;
+                Logs.AddRange(result);
+            }
         }
 
         public bool CanCloseDialog()
@@ -290,6 +302,40 @@ namespace DC.Authorization.WPF.ViewModels
 
 
         public int LogCurrentPage { get => _logCurrentPage; set => SetProperty(ref _logCurrentPage, value); }
+
+        private string _jumpPageText;
+        /// <summary>
+        /// 页码跳转输入
+        /// </summary>
+        public string JumpPageText { get => _jumpPageText; set => SetProperty(ref _jumpPageText, value); }
+
+        private DelegateCommand _jumpPageCommand;
+        public ICommand JumpPageCommand => _jumpPageCommand ??= new DelegateCommand(JumpPage);
+
+        private void JumpPage()
+        {
+            if (int.TryParse(JumpPageText, out int targetPage) && targetPage >= 1)
+            {
+                QueryModel queryModel = new QueryModel()
+                {
+                    StartTime = _startDate,
+                    EndTime = endDate,
+                    PageIndex = targetPage - 1
+                };
+                var result = _auditLogRepository.Query(queryModel);
+                if (result == null || result.Count == 0)
+                {
+                    MessageBox.Show($"第 {targetPage} 页不存在", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    Logs.Clear();
+                    LogCurrentPage = targetPage;
+                    Logs.AddRange(result);
+                }
+            }
+            JumpPageText = string.Empty;
+        }
 
         //public DialogCloseListener RequestClose => _requestClose;
 
@@ -482,7 +528,7 @@ namespace DC.Authorization.WPF.ViewModels
             {
                 MessageBox.Show("导入成功!", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
                 Accounts.Clear();
-                Accounts.AddRange(_accountRepository.Load());
+                Accounts.AddRange(_accountRepository.Load(false).Where(x => !x.IsAdmin));
             }
         }
 

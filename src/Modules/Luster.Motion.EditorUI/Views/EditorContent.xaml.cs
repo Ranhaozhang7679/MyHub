@@ -213,6 +213,12 @@ namespace Luster.Motion.EditorUI.Views
             AddByRef(flowItem);
 
             AddHolo3D(flowItem);
+
+            // 新窗口打开
+            AddOpenInNewWindow(flowItem);
+
+            // 查找同名工站
+            AddFindDuplicate(flowItem);
         }
 
 
@@ -279,6 +285,22 @@ namespace Luster.Motion.EditorUI.Views
                     refItem.Icon = GetFontText("\xe6b1", Brushes.Blue);
                     contextMenu.Items.Add(refItem);
                 }
+            }
+        }
+
+        /// <summary>
+        /// 查找同名工站
+        /// </summary>
+        private void AddFindDuplicate(FlowItem flowItem)
+        {
+            if (flowEditor.IsDataFlow && flowItem.Motion.TaskFunction is IStation)
+            {
+                contextMenu.Items.Add(new Separator());
+                MenuItem item = new MenuItem();
+                item.Header = "查找同名工站";
+                BuildCommand(item, "FindDuplicateCommand");
+                item.Icon = GetFontText("\xe693", Brushes.Orange);
+                contextMenu.Items.Add(item);
             }
         }
 
@@ -645,6 +667,27 @@ namespace Luster.Motion.EditorUI.Views
             exportItem.Icon = GetFontText("\xe634");
             BuildCommand(exportItem, "ExportFlowCommand");
             contextMenu.Items.Add(exportItem);
+        }
+
+        /// <summary>
+        /// 新窗口打开菜单项（仅对自由工站、测试工站、多分支、if判断、并行显示）
+        /// </summary>
+        private void AddOpenInNewWindow(FlowItem flowItem)
+        {
+            if (flowItem?.Motion?.TaskFunction == null) return;
+
+            var func = flowItem.Motion.TaskFunction;
+            if (func is IFreeStation || func is ITestStation || func is ISwitch
+                || func is IBranch || func is IParallel)
+            {
+                contextMenu.Items.Add(new Separator());
+                MenuItem openItem = new MenuItem();
+                openItem.Header = "新窗口打开";
+                openItem.Icon = GetFontText("\xe75e");
+                BuildCommand(openItem, "OpenInNewWindowCommand");
+                openItem.CommandParameter = flowItem.Motion;
+                contextMenu.Items.Add(openItem);
+            }
         }
     }
 }

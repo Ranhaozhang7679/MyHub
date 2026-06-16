@@ -82,6 +82,13 @@ namespace Luster.SimDevice.MotionCard.LC
                 return;
             }
 
+            // 在任何 ecat_motion 调用之前，预加载配置指定的 DLL 版本
+            LCDllManager.EnsureDllLoaded();
+            if (!string.IsNullOrEmpty(LCDllManager.ConfigError))
+            {
+                OnLog(LogType.Warning, $"LC DLL 加载警告: {LCDllManager.ConfigError}");
+            }
+
             var pcie = Adapter as PCIe;
             if (pcie == null)
             {
@@ -161,6 +168,18 @@ namespace Luster.SimDevice.MotionCard.LC
 
                 return true;
             });
+
+            // 读取并校验板卡版本信息
+            LCDllManager.ReadVersionInfo(cardNo);
+            if (!LCDllManager.IsVersionMatched)
+            {
+                OnLog(LogType.Error, $"LC板卡版本不匹配: {LCDllManager.VersionInfo}");
+            }
+            else
+            {
+                OnLog(LogType.Info, $"LC板卡版本: {LCDllManager.VersionInfo}");
+            }
+
             OnStatusChanged(DeviceStatus.Online);
         }
         #endregion

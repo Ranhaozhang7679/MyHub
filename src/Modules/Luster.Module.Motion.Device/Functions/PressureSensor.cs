@@ -131,7 +131,7 @@ namespace Luster.Module.Motion.Device.Functions
                         // 1、单通道清零-01 10 00 5E 00 01 02 00 01 6A EE
                         for (int i = 0; i < 1; i++)
                         {
-                            bool comResult = communcation.WriteWithoutBlocking<int>(1, $"{StationNum} 10 94 1");
+                            bool comResult = communcation.WriteWithoutBlocking<int>(1, $"{StationNum} 16 94 1");
                             if (comResult)
                             {
                                 //    var coilVs = (communcation.Read<int>($"{StationNum} 03 80 1")[0]) / 1000.0;

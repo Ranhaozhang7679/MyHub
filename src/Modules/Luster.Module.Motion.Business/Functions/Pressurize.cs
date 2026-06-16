@@ -80,9 +80,14 @@ namespace Luster.Module.Motion.Business.Functions
         [Parameter("真实保压值", 20, CN = "真实保压值", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
         public double PressurizeVal { get; set; }
 
-        [NotEmpty]
         [Parameter("气缸保压时间输出,单位为S", 21, CN = "保压时间", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
-        public int PressureTimeOut { get; set; }
+        public double PressureTimeOut { get; set; }
+
+        [Parameter("气缸伸出时间输出,单位为S", 22, CN = "气缸伸出时间", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
+        public double CylinderTTimeOut { get; set; }
+
+        [Parameter("气缸缩回时间输出,单位为S", 23, CN = "气缸缩回时间", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
+        public double CylinderFTimeOut { get; set; }
 
         public override bool IsNeedPause => true;
 
@@ -125,8 +130,12 @@ namespace Luster.Module.Motion.Business.Functions
             PressureAddress = getSlaveNum(val);
             GetVDevice<VCylinder>(Cylinder, out var val2);
             val2.InRetractSensorCheck(CylinderTime);
+            DateTime startTime = DateTime.Now;
             val2.Extend();
             val2.InExtendSensorCheck(CylinderTime);
+            DateTime endTime = DateTime.Now;
+            TimeSpan timedec = endTime - startTime;
+            CylinderTTimeOut = timedec.TotalSeconds;
             Thread.Sleep(DelayTime);
             double num = 0.0;
             lstPressVal.Clear();
@@ -178,8 +187,12 @@ namespace Luster.Module.Motion.Business.Functions
                 PressurizeVal = Math.Round(PressureValue, 3);
             }
             Thread.Sleep(PressureTime - DelayTime);
+            DateTime startTime1 = DateTime.Now;
             val2.Retract();
             val2.InRetractSensorCheck(CylinderTime);
+            DateTime endTime1 = DateTime.Now;
+            TimeSpan timedec1 = endTime1 - startTime1;
+            CylinderFTimeOut = timedec1.TotalSeconds;
             PressureTimeOut = PressureTime / 1000;
         }
 

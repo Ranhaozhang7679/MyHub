@@ -145,9 +145,9 @@ namespace Luster.Motion.ReportUI.ViewModel
             set => SetProperty(ref _yAxisStep, value);
         }
 
-        private double _yAxisMax = 0.12;
+        private double _yAxisMax = 0.3;
         /// <summary>
-        /// 图表1 Y轴上限（kgf）
+        /// 图表1 Y轴上限（kgf），设置为0时自动调整
         /// </summary>
         public double YAxisMax
         {
@@ -156,7 +156,7 @@ namespace Luster.Motion.ReportUI.ViewModel
         }
 
         // === 图表2 参数 ===
-        private double _xAxisStep2 = 0.5;
+        private double _xAxisStep2 = 50;
         /// <summary>
         /// 图表2 X轴刻度间隔
         /// </summary>
@@ -178,18 +178,44 @@ namespace Luster.Motion.ReportUI.ViewModel
 
         private double _yAxisMax2 = 5.0;
         /// <summary>
-        /// 图表2 Y轴上限
+        /// 图表2 Y轴上限，设置为0时自动调整
         /// </summary>
         public double YAxisMax2
         {
             get => _yAxisMax2;
             set => SetProperty(ref _yAxisMax2, value);
         }
+        //只显示Y+
+        private bool _onlyShowPositiveIsEnabled = false;
+        public bool OnlyShowPositiveIsEnabled
+        {
+            get => _onlyShowPositiveIsEnabled;
+            set
+            {
+                if (SetProperty(ref _onlyShowPositiveIsEnabled, value))
+                    RedrawChart();
+            }
+        }
+        //是否启用平滑曲线
+        private bool _smoothCurveProcessingsEnabled = false;
+        public bool SmoothCurveProcessingsEnabled
+        {
+            get => _smoothCurveProcessingsEnabled;
+            set => SetProperty(ref _smoothCurveProcessingsEnabled, value);
+        }
 
+        private int _sliderValue = 11;
+        public int SliderValue
+        {
+            get => _sliderValue;
+            set => SetProperty(ref _sliderValue, value);
+        }
         // 原始数据缓存
         private List<List<ObservablePoint>> _rawDataCache = new List<List<ObservablePoint>>();
         private List<List<ObservablePoint>> _rawPositionPressCache = new List<List<ObservablePoint>>();
         private List<List<ObservablePoint>> _rawTimePositionCache = new List<List<ObservablePoint>>();
+        //平滑处理后的数据
+        private List<List<ObservablePoint>> _rawDataCache1 = new List<List<ObservablePoint>>();
         private double _cachedTimeMax = 1000;
         private double _cachedPressMin = 0;
         private double _cachedPressMax = 1.0;
@@ -246,14 +272,14 @@ namespace Luster.Motion.ReportUI.ViewModel
                     Chart2Title = "Time-Position";
                     Chart2XLabel = "X间隔(ms):";
                     Chart2YLabel = "Y间隔(mm):";
-                    Chart2YMaxLabel = "Y上限(mm):";
+                    Chart2YMaxLabel = "Y上限(mm,0自动):";
                 }
                 else
                 {
                     Chart2Title = "Position-Press";
                     Chart2XLabel = "X间隔(mm):";
                     Chart2YLabel = "Y间隔(kgf):";
-                    Chart2YMaxLabel = "Y上限(kgf):";
+                    Chart2YMaxLabel = "Y上限(kgf,0自动):";
                 }
                 RedrawChart();
             }));
@@ -310,7 +336,6 @@ namespace Luster.Motion.ReportUI.ViewModel
                 _rawPositionPressCache.Add(posPressValues);
                 _rawTimePositionCache.Add(timePosValues);
             }
-
             if (timeMax <= 0) timeMax = 1000;
             if (pressMin == double.MaxValue) pressMin = 0;
             if (pressMax <= pressMin) pressMax = pressMin + 1.0;
@@ -416,6 +441,10 @@ namespace Luster.Motion.ReportUI.ViewModel
         private void RedrawChart()
         {
             if (_rawDataCache.Count == 0) return;
+            if (_smoothCurveProcessingsEnabled)
+            {
+                _rawDataCache1 = Smoothing.Pxcl(_rawDataCache, _sliderValue);
+            }
             if (_dispatcher == null) _dispatcher = Application.Current?.Dispatcher;
 
             double timeMax = _cachedTimeMax;
@@ -429,23 +458,44 @@ namespace Luster.Motion.ReportUI.ViewModel
 
             // === 图表1：Time-Press ===
             var chart1Series = new List<ISeries>();
-            foreach (var cachedValues in _rawDataCache)
+            if (_smoothCurveProcessingsEnabled)
             {
-                var line = new LineSeries<ObservablePoint>();
-                line.Stroke = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
-                line.LineSmoothness = 0;
-                line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
-                line.GeometrySize = 0;
-                line.MiniatureShapeSize = 0;
-                line.Name = null;
-                line.Values = new List<ObservablePoint>(cachedValues);
-                chart1Series.Add(line);
+                foreach (var cachedValues in _rawDataCache1)
+                {
+                    var line = new LineSeries<ObservablePoint>();
+                    line.Stroke = new SolidColorPaint(Colors.Red.ToSKColor(), 1);
+                    line.LineSmoothness = 0;
+                    line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
+                    line.GeometrySize = 0;
+                    line.MiniatureShapeSize = 0;
+                    line.Name = null;
+                    line.Values = new List<ObservablePoint>(cachedValues);
+                    chart1Series.Add(line);
+                }
             }
-
+            else
+            {
+                foreach (var cachedValues in _rawDataCache)
+                {
+                    var line = new LineSeries<ObservablePoint>();
+                    line.Stroke = new SolidColorPaint(Colors.Red.ToSKColor(), 1);
+                    line.LineSmoothness = 0;
+                    line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
+                    line.GeometrySize = 0;
+                    line.MiniatureShapeSize = 0;
+                    line.Name = null;
+                    line.Values = new List<ObservablePoint>(cachedValues);
+                    chart1Series.Add(line);
+                }
+            }
             double xStep1 = XAxisStep > 0 ? XAxisStep : 50;
             double yStep1 = YAxisStep > 0 ? YAxisStep : 0.05;
             double yMax1 = YAxisMax > 0 ? YAxisMax : pressAbsMax * 1.05;
             double xMax = Math.Ceiling(timeMax / xStep1) * xStep1 + xStep1;
+
+            // 分隔符溢出自动适应：步长过小导致刻度过多时，自动计算合理步长
+            double niceStep1 = CalculateNiceStep(yMax1, 8);
+            if (yStep1 < niceStep1) yStep1 = niceStep1;
 
             var axis_x_time = new Axis();
             axis_x_time.Name = "Time/ms";
@@ -464,7 +514,7 @@ namespace Luster.Motion.ReportUI.ViewModel
             axis_y_press1.Name = "Press/kgf";
             axis_y_press1.NameTextSize = 12;
             axis_y_press1.TextSize = 10;
-            axis_y_press1.MinLimit = -yMax1;
+            axis_y_press1.MinLimit = _onlyShowPositiveIsEnabled ? 0 : -yMax1;
             axis_y_press1.MaxLimit = yMax1;
             axis_y_press1.MinStep = yStep1;
             axis_y_press1.ForceStepToMin = true;
@@ -488,7 +538,7 @@ namespace Luster.Motion.ReportUI.ViewModel
                     foreach (var cachedValues in _rawTimePositionCache)
                     {
                         var line = new LineSeries<ObservablePoint>();
-                        line.Stroke = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
+                        line.Stroke = new SolidColorPaint(Colors.Red.ToSKColor(), 1);
                         line.LineSmoothness = 0;
                         line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
                         line.GeometrySize = 0;
@@ -504,6 +554,9 @@ namespace Luster.Motion.ReportUI.ViewModel
                 double yMax2tp = YAxisMax2 > 0 ? YAxisMax2 : positionMax * 1.1;
 
                 double xMax2tp = Math.Ceiling(timeMax / xStep2tp) * xStep2tp + xStep2tp;
+
+                double niceStep2tp = CalculateNiceStep(yMax2tp, 8);
+                if (yStep2tp < niceStep2tp) yStep2tp = niceStep2tp;
 
                 axis_x2 = new Axis();
                 axis_x2.Name = "Time/ms";
@@ -522,7 +575,7 @@ namespace Luster.Motion.ReportUI.ViewModel
                 axis_y2.Name = "Position/mm";
                 axis_y2.NameTextSize = 12;
                 axis_y2.TextSize = 10;
-                axis_y2.MinLimit = 0;
+                axis_y2.MinLimit = _onlyShowPositiveIsEnabled ? 0 : -yMax2tp;
                 axis_y2.MaxLimit = yMax2tp;
                 axis_y2.MinStep = yStep2tp;
                 axis_y2.ForceStepToMin = true;
@@ -539,7 +592,7 @@ namespace Luster.Motion.ReportUI.ViewModel
                     foreach (var cachedValues in _rawPositionPressCache)
                     {
                         var line = new LineSeries<ObservablePoint>();
-                        line.Stroke = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
+                        line.Stroke = new SolidColorPaint(Colors.Red.ToSKColor(), 1);
                         line.LineSmoothness = 0;
                         line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
                         line.GeometrySize = 0;
@@ -553,6 +606,9 @@ namespace Luster.Motion.ReportUI.ViewModel
                 double xStep2pp = XAxisStep2 > 0 ? XAxisStep2 : 0.5;
                 double yStep2pp = YAxisStep2 > 0 ? YAxisStep2 : 0.05;
                 double yMax2pp = YAxisMax2 > 0 ? YAxisMax2 : pressAbsMax * 1.05;
+
+                double niceStep2pp = CalculateNiceStep(yMax2pp, 8);
+                if (yStep2pp < niceStep2pp) yStep2pp = niceStep2pp;
 
                 double posRange = positionMax - positionMin;
                 double posPadding = posRange * 0.05;
@@ -576,7 +632,7 @@ namespace Luster.Motion.ReportUI.ViewModel
                 axis_y2.Name = "Press/kgf";
                 axis_y2.NameTextSize = 12;
                 axis_y2.TextSize = 10;
-                axis_y2.MinLimit = -yMax2pp;
+                axis_y2.MinLimit = _onlyShowPositiveIsEnabled ? 0 : -yMax2pp;
                 axis_y2.MaxLimit = yMax2pp;
                 axis_y2.MinStep = yStep2pp;
                 axis_y2.ForceStepToMin = true;
@@ -702,5 +758,265 @@ namespace Luster.Motion.ReportUI.ViewModel
         }
 
         #endregion
+    }
+    //平滑曲线的算法
+    public static class Smoothing
+    {
+        // 移动平均平滑
+        public static double[] MovingAverage(double[] data, int windowSize)
+        {
+            int n = data.Length;
+            double[] result = new double[n];
+            int half = windowSize / 2;
+
+            for (int i = 0; i < n; i++)
+            {
+                double sum = 0;
+                int count = 0;
+                for (int j = -half; j <= half; j++)
+                {
+                    int idx = i + j;
+                    if (idx >= 0 && idx < n)
+                    {
+                        sum += data[idx];
+                        count++;
+                    }
+                }
+                result[i] = sum / count;
+            }
+
+            return result;
+        }
+
+        // 高斯平滑
+        public static double[] GaussianSmooth(double[] data, int windowSize)
+        {
+            int n = data.Length;
+            double[] result = new double[n];
+            int half = windowSize / 2;
+            double sigma = windowSize / 6.0;
+
+            // 预计算高斯权重
+            double[] weights = new double[windowSize];
+            double weightSum = 0;
+            for (int i = 0; i < windowSize; i++)
+            {
+                double x = i - half;
+                weights[i] = Math.Exp(-(x * x) / (2 * sigma * sigma));
+                weightSum += weights[i];
+            }
+
+            // 归一化权重
+            for (int i = 0; i < windowSize; i++)
+            {
+                weights[i] /= weightSum;
+            }
+
+            for (int i = 0; i < n; i++)
+            {
+                double sum = 0;
+                for (int j = -half; j <= half; j++)
+                {
+                    int idx = i + j;
+                    if (idx >= 0 && idx < n)
+                    {
+                        sum += data[idx] * weights[j + half];
+                    }
+                }
+                result[i] = sum;
+            }
+
+            return result;
+        }
+
+        // Savitzky-Golay 平滑（使用二次多项式拟合）
+        public static double[] SavitzkyGolay(double[] data, int windowSize)
+        {
+            int n = data.Length;
+            double[] result = new double[n];
+            int half = windowSize / 2;
+
+            // 计算Savitzky-Golay卷积系数（二次多项式）
+            // 使用最小二乘法求解
+            int m = half;
+            double[,] A = new double[5, 5];
+            double[] b = new double[5];
+
+            // 构建正规方程
+            for (int k = -m; k <= m; k++)
+            {
+                A[0, 0] += 1;
+                A[0, 1] += k;
+                A[0, 2] += k * k;
+                A[1, 0] += k;
+                A[1, 1] += k * k;
+                A[1, 2] += k * k * k;
+                A[2, 0] += k * k;
+                A[2, 1] += k * k * k;
+                A[2, 2] += k * k * k * k;
+            }
+
+            // 对于平滑（求第0阶导数），b向量
+            b[0] = 1;
+            b[1] = 0;
+            b[2] = 0;
+
+            // 使用3x3子矩阵求解（简化）
+            double[,] mat = new double[3, 4];
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                    mat[i, j] = A[i, j];
+                mat[i, 3] = b[i];
+            }
+
+            // 高斯消元法求解系数
+            SolveLinearSystem3x3(mat);
+            double c0 = mat[0, 3];
+            // double c1 = mat[1, 3]; // 不需要
+            // double c2 = mat[2, 3];
+
+            // 计算卷积核: c(j) = c0 * 1 (对于SG平滑，中心点的权重)
+            // 实际上SG平滑的卷积系数
+            double[] coeffs = new double[windowSize];
+            for (int j = -half; j <= half; j++)
+            {
+                coeffs[j + half] = c0; // 简化处理
+            }
+
+            // 更精确的做法：直接用最小二乘拟合
+            for (int i = 0; i < n; i++)
+            {
+                // 对每个点用二次多项式拟合窗口内数据
+                double sumY = 0, sumX = 0, sumX2 = 0, sumXY = 0, sumX2Y = 0;
+                int count = 0;
+
+                for (int j = -half; j <= half; j++)
+                {
+                    int idx = i + j;
+                    if (idx >= 0 && idx < n)
+                    {
+                        double x = j;
+                        double y = data[idx];
+                        sumY += y;
+                        sumX += x;
+                        sumX2 += x * x;
+                        sumXY += x * y;
+                        sumX2Y += x * x * y;
+                        count++;
+                    }
+                }
+
+                // 最小二乘拟合 y = a + b*x + c*x^2 在x=0处的值就是a
+                // 使用正规方程求解a
+                double det = count * sumX2 * sumX2 * sumX2
+                    - count * sumX2 * (count > 0 ? 0 : 1); // 简化
+
+                // 更简单的做法：直接使用移动平均的加权版本
+                // 实际SG平滑：中心点值为a
+                // 正规方程: [n, Σx, Σx²] [a]   [Σy]
+                //           [Σx, Σx², Σx³] [b] = [Σxy]
+                //           [Σx², Σx³, Σx⁴] [c]   [Σx²y]
+                // 由于对称窗口，Σx = 0, Σx³ = 0
+                // 简化为: [n, Σx²] [a]   [Σy]
+                //         [Σx², Σx⁴] [c] = [Σx²y]
+                // b = Σxy / Σx²
+
+                double S0 = count;
+                double S2 = sumX2;
+                double S4 = 0;
+                for (int j = -half; j <= half; j++)
+                {
+                    int idx = i + j;
+                    if (idx >= 0 && idx < n)
+                    {
+                        S4 += j * j * j * j;
+                    }
+                }
+
+                double detA = S0 * S4 - S2 * S2;
+                if (Math.Abs(detA) > 1e-12)
+                {
+                    result[i] = (S4 * sumY - S2 * sumX2Y) / detA;
+                }
+                else
+                {
+                    result[i] = sumY / count;
+                }
+            }
+
+            return result;
+        }
+
+        // 3x3线性方程组求解（高斯消元法）
+        private static void SolveLinearSystem3x3(double[,] mat)
+        {
+            int n = 3;
+            for (int col = 0; col < n; col++)
+            {
+                // 选主元
+                int maxRow = col;
+                for (int row = col + 1; row < n; row++)
+                {
+                    if (Math.Abs(mat[row, col]) > Math.Abs(mat[maxRow, col]))
+                        maxRow = row;
+                }
+
+                // 交换行
+                for (int j = 0; j <= n; j++)
+                {
+                    double tmp = mat[col, j];
+                    mat[col, j] = mat[maxRow, j];
+                    mat[maxRow, j] = tmp;
+                }
+
+                // 消元
+                for (int row = col + 1; row < n; row++)
+                {
+                    double factor = mat[row, col] / mat[col, col];
+                    for (int j = col; j <= n; j++)
+                    {
+                        mat[row, j] -= factor * mat[col, j];
+                    }
+                }
+            }
+
+            // 回代
+            for (int i = n - 1; i >= 0; i--)
+            {
+                mat[i, n] /= mat[i, i];
+                for (int k = 0; k < i; k++)
+                {
+                    mat[k, n] -= mat[k, i] * mat[i, n];
+                }
+            }
+        }
+        /// <summary>
+        /// 波形数据平滑处理
+        /// </summary>
+        /// <param name="observablePoint"></param>
+        /// <returns></returns>
+        public static List<List<ObservablePoint>> Pxcl(List<List<ObservablePoint>> observablePoint, int Windowsize)
+        {
+            List<List<ObservablePoint>> date = new List<List<ObservablePoint>>();
+            foreach (List<ObservablePoint> sj in observablePoint)
+            {
+                List<double> ytemp = new List<double>();
+                List<ObservablePoint> hc = new List<ObservablePoint>();
+                foreach (ObservablePoint tt in sj)
+                {
+                    ytemp.Add((double)tt.Y);
+                }
+                double[] doubles = MovingAverage(ytemp.ToArray(), Windowsize);
+                for (int i = 0; i < doubles.Length; i++)
+                {
+                    ObservablePoint tempdata = sj[i];
+                    tempdata.Y = doubles[i];
+                    hc.Add(tempdata);
+                }
+                date.Add(hc);
+            }
+            return date;
+        }
     }
 }

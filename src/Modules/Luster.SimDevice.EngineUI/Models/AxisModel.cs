@@ -671,21 +671,29 @@ namespace Luster.SimDevice.EngineUI.Models
                         break;
                     }
 
-                    // 更新状态信息
-                    var dictStatus = Tag.GetAxisStatus(false);
-                    foreach (var sItem in StatusList)
+                    try
                     {
-                        if (dictStatus.ContainsKey(sItem.Name))
+                        // 更新状态信息
+                        var dictStatus = Tag.GetAxisStatus(false);
+                        foreach (var sItem in StatusList)
                         {
-                            sItem.Status = dictStatus[sItem.Name];
+                            if (dictStatus.ContainsKey(sItem.Name))
+                            {
+                                sItem.Status = dictStatus[sItem.Name];
+                            }
+                            else
+                            {
+                                sItem.Status = false;
+                            }
                         }
-                        else
-                        {
-                            sItem.Status = false;
-                        }
+
+                        CurrentPos = Tag.GetCurrentPos();
+                    }
+                    catch
+                    {
+                        // 通讯异常时忽略，下一轮继续重试
                     }
 
-                    CurrentPos = Tag.GetCurrentPos();
                     Thread.Sleep(100);
                 }
             }, tokenS.Token);

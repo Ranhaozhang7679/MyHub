@@ -50,7 +50,11 @@ namespace Luster.Module.Motion.Business.Functions
             [Description("结束")]
             End,
             [Description("CCTV文件拷贝")]
-            CCTV
+            CCTV,
+            [Description("CSV拷贝")]
+            CopyCSV,
+            [Description("打包上传")]
+            WholeContinous
         }
         /// <summary>
         /// 通信服务器
@@ -87,7 +91,7 @@ namespace Luster.Module.Motion.Business.Functions
         [Parameter("动作类型", 2, CN = "动作类型", DefaultV = PDCAType.SendData)]
         public PDCAType PDCAMode { get; set; }
 
-        [DependOn("PDCAMode", PDCAType.Whole, PDCAType.SendData)]
+        [DependOn("PDCAMode", PDCAType.Whole, PDCAType.SendData, PDCAType.WholeContinous)]
         [Parameter("启用Display_SN上传项", 3, CN = "启用Display_SN", CanRef = ParamRef.Ref, DefaultV = false)]
         public bool IsCGDisplaySN { get; set; }
 
@@ -188,6 +192,41 @@ namespace Luster.Module.Motion.Business.Functions
         /// </summary>
         [Parameter("启用载具查询WIP", 19, CN = "启用载具查询WIP", DefaultV = false)]
         public bool IsEnableCarrier { get; set; }
+
+        /// <summary>
+        /// 源CSV路径
+        /// </summary>
+        [DependOn("PDCAMode", PDCAType.CopyCSV)]
+        [Parameter("源CSV文件夹路径", 24, CN = "源CSV路径", CanRef = ParamRef.Ref)]
+        public string SourceCSVPath { get; set; }
+
+        /// <summary>
+        /// 目标CSV路径
+        /// </summary>
+        [DependOn("PDCAMode", PDCAType.CopyCSV)]
+        [Parameter("目标CSV文件夹路径", 25, CN = "目标CSV路径")]
+        public LStringEx DesCSVPath { get; set; }
+
+        /// <summary>
+        /// CSV文件名称规则
+        /// </summary>
+        [DependOn("PDCAMode", PDCAType.CopyCSV)]
+        [Parameter("CSV名称规则", 26, CN = "CSV名称规则", CanRef = ParamRef.Ref)]
+        public string CSVRol { get; set; }
+
+        /// <summary>
+        /// 是否上传csv文件
+        /// </summary>
+        [DependOn("PDCAMode", PDCAType.CopyCSV)]
+        [Parameter("是否上传csv文件", 18, CN = "是否上传csv文件", DefaultV = false)]
+        public bool IsUploadCsv { get; set; }
+
+        /// <summary>
+        /// 是否上传力控图片
+        /// </summary>
+        [DependOn("PDCAMode", PDCAType.CopyCSV)]
+        [Parameter("是否上传力控图片", 18, CN = "是否上传力控图片", DefaultV = false)]
+        public bool IsUploadDHPic { get; set; }
 
 
         /// <summary>
@@ -419,6 +458,18 @@ namespace Luster.Module.Motion.Business.Functions
                     else
                         iResult = 2;
                     break;
+
+                case PDCAType.CopyCSV:
+                    if (IsConnectMacMini)
+                    {
+                        // 异步拷贝CSV文件
+                        var bRes = CopyCSVAsync(OutWIP).GetAwaiter().GetResult();
+                        iResult = bRes ? 1 : 2;
+                    }
+                    else
+                        iResult = 2;
+                    break;
+
                 case PDCAType.Whole:
 
                     //1.第一步 发送Start
@@ -480,9 +531,57 @@ namespace Luster.Module.Motion.Business.Functions
                     }
 
                     break;
+
+                case PDCAType.WholeContinous:
+
+                    // 1.异步拷贝图片（非CPK/GRR模式下）
+                    if (!IsCPKMode && !IsGRRMode)
+                    {
+                        if (IsConnectMacMini)
+                        {
+                            CopyFolderAsync(OutWIP.ToString());
+                        }
+                        // 图片拷贝为异步操作，不阻塞数据上传
+                        iCopyImgRes = 1;
+                    }
+                    else
+                    {
+                        iCopyImgRes = 1;
+                    }
+
+                    // 2.拼接完整批量消息（start + attr + data + submit 一次性发送）
+                    if(IsManual)
+                        sendStr = GetSendDataContinuous(OutWIP, ProdData, IsCPKMode, IsGRRMode, WorkId);
+                    else
+                        sendStr = GetSendDataContinuousNew(OutWIP, ProdData, IsCPKMode, IsGRRMode, WorkId);
+
+                    // 3.检测压力值异常
+                    if (sendStr.ToLower().Contains("force@-1@"))
+                    {
+                        MyOwner.OnAlarm(AlarmType.InfoTip, $"压力值读到-1，不再上传PDCA!!!");
+                        iResult = 5;
+                        return true;
+                    }
+
+                    // 4.一次性发送
+                    _sfcHelper.SendPDCAData(sendStr, "PDCA打包上传", out errMsg, TimeOutMS, IsAutoDisConnect);
+                    if (!string.IsNullOrEmpty(errMsg))
+                    {
+                        OnAlarm(AlarmType.InfoTip, $"PDCA打包上传失败:{errMsg}");
+                        iSendPDCARes = 0;
+                        SaveErrorData(SN, sendStr);
+                        iResult = 3;
+                        return true;
+                    }
+                    else
+                    {
+                        iSendPDCARes = 1;
+                    }
+
+                    break;
             }
 
-            if (PDCAMode == PDCAType.Whole)
+            if (PDCAMode == PDCAType.Whole || PDCAMode == PDCAType.WholeContinous)
             {
                 if (iCopyImgRes == 1 && iSendPDCARes == 1)
                     iResult = 1;
@@ -764,6 +863,159 @@ namespace Luster.Module.Motion.Business.Functions
             return sendContent;
         }
 
+        /// <summary>
+        /// 连续一次性发送：将 start + attr + data + submit 拼成一条 _{} 批量消息
+        /// </summary>
+        private string GetSendDataContinuous(string wip, LStringEx pDataEx, bool IsCPK, bool IsGRR, int WorkId)
+        {
+            string QPLNum = MyOwner.ConfigManager.GetWebConfig("UniteCode");
+
+            string mode = "0";
+            string priority = "0";
+            string straudit = "";
+
+            // 拼接过程数据
+            string prodDatas = pDataEx.GetString(MyOwner).Replace('\r', ';').Replace('\n', ';');
+            prodDatas = prodDatas.Replace("QPL@1@@", $"QPL@{QPLNum}@@");
+
+            StringBuilder sbData = new StringBuilder();
+            var datas = prodDatas.Split(';');
+            foreach (var item in datas)
+            {
+                if (string.IsNullOrEmpty(item.Trim())) continue;
+                sbData.Append($"{wip}@{item}\n");
+            }
+
+            if (IsCPKMode)
+            {
+                mode = "1";
+                priority = "-2";
+                straudit = "@audit";
+            }
+            else if (IsGRRMode)
+            {
+                mode = "2";
+                priority = "-2";
+                straudit = "@audit";
+            }
+            else
+            {
+                mode = "0";
+                priority = "0";
+                straudit = "";
+                testSeriesID = "0";
+            }
+
+            // 拼接 attr
+            StringBuilder sbAttr = new StringBuilder();
+            string machineSN = MyOwner.ConfigManager.GetWebConfig("MachineSN");
+            if (!IsContainLine)
+            {
+                //sbAttr.Append($"{wip}@attr@Machine SN@{machineSN}\n");
+                //sbAttr.Append($"{wip}@attr@CG SN@{SN}\n");
+                //sbAttr.Append($"{wip}@attr@Carrier SN@{CarrierSN}\n");
+                if (IsCGDisplaySN)
+                    sbAttr.Append($"{wip}@attr@CG Display_SN@{CGDisplaySN}\n");
+            }
+            else
+            {
+                //sbAttr.Append($"{wip}@attr@Machine_SN@{machineSN}\n");
+                //sbAttr.Append($"{wip}@attr@CG_SN@{SN}\n");
+                //sbAttr.Append($"{wip}@attr@Carrier_SN@{CarrierSN}\n");
+                if (IsCGDisplaySN)
+                    sbAttr.Append($"{wip}@attr@CG Display_SN@{CGDisplaySN}\n");
+            }
+
+            string sendContent =
+                $"_{{\n" +
+                $"{wip}@start{straudit}\n" +
+                sbAttr.ToString() +
+                sbData.ToString() +
+                //$"{wip}@pdata@Mode@{mode}\n" +
+                //$"{wip}@pdata@Operator_ID@1\n" +
+                //$"{wip}@pdata@Priority@{priority}\n" +
+                $"{wip}@pdata@TestSeriesID@{(IsCPKMode || IsGRRMode ? testSeriesID : "0")}\n" +
+                $"{wip}@submit@{MyOwner.ConfigManager.GetWebConfig("SoftVersion")}\n" +
+                $"}}\n";
+
+            return sendContent;
+        }
+
+        private string GetSendDataContinuousNew(string wip, LStringEx pDataEx, bool IsCPK, bool IsGRR, int WorkId)
+        {
+            string QPLNum = MyOwner.ConfigManager.GetWebConfig("UniteCode");
+
+            string mode = "0";
+            string priority = "0";
+            string straudit = "";
+
+            // 拼接过程数据
+            string prodDatas = pDataEx.GetString(MyOwner).Replace('\r', ';').Replace('\n', ';');
+            prodDatas = prodDatas.Replace("QPL@1@@", $"QPL@{QPLNum}@@");
+
+            StringBuilder sbData = new StringBuilder();
+            var datas = prodDatas.Split(';');
+            foreach (var item in datas)
+            {
+                if (string.IsNullOrEmpty(item.Trim())) continue;
+                sbData.Append($"{wip}@pdata@{item}\n");
+            }
+
+            if (IsCPKMode)
+            {
+                mode = "1";
+                priority = "-2";
+                straudit = "@audit";
+            }
+            else if (IsGRRMode)
+            {
+                mode = "2";
+                priority = "-2";
+                straudit = "@audit";
+            }
+            else
+            {
+                mode = "0";
+                priority = "0";
+                straudit = "";
+                testSeriesID = "0";
+            }
+
+            // 拼接 attr
+            StringBuilder sbAttr = new StringBuilder();
+            string machineSN = MyOwner.ConfigManager.GetWebConfig("MachineSN");
+            if (!IsContainLine)
+            {
+                sbAttr.Append($"{wip}@attr@Machine SN@{machineSN}\n");
+                sbAttr.Append($"{wip}@attr@CG SN@{SN}\n");
+                sbAttr.Append($"{wip}@attr@Carrier SN@{CarrierSN}\n");
+                if (IsCGDisplaySN)
+                    sbAttr.Append($"{wip}@attr@CG Display_SN@{CGDisplaySN}\n");
+            }
+            else
+            {
+                sbAttr.Append($"{wip}@attr@Machine_SN@{machineSN}\n");
+                sbAttr.Append($"{wip}@attr@CG_SN@{SN}\n");
+                sbAttr.Append($"{wip}@attr@Carrier_SN@{CarrierSN}\n");
+                if (IsCGDisplaySN)
+                    sbAttr.Append($"{wip}@attr@CG Display_SN@{CGDisplaySN}\n");
+            }
+
+            string sendContent =
+                $"_{{\n" +
+                $"{wip}@start{straudit}\n" +
+                sbAttr.ToString() +
+                sbData.ToString() +
+                $"{wip}@pdata@Mode@{mode}\n" +
+                $"{wip}@pdata@Operator_ID@1\n" +
+                $"{wip}@pdata@Priority@{priority}\n" +
+                $"{wip}@pdata@TestSeriesID@{(IsCPKMode || IsGRRMode ? testSeriesID : "0")}\n" +
+                $"{wip}@submit@{MyOwner.ConfigManager.GetWebConfig("SoftVersion")}\n" +
+                $"}}\n";
+
+            return sendContent;
+        }
+
         // 定义静态信号量（全局串行队列）
         private static readonly SemaphoreSlim _copySemaphore = new SemaphoreSlim(1, 1);
 
@@ -784,6 +1036,108 @@ namespace Luster.Module.Motion.Business.Functions
                 _copySemaphore.Release();
             }
         }
+        private async Task<bool> CopyCSVAsync(string wip)
+        {
+            await _copySemaphore.WaitAsync();
+            try
+            {
+                return await CopyCSVAsyncInner(wip);
+            }
+            catch (Exception ex)
+            {
+                MyOwner.OnLog(LogType.Warning, $"PDCAELimit模块:{MyOwner.Alias} 异步拷贝CSV异常:{ex.ToString()}");
+                return false;
+            }
+            finally
+            {
+                _copySemaphore.Release();
+            }
+        }
+
+        private async Task<bool> CopyCSVAsyncInner(string wip)
+        {
+            int maxRetry = 3;
+            int retry = 0;
+            Exception lastEx = null;
+            string srcCSVFolder = "";
+            string dstCSVFolder = "";
+
+            while (retry < maxRetry)
+            {
+                try
+                {
+                    srcCSVFolder = SourceCSVPath.Trim();
+                    dstCSVFolder = Path.Combine(DesImagePath.GetString(Owner), wip).Trim();
+
+                    MyOwner.OnLog(LogType.Info, $"PDCAELimit模块:{MyOwner.Alias} 源CSV路径:{srcCSVFolder}  目标路径{dstCSVFolder}");
+
+                    if (!Directory.Exists(srcCSVFolder))
+                    {
+                        MyOwner.OnLog(LogType.Warning, $"PDCAELimit模块:{MyOwner.Alias} 源CSV路径:{srcCSVFolder}不存在");
+                        return false;
+                    }
+                    if (!Directory.Exists(dstCSVFolder))
+                    {
+                        Directory.CreateDirectory(dstCSVFolder);
+                    }
+
+                    if (IsUploadCsv)
+                    {
+                        string[] csvList = Directory.GetFiles(srcCSVFolder, "*.csv");
+                        foreach (var fPath in csvList)
+                        {
+                            var fName = Path.GetFileName(fPath);
+                            // 文件名规则过滤：未配置规则则拷贝所有CSV，配置了则只拷贝匹配的
+                            if (string.IsNullOrEmpty(CSVRol) || fName.IndexOf(CSVRol, StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                File.Copy(fPath, Path.Combine(dstCSVFolder, fName), true);
+                                MyOwner.OnLog(LogType.Warning, $"PDCAELimit CSV复制OK;{Path.Combine(srcCSVFolder, fName)}->{Path.Combine(dstCSVFolder, fName)}\r\n");
+                            }
+                        }
+                    }
+
+                    if (IsUploadDHPic)
+                    {
+                        string[] DHpicList = Directory.GetFiles(srcCSVFolder, "*.jpg")
+                                                   .Concat(Directory.GetFiles(srcCSVFolder, "*.png"))
+                                                   .ToArray();
+                        foreach (var fPath in DHpicList)
+                        {
+                            var fName = Path.GetFileName(fPath);
+                            // 文件名规则过滤：未配置规则则拷贝所有CSV，配置了则只拷贝匹配的
+                            if (string.IsNullOrEmpty(CSVRol) || fName.IndexOf(CSVRol, StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                File.Copy(fPath, Path.Combine(dstCSVFolder, fName), true);
+                                MyOwner.OnLog(LogType.Warning, $"PDCAELimit CSV复制OK;{Path.Combine(srcCSVFolder, fName)}->{Path.Combine(dstCSVFolder, fName)}\r\n");
+                            }
+                        }
+                    }
+
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    lastEx = ex;
+                    MyOwner.OnLog(LogType.Warning, $"PDCAELimit CSV复制失败;第{retry + 1}次尝试;{srcCSVFolder}->{dstCSVFolder}\r\n{ex}");
+                    await Task.Delay(500);
+                }
+                retry++;
+            }
+
+            // 三次失败，保存到本地日志
+            try
+            {
+                string baseLogPath = Path.Combine($"E:\\DefaultStation", "LUSTER", "PDCAELimit_CSVCopyFailLog");
+                string failLog = Path.Combine(baseLogPath, DateTime.Now.ToString("yyyy-MM-dd"), ".log");
+                string logContent = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] WIP:{wip} 源:{srcCSVFolder} 目标:{dstCSVFolder} 错误:{lastEx}\r\n";
+                File.AppendAllText(failLog, logContent, Encoding.UTF8);
+            }
+            catch { /* 忽略本地日志写入异常 */ }
+
+            return false;
+        }
+
         private async Task<bool> CopyFolderAsyncInner(string wip)
         {
             int maxRetry = 3;

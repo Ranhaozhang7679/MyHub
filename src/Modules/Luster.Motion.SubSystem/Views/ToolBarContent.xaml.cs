@@ -1,4 +1,7 @@
-﻿using Luster.Motion.CommonUI.Interfaces;
+﻿using DC.Authorization;
+using DC.Authorization.WPF.Helper;
+using Luster.Motion.CommonUI.Interfaces;
+using Prism.Ioc;
 using System;
 using System.Collections.Generic;
 using System.Linq;

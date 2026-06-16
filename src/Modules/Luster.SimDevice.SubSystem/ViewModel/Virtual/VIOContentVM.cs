@@ -179,6 +179,11 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
         /// </summary>
         private Dispatcher _dispatcher;
 
+        /// <summary>
+        /// 缓存最后一次 ListBox 的尺寸，用于切换 IO 类型时重新计算分页
+        /// </summary>
+        private Size _lastSize;
+
         protected VIOContentVM(ISimDeviceEngineUI _engine, Dispatcher dispatcher) : base(_engine)
         {
             _dispatcher = dispatcher;
@@ -379,9 +384,9 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
                 if (r.Parameters.TryGetValue<IOType>("IOType", out var ioType))
                 {
                     IsDigitalIn = ioType == IOType.Digital;
+                    IsDigitalOut = ioType == IOType.Digital;
                     IsAnalogIn = ioType == IOType.Analog;
-                    IsDigitalIn = ioType == IOType.Digital;
-                    IsAnalogIn = ioType == IOType.Analog;
+                    IsAnalogOut = ioType == IOType.Analog;
 
                     // 构架IO
                     LoadDatas();
@@ -422,13 +427,15 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
         public DelegateCommand<object> ChangeIOTypeCommand => _changeIOTypeCommand ?? (_changeIOTypeCommand = new DelegateCommand<object>((type) =>
         {
             var comItem = type as ComboBoxItem;
-            var str = comItem.Content.ToString();
+            var str = comItem.Tag.ToString();
 
 
             IsDigitalOut=IsDigitalIn = str == "Digital";
-            IsAnalogIn= IsAnalogOut = str == "Anglog";
+            IsAnalogIn= IsAnalogOut = str == "Analog";
+            IsAnalogMode = str == "Analog";
 
-
+            // 切换 IO 类型后重新计算分页参数
+            CalcItemsSize(_lastSize);
             LoadDatas();
         }));
 
@@ -498,14 +505,17 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
 
         private void CalcItemsSize(Size size)
         {
+            _lastSize = size;
+
             // 计算页面能够容纳的IO数量
             int col = (int)(size.Width / 250);
             int row = (int)(size.Height / 35);
 
             if (IsAnalogIn || IsAnalogOut)
             {
-                col = (int)(size.Width / 400);
-                row = (int)(size.Height / 54);
+                // 模拟量强制单列，使用更大的条目高度估算（含 Margin+Padding+Border）
+                col = 1;
+                row = Math.Max(1, (int)(size.Height / 46) - 1);
             }
 
             // 更新配置
@@ -551,6 +561,16 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
         {
             get { return _isAnalogOut; }
             set { SetProperty(ref _isAnalogOut, value); }
+        }
+
+        /// <summary>
+        /// 当前是否为模拟量模式（用于 ItemsPanel 切换）
+        /// </summary>
+        private bool _isAnalogMode = false;
+        public bool IsAnalogMode
+        {
+            get => _isAnalogMode;
+            set => SetProperty(ref _isAnalogMode, value);
         }
 
         /// <summary>
@@ -810,7 +830,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
             {
                 var model = new ExportVIOModel();
                 model.Index = i;
-                model.PortNo = $"AO{i}";
+                model.PortNo = $"AI{i}";
                 model.ModuleName = io.Module;
                 model.Name = io.Name;
                 lists.Add(model);
@@ -830,7 +850,7 @@ namespace Luster.SimDevice.SubSystem.ViewModel.Virtual
             {
                 var model = new ExportVIOModel();
                 model.Index = i;
-                model.PortNo = $"AI{i}";
+                model.PortNo = $"AO{i}";
                 model.ModuleName = io.Module;
                 model.Name = io.Name;
                 lists.Add(model);

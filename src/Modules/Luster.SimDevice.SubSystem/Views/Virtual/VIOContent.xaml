@@ -185,11 +185,11 @@
                 Style="{StaticResource BorderRegion}">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="25" />
-                        <ColumnDefinition Width="180" />
-                        <ColumnDefinition Width="40" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="30" />
+                        <ColumnDefinition Width="27" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="50" />
+                        <ColumnDefinition Width="200" />
+                        <ColumnDefinition Width="60" />
                     </Grid.ColumnDefinitions>
                     <Border HorizontalAlignment="Left">
                         <TextBlock
@@ -210,7 +210,7 @@
                         Visibility="{Binding IsSelected, Converter={StaticResource Boolean2VisibilityReConverter}}" />
                     <TextBox
                         Grid.Column="1"
-                        Width="180"
+                        Width="200"
                         MaxHeight="22"
                         Style="{StaticResource TextBoxExtend.Small}"
                         Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -222,7 +222,7 @@
                         FontWeight="Bold"
                         Foreground="{StaticResource PrimaryBrush}"
                         Text="{Binding AnalogValue}" />
-                    <hc:ElementGroup Grid.Column="3" Margin="10,0,0,0">
+                    <hc:ElementGroup Grid.Column="3" Margin="5,0,0,0">
                         <hc:ElementGroup.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <Grid>
@@ -234,7 +234,7 @@
                             </ItemsPanelTemplate>
                         </hc:ElementGroup.ItemsPanel>
                         <TextBox
-                            MinWidth="160"
+                            MinWidth="170"
                             IsReadOnly="True"
                             Text="{Binding Express}" />
                         <Button
@@ -253,7 +253,6 @@
             </Border>
             <DataTemplate.Triggers>
                 <DataTrigger Binding="{Binding IsSelected}" Value="True">
-            
                     <Setter TargetName="BorderItem" Property="BorderThickness" Value="2" />
                 </DataTrigger>
             </DataTemplate.Triggers>
@@ -271,11 +270,11 @@
                 Style="{StaticResource BorderRegion}">
                 <Grid>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="25" />
-                        <ColumnDefinition Width="180" />
-                        <ColumnDefinition Width="40" />
+                        <ColumnDefinition Width="27" />
                         <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="30" />
+                        <ColumnDefinition Width="50" />
+                        <ColumnDefinition Width="200" />
+                        <ColumnDefinition Width="60" />
                     </Grid.ColumnDefinitions>
                     <Border HorizontalAlignment="Left">
                         <TextBlock
@@ -296,7 +295,7 @@
                         Visibility="{Binding IsSelected, Converter={StaticResource Boolean2VisibilityReConverter}}" />
                     <TextBox
                         Grid.Column="1"
-                        Width="180"
+                        Width="200"
                         MaxHeight="22"
                         Style="{StaticResource TextBoxExtend.Small}"
                         Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
@@ -308,7 +307,7 @@
                         FontWeight="Bold"
                         Style="{StaticResource NumericUpDownExtend.Small}"
                         Value="{Binding AnalogValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                    <hc:ElementGroup Grid.Column="3" Margin="10,0,0,0">
+                    <hc:ElementGroup Grid.Column="3" Margin="5,0,0,0">
                         <hc:ElementGroup.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <Grid>
@@ -320,7 +319,7 @@
                             </ItemsPanelTemplate>
                         </hc:ElementGroup.ItemsPanel>
                         <TextBox
-                            MinWidth="160"
+                            MinWidth="170"
                             IsReadOnly="True"
                             Text="{Binding Express}" />
                         <Button
@@ -386,6 +385,36 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <!--  IO列表样式：数字量 UniformSpacingPanel 多列Wrap，模拟量 StackPanel 单列  -->
+        <Style
+            x:Key="IOListBoxStyle"
+            BasedOn="{StaticResource ListBoxCustom}"
+            TargetType="ListBox">
+            <Setter Property="ItemsPanel">
+                <Setter.Value>
+                    <ItemsPanelTemplate>
+                        <hc:UniformSpacingPanel
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Top"
+                            ChildWrapping="Wrap"
+                            Orientation="Vertical"
+                            ScrollViewer.VerticalScrollBarVisibility="Visible" />
+                    </ItemsPanelTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsAnalogMode}" Value="True">
+                    <Setter Property="ItemsPanel">
+                        <Setter.Value>
+                            <ItemsPanelTemplate>
+                                <StackPanel />
+                            </ItemsPanelTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </Border.Resources>
     <Grid x:Name="GridIO" Margin="5">
         <Grid.RowDefinitions>
@@ -428,13 +457,13 @@
                 <hc:ComboBox
                     x:Name="comIo"
                     hc:InfoElement.Necessary="True"
-                    hc:InfoElement.Placeholder="{lang:Lang Key={x:Static lang:LangKeys.ModuleName}}"
-                    hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.ModuleName}}"
+                    hc:InfoElement.Placeholder="{lang:Lang Key={x:Static lang:LangKeys.IOType}}"
+                    hc:InfoElement.Title="{lang:Lang Key={x:Static lang:LangKeys.IOType}}"
                     SelectedIndex="0"
                     Style="{StaticResource ComboBoxValidationStyle}">
 
-                    <ComboBoxItem>Digital</ComboBoxItem>
-                    <ComboBoxItem>Anglog</ComboBoxItem>
+                    <ComboBoxItem Content="{lang:Lang Key={x:Static lang:LangKeys.DigitalIO}}" Tag="Digital" />
+                    <ComboBoxItem Content="{lang:Lang Key={x:Static lang:LangKeys.AnalogIO}}" Tag="Analog" />
 
                     <hc:Interaction.Triggers>
                         <hc:EventTrigger EventName="SelectionChanged">
@@ -512,17 +541,7 @@
                     ItemsSource="{Binding InputDatas}"
                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                     ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                    Style="{StaticResource ListBoxCustom}">
-                    <ListBox.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <hc:UniformSpacingPanel
-                                HorizontalAlignment="Left"
-                                VerticalAlignment="Top"
-                                ChildWrapping="Wrap"
-                                Orientation="Vertical"
-                                ScrollViewer.VerticalScrollBarVisibility="Visible" />
-                        </ItemsPanelTemplate>
-                    </ListBox.ItemsPanel>
+                    Style="{StaticResource IOListBoxStyle}">
                     <hc:Interaction.Triggers>
                         <hc:EventTrigger EventName="Loaded">
                             <hc:EventToCommand Command="{Binding LoadedCommand}" PassEventArgsToCommand="True" />
@@ -551,17 +570,7 @@
                     ItemsSource="{Binding IoDatas}"
                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                     ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                    Style="{StaticResource ListBoxCustom}">
-                    <ListBox.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <hc:UniformSpacingPanel
-                                HorizontalAlignment="Left"
-                                VerticalAlignment="Top"
-                                ChildWrapping="Wrap"
-                                Orientation="Vertical"
-                                ScrollViewer.VerticalScrollBarVisibility="Visible" />
-                        </ItemsPanelTemplate>
-                    </ListBox.ItemsPanel>
+                    Style="{StaticResource IOListBoxStyle}">
                     <hc:Interaction.Triggers>
                         <hc:EventTrigger EventName="Loaded">
                             <hc:EventToCommand Command="{Binding LoadedCommand}" PassEventArgsToCommand="True" />

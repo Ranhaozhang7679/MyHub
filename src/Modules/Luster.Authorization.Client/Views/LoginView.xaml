@@ -14,6 +14,7 @@
              Loaded="UserControl_Loaded">
     <prism:Dialog.WindowStyle>
         <Style TargetType="Window">
+            <Setter Property="WindowStyle" Value="None" />
             <Setter Property="prism:Dialog.WindowStartupLocation" Value="CenterScreen" />
             <Setter Property="ResizeMode" Value="NoResize"/>
             <Setter Property="ShowInTaskbar" Value="False"/>
@@ -76,38 +77,22 @@
                 <TextBlock Text="权限登录" FontSize="13" FontWeight="Bold"
                            Foreground="#333" VerticalAlignment="Center"/>
                 <Button HorizontalAlignment="Right"
-                        Width="22" Height="22"
-                        Content="✕"
-                        FontSize="12"
-                        Cursor="Hand"
-                        Command="{Binding CancelCommand}"
-                        ToolTip="关闭"
-                        Background="Transparent"
-                        BorderThickness="0"
-                        Foreground="#666">
-                    <Button.Style>
-                        <Style TargetType="Button">
-                            <Setter Property="Background" Value="Transparent"/>
-                            <Setter Property="BorderThickness" Value="0"/>
-                            <Setter Property="Template">
-                                <Setter.Value>
-                                    <ControlTemplate TargetType="Button">
-                                        <Border Background="{TemplateBinding Background}"
-                                                CornerRadius="3">
-                                            <ContentPresenter HorizontalAlignment="Center"
-                                                              VerticalAlignment="Center"/>
-                                        </Border>
-                                        <ControlTemplate.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter Property="Background" Value="#E81123"/>
-                                                <Setter Property="Foreground" Value="White"/>
-                                            </Trigger>
-                                        </ControlTemplate.Triggers>
-                                    </ControlTemplate>
-                                </Setter.Value>
-                            </Setter>
-                        </Style>
-                    </Button.Style>
+                        Width="28" Height="28" Content="✕" FontSize="16"
+                        Cursor="Hand" Command="{Binding CancelCommand}" ToolTip="关闭">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="Bd" Background="#01000000" CornerRadius="3">
+                                <TextBlock x:Name="Txt" Text="✕" IsHitTestVisible="False" FontSize="16" Foreground="#666"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Bd" Property="Background" Value="#E81123"/>
+                                    <Setter TargetName="Txt" Property="Foreground" Value="White"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
                 </Button>
             </Grid>
 
@@ -168,9 +153,8 @@
                             <Run Text="CardNo"/>
                         </TextBlock>
                         <TextBox Grid.Column="1" Style="{StaticResource InfoTextBoxStyle}"
-                                 Text="{Binding CardNo, Mode=OneWay}"
-                                 IsReadOnly="True"
-                                 Focusable="False"
+                                 Text="{Binding CardNo, UpdateSourceTrigger=PropertyChanged}"
+                                 IsReadOnly="{Binding IsCardNoReadOnly}"
                                  Background="#F5F5F5"
                                  Foreground="#555555"/>
                     </Grid>

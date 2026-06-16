@@ -221,7 +221,14 @@ DeviceError.SensorFail
             double val = Value;
             ProcessAction(() =>
             {
-                val = motionCard.GetAnalogIn(Index);
+                try
+                {
+                    val = motionCard.GetAnalogIn(Index);
+                }
+                catch (NotImplementedException)
+                {
+                    // 该轴卡不支持模拟量输入读取，回退到本地值
+                }
             });
 
             return val;
@@ -261,7 +268,14 @@ DeviceError.SensorFail
             double val = Value;
             ProcessAction(() =>
             {
-                val = motionCard.GetAnalogOut(Index);
+                try
+                {
+                    val = motionCard.GetAnalogOut(Index);
+                }
+                catch (NotImplementedException)
+                {
+                    // 该轴卡不支持模拟量输出读取，回退到本地值
+                }
             });
 
             return val;
@@ -290,7 +304,15 @@ DeviceError.SensorFail
             {
                 if (Behavior == IOBehavior.Output)
                 {
-                    motionCard.SetAnalogOut(Index, val);
+                    try
+                    {
+                        motionCard.SetAnalogOut(Index, val);
+                    }
+                    catch (NotImplementedException)
+                    {
+                        // 该轴卡不支持模拟量输出写入，回退到本地值
+                        SetIOValue(val);
+                    }
                 }
             },
             () =>

@@ -17,6 +17,7 @@
         <ProjectReference Include="..\Luster.Control.Wpf.Motion\Luster.Control.Wpf.Motion.csproj" />
         <ProjectReference Include="..\Luster.Motion.Assests\Luster.Motion.Assests.csproj" />
         <ProjectReference Include="..\Luster.Motion.CommonUI\Luster.Motion.CommonUI.csproj" />
+        <ProjectReference Include="..\Luster.Common.Authorization\Luster.Common.Authorization.csproj" />
     </ItemGroup>
 
     <ItemGroup>
