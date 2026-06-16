@@ -182,6 +182,10 @@ namespace Luster.Module.Motion.Device.Functions
         [Parameter("补偿时间(ms)", 34, CN = "补偿时间", DefaultV = 0)]
         public int BcTime { get; set; }
 
+        [DependOn("ActionType", VCMActionType.SoftLanding)]
+        [Parameter("上抬距离(mm)", 35, CN = "上抬距离", DefaultV = 0)]
+        public double StDistance { get; set; }
+
         // ===== 输出参数 =====
         [Parameter("执行结果", 40, CN = "执行结果", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
         public bool OutResult { get; set; }
@@ -692,7 +696,7 @@ namespace Luster.Module.Motion.Device.Functions
                 double dystarttime = stopwatch.ElapsedMilliseconds;
                 _axis.Stop();
                 Double currentpos = _axis.GetCurrentPos();
-                MoveAbsFixed(currentpos, PTVelocity, MoveAcc, MoveDec);
+                MoveAbsFixed(currentpos- StDistance, PTVelocity, MoveAcc, MoveDec);
                 //由于很小的力矩导致我点位运动直接失败，但是又不能一下设置最大，会过冲，所以尝试缓慢增加
                 WriteTorqueLimit(TorqueLimit2);
                 Thread.Sleep(TimeOut1);
