@@ -696,7 +696,7 @@ namespace Luster.Module.Motion.Device.Functions
                 double dystarttime = stopwatch.ElapsedMilliseconds;
                 _axis.Stop();
                 Double currentpos = _axis.GetCurrentPos();
-                MoveAbsFixed(currentpos - StDistance, PTVelocity, MoveAcc, MoveDec);
+                MoveAbsFixed(currentpos, PTVelocity, MoveAcc, MoveDec);
                 //由于很小的力矩导致我点位运动直接失败，但是又不能一下设置最大，会过冲，所以尝试缓慢增加
                 WriteTorqueLimit(TorqueLimit2);
                 Thread.Sleep(TimeOut1);
