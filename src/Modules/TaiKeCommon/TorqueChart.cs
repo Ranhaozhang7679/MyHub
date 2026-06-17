@@ -462,14 +462,20 @@ namespace TaiKeCommon
             //axis_xEnd.Name = "angle/deg";
             axis_yEnd.Name = "press/kgf";
 
+            // X轴最大值根据实际时间数据动态计算:向上取整到 500ms 倍数并预留 1 个刻度间隔的余量
+            const int timeAxisStep = 500;
+            double timeMaxValue = Time != null && Time.Length > 0 ? Time.Max() : 0;
+            double timeMaxLimit = Math.Ceiling((timeMaxValue + timeAxisStep) / (double)timeAxisStep) * timeAxisStep;
+            if (timeMaxLimit < timeAxisStep * 2) timeMaxLimit = timeAxisStep * 2;
+
             axis_x.NameTextSize = 16;
             axis_x.TextSize = 16;
             axis_x.MinLimit = 0;
-            axis_x.MaxLimit = 1700; // 1000
+            axis_x.MaxLimit = timeMaxLimit;
             axis_x.ShowSeparatorLines = false;  // true
             axis_x.Padding = new LiveChartsCore.Drawing.Padding(0, 0, 0, 0);
             axis_x.SeparatorsPaint = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
-            axis_x.MinStep = 200;
+            axis_x.MinStep = timeAxisStep;
             axis_x.Position = AxisPosition.Start;
 
 
@@ -1007,7 +1013,11 @@ namespace TaiKeCommon
             //double torqueMin = torque.Min(), torqueMax = torque.Max();
             //double pressMin = press.Min(), pressMax = press.Max();
 
-            double timeMin = 0, timeMax = 1700;
+            // X轴时间最大值根据实际数据动态计算,与界面显示保持一致(向上取整到 500ms 倍数并预留 1 个刻度间隔的余量)
+            const int timeAxisStep = 500;
+            double timeMaxRaw = time != null && time.Length > 0 ? time.Max() : 0;
+            double timeMin = 0, timeMax = Math.Ceiling((timeMaxRaw + timeAxisStep) / (double)timeAxisStep) * timeAxisStep;
+            if (timeMax < timeAxisStep * 2) timeMax = timeAxisStep * 2;
             double angleMin = 0, angleMax = 3500;
             double torqueMin = 0, torqueMax = 0.5;
             double pressMin = 0, pressMax = 2.5;
@@ -1027,7 +1037,7 @@ namespace TaiKeCommon
                 var axisPaint = new SKPaint { Color = SKColors.Black, StrokeWidth = 2, IsAntialias = true };
 
                 // 画主X轴（time）分隔线和刻度
-                int xStep = 100; // 可根据axis_x.MinStep调整
+                int xStep = timeAxisStep; // 与界面 axis_x.MinStep 保持一致(500ms)
                 for (double x = Math.Ceiling(timeMin / xStep) * xStep; x <= timeMax; x += xStep)
                 {
                     float px = marginLeft + (float)((x - timeMin) / (timeMax - timeMin) * plotWidth);
