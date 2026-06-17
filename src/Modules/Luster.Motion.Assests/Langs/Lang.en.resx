@@ -3207,4 +3207,7 @@
   <data name="SetModbusEx" xml:space="preserve">
     <value>SetModbusEx</value>
   </data>
+  <data name="ReadRobotSpeed" xml:space="preserve">
+    <value>ReadRobotSpeed</value>
+  </data>
 </root>
