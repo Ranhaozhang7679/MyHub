@@ -466,8 +466,8 @@ namespace Luster.Module.Motion.Device.Functions
                 {
                     updated = false;
 
-                    // 标准时间为0 / 总耗时为0 / 总耗时已达标准时间 → 原方案直接结束
-                    if (delay == 0 || updatedElapsedMs == 0 || updatedElapsedMs >= delay)
+                    // 标准时间为0 → 立即结束;总耗时 >= 标准时间 → 立即结束
+                    if (delay == 0 || updatedElapsedMs >= delay)
                     {
                         electricScrewDrivers.UpdateTotalCurve(listTimeVal.ToArray(), listPressVal.ToArray());
                         MaxPressure = listPressVal.Max().ToString("f3");
