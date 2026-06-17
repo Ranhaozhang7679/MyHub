@@ -163,8 +163,8 @@ namespace Luster.Module.Motion.Device.Functions
         public int beilv { get; set; }
 
         //JIAN
-        [Range(0, 5000)]
-        [Parameter("压力曲线读取延时", 13, CN = "压力曲线读取延时", DefaultV = 0)]
+        [Range(0, 10000)]
+        [Parameter("压力采集标准时间", 13, CN = "压力采集标准时间(ms)", DefaultV = 0)]
         public int delay { get; set; }
 
         /// <summary>
@@ -241,6 +241,9 @@ namespace Luster.Module.Motion.Device.Functions
         private ElectricScrewDrivers electricScrewDrivers;
 
         bool updated = false;
+        bool finishing = false;
+        double updatedElapsedMs = 0;
+        private System.Diagnostics.Stopwatch collectStopwatch;
 
         private void ConnectNet()
         {
@@ -313,7 +316,10 @@ namespace Luster.Module.Motion.Device.Functions
             PrevailingTorque = data.PrevailingTorque;
             MC = data.MC;
             //JIAN
-            Thread.Sleep(delay);
+            if (collectStopwatch != null)
+            {
+                updatedElapsedMs = collectStopwatch.Elapsed.TotalMilliseconds;
+            }
             updated = true;
             //Thread.Sleep(800);
         }
@@ -330,8 +336,11 @@ namespace Luster.Module.Motion.Device.Functions
             listTimeVal.Clear();
             listPressVal.Clear();
             //DateTime timestart = DateTime.Now;
-            var stopwatch = new System.Diagnostics.Stopwatch();
+            collectStopwatch = new System.Diagnostics.Stopwatch();
+            var stopwatch = collectStopwatch;
             stopwatch.Start();
+            updatedElapsedMs = 0;
+            finishing = false;
             errMsg = "";
             errMsg += $"压力传感器的类型:{FactoryName}\t\n";
             if (!uiRegistered && MyOwner != null)
@@ -453,9 +462,24 @@ namespace Luster.Module.Motion.Device.Functions
                 }
 
                 //等待太科电批数据处理完成标记
-                if (updated)
+                if (!finishing && updated)
                 {
                     updated = false;
+
+                    // 标准时间为0 → 立即结束;总耗时 >= 标准时间 → 立即结束
+                    if (delay == 0 || updatedElapsedMs >= delay)
+                    {
+                        electricScrewDrivers.UpdateTotalCurve(listTimeVal.ToArray(), listPressVal.ToArray());
+                        MaxPressure = listPressVal.Max().ToString("f3");
+                        break;
+                    }
+                    // 总耗时 < 标准时间 → 进入补采阶段,继续采集到标准时间
+                    finishing = true;
+                }
+
+                // 补采阶段:达到标准时间后收尾
+                if (finishing && stopwatch.Elapsed.TotalMilliseconds >= delay)
+                {
                     electricScrewDrivers.UpdateTotalCurve(listTimeVal.ToArray(), listPressVal.ToArray());
                     MaxPressure = listPressVal.Max().ToString("f3");
                     break;
