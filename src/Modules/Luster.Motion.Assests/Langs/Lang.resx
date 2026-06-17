@@ -3216,4 +3216,7 @@
   <data name="SetModbusEx" xml:space="preserve">
     <value>设置Modbus</value>
   </data>
+  <data name="ReadRobotSpeed" xml:space="preserve">
+    <value>读取机械手速度</value>
+  </data>
 </root>

@@ -6314,7 +6314,16 @@ namespace Luster.Motion.Assests.Langs {
                 return ResourceManager.GetString("ReadPlc", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   查找类似 读取机械手速度 的本地化字符串。
+        /// </summary>
+        public static string ReadRobotSpeed {
+            get {
+                return ResourceManager.GetString("ReadRobotSpeed", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   查找类似 加载STL 的本地化字符串。
         /// </summary>

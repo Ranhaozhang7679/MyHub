@@ -738,6 +738,7 @@ namespace Luster.Motion.Assests.Langs
 			OnPropertyChanged(nameof(ReadMC));
 			OnPropertyChanged(nameof(ReadModbus));
 			OnPropertyChanged(nameof(ReadPlc));
+			OnPropertyChanged(nameof(ReadRobotSpeed));
 			OnPropertyChanged(nameof(ReadSTL));
 			OnPropertyChanged(nameof(RealTime));
 			OnPropertyChanged(nameof(RealTimeLocation));
@@ -4552,6 +4553,11 @@ namespace Luster.Motion.Assests.Langs
         ///   查找类似 读取PLC 的本地化字符串。
         /// </summary>
 		public string ReadPlc => Lang.ReadPlc;
+
+        /// <summary>
+        ///   查找类似 读取机械手速度 的本地化字符串。
+        /// </summary>
+		public string ReadRobotSpeed => Lang.ReadRobotSpeed;
 
         /// <summary>
         ///   查找类似 加载STL 的本地化字符串。
@@ -9711,6 +9717,11 @@ namespace Luster.Motion.Assests.Langs
         ///   查找类似 读取PLC 的本地化字符串。
         /// </summary>
 		public static string ReadPlc = nameof(ReadPlc);
+
+        /// <summary>
+        ///   查找类似 读取机械手速度 的本地化字符串。
+        /// </summary>
+		public static string ReadRobotSpeed = nameof(ReadRobotSpeed);
 
         /// <summary>
         ///   查找类似 加载STL 的本地化字符串。
