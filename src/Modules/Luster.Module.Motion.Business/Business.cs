@@ -6,7 +6,7 @@ namespace Luster.Module.Motion.Business
 {
 
     /// <summary>
-    /// ÒµÎñÄ£¿é
+    /// Òµï¿½ï¿½Ä£ï¿½ï¿½
     /// </summary>
     public class Business : MotionModule
     {
@@ -16,17 +16,17 @@ namespace Luster.Module.Motion.Business
             //AddFunction<WipPrint>();
             AddFunction<Pressurize>();
 
-            // ÁÏ²Ö
+            // ï¿½Ï²ï¿½
             AddFunction<LoadingSilo>();
             AddFunction<UnLoadingSilo>();
             AddFunction<PositionOutput>();
             AddFunction<Heightfinder>();
             AddFunction<Tearing>();
 
-            // ĞÂ±£Ñ¹
+            // ï¿½Â±ï¿½Ñ¹
             AddFunction<NewPressurize>();
             AddFunction<SFCFlow>();
-            // ÒµÎñÀà±ğÀïĞÂÔö¹¤¾ß 2025-5-5 wyy
+            // Òµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 2025-5-5 wyy
             AddFunction<SFCFlowTiaoJi>();
 
             AddFunction<SingelAxisFlyShot>();
@@ -43,7 +43,7 @@ namespace Luster.Module.Motion.Business
             AddFunction<PDCAWIP>();
             AddFunction<PDCAFailRetry>();
 
-            //SFC²ğ½â
+            //SFCï¿½ï¿½ï¿½
             AddFunction<FX_OrderQuery>();
             AddFunction<FX_BindCarrier>();
             AddFunction<FX_RouteQuery>();
@@ -61,11 +61,14 @@ namespace Luster.Module.Motion.Business
             AddFunction<HiveCT>();
 
             AddFunction<PressurizeChart>();
+
+            // æ’çº¿SNç®¡ç†
+            AddFunction<CableSNManager>();
         }
     }
 
     /// <summary>
-    /// Ä£¿é´´½¨
+    /// Ä£ï¿½é´´ï¿½ï¿½
     /// </summary>
     public class BusinessCreator : MotionModuleCreator<Business>
     {

@@ -81,7 +81,9 @@ namespace Luster.Module.Motion.Business.Functions
             [Description("通过载具码查询WIP")]
             N,
             [Description("CG5Flex绑定CG_68")]
-            CG5Flex绑定CG_68
+            CG5Flex绑定CG_68,
+            [Description("CG5通过WIP查询排线SN")]
+            O
         }
 
         public enum CheckFlag
@@ -320,6 +322,14 @@ namespace Luster.Module.Motion.Business.Functions
         [DependOn("SfcMode")]
         [Parameter("卷料绑定OK", 20, CN = "卷料绑定OK", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
         public bool RollOK { get; set; }
+
+        [DependOn("SfcMode", SFCType.O)]
+        [Parameter("CableSN", 20, CN = "排线SN", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
+        public string CableSN { get; set; }
+
+        [DependOn("SfcMode", SFCType.O)]
+        [Parameter("排线SN长度", 9, CN = "排线SN长度", DefaultV = 24)]
+        public int CableSNLength { get; set; }
 
         [DependOn("SfcMode", SFCType.B)]
         [Parameter("上传/不上传", 20, CN = "查询卷料是否上传", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
@@ -954,7 +964,17 @@ namespace Luster.Module.Motion.Business.Functions
                     if(_sfcHelper.FlexBindingResult(Wip, smallPartWip, partname, out errMsg)||true)
                     {
                         Result = _sfcHelper.BindingFlex(Wip, smallPartWip,partname, out errMsg);
-                    }               
+                    }
+                    break;
+                // CG5通过WIP查询排线SN
+                case SFCType.O:
+                    CableSN = _sfcHelper.QueryCableSN(SN, CableSNLength, out errMsg);
+                    if (!string.IsNullOrEmpty(errMsg))
+                    {
+                        MyOwner.OnAlarm(AlarmType.InfoTip, errMsg, AlarmCode);
+                        return true;
+                    }
+                    Result = !string.IsNullOrEmpty(CableSN);
                     break;
             }
 

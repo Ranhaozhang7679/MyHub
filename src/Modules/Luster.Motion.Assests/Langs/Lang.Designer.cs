@@ -4469,7 +4469,16 @@ namespace Luster.Motion.Assests.Langs {
                 return ResourceManager.GetString("LSMesUnLoad", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   查找类似 排线SN管理 的本地化字符串。
+        /// </summary>
+        public static string CableSNManager {
+            get {
+                return ResourceManager.GetString("CableSNManager", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   查找类似 智能驾驶舱 的本地化字符串。
         /// </summary>
