@@ -116,6 +116,7 @@ namespace TaiKeCommon
             dirCurveToeinXForceData = $"{rootSaveDir}STD1\\Curve\\Toein_X_Force\\";
             dirCurveToeinYForceData = $"{rootSaveDir}STD1\\Curve\\Toein_Y_Force\\";
             dirCurveToeinZForceData = $"{rootSaveDir}STD1\\Curve\\Toein_Z_Force\\";
+            dirCurveToeinXYZForceData = $"{rootSaveDir}Toein_XYZ_Force\\STD1\\Curve\\";
             dirTimeTorAngPreData = $"{rootSaveDir}STD1\\TimeTorAngPre\\";
         }
 
