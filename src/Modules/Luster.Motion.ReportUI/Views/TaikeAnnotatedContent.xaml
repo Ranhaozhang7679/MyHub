@@ -72,11 +72,17 @@
             </StackPanel>
         </StackPanel>
 
-        <!-- 图表区：合并模式（单图双 Y 轴）/ 分开模式（上下双子图）-->
+        <!-- 图表区：合并模式（单图双 Y 轴）/ 分开模式（左右双子图）。
+             用 RowDefinition.Height 在 0/* 之间切换，让 CartesianChart 始终保持 Loaded，
+             避免 Visibility 切换导致 LiveCharts 不刷新曲线。-->
         <Grid Grid.Row="1" Margin="8,4">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="{Binding MergedHeight}" />
+                <RowDefinition Height="{Binding SplitHeight}" />
+            </Grid.RowDefinitions>
+
             <!-- 合并模式 -->
-            <Border Padding="4" BorderBrush="#57a9fd" BorderThickness="1"
-                    Visibility="{Binding IsMergedView, Converter={StaticResource BoolToVis}}">
+            <Border Grid.Row="0" Padding="4" BorderBrush="#57a9fd" BorderThickness="1">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -93,15 +99,15 @@
                 </Grid>
             </Border>
 
-            <!-- 分开模式：上下双子图，共享 Time X 轴 -->
-            <Grid Visibility="{Binding IsSplitView, Converter={StaticResource BoolToVis}}">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
+            <!-- 分开模式：左右双子图，共享 Time X 轴 -->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
-                <!-- 上方子图：Time-Press -->
-                <Border Grid.Row="0" Margin="0,0,0,4" Padding="4"
+                <!-- 左侧子图：Time-Press -->
+                <Border Grid.Column="0" Margin="0,0,4,0" Padding="4"
                         BorderBrush="#57a9fd" BorderThickness="1">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -119,8 +125,8 @@
                     </Grid>
                 </Border>
 
-                <!-- 下方子图：Time-Position -->
-                <Border Grid.Row="1" Margin="0,4,0,0" Padding="4"
+                <!-- 右侧子图：Time-Position -->
+                <Border Grid.Column="1" Margin="4,0,0,0" Padding="4"
                         BorderBrush="#57a9fd" BorderThickness="1">
                     <Grid>
                         <Grid.RowDefinitions>
