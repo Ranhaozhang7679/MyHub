@@ -184,8 +184,8 @@ namespace Luster.Module.Motion.Device.Functions
         public int BcTime { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("上抬距离(mm)", 35, CN = "上抬距离", DefaultV = 0)]
-        public double StDistance { get; set; }
+        [Parameter("微抬位置(mm)", 36, CN = "微抬位置")]
+        public VAxisPos StPosition { get; set; }
 
         // ===== 输出参数 =====
         [Parameter("执行结果", 40, CN = "执行结果", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
@@ -724,22 +724,19 @@ namespace Luster.Module.Motion.Device.Functions
                 string dateStr = now.ToString("yyyyMMdd");
                 string FileDir = @"D:\力控数据存储\" + dateStr + "\\" + SlaveNum.ToString() + "\\" + GStringVal;
                 DataPath = FileDir;
-                while (stopwatch.ElapsedMilliseconds < (InstallTime - BcTime))
+                while (stopwatch.ElapsedMilliseconds < (InstallTime-BcTime))
                 {
                     Thread.Sleep(5);
                 }
                 if (_isBreak) return;
                 //方案3
-                double dystarttime = stopwatch.ElapsedMilliseconds;
-                _axis.Stop();
-                Double currentpos = _axis.GetCurrentPos();
-                MoveAbsFixed(currentpos, PTVelocity, MoveAcc, MoveDec);
+                
+                MoveAbsFixed(StPosition[0].Position, PTVelocity, MoveAcc, MoveDec);
                 //由于很小的力矩导致我点位运动直接失败，但是又不能一下设置最大，会过冲，所以尝试缓慢增加
                 WriteTorqueLimit(TorqueLimit2);
                 Thread.Sleep(TimeOut1);
                 _axis.CheckMotionDone();
-                double dystoptime = stopwatch.ElapsedMilliseconds;
-                Dytime = dystoptime - dystarttime;
+                
                 //方案4
                 // Step 100: 完成
 

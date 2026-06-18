@@ -131,6 +131,7 @@ namespace Luster.Module.Motion.Device.Functions
             GetVDevice<VIO>(ADIY, out var adiy);
             GetVDevice<VIO>(ADIZ, out var adiz);
             errMsg = "";
+            electricScrewDriver.SetRootDir($"D:\\TaiKeScrewDatas\\{DateTime.Now.ToString("yyyyMMdd")}\\");
             if (!uiRegistered && MyOwner != null)
             {
                 uiRegistered = true;

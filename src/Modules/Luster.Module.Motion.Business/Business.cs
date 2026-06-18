@@ -35,6 +35,7 @@ namespace Luster.Module.Motion.Business
 
             AddFunction<Robot>();
             AddFunction<EpsonRobot>();
+            AddFunction<ReadRobotSpeed>();
             AddFunction<CalibByPosMove>();
 
             AddFunction<PDCAFlow>();
