@@ -98,13 +98,16 @@
                     </TextBlock.InputBindings>
                 </TextBlock>
 
-                <TextBlock
+                <Viewbox
                     Grid.Row="1"
-                    Margin="10,0,0,0"
+                    Margin="10,0,5,0"
                     VerticalAlignment="Center"
-                    FontSize="28"
-                    Foreground="White"
-                    Text="{Binding Title}"/>
+                    StretchDirection="DownOnly">
+                    <TextBlock
+                        FontSize="28"
+                        Foreground="White"
+                        Text="{Binding Title}"/>
+                </Viewbox>
 
             </Grid>
         </Grid>

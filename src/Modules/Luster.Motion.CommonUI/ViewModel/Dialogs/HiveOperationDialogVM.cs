@@ -249,7 +249,12 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                             "记录非停机异常" => "F99OOOO-10",
                             _ => "F99OOOO-20",
                         };
-                        var ret = sfcHelper.CheckCard(cardID, hiveAPI.machineSN, out string auth, alarmCodeForCard, DateTime.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.ff+0800"));
+                        //var ret = sfcHelper.CheckCard(cardID, hiveAPI.machineSN, out string auth, alarmCodeForCard, DateTime.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.ff+0800"));
+                        var changeTime = string.IsNullOrEmpty(hiveAPI._hiveState.CurrentEventId)
+                        ? DateTime.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.ff+0800")
+                        : hiveAPI._hiveState.CurrentEventId;
+                        var ret = sfcHelper.CheckCard(cardID, hiveAPI.machineSN, out string auth, alarmCodeForCard, changeTime);
+
 
                         SendHiveMsg(cmdStr);
                         cardID = "";

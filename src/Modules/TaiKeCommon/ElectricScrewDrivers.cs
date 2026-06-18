@@ -116,6 +116,7 @@ namespace TaiKeCommon
             dirCurveToeinXForceData = $"{rootSaveDir}STD1\\Curve\\Toein_X_Force\\";
             dirCurveToeinYForceData = $"{rootSaveDir}STD1\\Curve\\Toein_Y_Force\\";
             dirCurveToeinZForceData = $"{rootSaveDir}STD1\\Curve\\Toein_Z_Force\\";
+            dirCurveToeinXYZForceData = $"{rootSaveDir}Toein_XYZ_Force\\STD1\\Curve\\";
             dirTimeTorAngPreData = $"{rootSaveDir}STD1\\TimeTorAngPre\\";
         }
 
@@ -1329,19 +1330,15 @@ namespace TaiKeCommon
             //E:\工站\厂商\Type\Date\Result\Time_WIP_SN_WorkStaion\StationID_{YYYYMMDD_HHMMSS}_SN_Status_Screw_Torque_Vendor_Machine.csv
             //E:\CGSF\Luster\Torque_Screw_1\20251121\OK\235959_SN\FXGL_B06-2FT-07_5_STATION1615_20251121_233215_Valkyrie_SN_OK_Screw_W_Torque_SR_MAM2.csv
             string dirTCRData1 = $"E:\\CGSF\\Luster\\Torque_Screw_{ScrewNumber}\\{DateTime.Now.ToString("yyyyMMdd")}\\";
-            //FXGL_B06-2FT-07_5_STATION1615_20251121_233215_Valkyrie_SN_OK_Screw_W_Torque_SR_MAM2.csv
-            //FXGL_B11-2FT-07_11_STATION1779_20260303_022735212_Mistral_G9NHP6J306J0000L4B+A100_OK_Screw_2_Torque_Luster_CGSF.csv
-            string logPath1 =dirStationID+ "_" + DateTime.Now.ToString("yyyyMMdd_HHmmssfff") + "_" + dirStationType + "_" +
-                             ProductSn.Trim() + "_" + "OK_Screw_" + ScrewNumber + "_Torque_Luster_CGSF.csv";
+            //CGSF规范文件名（不含.csv后缀，RecordValue会自动追加）
+            //格式：{StationID}_{yyyyMMddHHmmss}_{SN}_OK_Screw{N}_Torque_Luster_CGSF_{StationType}
+            string fileName1 = dirStationID + "_" + DateTime.Now.ToString("yyyyMMddHHmmss") + "_" +
+                               ProductSn.Trim() + "_" + "OK_Screw" + ScrewNumber +
+                               "_Torque_Luster_CGSF_" + dirStationType;
             FileInfo fi = new FileInfo(logPath);
-            FileInfo fi1 = new FileInfo(logPath1);
             if (!fi.Directory.Exists)
             {
                 fi.Directory.Create();
-            }
-            if (!fi1.Directory.Exists)
-            {
-                fi1.Directory.Create();
             }
 
             string title = "No" + "," + "Torque1" + "," + "Angle1";
@@ -1373,7 +1370,7 @@ namespace TaiKeCommon
                             " " + "," + " " + "," + Angle_double[i] + "," + torq_double[i] + "," + "OK";
                 }
                 recordValueTorque.RecordValue(dirTCRData, fileName, title, value);
-                recordValueTorque.RecordValue(dirTCRData1, fileName, title1, value1);
+                recordValueTorque.RecordValue(dirTCRData1, fileName1, title1, value1);
             }
         }
 
@@ -1387,8 +1384,11 @@ namespace TaiKeCommon
             string fileName = ProductSn.Trim() + "_" + DateTime.Now.ToString("yyyy-M-dd_HH-mm-ss-fff");
             string logPath = dirPressData + fileName + ".csv";
             string dirPressData1 = $"E:\\CGSF\\Luster\\Force_Screw_{ScrewNumber}\\{DateTime.Now.ToString("yyyyMMdd")}\\";
-            string logPath1 = dirStationID + "_" + DateTime.Now.ToString("yyyyMMdd_HHmmssfff") + "_" + dirStationType + "_" +
-                              ProductSn.Trim() + "_" + "OK_Screw_" + ScrewNumber + "_Force_Luster_CGSF.csv";
+            //CGSF规范文件名（不含.csv后缀，RecordValue会自动追加）
+            //格式：{StationID}_{yyyyMMddHHmmss}_{SN}_OK_Screw{N}_Force_Luster_CGSF_{StationType}
+            string fileName1 = dirStationID + "_" + DateTime.Now.ToString("yyyyMMddHHmmss") + "_" +
+                               ProductSn.Trim() + "_" + "OK_Screw" + ScrewNumber +
+                               "_Force_Luster_CGSF_" + dirStationType;
 
             //double[] timeNew = time;
             //double[] pressNew = press;
@@ -1413,12 +1413,6 @@ namespace TaiKeCommon
                 fi.Directory.Create();
             }
 
-            FileInfo fi1 = new FileInfo(logPath1);
-            if (!fi1.Directory.Exists)
-            {
-                fi1.Directory.Create();
-            }
-
             string title = "No" + "," + "Time" + "," + "Press";
             string title1 = "ScrewNumber" + "," +
                            "Vendor" + "," +
@@ -1441,7 +1435,7 @@ namespace TaiKeCommon
                 value1 = ScrewNumber + "," + "Luster" + "," + "A" + "," + "CGSF" + "," + ProductSn.Trim() + "," +
                         time[i] + "," + press[i] + "," + " " + "," + " " + "," +" " + "," + "OK";
                 recordValuePress.RecordValue(dirPressData, fileName, title, value);
-                recordValuePress.RecordValue(dirPressData1, fileName, title1, value1);
+                recordValuePress.RecordValue(dirPressData1, fileName1, title1, value1);
             }
         }
 

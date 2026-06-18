@@ -182,6 +182,10 @@ namespace Luster.Module.Motion.Device.Functions
         [Parameter("补偿时间(ms)", 34, CN = "补偿时间", DefaultV = 0)]
         public int BcTime { get; set; }
 
+        [DependOn("ActionType", VCMActionType.SoftLanding)]
+        [Parameter("微抬位置(mm)", 36, CN = "微抬位置")]
+        public VAxisPos StPosition { get; set; }
+
         // ===== 输出参数 =====
         [Parameter("执行结果", 40, CN = "执行结果", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
         public bool OutResult { get; set; }
@@ -220,6 +224,10 @@ namespace Luster.Module.Motion.Device.Functions
 
         // 真实采样时间戳(ms)，与 pressureSamples 一一对应
         private System.Collections.Generic.List<long> timeSamples;
+
+        // 本轮软着陆的文件名时间戳，由 ExecuteSoftLanding 在保压前生成，
+        // 供 SaveFile() 与 DataPath 共用，保证输出路径与实际保存文件一致
+        private string _fileTimestamp;
 
         // SAC-N2双轴控制器: 轴二地址偏移 +0x800
         private const int AxisOffset = 0x800;
@@ -528,10 +536,12 @@ namespace Luster.Module.Motion.Device.Functions
         {
             DateTime now = DateTime.Now;
             string dateStr = now.ToString("yyyyMMdd");
-            string timeStr = now.ToString("HHmmss");
+            // 与 ExecuteSoftLanding 中赋给 DataPath 的时间戳保持一致，
+            // 避免同 SN 多次执行时新旧文件互相覆盖
+            string timeStr = _fileTimestamp ?? now.ToString("HHmmss");
             string FileDir = @"D:\力控数据存储\" + dateStr + "\\" + SlaveNum.ToString() + "\\" + GStringVal + "\\";
-            string filename = GStringVal;
-            string picName = GStringVal;
+            string filename = GStringVal + "_" + timeStr;
+            string picName = GStringVal + "_" + timeStr;
             CRecordValue recordValuePress = new CRecordValue();
             string title = "No" + "," + "Time" + "," + "Press" + "," + "Position";
             string title1 = "No" + "," + "Position" + "," + "Press";
@@ -681,24 +691,24 @@ namespace Luster.Module.Motion.Device.Functions
                 XYLC = false;
                 DateTime now = DateTime.Now;
                 string dateStr = now.ToString("yyyyMMdd");
-                string FileDir = @"D:\力控数据存储\" + dateStr + "\\" + SlaveNum.ToString() + "\\" + GStringVal;
-                DataPath = FileDir;
+                // 提前生成时间戳并保存到类成员，供 SaveFile() 复用，
+                // 保证 DataPath 输出的文件路径与最终落盘的 CSV/PNG 完全一致
+                _fileTimestamp = now.ToString("HHmmss");
+                string FileDir = @"D:\力控数据存储\" + dateStr + "\\" + SlaveNum.ToString() + "\\" + GStringVal + "\\";
+                DataPath = FileDir + GStringVal + "_" + _fileTimestamp + ".csv";
                 while (stopwatch.ElapsedMilliseconds < (InstallTime-BcTime))
                 {
                     Thread.Sleep(5);
                 }
                 if (_isBreak) return;
                 //方案3
-                double dystarttime = stopwatch.ElapsedMilliseconds;
-                _axis.Stop();
-                Double currentpos = _axis.GetCurrentPos();
-                MoveAbsFixed(currentpos, PTVelocity, MoveAcc, MoveDec);
+                
+                MoveAbsFixed(StPosition[0].Position, PTVelocity, MoveAcc, MoveDec);
                 //由于很小的力矩导致我点位运动直接失败，但是又不能一下设置最大，会过冲，所以尝试缓慢增加
                 WriteTorqueLimit(TorqueLimit2);
                 Thread.Sleep(TimeOut1);
                 _axis.CheckMotionDone();
-                double dystoptime = stopwatch.ElapsedMilliseconds;
-                Dytime = dystoptime - dystarttime;
+                
                 //方案4
                 // Step 100: 完成
 

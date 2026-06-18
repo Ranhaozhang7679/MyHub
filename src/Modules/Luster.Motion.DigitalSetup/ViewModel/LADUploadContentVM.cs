@@ -2428,8 +2428,13 @@ namespace Luster.Motion.DigitalSetup.ViewModel
             }
         }
 
+        private bool _isConfigDialogOpen;
+
         private void OnConfig()
         {
+            // 防止重复打开：避免多个 ConfigDialog 叠加后 OnConfirm/OnCancel 用 FirstOrDefault 关错窗口
+            if (_isConfigDialogOpen) return;
+
             TempConfigFile1 = ConfigFile1;
             TempConfigFile2 = ConfigFile2;
             TempPythonScriptPath = PythonScriptPath;
@@ -2439,8 +2444,23 @@ namespace Luster.Motion.DigitalSetup.ViewModel
 
             var dialog = new Luster.Motion.DigitalSetup.Views.ConfigDialog();
             dialog.DataContext = this;
-            dialog.Owner = Application.Current.MainWindow;
-            dialog.ShowDialog();
+            // LADUploadContent 本身是作为独立弹窗(窗口A)打开的，并非 MainWindow。
+            // 这里把 Owner 设为当前活动窗口(即承载 LADUploadContent 的窗口A)，保证模态层级正确。
+            dialog.Owner = Application.Current.Windows.OfType<Window>().FirstOrDefault(w => w.IsActive)
+                           ?? Application.Current.MainWindow;
+            // 注意：DialogWindow 的 RemoveIcon 工具用 SetWindowPos(HWND_TOPMOST) 把窗口A变成置顶窗口，
+            // 非置顶的 ConfigDialog 即使设了 Owner 也会被压在A下面，所以这里必须同样置顶才能显示在A之上。
+            dialog.Topmost = true;
+
+            _isConfigDialogOpen = true;
+            try
+            {
+                dialog.ShowDialog();
+            }
+            finally
+            {
+                _isConfigDialogOpen = false;
+            }
         }
 
         private void OnBrowseTempFile1()

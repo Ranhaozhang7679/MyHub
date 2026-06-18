@@ -251,7 +251,11 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                     if (cardID.Substring(0, 1) == "0")
                         cardID = cardID.Substring(1, cardID.Length - 1);
 
-                    var ret = sfcHelper.CheckCard(cardID, _hiveAPI.machineSN, out string auth, string.IsNullOrEmpty(_hiveAPI._hiveState.RepairStartAlarmCode) ? "F99OOOO-07" : _hiveAPI._hiveState.HiveCurrentCode, DateTime.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.ff+0800"));
+                    // 时间戳取repair start时的state_change_time（同步存于HiveState），异常时回退当前时间
+                    var changeTime = string.IsNullOrEmpty(_hiveAPI._hiveState.RepairStartChangeTime)
+                        ? DateTime.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.ff+0800")
+                        : _hiveAPI._hiveState.RepairStartChangeTime;
+                    var ret = sfcHelper.CheckCard(cardID, _hiveAPI.machineSN, out string auth, string.IsNullOrEmpty(_hiveAPI._hiveState.RepairStartAlarmCode) ? "F99OOOO-07" : _hiveAPI._hiveState.HiveCurrentCode, changeTime);
 
                     cardID = "";
 

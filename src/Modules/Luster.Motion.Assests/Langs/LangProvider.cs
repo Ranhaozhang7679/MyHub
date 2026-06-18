@@ -533,6 +533,7 @@ namespace Luster.Motion.Assests.Langs
 			OnPropertyChanged(nameof(LowCurrentUpperLimit));
 			OnPropertyChanged(nameof(LowerLimit));
 			OnPropertyChanged(nameof(LSMesUnLoad));
+			OnPropertyChanged(nameof(CableSNManager));
 			OnPropertyChanged(nameof(LusterSmartCockpit));
 			OnPropertyChanged(nameof(MacAddress));
 			OnPropertyChanged(nameof(Machine));
@@ -737,6 +738,7 @@ namespace Luster.Motion.Assests.Langs
 			OnPropertyChanged(nameof(ReadMC));
 			OnPropertyChanged(nameof(ReadModbus));
 			OnPropertyChanged(nameof(ReadPlc));
+			OnPropertyChanged(nameof(ReadRobotSpeed));
 			OnPropertyChanged(nameof(ReadSTL));
 			OnPropertyChanged(nameof(RealTime));
 			OnPropertyChanged(nameof(RealTimeLocation));
@@ -3528,6 +3530,11 @@ namespace Luster.Motion.Assests.Langs
 		public string LSMesUnLoad => Lang.LSMesUnLoad;
 
         /// <summary>
+        ///   查找类似 排线SN管理 的本地化字符串。
+        /// </summary>
+		public string CableSNManager => Lang.CableSNManager;
+
+        /// <summary>
         ///   查找类似 智能驾驶舱 的本地化字符串。
         /// </summary>
 		public string LusterSmartCockpit => Lang.LusterSmartCockpit;
@@ -4546,6 +4553,11 @@ namespace Luster.Motion.Assests.Langs
         ///   查找类似 读取PLC 的本地化字符串。
         /// </summary>
 		public string ReadPlc => Lang.ReadPlc;
+
+        /// <summary>
+        ///   查找类似 读取机械手速度 的本地化字符串。
+        /// </summary>
+		public string ReadRobotSpeed => Lang.ReadRobotSpeed;
 
         /// <summary>
         ///   查找类似 加载STL 的本地化字符串。
@@ -8682,6 +8694,11 @@ namespace Luster.Motion.Assests.Langs
 		public static string LSMesUnLoad = nameof(LSMesUnLoad);
 
         /// <summary>
+        ///   查找类似 排线SN管理 的本地化字符串。
+        /// </summary>
+		public static string CableSNManager = nameof(CableSNManager);
+
+        /// <summary>
         ///   查找类似 智能驾驶舱 的本地化字符串。
         /// </summary>
 		public static string LusterSmartCockpit = nameof(LusterSmartCockpit);
@@ -9700,6 +9717,11 @@ namespace Luster.Motion.Assests.Langs
         ///   查找类似 读取PLC 的本地化字符串。
         /// </summary>
 		public static string ReadPlc = nameof(ReadPlc);
+
+        /// <summary>
+        ///   查找类似 读取机械手速度 的本地化字符串。
+        /// </summary>
+		public static string ReadRobotSpeed = nameof(ReadRobotSpeed);
 
         /// <summary>
         ///   查找类似 加载STL 的本地化字符串。
