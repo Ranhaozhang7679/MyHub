@@ -15,6 +15,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Documents;
@@ -536,46 +537,82 @@ namespace Luster.Module.Motion.Device.Functions
             string FileDir = @"D:\力控数据存储\" + dateStr + "\\" + SlaveNum.ToString() + "\\" + GStringVal + "\\";
             string filename = GStringVal;
             string picName = GStringVal;
-            CRecordValue recordValuePress = new CRecordValue();
-            string title = "No" + "," + "Time" + "," + "Press" + "," + "Position";
-            string title1 = "No" + "," + "Position" + "," + "Press";
-            string value = "";
-            int pressindex = 0;
-            //防止存入多段数据
-            FileInfo a = new FileInfo(FileDir + filename + ".csv");
-            if (a.Exists)
+            string filenameForce = "Force_Arc_" + timeStr;
+            string filenameMove = "Move_Arc_" + timeStr;
+
+            // 确保目录存在(原 CRecordValue 内部会自动创建)
+            Directory.CreateDirectory(FileDir);
+
+            int count = pressureSamples.Count;
+            int posCount = positionSamples.Count;
+            int tsCount = timeSamples.Count;
+            long step = SamplePeriod;
+
+            // 预先计算时间戳数组(CSV 与曲线图共用,避免重复计算)
+            long[] timeArrLong = new long[count];
+            long lastTs = 0;
+            for (int i = 0; i < count; i++)
             {
-                a.Delete();
+                if (i < tsCount)
+                {
+                    timeArrLong[i] = timeSamples[i];
+                    lastTs = timeSamples[i];
+                }
+                else if (tsCount > 0)
+                {
+                    timeArrLong[i] = lastTs + (i - tsCount + 1) * step;
+                }
+                else
+                {
+                    timeArrLong[i] = (i + 1) * step;
+                }
             }
-            for (int i = 0; i < pressureSamples.Count; i++)
+
+            // 批量构建 CSV 文本(替代原 3N 次 RecordValue 调用)
+            StringBuilder sbAll = new StringBuilder(count * 32);
+            StringBuilder sbForce = new StringBuilder(count * 24);
+            StringBuilder sbMove = new StringBuilder(count * 24);
+            sbAll.AppendLine("No,Time,Press,Position");
+            sbForce.AppendLine("No,Time,Press");
+            sbMove.AppendLine("No,Time,Position");
+
+            for (int i = 0; i < count; i++)
             {
                 int num = i + 1;
-                int timenum = (int)(i < timeSamples.Count ? timeSamples[i] : (timeSamples.Count > 0 ? timeSamples[timeSamples.Count - 1] + (i - timeSamples.Count + 1) * (long)SamplePeriod : num * (long)SamplePeriod));
-                double press = pressureSamples[i] / 1000;
-                double position1 = 0;
-                if (i < positionSamples.Count)
-                {
-                    position1 = positionSamples[i];
+                long timenum = timeArrLong[i];
+                double press = pressureSamples[i] / 1000.0;
+                double pos = (i < posCount) ? positionSamples[i] : 0;
 
-                }
-                value = num + "," + timenum + "," + press + "," + position1;
-                recordValuePress.RecordValue(FileDir, filename, title, value);
-                pressindex = i;
+                sbAll.Append(num).Append(',').Append(timenum).Append(',').Append(press).Append(',').Append(pos).AppendLine();
+                sbForce.Append(num).Append(',').Append(timenum).Append(',').Append(press).AppendLine();
+                sbMove.Append(num).Append(',').Append(timenum).Append(',').Append(pos).AppendLine();
+            }
+
+            // 一次性覆盖写入(等价于原 FileInfo.Delete + 写入,但 I/O 次数从 3N 降到 3)
+            try
+            {
+                File.WriteAllText(FileDir + filename + ".csv", sbAll.ToString());
+                File.WriteAllText(FileDir + filenameForce + ".csv", sbForce.ToString());
+                File.WriteAllText(FileDir + filenameMove + ".csv", sbMove.ToString());
+            }
+            catch (Exception ex)
+            {
+                MyOwner.OnLog(LogType.Debug, $"模块 {MyOwner.Alias} CSV写入失败: {ex.Message}");
             }
 
             // 保存CSV后自动生成曲线图（时间-压力 + 时间-位置）
             try
             {
-                if (pressureSamples.Count > 0)
+                if (count > 0)
                 {
-                    double[] timeArr = new double[pressureSamples.Count];
-                    double[] pressArr = new double[pressureSamples.Count];
-                    double[] posArr = new double[pressureSamples.Count];
-                    for (int i = 0; i < pressureSamples.Count; i++)
+                    double[] timeArr = new double[count];
+                    double[] pressArr = new double[count];
+                    double[] posArr = new double[count];
+                    for (int i = 0; i < count; i++)
                     {
-                        timeArr[i] = i < timeSamples.Count ? timeSamples[i] : (timeSamples.Count > 0 ? timeSamples[timeSamples.Count - 1] + (i - timeSamples.Count + 1) * (long)SamplePeriod : (i + 1) * (long)SamplePeriod);
-                        pressArr[i] = pressureSamples[i] / 1000;
-                        posArr[i] = i < positionSamples.Count ? positionSamples[i] : 0;
+                        timeArr[i] = timeArrLong[i];
+                        pressArr[i] = pressureSamples[i] / 1000.0;
+                        posArr[i] = (i < posCount) ? positionSamples[i] : 0;
                     }
                     TorqueChart torqueChart = new TorqueChart();
                     torqueChart.SavePressureCurveImage(timeArr, pressArr, posArr, FileDir, picName);

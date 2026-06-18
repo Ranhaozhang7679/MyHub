@@ -1364,12 +1364,12 @@ namespace TaiKeCommon
                     canvas.DrawText("Move_Arc", legendX + 30, legendY + 25, tickPaintBlue);
                 }
 
-                // 保存PNG
+                // 保存JPEG
                 if (!Directory.Exists(savePath))
                     Directory.CreateDirectory(savePath);
                 using (var image = SKImage.FromBitmap(bitmap))
-                using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
-                using (var stream = File.OpenWrite(System.IO.Path.Combine(savePath, fileName + ".png")))
+                using (var data = image.Encode(SKEncodedImageFormat.Jpeg, 90))
+                using (var stream = File.OpenWrite(System.IO.Path.Combine(savePath, fileName + ".jpeg")))
                 {
                     data.SaveTo(stream);
                 }
