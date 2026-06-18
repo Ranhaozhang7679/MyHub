@@ -35,6 +35,10 @@ namespace Luster.Motion.ReportUI.ViewModel
         private ICommonBus _commonBus;
         private IDialogService _dialogService;
 
+        // 自动保存：加载中标志 + 节流计时器
+        private bool _isLoadingChartSettings;
+        private DispatcherTimer _saveChartSettingsTimer;
+
         // 图表数据
         private List<ISeries> _series = new List<ISeries>();
         public List<ISeries> Series
@@ -43,14 +47,30 @@ namespace Luster.Motion.ReportUI.ViewModel
             set => SetProperty(ref _series, value);
         }
 
-        private List<Axis> _xAxes = new List<Axis> { new Axis() };
+        private List<Axis> _xAxes = new List<Axis> { new Axis { Name = "Time/ms" } };
         public List<Axis> XAxes
         {
             get => _xAxes;
             set => SetProperty(ref _xAxes, value);
         }
 
-        private List<Axis> _yAxes = new List<Axis> { new Axis() };
+        private List<Axis> _yAxes = new List<Axis>
+        {
+            new Axis
+            {
+                Name = "Press/kgf",
+                Position = AxisPosition.Start,
+                NamePaint = new SolidColorPaint(System.Windows.Media.Colors.Red.ToSKColor()),
+                LabelsPaint = new SolidColorPaint(System.Windows.Media.Colors.Red.ToSKColor()),
+            },
+            new Axis
+            {
+                Name = "Position/mm",
+                Position = AxisPosition.End,
+                NamePaint = new SolidColorPaint(System.Windows.Media.Colors.Blue.ToSKColor()),
+                LabelsPaint = new SolidColorPaint(System.Windows.Media.Colors.Blue.ToSKColor()),
+            },
+        };
         public List<Axis> YAxes
         {
             get => _yAxes;
@@ -65,14 +85,14 @@ namespace Luster.Motion.ReportUI.ViewModel
             set => SetProperty(ref _series2, value);
         }
 
-        private List<Axis> _xAxes2 = new List<Axis> { new Axis() };
+        private List<Axis> _xAxes2 = new List<Axis> { new Axis { Name = "Time/ms" } };
         public List<Axis> XAxes2
         {
             get => _xAxes2;
             set => SetProperty(ref _xAxes2, value);
         }
 
-        private List<Axis> _yAxes2 = new List<Axis> { new Axis() };
+        private List<Axis> _yAxes2 = new List<Axis> { new Axis { Name = "Position/mm" } };
         public List<Axis> YAxes2
         {
             get => _yAxes2;
@@ -108,6 +128,7 @@ namespace Luster.Motion.ReportUI.ViewModel
                 RaisePropertyChanged(nameof(MergedHeight));
                 RaisePropertyChanged(nameof(SplitHeight));
                 RedrawChart();
+                ScheduleSaveChartSettings();
             }
         }
 
@@ -173,7 +194,11 @@ namespace Luster.Motion.ReportUI.ViewModel
         public double XAxisStep
         {
             get => _xAxisStep;
-            set => SetProperty(ref _xAxisStep, value);
+            set
+            {
+                if (SetProperty(ref _xAxisStep, value))
+                    ScheduleSaveChartSettings();
+            }
         }
 
         private double _yAxisStep = 0.05;
@@ -183,7 +208,11 @@ namespace Luster.Motion.ReportUI.ViewModel
         public double YAxisStep
         {
             get => _yAxisStep;
-            set => SetProperty(ref _yAxisStep, value);
+            set
+            {
+                if (SetProperty(ref _yAxisStep, value))
+                    ScheduleSaveChartSettings();
+            }
         }
 
         private double _yAxisMax = 0.3;
@@ -193,7 +222,11 @@ namespace Luster.Motion.ReportUI.ViewModel
         public double YAxisMax
         {
             get => _yAxisMax;
-            set => SetProperty(ref _yAxisMax, value);
+            set
+            {
+                if (SetProperty(ref _yAxisMax, value))
+                    ScheduleSaveChartSettings();
+            }
         }
 
         // === 图表2 参数 ===
@@ -204,7 +237,11 @@ namespace Luster.Motion.ReportUI.ViewModel
         public double XAxisStep2
         {
             get => _xAxisStep2;
-            set => SetProperty(ref _xAxisStep2, value);
+            set
+            {
+                if (SetProperty(ref _xAxisStep2, value))
+                    ScheduleSaveChartSettings();
+            }
         }
 
         private double _yAxisStep2 = 0.5;
@@ -214,7 +251,11 @@ namespace Luster.Motion.ReportUI.ViewModel
         public double YAxisStep2
         {
             get => _yAxisStep2;
-            set => SetProperty(ref _yAxisStep2, value);
+            set
+            {
+                if (SetProperty(ref _yAxisStep2, value))
+                    ScheduleSaveChartSettings();
+            }
         }
 
         private double _yAxisMax2 = 5.0;
@@ -224,7 +265,11 @@ namespace Luster.Motion.ReportUI.ViewModel
         public double YAxisMax2
         {
             get => _yAxisMax2;
-            set => SetProperty(ref _yAxisMax2, value);
+            set
+            {
+                if (SetProperty(ref _yAxisMax2, value))
+                    ScheduleSaveChartSettings();
+            }
         }
         //只显示Y+
         private bool _onlyShowPositiveIsEnabled = false;
@@ -234,7 +279,10 @@ namespace Luster.Motion.ReportUI.ViewModel
             set
             {
                 if (SetProperty(ref _onlyShowPositiveIsEnabled, value))
+                {
                     RedrawChart();
+                    ScheduleSaveChartSettings();
+                }
             }
         }
         //是否启用平滑曲线
@@ -242,14 +290,22 @@ namespace Luster.Motion.ReportUI.ViewModel
         public bool SmoothCurveProcessingsEnabled
         {
             get => _smoothCurveProcessingsEnabled;
-            set => SetProperty(ref _smoothCurveProcessingsEnabled, value);
+            set
+            {
+                if (SetProperty(ref _smoothCurveProcessingsEnabled, value))
+                    ScheduleSaveChartSettings();
+            }
         }
 
         private int _sliderValue = 11;
         public int SliderValue
         {
             get => _sliderValue;
-            set => SetProperty(ref _sliderValue, value);
+            set
+            {
+                if (SetProperty(ref _sliderValue, value))
+                    ScheduleSaveChartSettings();
+            }
         }
         // 原始数据缓存
         private List<List<ObservablePoint>> _rawDataCache = new List<List<ObservablePoint>>();
@@ -277,6 +333,8 @@ namespace Luster.Motion.ReportUI.ViewModel
             _dispatcher = dispatcher;
             _commonBus = commonBus;
             _dialogService = dialogService;
+
+            LoadChartSettings();
         }
 
         #region 命令
@@ -501,6 +559,107 @@ namespace Luster.Motion.ReportUI.ViewModel
 
         #endregion
 
+        #region 图表参数自动保存
+
+        /// <summary>
+        /// 从 StepAnnotationConfig.json 的 _default 条目加载图表参数（与步骤配置共用同一文件）。
+        /// 在带参构造函数末尾调用，加载期间关闭自动保存避免回写。
+        /// </summary>
+        private void LoadChartSettings()
+        {
+            try
+            {
+                _isLoadingChartSettings = true;
+                var config = StepAnnotationConfig.LoadByCsvName(null, GetRecipePath());
+                var s = config.ChartSettings ?? new ChartSettings();
+                XAxisStep = s.XAxisStep;
+                YAxisStep = s.YAxisStep;
+                YAxisMax = s.YAxisMax;
+                XAxisStep2 = s.XAxisStep2;
+                YAxisStep2 = s.YAxisStep2;
+                YAxisMax2 = s.YAxisMax2;
+                OnlyShowPositiveIsEnabled = s.OnlyShowPositiveIsEnabled;
+                SmoothCurveProcessingsEnabled = s.SmoothCurveProcessingsEnabled;
+                SliderValue = s.SliderValue;
+                IsMergedView = s.IsMergedView;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Trace.WriteLine($"加载图表参数失败: {ex.Message}");
+            }
+            finally
+            {
+                _isLoadingChartSettings = false;
+            }
+        }
+
+        /// <summary>
+        /// 节流调度保存：500ms 内多次属性变更只写盘一次，避免连续输入时频繁 IO。
+        /// </summary>
+        private void ScheduleSaveChartSettings()
+        {
+            if (_isLoadingChartSettings) return;
+            if (_dispatcher == null) _dispatcher = Application.Current?.Dispatcher;
+            if (_dispatcher == null) { SaveChartSettings(); return; }
+
+            _dispatcher.Invoke(new Action(() =>
+            {
+                if (_saveChartSettingsTimer == null)
+                {
+                    _saveChartSettingsTimer = new DispatcherTimer(DispatcherPriority.Background)
+                    {
+                        Interval = TimeSpan.FromMilliseconds(500)
+                    };
+                    _saveChartSettingsTimer.Tick += (s, e) =>
+                    {
+                        _saveChartSettingsTimer.Stop();
+                        SaveChartSettings();
+                    };
+                }
+                _saveChartSettingsTimer.Stop();
+                _saveChartSettingsTimer.Start();
+            }));
+        }
+
+        /// <summary>
+        /// 将当前图表参数写入 StepAnnotationConfig.json 的 _default 条目，保留其它 CSV 文件名下的步骤配置。
+        /// </summary>
+        private void SaveChartSettings()
+        {
+            try
+            {
+                var recipePath = GetRecipePath();
+                var allConfigs = StepAnnotationConfig.LoadAll(recipePath);
+                StepAnnotationConfig current;
+                if (allConfigs.ContainsKey(StepAnnotationConfig.DefaultKey))
+                    current = allConfigs[StepAnnotationConfig.DefaultKey];
+                else
+                    current = new StepAnnotationConfig();
+
+                current.ChartSettings = new ChartSettings
+                {
+                    XAxisStep = XAxisStep,
+                    YAxisStep = YAxisStep,
+                    YAxisMax = YAxisMax,
+                    XAxisStep2 = XAxisStep2,
+                    YAxisStep2 = YAxisStep2,
+                    YAxisMax2 = YAxisMax2,
+                    OnlyShowPositiveIsEnabled = OnlyShowPositiveIsEnabled,
+                    SmoothCurveProcessingsEnabled = SmoothCurveProcessingsEnabled,
+                    SliderValue = SliderValue,
+                    IsMergedView = IsMergedView,
+                };
+                allConfigs[StepAnnotationConfig.DefaultKey] = current;
+                StepAnnotationConfig.SaveAll(recipePath, allConfigs);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Trace.WriteLine($"保存图表参数失败: {ex.Message}");
+            }
+        }
+
+        #endregion
+
         #region 图表重绘
 
         private void RedrawChart()
@@ -615,6 +774,9 @@ namespace Luster.Motion.ReportUI.ViewModel
             axis_y_press.SeparatorsPaint = new SolidColorPaint(Colors.LightGray.ToSKColor(), 1);
             axis_y_press.Padding = new Padding(4, 0, 4, 0);
             axis_y_press.NamePadding = new Padding(4, 0, 4, 0);
+            axis_y_press.Position = AxisPosition.Start;
+            axis_y_press.NamePaint = new SolidColorPaint(Colors.Red.ToSKColor());
+            axis_y_press.LabelsPaint = new SolidColorPaint(Colors.Red.ToSKColor());
 
             var axis_y_position = new Axis();
             axis_y_position.Name = "Position/mm";
@@ -629,14 +791,16 @@ namespace Luster.Motion.ReportUI.ViewModel
             axis_y_position.Padding = new Padding(4, 0, 4, 0);
             axis_y_position.NamePadding = new Padding(4, 0, 4, 0);
             axis_y_position.Position = AxisPosition.End;
+            axis_y_position.NamePaint = new SolidColorPaint(Colors.Blue.ToSKColor());
+            axis_y_position.LabelsPaint = new SolidColorPaint(Colors.Blue.ToSKColor());
 
             DrawStepAnnotations(chartSeries, _steps, pressMax, xMax);
 
             _dispatcher.Invoke(new Action(() =>
             {
-                Series = chartSeries;
                 XAxes = new List<Axis> { axis_x_time };
                 YAxes = new List<Axis> { axis_y_press, axis_y_position };
+                Series = chartSeries;
             }));
         }
 
@@ -761,13 +925,13 @@ namespace Luster.Motion.ReportUI.ViewModel
 
             _dispatcher.Invoke(new Action(() =>
             {
-                Series = chart1Series;
                 XAxes = new List<Axis> { axis_x_time };
                 YAxes = new List<Axis> { axis_y_press1 };
+                Series = chart1Series;
 
-                Series2 = chart2Series;
                 XAxes2 = new List<Axis> { axis_x2 };
                 YAxes2 = new List<Axis> { axis_y2 };
+                Series2 = chart2Series;
             }));
         }
 
