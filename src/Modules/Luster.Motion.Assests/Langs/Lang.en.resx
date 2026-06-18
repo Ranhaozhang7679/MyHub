@@ -2868,6 +2868,9 @@
   <data name="LSMesUnLoad" xml:space="preserve">
     <value>LSMesUnLoad</value>
   </data>
+  <data name="CableSNManager" xml:space="preserve">
+    <value>CableSNManager</value>
+  </data>
   <data name="TimerJudge" xml:space="preserve">
     <value>TimerJudge</value>
   </data>
@@ -3206,5 +3209,8 @@
   </data>
   <data name="SetModbusEx" xml:space="preserve">
     <value>SetModbusEx</value>
+  </data>
+  <data name="ReadRobotSpeed" xml:space="preserve">
+    <value>ReadRobotSpeed</value>
   </data>
 </root>

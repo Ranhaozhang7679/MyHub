@@ -45,104 +45,96 @@ namespace Luster.Module.Motion.Device.Functions
         [Parameter("轴设备选择", 0, CN = "轴名称", EditorType = typeof(VAxis))]
         public VDevice DeviceParam { get; set; }
 
-        [Parameter("伺服Z轴设备选择", 1, CN = "伺服Z轴名称", EditorType = typeof(VAxis))]
-        public VDevice DeviceParam1 { get; set; }
-
         [NotEmpty]
-        [Parameter("轴ID选择", 2, CN = "轴ID", DefaultV = SlaveID.NUM1)]
+        [Parameter("轴ID选择", 1, CN = "轴ID", DefaultV = SlaveID.NUM1)]
         public SlaveID SlaveNum { get; set; }
 
-        [Parameter("动作类型", 3, CN = "动作类型", DefaultV = VCMActionType.ServoOn)]
+        [Parameter("动作类型", 2, CN = "动作类型", DefaultV = VCMActionType.ServoOn)]
         public VCMActionType ActionType { get; set; }
 
         // ===== 硬着陆参数 =====
         [DependOn("ActionType", VCMActionType.HardLanding)]
-        [Parameter("目标位置(mm)", 4, CN = "目标位置")]
+        [Parameter("目标位置(mm)", 3, CN = "目标位置")]
         public VAxisPos TargetPosition { get; set; }
 
         [DependOn("ActionType", VCMActionType.HardLanding)]
-        [Parameter("位置上限(mm)", 5, CN = "位置上限")]
+        [Parameter("位置上限(mm)", 4, CN = "位置上限")]
         public double PositionUpperLimit { get; set; }
 
         [DependOn("ActionType", VCMActionType.HardLanding)]
-        [Parameter("位置下限(mm)", 6, CN = "位置下限")]
+        [Parameter("位置下限(mm)", 5, CN = "位置下限")]
         public double PositionLowerLimit { get; set; }
 
         [DependOn("ActionType", VCMActionType.HardLanding)]
-        [Parameter("运动速度(mm/s)", 7, CN = "运动速度", DefaultV = 50.0)]
+        [Parameter("运动速度(mm/s)", 6, CN = "运动速度", DefaultV = 50.0)]
         public double MoveSpeed { get; set; }
 
         // 加速度/减速度: 硬着陆和软着陆共用
         [DependOn("ActionType", VCMActionType.HardLanding)]
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("加速度(mm/s²)", 8, CN = "加速度", DefaultV = 1000.0)]
+        [Parameter("加速度(mm/s²)", 7, CN = "加速度", DefaultV = 1000.0)]
         public double MoveAcc { get; set; }
 
         [DependOn("ActionType", VCMActionType.HardLanding)]
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("减速度(mm/s²)", 9, CN = "减速度", DefaultV = 1000.0)]
+        [Parameter("减速度(mm/s²)", 8, CN = "减速度", DefaultV = 1000.0)]
         public double MoveDec { get; set; }
 
 
         // ===== 软着陆参数(参考DH Control Demo) =====
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("快进位置PP(mm)", 10, CN = "快进位置")]
+        [Parameter("快进位置PP(mm)", 9, CN = "快进位置")]
         public VAxisPos PPPosition { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("快进速度(mm/s)", 11, CN = "快进速度", DefaultV = 50.0)]
+        [Parameter("快进速度(mm/s)", 10, CN = "快进速度", DefaultV = 50.0)]
         public double PPVelocity { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("接触位置PT(mm)", 12, CN = "接触位置")]
+        [Parameter("接触位置PT(mm)", 11, CN = "接触位置")]
         public VAxisPos PTPosition { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("接触速度(mm/s)", 13, CN = "接触速度", DefaultV = 5.0)]
+        [Parameter("接触速度(mm/s)", 12, CN = "接触速度", DefaultV = 5.0)]
         public double PTVelocity { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("寻力扭矩限制(千分比)", 14, CN = "一段扭矩", DefaultV = 500)]
+        [Parameter("寻力扭矩限制(千分比)", 13, CN = "一段扭矩", DefaultV = 500)]
         public int TorqueLimit { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("保压时间(ms)", 15, CN = "保压时间", DefaultV = 100)]
+        [Parameter("保压时间(ms)", 14, CN = "保压时间", DefaultV = 100)]
         public int InstallTime { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("恢复扭矩延时)", 16, CN = "恢复扭矩延时", DefaultV = 1.0)]
+        [Parameter("恢复扭矩延时)", 15, CN = "恢复扭矩延时", DefaultV = 1.0)]
         public int TimeOut1 { get; set; }
 
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("软着陆超时(秒)", 17, CN = "软着陆超时", DefaultV = 10)]
+        [Parameter("软着陆超时(秒)", 16, CN = "软着陆超时", DefaultV = 10)]
         public int SoftLandingTimeout { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("力矩到达容差(千分比)", 18, CN = "力矩容差", DefaultV = 20)]
+        [Parameter("力矩到达容差(千分比)", 17, CN = "力矩容差", DefaultV = 20)]
         public int TorqueTolerance { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("速度判定阈值(mm/s)", 19, CN = "速度阈值", DefaultV = 1.0)]
+        [Parameter("速度判定阈值(mm/s)", 18, CN = "速度阈值", DefaultV = 1.0)]
         public double SpeedThreshold { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("二段扭矩延时)", 20, CN = "二段扭矩延时", DefaultV = 1.0)]
-        public int TimeOut { get; set; }
-
-
-        [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("压力标定系数K(压力=K×电流+B)", 21, CN = "标定系数K", DefaultV = 1.0)]
+        [Parameter("压力标定系数K(压力=K×电流+B)", 19, CN = "标定系数K", DefaultV = 1.0)]
         public double PressureCalibrationK { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("压力标定偏移B", 22, CN = "标定偏移B", DefaultV = 0.0)]
+        [Parameter("压力标定偏移B", 20, CN = "标定偏移B", DefaultV = 0.0)]
         public double PressureCalibrationB { get; set; }
 
         // ===== 回零参数 =====
         [DependOn("ActionType", VCMActionType.Home)]
         [DependOn("ActionType", VCMActionType.HomeNonStandard)]
-        [Parameter("回零超时(秒)", 23, CN = "回零超时", DefaultV = 60)]
+        [Parameter("回零超时(秒)", 21, CN = "回零超时", DefaultV = 60)]
         public int HomeTimeout { get; set; }
 
         // ===== 非标回零参数 =====
@@ -179,17 +171,20 @@ namespace Luster.Module.Motion.Device.Functions
         public string GlobalVar { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("二段扭矩限制(千分比)", 32, CN = "二段扭矩", DefaultV = 500)]
-        public int TorqueLimit1 { get; set; }
-
-        [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("抬起扭矩限制(千分比)", 33, CN = "抬起扭矩", DefaultV = 500)]
+        [Parameter("抬起扭矩限制(千分比)", 32, CN = "抬起扭矩", DefaultV = 500)]
         public int TorqueLimit2 { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("压力采集周期(ms)", 34, CN = "采集周期", DefaultV = 24)]
+        [Parameter("压力采集周期(ms)", 33, CN = "采集周期", DefaultV = 24)]
         public int SamplePeriod { get; set; }
 
+        [DependOn("ActionType", VCMActionType.SoftLanding)]
+        [Parameter("补偿时间(ms)", 34, CN = "补偿时间", DefaultV = 0)]
+        public int BcTime { get; set; }
+
+        [DependOn("ActionType", VCMActionType.SoftLanding)]
+        [Parameter("微抬位置(mm)", 36, CN = "微抬位置")]
+        public VAxisPos StPosition { get; set; }
 
         // ===== 输出参数 =====
         [Parameter("执行结果", 40, CN = "执行结果", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
@@ -201,18 +196,19 @@ namespace Luster.Module.Motion.Device.Functions
         [Parameter("实际压力", 42, CN = "实际压力", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
         public double OutPressure { get; set; }
 
-        [Parameter("实时压力记录(N)，逗号分割", 43, CN = "实时压力", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
-        public string OutPressureData { get; set; }
-
         [Parameter("失败原因", 44, CN = "失败原因", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
         public string OutFailReason { get; set; }
 
+        [Parameter("CSV和图片路径输出", 45, CN = "CSV路径输出", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
+        public string DataPath { get; set; }
+
+        [Parameter("保压多余时间(ms)", 46, CN = "保压多余时间", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
+        public double Dytime { get; set; }
         #endregion
 
         public override string[] NoteParams => new string[] { nameof(DeviceParam), nameof(ActionType) };
 
         private VAxis _axis;
-        private VAxis _axis1;
         private volatile bool _isBreak;
 
         // 异步压力采集控制
@@ -229,8 +225,14 @@ namespace Luster.Module.Motion.Device.Functions
         // 真实采样时间戳(ms)，与 pressureSamples 一一对应
         private System.Collections.Generic.List<long> timeSamples;
 
+        // 本轮软着陆的文件名时间戳，由 ExecuteSoftLanding 在保压前生成，
+        // 供 SaveFile() 与 DataPath 共用，保证输出路径与实际保存文件一致
+        private string _fileTimestamp;
+
         // SAC-N2双轴控制器: 轴二地址偏移 +0x800
         private const int AxisOffset = 0x800;
+        //用来下压过程中把负数变0
+        private bool XYLC = true;
 
         /// <summary>
         /// 根据SlaveNum返回轴专属的SDO地址(轴二+0x800)
@@ -259,12 +261,6 @@ namespace Luster.Module.Motion.Device.Functions
                 errMsg = $"设备:{DeviceParam.Name}未找到";
                 OutFailReason = errMsg;
                 return false;
-            }
-
-            // 伺服Z轴可选，不填则按设置的点位运动
-            if (DeviceParam1 != null && !string.IsNullOrEmpty(DeviceParam1.Name))
-            {
-                GetVDevice<VAxis>(DeviceParam1, out _axis1);
             }
 
             try
@@ -449,11 +445,34 @@ namespace Luster.Module.Motion.Device.Functions
 
         #endregion
 
+        #region 运动辅助
+
+        /// <summary>
+        /// 固定速度绝对运动(不受当前模式速度百分比影响)
+        /// 说明: VAxis.MoveAbs(double...) 重载未把 IsFixedSpd 透传到底层 GetSpeed,
+        ///       故改用 VAxisDevice 重载, 显式传 IsFixedSpd = true 使速度不被百分比缩放
+        /// </summary>
+        private void MoveAbsFixed(double position, double speed, double acc, double dec)
+        {
+            _axis.MoveAbs(new VAxisDevice()
+            {
+                Compensate = 0,
+                DeviceID = _axis.ID,
+                Axis = _axis,
+                Position = position,
+                Speed = speed,
+                Acc = acc,
+                Dec = dec,
+            }, true);
+        }
+
+        #endregion
+
         #region 硬着陆
 
         private void ExecuteHardLanding()
         {
-            _axis.MoveAbs(TargetPosition[0].Position, MoveSpeed, MoveAcc, MoveDec);
+            MoveAbsFixed(TargetPosition[0].Position, MoveSpeed, MoveAcc, MoveDec);
             _axis.CheckMotionDone();
 
             double actualPos = _axis.GetCurrentPos();
@@ -517,15 +536,23 @@ namespace Luster.Module.Motion.Device.Functions
         {
             DateTime now = DateTime.Now;
             string dateStr = now.ToString("yyyyMMdd");
-            string timeStr = now.ToString("HHmmss");
-            string FileDir = @"D:\力控数据存储\" + dateStr + "\\" + SlaveNum.ToString() + "\\";
-            string filename = GStringVal + ".csv";
-            string picName = GStringVal;
+            // 与 ExecuteSoftLanding 中赋给 DataPath 的时间戳保持一致，
+            // 避免同 SN 多次执行时新旧文件互相覆盖
+            string timeStr = _fileTimestamp ?? now.ToString("HHmmss");
+            string FileDir = @"D:\力控数据存储\" + dateStr + "\\" + SlaveNum.ToString() + "\\" + GStringVal + "\\";
+            string filename = GStringVal + "_" + timeStr;
+            string picName = GStringVal + "_" + timeStr;
             CRecordValue recordValuePress = new CRecordValue();
             string title = "No" + "," + "Time" + "," + "Press" + "," + "Position";
             string title1 = "No" + "," + "Position" + "," + "Press";
             string value = "";
             int pressindex = 0;
+            //防止存入多段数据
+            FileInfo a = new FileInfo(FileDir + filename + ".csv");
+            if (a.Exists)
+            {
+                a.Delete();
+            }
             for (int i = 0; i < pressureSamples.Count; i++)
             {
                 int num = i + 1;
@@ -537,30 +564,10 @@ namespace Luster.Module.Motion.Device.Functions
                     position1 = positionSamples[i];
 
                 }
-
                 value = num + "," + timenum + "," + press + "," + position1;
                 recordValuePress.RecordValue(FileDir, filename, title, value);
                 pressindex = i;
             }
-            //PM要求拉力也用正值显示
-            //for (int i = 0; i < PullSamples.Count; i++)
-            //{
-            //    int num = i + 2+ pressindex;
-            //    int timenum = 10* pressindex+5*i+5;
-            //    double pullforce = PullSamples[i]/ 1000;
-            //    pressureSamples.Add(pullforce);
-            //    value = num + "," + timenum + "," + pullforce;
-            //    recordValuePress.RecordValue(FileDir, filename, title, value);
-            //}
-
-            //for (int i = 0; i < positionSamples.Count; i++)
-            //{
-            //    int num = i + 2 + pressindex;
-            //    double position1 = positionSamples[i];
-            //    double pullforce = pressureSamples[i];
-            //    value = i + "," + position1 + "," + pullforce;
-            //    recordValuePress.RecordValue(position, filename, title, value);
-            //}
 
             // 保存CSV后自动生成曲线图（时间-压力 + 时间-位置）
             try
@@ -587,7 +594,6 @@ namespace Luster.Module.Motion.Device.Functions
         }
 
         double positionZ = 0;
-        bool StartGetZ1Position = false;
         /// <summary>
         /// 软着陆(参考DH Control Demo的SoftLand_ServoExternal)
         /// 流程: 力矩最大 → 快进PP → 设目标力矩 → 慢速PT → 等力矩到达 → 保压 → 返回PB → 解除力矩
@@ -607,7 +613,6 @@ namespace Luster.Module.Motion.Device.Functions
             positionSamples = new System.Collections.Generic.List<double>();
             try
             {
-                positionZ = _axis1?.GetCurrentPos() ?? 0;
                 int InitalRaw = ReadRawCurrent();
                 // Step 0: 设定扭矩限制为最大
                 WriteTorqueLimit(MaxTorque);
@@ -616,10 +621,10 @@ namespace Luster.Module.Motion.Device.Functions
 
                 //pressureSamples.Add(ReadPressure()); //记录力控数据
                 // Step 10: 快速段 - 快速接近产品上方(PP位置)
-                _axis.MoveAbs(PPPosition[0].Position, PPVelocity, MoveAcc, MoveDec);
+                MoveAbsFixed(PPPosition[0].Position, PPVelocity, MoveAcc, MoveDec);
 
                 _axis.CheckMotionDone();
-                StartGetZ1Position = true;
+                XYLC = true;
                 ReadPressure1();
 
                 MyOwner.OnLog(Common.DataStruct.Enums.LogType.Debug, $"模块:{MyOwner.Alias} 快速运动");
@@ -630,7 +635,7 @@ namespace Luster.Module.Motion.Device.Functions
                 Thread.Sleep(20);
 
                 // Step 30: 慢速段 - 低速接触产品(PT位置)
-                _axis.MoveAbs(PTPosition[0].Position, PTVelocity, MoveAcc, MoveDec);
+                MoveAbsFixed(PTPosition[0].Position, PTVelocity, MoveAcc, MoveDec);
 
                 // 等待力矩到达(接触判定)
                 double lastPos = _axis.GetCurrentPos();
@@ -677,89 +682,37 @@ namespace Luster.Module.Motion.Device.Functions
                 //}
                 //Thread.Sleep(InstallTime);
                 stopwatch.Restart();
-                //保压后使用二段力矩
-
-                double installPos = _axis.GetCurrentPos();
+                FreshResult();
                 //在这读取压力和力控完成位置
-                OutPressure = ReadRawCurrent() * PressureCalibrationK + PressureCalibrationB;
-                OutPosition = _axis.GetCurrentPos();
-                MyOwner.OnLog(Common.DataStruct.Enums.LogType.Debug, $"模块:{MyOwner.Alias} 保压完成");
+                //OutPressure = ReadRawCurrent() * PressureCalibrationK + PressureCalibrationB;
+                //OutPosition = _axis.GetCurrentPos();
+                //MyOwner.OnLog(Common.DataStruct.Enums.LogType.Debug, $"模块:{MyOwner.Alias} 保压完成");
 
-                while (stopwatch.ElapsedMilliseconds < InstallTime)
+                XYLC = false;
+                DateTime now = DateTime.Now;
+                string dateStr = now.ToString("yyyyMMdd");
+                // 提前生成时间戳并保存到类成员，供 SaveFile() 复用，
+                // 保证 DataPath 输出的文件路径与最终落盘的 CSV/PNG 完全一致
+                _fileTimestamp = now.ToString("HHmmss");
+                string FileDir = @"D:\力控数据存储\" + dateStr + "\\" + SlaveNum.ToString() + "\\" + GStringVal + "\\";
+                DataPath = FileDir + GStringVal + "_" + _fileTimestamp + ".csv";
+                while (stopwatch.ElapsedMilliseconds < (InstallTime-BcTime))
                 {
                     Thread.Sleep(5);
                 }
-
-                WriteTorqueLimit(TorqueLimit1);
-                //Thread.Sleep(TimeOut);
-                stopwatch.Restart();
                 if (_isBreak) return;
-
-                OutPressureData = string.Join(",", pressureSamples);
-
                 //方案3
-                _axis.Stop();
-                Double currentpos = _axis.GetCurrentPos();
-                _axis.MoveAbs(currentpos, PTVelocity, MoveAcc, MoveDec);
-
-
+                
+                MoveAbsFixed(StPosition[0].Position, PTVelocity, MoveAcc, MoveDec);
                 //由于很小的力矩导致我点位运动直接失败，但是又不能一下设置最大，会过冲，所以尝试缓慢增加
                 WriteTorqueLimit(TorqueLimit2);
                 Thread.Sleep(TimeOut1);
-
                 _axis.CheckMotionDone();
-                while (stopwatch.ElapsedMilliseconds < TimeOut)
-                {
-                }
+                
                 //方案4
-
                 // Step 100: 完成
+
                 OutResult = true;
-                StartGetZ1Position = false;
-                //if (!string.IsNullOrEmpty(GlobalVar))
-                //{
-                //    // 取消上次未完成的异步采集线程
-                //    _stopPressureCollect = true;
-                //    Thread.Sleep(10);
-                //    _stopPressureCollect = false;
-                //    Task.Run(() =>
-                //    {
-                //        PullSamples = new System.Collections.Generic.List<double>();
-                //        while (true)
-                //        {
-                //            if (_stopPressureCollect || _isBreak) break;
-
-                //            if (gParameter == null)
-                //            {
-                //                if (gModule != null && gModule.Parameters.ContainsKey(GlobalVar))
-                //                {
-                //                    gParameter = gModule.Parameters[GlobalVar];
-                //                }
-                //                else
-                //                {
-                //                    MyOwner.OnLog(LogType.Debug, $"全局变量:{GlobalVar}不存在!");
-                //                    break;
-                //                }
-                //            }
-
-                //            object pVal = gParameter?.Value;
-                //            if (pVal != null && pVal.Equals(true))
-                //            {
-                //                MyOwner.OnLog(LogType.Debug, $"模块 {MyOwner.Alias} 异步压力采集: 全局变量触发停止");
-                //                break;
-                //            }
-                //                // 实时采集压力
-                //            double pressure = ReadPressure();
-                //            PullSamples.Add(pressure);
-                //            double position = _axis.GetCurrentPos();
-                //            positionSamples.Add(position);
-                //            Thread.Sleep(5);
-                //        }
-                //        //结束后写入csv
-                //        SaveFile();
-                //    });
-                //}
-
             }
             finally
             {
@@ -768,7 +721,15 @@ namespace Luster.Module.Motion.Device.Functions
         }
 
         #endregion
-
+        //由于读取轴当前位置和读取当前压力值会导致保压时间延长，把拉出来单独运行
+        private void FreshResult()
+        {
+            Task.Run(() =>
+            {
+                OutPressure = ReadRawCurrent() * PressureCalibrationK + PressureCalibrationB;
+                OutPosition = _axis.GetCurrentPos();
+            });
+        }
         private void ReadPressure1()
         {
             const int MaxTorque = 3000;
@@ -783,7 +744,6 @@ namespace Luster.Module.Motion.Device.Functions
                 _stopPressureCollect = false;
                 Task.Run(() =>
                 {
-                    PullSamples = new System.Collections.Generic.List<double>();
                     //var sw = System.Diagnostics.Stopwatch.StartNew();
                     Stopwatch stopwatch = new Stopwatch();
                     stopwatch.Restart();
@@ -812,18 +772,18 @@ namespace Luster.Module.Motion.Device.Functions
                         }
                         // 实时采集压力
                         double pressure = ReadPressure12();
-                        pressureSamples.Add(pressure);
-                        //timeSamples.Add(sw.ElapsedMilliseconds);
-                        timeSamples.Add(stopwatch.ElapsedMilliseconds);
-                        double position = 0;
-                        if (StartGetZ1Position || _axis1 == null)
+                        if (XYLC && pressure <= 0)
                         {
-                            position = _axis.GetCurrentPos();
+                            pressureSamples.Add(0);
                         }
                         else
                         {
-                            position = _axis.GetCurrentPos() + _axis1.GetCurrentPos() - positionZ;
+                            pressureSamples.Add(pressure);
                         }
+                        //timeSamples.Add(sw.ElapsedMilliseconds);
+                        timeSamples.Add(stopwatch.ElapsedMilliseconds);
+                        double position = 0;
+                        position = _axis.GetCurrentPos();
                         positionSamples.Add(position);
                         // Stopwatch补偿：保证24ms采样周期
                         // long elapsed = sw.ElapsedMilliseconds;

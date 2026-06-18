@@ -80,7 +80,7 @@ namespace Luster.Motion.ReportUI.ViewModel
         }
 
         // 图表2 模式切换：false=Position-Press, true=Time-Position
-        private bool _isChart2TimePosition;
+        private bool _isChart2TimePosition = true;
         /// <summary>
         /// 图表2是否为Time-Position模式
         /// </summary>
@@ -90,7 +90,36 @@ namespace Luster.Motion.ReportUI.ViewModel
             set => SetProperty(ref _isChart2TimePosition, value);
         }
 
-        private string _chart2Title = "Position-Press";
+        // 合并/分开显示：true=单图双 Y 轴叠加, false=上下双子图
+        private bool _isMergedView = true;
+        /// <summary>
+        /// 是否合并显示（单图双 Y 轴）。false 时为上下双子图
+        /// </summary>
+        public bool IsMergedView
+        {
+            get => _isMergedView;
+            set
+            {
+                if (_isMergedView == value) return;
+                _isMergedView = value;
+                RaisePropertyChanged();
+                RaisePropertyChanged(nameof(IsSplitView));
+                RaisePropertyChanged(nameof(MergeViewButtonText));
+                RedrawChart();
+            }
+        }
+
+        /// <summary>
+        /// IsMergedView 反向，供 XAML 反向 Visibility 绑定
+        /// </summary>
+        public bool IsSplitView => !_isMergedView;
+
+        /// <summary>
+        /// 切换按钮文字：合并模式下显示"切换分开"，分开模式下显示"切换合并"
+        /// </summary>
+        public string MergeViewButtonText => IsMergedView ? "切换分开" : "切换合并";
+
+        private string _chart2Title = "Time-Position";
         /// <summary>
         /// 图表2标题
         /// </summary>
@@ -100,21 +129,21 @@ namespace Luster.Motion.ReportUI.ViewModel
             set => SetProperty(ref _chart2Title, value);
         }
 
-        private string _chart2XLabel = "X间隔(mm):";
+        private string _chart2XLabel = "X间隔(ms):";
         public string Chart2XLabel
         {
             get => _chart2XLabel;
             set => SetProperty(ref _chart2XLabel, value);
         }
 
-        private string _chart2YLabel = "Y间隔(kgf):";
+        private string _chart2YLabel = "Y间隔(mm):";
         public string Chart2YLabel
         {
             get => _chart2YLabel;
             set => SetProperty(ref _chart2YLabel, value);
         }
 
-        private string _chart2YMaxLabel = "Y上限(kgf):";
+        private string _chart2YMaxLabel = "Y上限(mm,0自动):";
         public string Chart2YMaxLabel
         {
             get => _chart2YMaxLabel;
@@ -186,7 +215,7 @@ namespace Luster.Motion.ReportUI.ViewModel
             set => SetProperty(ref _yAxisMax2, value);
         }
         //只显示Y+
-        private bool _onlyShowPositiveIsEnabled = true;
+        private bool _onlyShowPositiveIsEnabled = false;
         public bool OnlyShowPositiveIsEnabled
         {
             get => _onlyShowPositiveIsEnabled;
@@ -197,7 +226,7 @@ namespace Luster.Motion.ReportUI.ViewModel
             }
         }
         //是否启用平滑曲线
-        private bool _smoothCurveProcessingsEnabled = true;
+        private bool _smoothCurveProcessingsEnabled = false;
         public bool SmoothCurveProcessingsEnabled
         {
             get => _smoothCurveProcessingsEnabled;
@@ -261,7 +290,7 @@ namespace Luster.Motion.ReportUI.ViewModel
 
         private DelegateCommand _toggleChart2ModeCommand;
         /// <summary>
-        /// 切换图表2模式：Position-Press / Time-Position
+        /// 切换图表2模式：Position-Press / Time-Position（仅分开模式有效）
         /// </summary>
         public DelegateCommand ToggleChart2ModeCommand =>
             _toggleChart2ModeCommand ?? (_toggleChart2ModeCommand = new DelegateCommand(() =>
@@ -284,6 +313,16 @@ namespace Luster.Motion.ReportUI.ViewModel
                 RedrawChart();
             }));
 
+        private DelegateCommand _toggleMergeViewCommand;
+        /// <summary>
+        /// 切换显示模式：合并单图（双 Y 轴）/ 分开双子图（上下 Time-Press + Time-Position）
+        /// </summary>
+        public DelegateCommand ToggleMergeViewCommand =>
+            _toggleMergeViewCommand ?? (_toggleMergeViewCommand = new DelegateCommand(() =>
+            {
+                IsMergedView = !IsMergedView;
+            }));
+
         #endregion
 
         #region CSV 导入
@@ -292,16 +331,30 @@ namespace Luster.Motion.ReportUI.ViewModel
         {
             if (_dispatcher == null) _dispatcher = Application.Current?.Dispatcher;
 
-            var openFileDialog = new Microsoft.Win32.OpenFileDialog();
-            openFileDialog.Multiselect = true;
-            openFileDialog.Filter = "CSV 文件 (*.csv)|*.csv|所有文件 (*.*)|*.*";
-            openFileDialog.Title = "请选择压力曲线数据文件";
-            openFileDialog.InitialDirectory = @"D:\lmv-2026-043011\0430FCLP2\CC上传\NUM1";
+            // 选择文件夹：递归扫描该文件夹（含子文件夹）下所有 CSV
+            var folderDialog = new System.Windows.Forms.FolderBrowserDialog();
+            folderDialog.Description = "请选择压力曲线数据所在文件夹（含子文件夹，将自动扫描所有 CSV）";
+            folderDialog.ShowNewFolderButton = false;
+            folderDialog.RootFolder = Environment.SpecialFolder.Desktop;
+            try
+            {
+                var defaultPath = @"D:\lmv-2026-043011\0430FCLP2\CC上传\NUM1";
+                if (System.IO.Directory.Exists(defaultPath))
+                    folderDialog.SelectedPath = defaultPath;
+            }
+            catch { }
 
-            if (openFileDialog.ShowDialog() != true) return;
+            if (folderDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
 
-            string[] files = openFileDialog.FileNames;
-            if (files.Length == 0) return;
+            string selectedFolder = folderDialog.SelectedPath;
+            if (string.IsNullOrEmpty(selectedFolder) || !System.IO.Directory.Exists(selectedFolder)) return;
+
+            string[] files = System.IO.Directory.GetFiles(selectedFolder, "*.csv", System.IO.SearchOption.AllDirectories);
+            if (files.Length == 0)
+            {
+                MessageBox.Show("所选文件夹中没有找到任何 CSV 文件。", "提示");
+                return;
+            }
 
             _rawDataCache.Clear();
             _rawPositionPressCache.Clear();
@@ -444,7 +497,7 @@ namespace Luster.Motion.ReportUI.ViewModel
             if (_smoothCurveProcessingsEnabled)
             {
                 _rawDataCache1 = Smoothing.Pxcl(_rawDataCache, _sliderValue);
-            }         
+            }
             if (_dispatcher == null) _dispatcher = Application.Current?.Dispatcher;
 
             double timeMax = _cachedTimeMax;
@@ -452,18 +505,140 @@ namespace Luster.Motion.ReportUI.ViewModel
             double pressMax = _cachedPressMax;
             double positionMin = _cachedPositionMin;
             double positionMax = _cachedPositionMax;
-
-            // 计算对称的 Y 轴范围（支持负数压力）
             double pressAbsMax = Math.Max(Math.Abs(pressMin), Math.Abs(pressMax));
 
-            // === 图表1：Time-Press ===
+            if (IsMergedView)
+                RedrawMerged(timeMax, pressMin, pressMax, positionMin, positionMax, pressAbsMax);
+            else
+                RedrawSplit(timeMax, pressMin, pressMax, positionMin, positionMax, pressAbsMax);
+        }
+
+        // === 合并模式：单图双 Y 轴（Time-Press 红 左 Y + Time-Position 蓝 右 Y） ===
+        private void RedrawMerged(double timeMax, double pressMin, double pressMax, double positionMin, double positionMax, double pressAbsMax)
+        {
+            var chartSeries = new List<ISeries>();
+            if (_smoothCurveProcessingsEnabled)
+            {
+                foreach (var cachedValues in _rawDataCache1)
+                {
+                    var line = new LineSeries<ObservablePoint>();
+                    line.Stroke = new SolidColorPaint(Colors.Red.ToSKColor(), 1);
+                    line.LineSmoothness = 0;
+                    line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
+                    line.GeometrySize = 0;
+                    line.MiniatureShapeSize = 0;
+                    line.Name = null;
+                    line.Values = new List<ObservablePoint>(cachedValues);
+                    line.ScalesYAt = 0;
+                    chartSeries.Add(line);
+                }
+            }
+            else
+            {
+                foreach (var cachedValues in _rawDataCache)
+                {
+                    var line = new LineSeries<ObservablePoint>();
+                    line.Stroke = new SolidColorPaint(Colors.Red.ToSKColor(), 1);
+                    line.LineSmoothness = 0;
+                    line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
+                    line.GeometrySize = 0;
+                    line.MiniatureShapeSize = 0;
+                    line.Name = null;
+                    line.Values = new List<ObservablePoint>(cachedValues);
+                    line.ScalesYAt = 0;
+                    chartSeries.Add(line);
+                }
+            }
+
+            foreach (var cachedValues in _rawTimePositionCache)
+            {
+                var line = new LineSeries<ObservablePoint>();
+                line.Stroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
+                line.LineSmoothness = 0;
+                line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
+                line.GeometrySize = 0;
+                line.MiniatureShapeSize = 0;
+                line.Name = null;
+                line.Values = new List<ObservablePoint>(cachedValues);
+                line.ScalesYAt = 1;
+                chartSeries.Add(line);
+            }
+
+            double xStep1 = XAxisStep > 0 ? XAxisStep : 50;
+            double yStep1 = YAxisStep > 0 ? YAxisStep : 0.05;
+            double yMax1 = YAxisMax > 0 ? YAxisMax : pressAbsMax * 1.05;
+            double xMax = Math.Ceiling(timeMax / xStep1) * xStep1 + xStep1;
+
+            double niceStep1 = CalculateNiceStep(yMax1, 8);
+            if (yStep1 < niceStep1) yStep1 = niceStep1;
+
+            double posAbsMax = Math.Max(Math.Abs(positionMin), Math.Abs(positionMax));
+            double yStep2 = YAxisStep2 > 0 ? YAxisStep2 : 0.5;
+            double yMax2 = YAxisMax2 > 0 ? YAxisMax2 : (posAbsMax * 1.1);
+            double niceStep2 = CalculateNiceStep(yMax2, 8);
+            if (yStep2 < niceStep2) yStep2 = niceStep2;
+
+            var axis_x_time = new Axis();
+            axis_x_time.Name = "Time/ms";
+            axis_x_time.NameTextSize = 12;
+            axis_x_time.TextSize = 10;
+            axis_x_time.MinLimit = 0;
+            axis_x_time.MaxLimit = xMax;
+            axis_x_time.MinStep = xStep1;
+            axis_x_time.ForceStepToMin = true;
+            axis_x_time.ShowSeparatorLines = true;
+            axis_x_time.SeparatorsPaint = new SolidColorPaint(Colors.LightGray.ToSKColor(), 1);
+            axis_x_time.Padding = new Padding(4, 0, 4, 0);
+            axis_x_time.NamePadding = new Padding(4, 0, 4, 0);
+
+            var axis_y_press = new Axis();
+            axis_y_press.Name = "Press/kgf";
+            axis_y_press.NameTextSize = 12;
+            axis_y_press.TextSize = 10;
+            axis_y_press.MinLimit = _onlyShowPositiveIsEnabled ? 0 : -yMax1;
+            axis_y_press.MaxLimit = yMax1;
+            axis_y_press.MinStep = yStep1;
+            axis_y_press.ForceStepToMin = true;
+            axis_y_press.ShowSeparatorLines = true;
+            axis_y_press.SeparatorsPaint = new SolidColorPaint(Colors.LightGray.ToSKColor(), 1);
+            axis_y_press.Padding = new Padding(4, 0, 4, 0);
+            axis_y_press.NamePadding = new Padding(4, 0, 4, 0);
+
+            var axis_y_position = new Axis();
+            axis_y_position.Name = "Position/mm";
+            axis_y_position.NameTextSize = 12;
+            axis_y_position.TextSize = 10;
+            axis_y_position.MinLimit = _onlyShowPositiveIsEnabled ? 0 : -yMax2;
+            axis_y_position.MaxLimit = yMax2;
+            axis_y_position.MinStep = yStep2;
+            axis_y_position.ForceStepToMin = true;
+            axis_y_position.ShowSeparatorLines = false;
+            axis_y_position.SeparatorsPaint = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
+            axis_y_position.Padding = new Padding(4, 0, 4, 0);
+            axis_y_position.NamePadding = new Padding(4, 0, 4, 0);
+            axis_y_position.Position = AxisPosition.End;
+
+            DrawStepAnnotations(chartSeries, _steps, pressMax, xMax);
+
+            _dispatcher.Invoke(new Action(() =>
+            {
+                Series = chartSeries;
+                XAxes = new List<Axis> { axis_x_time };
+                YAxes = new List<Axis> { axis_y_press, axis_y_position };
+            }));
+        }
+
+        // === 分开模式：上下双子图，共享 Time X 轴 ===
+        private void RedrawSplit(double timeMax, double pressMin, double pressMax, double positionMin, double positionMax, double pressAbsMax)
+        {
+            // 上方子图：Time-Press（红）
             var chart1Series = new List<ISeries>();
             if (_smoothCurveProcessingsEnabled)
             {
                 foreach (var cachedValues in _rawDataCache1)
                 {
                     var line = new LineSeries<ObservablePoint>();
-                    line.Stroke = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
+                    line.Stroke = new SolidColorPaint(Colors.Red.ToSKColor(), 1);
                     line.LineSmoothness = 0;
                     line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
                     line.GeometrySize = 0;
@@ -478,7 +653,7 @@ namespace Luster.Motion.ReportUI.ViewModel
                 foreach (var cachedValues in _rawDataCache)
                 {
                     var line = new LineSeries<ObservablePoint>();
-                    line.Stroke = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
+                    line.Stroke = new SolidColorPaint(Colors.Red.ToSKColor(), 1);
                     line.LineSmoothness = 0;
                     line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
                     line.GeometrySize = 0;
@@ -488,12 +663,12 @@ namespace Luster.Motion.ReportUI.ViewModel
                     chart1Series.Add(line);
                 }
             }
+
             double xStep1 = XAxisStep > 0 ? XAxisStep : 50;
             double yStep1 = YAxisStep > 0 ? YAxisStep : 0.05;
             double yMax1 = YAxisMax > 0 ? YAxisMax : pressAbsMax * 1.05;
             double xMax = Math.Ceiling(timeMax / xStep1) * xStep1 + xStep1;
 
-            // 分隔符溢出自动适应：步长过小导致刻度过多时，自动计算合理步长
             double niceStep1 = CalculateNiceStep(yMax1, 8);
             if (yStep1 < niceStep1) yStep1 = niceStep1;
 
@@ -514,7 +689,7 @@ namespace Luster.Motion.ReportUI.ViewModel
             axis_y_press1.Name = "Press/kgf";
             axis_y_press1.NameTextSize = 12;
             axis_y_press1.TextSize = 10;
-            axis_y_press1.MinLimit = _onlyShowPositiveIsEnabled ? 0:- yMax1;
+            axis_y_press1.MinLimit = _onlyShowPositiveIsEnabled ? 0 : -yMax1;
             axis_y_press1.MaxLimit = yMax1;
             axis_y_press1.MinStep = yStep1;
             axis_y_press1.ForceStepToMin = true;
@@ -523,133 +698,61 @@ namespace Luster.Motion.ReportUI.ViewModel
             axis_y_press1.Padding = new Padding(4, 0, 4, 0);
             axis_y_press1.NamePadding = new Padding(4, 0, 4, 0);
 
-            // 步骤标注（仅 Time-Press 图表）
             DrawStepAnnotations(chart1Series, _steps, pressMax, xMax);
 
-            // === 图表2：Position-Press 或 Time-Position ===
+            // 下方子图：Time-Position（蓝，共享 Time X 轴）
             var chart2Series = new List<ISeries>();
-            Axis axis_x2, axis_y2;
-
-            if (_isChart2TimePosition)
+            foreach (var cachedValues in _rawTimePositionCache)
             {
-                // Time-Position 模式：X=Time, Y=Position
-                if (_rawTimePositionCache.Count > 0)
-                {
-                    foreach (var cachedValues in _rawTimePositionCache)
-                    {
-                        var line = new LineSeries<ObservablePoint>();
-                        line.Stroke = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
-                        line.LineSmoothness = 0;
-                        line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
-                        line.GeometrySize = 0;
-                        line.MiniatureShapeSize = 0;
-                        line.Name = null;
-                        line.Values = new List<ObservablePoint>(cachedValues);
-                        chart2Series.Add(line);
-                    }
-                }
-
-                double xStep2tp = XAxisStep2 > 0 ? XAxisStep2 : 50;
-                double yStep2tp = YAxisStep2 > 0 ? YAxisStep2 : 0.5;
-                double yMax2tp = YAxisMax2 > 0 ? YAxisMax2 : positionMax * 1.1;
-
-                double xMax2tp = Math.Ceiling(timeMax / xStep2tp) * xStep2tp + xStep2tp;
-
-                double niceStep2tp = CalculateNiceStep(yMax2tp, 8);
-                if (yStep2tp < niceStep2tp) yStep2tp = niceStep2tp;
-
-                axis_x2 = new Axis();
-                axis_x2.Name = "Time/ms";
-                axis_x2.NameTextSize = 12;
-                axis_x2.TextSize = 10;
-                axis_x2.MinLimit = 0;
-                axis_x2.MaxLimit = xMax2tp;
-                axis_x2.MinStep = xStep2tp;
-                axis_x2.ForceStepToMin = true;
-                axis_x2.ShowSeparatorLines = true;
-                axis_x2.SeparatorsPaint = new SolidColorPaint(Colors.LightGray.ToSKColor(), 1);
-                axis_x2.Padding = new Padding(4, 0, 4, 0);
-                axis_x2.NamePadding = new Padding(4, 0, 4, 0);
-
-                axis_y2 = new Axis();
-                axis_y2.Name = "Position/mm";
-                axis_y2.NameTextSize = 12;
-                axis_y2.TextSize = 10;
-                axis_y2.MinLimit = _onlyShowPositiveIsEnabled ? 0 : -yMax2tp;
-                axis_y2.MaxLimit = yMax2tp;
-                axis_y2.MinStep = yStep2tp;
-                axis_y2.ForceStepToMin = true;
-                axis_y2.ShowSeparatorLines = true;
-                axis_y2.SeparatorsPaint = new SolidColorPaint(Colors.LightGray.ToSKColor(), 1);
-                axis_y2.Padding = new Padding(4, 0, 4, 0);
-                axis_y2.NamePadding = new Padding(4, 0, 4, 0);
+                var line = new LineSeries<ObservablePoint>();
+                line.Stroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
+                line.LineSmoothness = 0;
+                line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
+                line.GeometrySize = 0;
+                line.MiniatureShapeSize = 0;
+                line.Name = null;
+                line.Values = new List<ObservablePoint>(cachedValues);
+                chart2Series.Add(line);
             }
-            else
-            {
-                // Position-Press 模式：X=Position, Y=Press
-                if (_rawPositionPressCache.Count > 0)
-                {
-                    foreach (var cachedValues in _rawPositionPressCache)
-                    {
-                        var line = new LineSeries<ObservablePoint>();
-                        line.Stroke = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
-                        line.LineSmoothness = 0;
-                        line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
-                        line.GeometrySize = 0;
-                        line.MiniatureShapeSize = 0;
-                        line.Name = null;
-                        line.Values = new List<ObservablePoint>(cachedValues);
-                        chart2Series.Add(line);
-                    }
-                }
 
-                double xStep2pp = XAxisStep2 > 0 ? XAxisStep2 : 0.5;
-                double yStep2pp = YAxisStep2 > 0 ? YAxisStep2 : 0.05;
-                double yMax2pp = YAxisMax2 > 0 ? YAxisMax2 : pressAbsMax * 1.05;
+            double posAbsMax = Math.Max(Math.Abs(positionMin), Math.Abs(positionMax));
+            double yStep2 = YAxisStep2 > 0 ? YAxisStep2 : 0.5;
+            double yMax2 = YAxisMax2 > 0 ? YAxisMax2 : (posAbsMax * 1.1);
+            double niceStep2 = CalculateNiceStep(yMax2, 8);
+            if (yStep2 < niceStep2) yStep2 = niceStep2;
 
-                double niceStep2pp = CalculateNiceStep(yMax2pp, 8);
-                if (yStep2pp < niceStep2pp) yStep2pp = niceStep2pp;
+            var axis_x2 = new Axis();
+            axis_x2.Name = "Time/ms";
+            axis_x2.NameTextSize = 12;
+            axis_x2.TextSize = 10;
+            axis_x2.MinLimit = 0;
+            axis_x2.MaxLimit = xMax;
+            axis_x2.MinStep = xStep1;
+            axis_x2.ForceStepToMin = true;
+            axis_x2.ShowSeparatorLines = true;
+            axis_x2.SeparatorsPaint = new SolidColorPaint(Colors.LightGray.ToSKColor(), 1);
+            axis_x2.Padding = new Padding(4, 0, 4, 0);
+            axis_x2.NamePadding = new Padding(4, 0, 4, 0);
 
-                double posRange = positionMax - positionMin;
-                double posPadding = posRange * 0.05;
-                double posMinLimit = positionMin - posPadding;
-                double posMaxLimit = positionMax + posPadding;
-
-                axis_x2 = new Axis();
-                axis_x2.Name = "Position/mm";
-                axis_x2.NameTextSize = 12;
-                axis_x2.TextSize = 10;
-                axis_x2.MinLimit = posMinLimit;
-                axis_x2.MaxLimit = posMaxLimit;
-                axis_x2.MinStep = xStep2pp;
-                axis_x2.ForceStepToMin = true;
-                axis_x2.ShowSeparatorLines = true;
-                axis_x2.SeparatorsPaint = new SolidColorPaint(Colors.LightGray.ToSKColor(), 1);
-                axis_x2.Padding = new Padding(4, 0, 4, 0);
-                axis_x2.NamePadding = new Padding(4, 0, 4, 0);
-
-                axis_y2 = new Axis();
-                axis_y2.Name = "Press/kgf";
-                axis_y2.NameTextSize = 12;
-                axis_y2.TextSize = 10;
-                axis_y2.MinLimit = _onlyShowPositiveIsEnabled ? 0 : -yMax2pp;
-                axis_y2.MaxLimit = yMax2pp;
-                axis_y2.MinStep = yStep2pp;
-                axis_y2.ForceStepToMin = true;
-                axis_y2.ShowSeparatorLines = true;
-                axis_y2.SeparatorsPaint = new SolidColorPaint(Colors.LightGray.ToSKColor(), 1);
-                axis_y2.Padding = new Padding(4, 0, 4, 0);
-                axis_y2.NamePadding = new Padding(4, 0, 4, 0);
-            }
+            var axis_y2 = new Axis();
+            axis_y2.Name = "Position/mm";
+            axis_y2.NameTextSize = 12;
+            axis_y2.TextSize = 10;
+            axis_y2.MinLimit = _onlyShowPositiveIsEnabled ? 0 : -yMax2;
+            axis_y2.MaxLimit = yMax2;
+            axis_y2.MinStep = yStep2;
+            axis_y2.ForceStepToMin = true;
+            axis_y2.ShowSeparatorLines = true;
+            axis_y2.SeparatorsPaint = new SolidColorPaint(Colors.LightGray.ToSKColor(), 1);
+            axis_y2.Padding = new Padding(4, 0, 4, 0);
+            axis_y2.NamePadding = new Padding(4, 0, 4, 0);
 
             _dispatcher.Invoke(new Action(() =>
             {
-                // 图表1：Time-Press
                 Series = chart1Series;
                 XAxes = new List<Axis> { axis_x_time };
                 YAxes = new List<Axis> { axis_y_press1 };
 
-                // 图表2
                 Series2 = chart2Series;
                 XAxes2 = new List<Axis> { axis_x2 };
                 YAxes2 = new List<Axis> { axis_y2 };
@@ -996,7 +1099,7 @@ namespace Luster.Motion.ReportUI.ViewModel
         /// </summary>
         /// <param name="observablePoint"></param>
         /// <returns></returns>
-        public static List<List<ObservablePoint>> Pxcl(List<List<ObservablePoint>> observablePoint,int Windowsize)
+        public static List<List<ObservablePoint>> Pxcl(List<List<ObservablePoint>> observablePoint, int Windowsize)
         {
             List<List<ObservablePoint>> date = new List<List<ObservablePoint>>();
             foreach (List<ObservablePoint> sj in observablePoint)
@@ -1011,7 +1114,7 @@ namespace Luster.Motion.ReportUI.ViewModel
                 for (int i = 0; i < doubles.Length; i++)
                 {
                     ObservablePoint tempdata = sj[i];
-                    tempdata.Y= doubles[i];
+                    tempdata.Y = doubles[i];
                     hc.Add(tempdata);
                 }
                 date.Add(hc);

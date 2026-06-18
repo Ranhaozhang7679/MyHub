@@ -441,16 +441,16 @@
                                                 BorderThickness="0">
                                                 <Grid>
                                                     <Border
-                                                        BorderBrush="#CCCCCC"
-                                                        BorderThickness="1"
-                                                        CornerRadius="4,0,0,4"
+                                                        Background="{StaticResource SuccessBrush}"
+                                                        BorderThickness="0"
+                                                        CornerRadius="4"
                                                         Width="100"
-                                                        Height="30"/>
+                                                        Height="32"/>
                                                     <Path
-                                                        Fill="#333333"
+                                                        Fill="White"
                                                         Stretch="Uniform"
-                                                        Width="10"
-                                                        Height="12"
+                                                        Width="14"
+                                                        Height="14"
                                                         HorizontalAlignment="Center"
                                                         VerticalAlignment="Center">
                                                         <Path.Data>
@@ -476,16 +476,16 @@
                                                 BorderThickness="0">
                                                 <Grid>
                                                     <Border
-                                                        BorderBrush="#CCCCCC"
-                                                        BorderThickness="1"
-                                                        CornerRadius="0,4,4,0"
+                                                        Background="{StaticResource DangerBrush}"
+                                                        BorderThickness="0"
+                                                        CornerRadius="4"
                                                         Width="100"
-                                                        Height="30"/>
+                                                        Height="32"/>
                                                     <Path
-                                                        Fill="#333333"
+                                                        Fill="White"
                                                         Stretch="Uniform"
-                                                        Width="10"
-                                                        Height="12"
+                                                        Width="14"
+                                                        Height="14"
                                                         HorizontalAlignment="Center"
                                                         VerticalAlignment="Center">
                                                         <Path.Data>

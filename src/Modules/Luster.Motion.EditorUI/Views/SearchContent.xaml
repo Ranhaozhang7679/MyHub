@@ -20,6 +20,25 @@
         <Style x:Key="ModuleItemStyle" TargetType="ListBoxItem">
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Margin" Value="0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border
+                            x:Name="rootBorder"
+                            Padding="10"
+                            Background="{StaticResource BorderBrush}"
+                            CornerRadius="3">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="rootBorder" Property="Background" Value="{DynamicResource PrimaryBrush}" />
+                                <Setter Property="Foreground" Value="White" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </UserControl.Resources>
     <Grid x:Name="Grid_Search">
@@ -82,12 +101,7 @@
             </ListBox.ItemsPanel>
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <Border
-                        Padding="10"
-                        Background="{StaticResource BorderBrush}"
-                        CornerRadius="3">
-                        <TextBlock VerticalAlignment="Center" Text="{Binding Desc}" />
-                    </Border>
+                    <TextBlock VerticalAlignment="Center" Text="{Binding Desc}" />
                 </DataTemplate>
             </ListBox.ItemTemplate>
             <hc:Interaction.Triggers>

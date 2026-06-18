@@ -250,6 +250,7 @@ namespace Luster.Motion.EditorUI.ViewModel
             {
                 // 切换到模块所在层级
                 eventBus.OnLoaded(m.Parent, m);
+                eventBus.OnSelected(m);
             }
         }));
 

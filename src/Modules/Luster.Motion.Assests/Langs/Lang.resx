@@ -2874,6 +2874,9 @@
   <data name="LSMesUnLoad" xml:space="preserve">
     <value>MCH弹片测量数据上传</value>
   </data>
+  <data name="CableSNManager" xml:space="preserve">
+    <value>排线SN管理</value>
+  </data>
   <data name="TimerJudge" xml:space="preserve">
     <value>定时判断</value>
   </data>
@@ -3212,5 +3215,8 @@
   </data>
   <data name="SetModbusEx" xml:space="preserve">
     <value>设置Modbus</value>
+  </data>
+  <data name="ReadRobotSpeed" xml:space="preserve">
+    <value>读取机械手速度</value>
   </data>
 </root>
