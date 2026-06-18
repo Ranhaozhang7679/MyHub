@@ -90,10 +90,10 @@ namespace Luster.Motion.ReportUI.ViewModel
             set => SetProperty(ref _isChart2TimePosition, value);
         }
 
-        // 合并/分开显示：true=单图双 Y 轴叠加, false=上下双子图
+        // 合并/分开显示：true=单图双 Y 轴叠加, false=左右双子图
         private bool _isMergedView = true;
         /// <summary>
-        /// 是否合并显示（单图双 Y 轴）。false 时为上下双子图
+        /// 是否合并显示（单图双 Y 轴）。false 时为左右双子图
         /// </summary>
         public bool IsMergedView
         {
@@ -105,9 +105,21 @@ namespace Luster.Motion.ReportUI.ViewModel
                 RaisePropertyChanged();
                 RaisePropertyChanged(nameof(IsSplitView));
                 RaisePropertyChanged(nameof(MergeViewButtonText));
+                RaisePropertyChanged(nameof(MergedHeight));
+                RaisePropertyChanged(nameof(SplitHeight));
                 RedrawChart();
             }
         }
+
+        /// <summary>
+        /// 合并区域高度：合并模式下占满，分开模式下为 0
+        /// </summary>
+        public GridLength MergedHeight => IsMergedView ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
+
+        /// <summary>
+        /// 分开区域高度：分开模式下占满，合并模式下为 0
+        /// </summary>
+        public GridLength SplitHeight => IsMergedView ? new GridLength(0) : new GridLength(1, GridUnitType.Star);
 
         /// <summary>
         /// IsMergedView 反向，供 XAML 反向 Visibility 绑定
@@ -315,7 +327,7 @@ namespace Luster.Motion.ReportUI.ViewModel
 
         private DelegateCommand _toggleMergeViewCommand;
         /// <summary>
-        /// 切换显示模式：合并单图（双 Y 轴）/ 分开双子图（上下 Time-Press + Time-Position）
+        /// 切换显示模式：合并单图（双 Y 轴）/ 分开双子图（左右 Time-Press + Time-Position）
         /// </summary>
         public DelegateCommand ToggleMergeViewCommand =>
             _toggleMergeViewCommand ?? (_toggleMergeViewCommand = new DelegateCommand(() =>
@@ -628,10 +640,10 @@ namespace Luster.Motion.ReportUI.ViewModel
             }));
         }
 
-        // === 分开模式：上下双子图，共享 Time X 轴 ===
+        // === 分开模式：左右双子图，共享 Time X 轴 ===
         private void RedrawSplit(double timeMax, double pressMin, double pressMax, double positionMin, double positionMax, double pressAbsMax)
         {
-            // 上方子图：Time-Press（红）
+            // 左侧子图：Time-Press（红）
             var chart1Series = new List<ISeries>();
             if (_smoothCurveProcessingsEnabled)
             {
@@ -700,7 +712,7 @@ namespace Luster.Motion.ReportUI.ViewModel
 
             DrawStepAnnotations(chart1Series, _steps, pressMax, xMax);
 
-            // 下方子图：Time-Position（蓝，共享 Time X 轴）
+            // 右侧子图：Time-Position（蓝，共享 Time X 轴）
             var chart2Series = new List<ISeries>();
             foreach (var cachedValues in _rawTimePositionCache)
             {
