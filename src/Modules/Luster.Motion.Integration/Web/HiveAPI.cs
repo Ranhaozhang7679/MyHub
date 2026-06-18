@@ -64,6 +64,8 @@ namespace Luster.Motion.Integration.Web
         public string LastEventId { get; set; } = "";
         // 记录repair start时的报警码，用于report end判断周/月保养
         public string RepairStartAlarmCode { get; set; } = "";
+        // 记录repair start时的state_change_time，用于repair end窗口CheckCard传时间戳
+        public string RepairStartChangeTime { get; set; } = "";
     }
 
     // ==================== 新增：Hive事件链追踪 ====================
@@ -1038,6 +1040,7 @@ namespace Luster.Motion.Integration.Web
                                 _hiveState.HiveRepairState = dstRepairState;
                                 _hiveState.HiveCurrentCode = alarmCode;
                                 _hiveState.RepairStartAlarmCode = alarmCode; // 记录repair start的报警码
+                                _hiveState.RepairStartChangeTime = DateTime.Now.ToString("yyyy-MM-dd'T'HH:mm:ss.ff+0800"); // 同步记录repair start时间，随SaveHiveState落盘，供repair end窗口CheckCard使用
                                 statusMessage = "repair start";
                             }
                             else
