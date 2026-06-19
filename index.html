@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>网页计数器</title>
+  <style>
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      color: #1f2937;
+    }
+
+    main {
+      padding: 32px;
+      text-align: center;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+    }
+
+    h1 {
+      margin: 0 0 24px;
+      font-size: 28px;
+    }
+
+    #count {
+      margin: 0 0 24px;
+      font-size: 64px;
+      font-weight: 700;
+    }
+
+    button {
+      padding: 12px 24px;
+      border: 0;
+      border-radius: 999px;
+      font-size: 18px;
+      color: #ffffff;
+      background: #2563eb;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>网页计数器</h1>
+    <p id="count" aria-live="polite">0</p>
+    <button id="increment" type="button">点击 +1</button>
+  </main>
+
+  <script>
+    const countElement = document.getElementById('count');
+    const incrementButton = document.getElementById('increment');
+    let count = 0;
+
+    countElement.textContent = String(count);
+    incrementButton.addEventListener('click', () => {
+      count += 1;
+      countElement.textContent = String(count);
+    });
+  </script>
+</body>
+</html>
