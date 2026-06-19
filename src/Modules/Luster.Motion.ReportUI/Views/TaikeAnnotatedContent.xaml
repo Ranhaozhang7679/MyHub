@@ -48,6 +48,9 @@
                         IsChecked="{Binding OnlyShowPositiveIsEnabled, Mode=TwoWay}" />
                 <CheckBox Content="平滑曲线处理"
                         IsChecked="{Binding SmoothCurveProcessingsEnabled, Mode=TwoWay}" />
+                <CheckBox Content="去除异常数据"
+                        IsChecked="{Binding RemoveAnomalyEnabled, Mode=TwoWay}"
+                        Margin="6,0,0,0" />
                 <TextBlock Text="平滑窗口:" VerticalAlignment="Center" Margin="15,0,5,0" Foreground="#555"/>
                 <Slider x:Name="SliderWindow" Width="150" VerticalAlignment="Center"
                         Minimum="3" Maximum="51" Value="{Binding SliderValue}" IsSnapToTickEnabled="True" TickFrequency="2"/>
@@ -71,7 +74,7 @@
                                    Style="{StaticResource DateTimePickerExtend}" />
             </StackPanel>
 
-            <!-- 第二行：合并/分开切换 + Position 参数 -->
+            <!-- 第二行：合并/分开切换 + Position 参数 + 分组下拉 -->
             <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
                 <Button Content="{Binding MergeViewButtonText}" Command="{Binding ToggleMergeViewCommand}"
                         MinWidth="80" Height="22" Margin="0,0,6,0" FontSize="11" Padding="4,0"
@@ -85,6 +88,12 @@
                 <TextBox Text="{Binding YAxisMax2, UpdateSourceTrigger=PropertyChanged}"
                          Width="50" Height="22" VerticalAlignment="Center"
                          VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="11" />
+                <TextBlock Text="分组:" VerticalAlignment="Center" FontSize="11" Margin="12,0,4,0"
+                           Foreground="#57a9fd" FontWeight="Bold" />
+                <ComboBox ItemsSource="{Binding GroupKeys}"
+                          SelectedItem="{Binding SelectedGroupKey, Mode=TwoWay}"
+                          Width="320" Height="22" VerticalAlignment="Center"
+                          FontSize="11" />
             </StackPanel>
         </StackPanel>
 

@@ -176,5 +176,11 @@ namespace Luster.Motion.ReportUI.Model
 
         /// <summary>是否合并显示（单图双 Y 轴）；false 为左右双子图</summary>
         public bool IsMergedView { get; set; } = true;
+
+        /// <summary>
+        /// 是否去除异常数据（点数超过 AnomalyMaxPoints 或 Time 超过 AnomalyMaxTimeMs 的 CSV 视为异常并跳过）。
+        /// 默认 false——保留全部数据，由用户主动开启。
+        /// </summary>
+        public bool RemoveAnomalyEnabled { get; set; } = false;
     }
 }
