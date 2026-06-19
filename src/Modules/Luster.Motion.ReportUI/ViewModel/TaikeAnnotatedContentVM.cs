@@ -363,6 +363,33 @@ namespace Luster.Motion.ReportUI.ViewModel
                     ScheduleSaveChartSettings();
             }
         }
+
+        // ===== 异常数据过滤 =====
+        // 现场偶发采集异常：Time 飙到几十秒甚至几十分钟（采集卡死或传感器异常）。
+        // 正常 CSV 采集时间 < 5s（不同工位采样频率不同，点数差异大：CGHP1 ~50 点、FIFO ~2500 点都正常）。
+        // 所以用 Time 作为主判据；点数阈值仅作兜底防范极端情况。
+        // 阈值 10s 远高于正常（5s 内），能精准命中 24s+ 的异常数据。
+        private const int AnomalyMaxPoints = 5000;
+        private const double AnomalyMaxTimeMs = 10_000;
+
+        private bool _removeAnomalyEnabled = false;
+        /// <summary>
+        /// 是否去除异常数据。默认 false——保留全部数据。
+        /// 开启后按 AnomalyMaxPoints/AnomalyMaxTimeMs 双判据跳过异常 CSV。
+        /// 切换后立即重绘当前分组（数据已缓存到 _groupedCache，无需重新导入）。
+        /// </summary>
+        public bool RemoveAnomalyEnabled
+        {
+            get => _removeAnomalyEnabled;
+            set
+            {
+                if (SetProperty(ref _removeAnomalyEnabled, value))
+                {
+                    ScheduleSaveChartSettings();
+                    ApplyGroupSelection();
+                }
+            }
+        }
         // 原始数据缓存
         private List<List<ObservablePoint>> _rawDataCache = new List<List<ObservablePoint>>();
         private List<List<ObservablePoint>> _rawPositionPressCache = new List<List<ObservablePoint>>();
@@ -374,6 +401,60 @@ namespace Luster.Motion.ReportUI.ViewModel
         private double _cachedPressMax = 1.0;
         private double _cachedPositionMin = 0;
         private double _cachedPositionMax = 1.0;
+
+        // ===== 分组筛选：导入后按 (工位, 日期, 工序) 三元组分组，下拉框切换 =====
+        // 路径模式: {root}\{工位}\{日期yyyyMMdd}\{时间戳}\{SN} {工序}.csv.csv
+        // 分组键 = "工位 / 日期 / 工序"; 显示键 = 分组键 + "  (N 条)"
+        private readonly Dictionary<string, GroupCurves> _groupedCache = new Dictionary<string, GroupCurves>();
+        private readonly Dictionary<string, string> _displayToRawKey = new Dictionary<string, string>();
+
+        private List<string> _groupKeys = new List<string>();
+        /// <summary>
+        /// 分组下拉框的选项列表（显示用，含条数）
+        /// </summary>
+        public List<string> GroupKeys
+        {
+            get => _groupKeys;
+            set => SetProperty(ref _groupKeys, value);
+        }
+
+        private string _selectedGroupKey;
+        /// <summary>
+        /// 当前选中的分组（显示键）。切换时触发 ApplyGroupSelection 重新装载该分组数据并重绘。
+        /// </summary>
+        public string SelectedGroupKey
+        {
+            get => _selectedGroupKey;
+            set
+            {
+                if (SetProperty(ref _selectedGroupKey, value))
+                    ApplyGroupSelection();
+            }
+        }
+
+        /// <summary>
+        /// 一条 CSV 曲线的解析结果（含异常标记）。导入时全部保留，绘制时按 RemoveAnomalyEnabled 过滤。
+        /// </summary>
+        private class CurveEntry
+        {
+            public List<ObservablePoint> TimePress;
+            public List<ObservablePoint> PosPress;
+            public List<ObservablePoint> TimePos;
+            public double TimeMax;
+            public double PressMin;
+            public double PressMax;
+            public double PositionMin;
+            public double PositionMax;
+            public bool IsAnomaly;
+        }
+
+        /// <summary>
+        /// 一个分组下的所有曲线 Entry
+        /// </summary>
+        private class GroupCurves
+        {
+            public List<CurveEntry> Entries = new List<CurveEntry>();
+        }
 
         public TaikeAnnotatedContentVM() { }
 
@@ -496,14 +577,8 @@ namespace Luster.Motion.ReportUI.ViewModel
                 }
             }
 
-            _rawDataCache.Clear();
-            _rawPositionPressCache.Clear();
-            _rawTimePositionCache.Clear();
-            double timeMax = double.MinValue;
-            double pressMin = double.MaxValue;
-            double pressMax = double.MinValue;
-            double positionMin = double.MaxValue;
-            double positionMax = double.MinValue;
+            _groupedCache.Clear();
+            _displayToRawKey.Clear();
 
             foreach (var file in files)
             {
@@ -511,6 +586,11 @@ namespace Luster.Motion.ReportUI.ViewModel
                 var values = new List<ObservablePoint>();
                 var posPressValues = new List<ObservablePoint>();
                 var timePosValues = new List<ObservablePoint>();
+                double timeMax = double.MinValue;
+                double pressMin = double.MaxValue;
+                double pressMax = double.MinValue;
+                double positionMin = double.MaxValue;
+                double positionMax = double.MinValue;
 
                 foreach (var item in pressModels)
                 {
@@ -525,10 +605,146 @@ namespace Luster.Motion.ReportUI.ViewModel
                     if (item.Position > positionMax) positionMax = item.Position;
                 }
 
-                _rawDataCache.Add(values);
-                _rawPositionPressCache.Add(posPressValues);
-                _rawTimePositionCache.Add(timePosValues);
+                // 异常判据：点数过多 OR Time 范围过大（典型异常是 1.9 万点、Time 飙到百万 ms）
+                bool isAnomaly = pressModels.Count > AnomalyMaxPoints || timeMax > AnomalyMaxTimeMs;
+
+                var entry = new CurveEntry
+                {
+                    TimePress = values,
+                    PosPress = posPressValues,
+                    TimePos = timePosValues,
+                    TimeMax = timeMax,
+                    PressMin = pressMin,
+                    PressMax = pressMax,
+                    PositionMin = positionMin,
+                    PositionMax = positionMax,
+                    IsAnomaly = isAnomaly,
+                };
+
+                string rawKey = ParseGroupKey(file);
+                if (!_groupedCache.TryGetValue(rawKey, out var bucket))
+                {
+                    bucket = new GroupCurves();
+                    _groupedCache[rawKey] = bucket;
+                }
+                bucket.Entries.Add(entry);
             }
+
+            // 生成显示键列表（含 正常/总数 条数），并建立 显示键 → 原始键 反向映射
+            var displayKeys = new List<string>();
+            foreach (var rawKey in _groupedCache.Keys.OrderBy(k => k))
+            {
+                var bucket = _groupedCache[rawKey];
+                int total = bucket.Entries.Count;
+                int normal = bucket.Entries.Count(e => !e.IsAnomaly);
+                // 没有异常时只显示总数；有异常时显示 "正常/总数"
+                string countPart = (normal == total) ? $"{total} 条" : $"{normal}/{total} 条";
+                string display = $"{rawKey}  ({countPart})";
+                _displayToRawKey[display] = rawKey;
+                displayKeys.Add(display);
+            }
+            GroupKeys = displayKeys;
+
+            // 自动加载步骤配置
+            LoadSteps();
+
+            // 默认选第一项；为空则清空当前显示
+            // 显式 ApplyGroupSelection 兜底：若 SelectedGroupKey 与上次相同（如重复导入同文件夹），
+            // setter 的 SetProperty 返回 false 不会触发重绘
+            SelectedGroupKey = displayKeys.Count > 0 ? displayKeys[0] : null;
+            ApplyGroupSelection();
+        }
+
+        /// <summary>
+        /// 从 CSV 路径解析分组键。
+        /// - 第一个 8 位纯数字目录作为日期，其父目录作为工位
+        /// - 若日期目录下紧跟 NUM1/NUM2 段（FIFO/FCLP 等工位有此结构），把工位号纳入键：工位 / 日期 / 工位号 / 工序
+        /// - 否则键为：工位 / 日期 / 工序
+        /// 文件名空格后的部分作为工序；后缀支持 .csv 和 .csv.csv；解析失败的字段回退为 "_unknown"。
+        /// </summary>
+        private static string ParseGroupKey(string csvPath)
+        {
+            if (string.IsNullOrEmpty(csvPath)) return "_unknown / _unknown / _unknown";
+
+            string normalized = csvPath.Replace('/', '\\');
+            var parts = normalized.Split('\\');
+            string date = null;
+            int dateIdx = -1;
+            for (int i = 0; i < parts.Length; i++)
+            {
+                string seg = parts[i];
+                if (seg.Length == 8 && long.TryParse(seg, out _))
+                {
+                    date = seg;
+                    dateIdx = i;
+                    break;
+                }
+            }
+            string station = (dateIdx >= 1) ? parts[dateIdx - 1] : null;
+
+            // 日期目录后紧跟的 NUM1/NUM2 段（FIFO 等：FIFO/{date}/{NUM1|NUM2}/{SN}/file）
+            string stationNum = null;
+            if (dateIdx >= 0 && dateIdx + 1 < parts.Length)
+            {
+                string nextSeg = parts[dateIdx + 1];
+                if (nextSeg.Equals("NUM1", StringComparison.OrdinalIgnoreCase) ||
+                    nextSeg.Equals("NUM2", StringComparison.OrdinalIgnoreCase))
+                {
+                    stationNum = nextSeg.ToUpperInvariant();
+                }
+            }
+
+            string fname = Path.GetFileName(csvPath);
+            string lower = fname.ToLowerInvariant();
+            if (lower.EndsWith(".csv.csv")) fname = fname.Substring(0, fname.Length - 8);
+            else if (lower.EndsWith(".csv")) fname = fname.Substring(0, fname.Length - 4);
+
+            string step = null;
+            int spaceIdx = fname.IndexOf(' ');
+            if (spaceIdx >= 0) step = fname.Substring(spaceIdx + 1).Trim();
+
+            string stationPart = station ?? "_unknown";
+            string datePart = date ?? "_unknown";
+            string stepPart = step ?? "_unknown";
+
+            return stationNum != null
+                ? $"{stationPart} / {datePart} / {stationNum} / {stepPart}"
+                : $"{stationPart} / {datePart} / {stepPart}";
+        }
+
+        /// <summary>
+        /// 响应分组下拉切换 / 异常过滤开关切换：按当前 RemoveAnomalyEnabled 决定是否包含异常 Entry，
+        /// 装入 _rawDataCache 等，重算轴范围并重绘。
+        /// </summary>
+        private void ApplyGroupSelection()
+        {
+            if (string.IsNullOrEmpty(SelectedGroupKey) ||
+                !_displayToRawKey.TryGetValue(SelectedGroupKey, out var rawKey) ||
+                !_groupedCache.TryGetValue(rawKey, out var bucket))
+            {
+                _rawDataCache = new List<List<ObservablePoint>>();
+                _rawPositionPressCache = new List<List<ObservablePoint>>();
+                _rawTimePositionCache = new List<List<ObservablePoint>>();
+                _rawDataCache1 = new List<List<ObservablePoint>>();
+                return;
+            }
+
+            IEnumerable<CurveEntry> entries = bucket.Entries;
+            if (_removeAnomalyEnabled)
+                entries = entries.Where(e => !e.IsAnomaly);
+
+            var entryList = entries.ToList();
+            _rawDataCache = entryList.Select(e => e.TimePress).ToList();
+            _rawPositionPressCache = entryList.Select(e => e.PosPress).ToList();
+            _rawTimePositionCache = entryList.Select(e => e.TimePos).ToList();
+            _rawDataCache1 = new List<List<ObservablePoint>>();
+
+            double timeMax = entryList.Count > 0 ? entryList.Max(e => e.TimeMax) : 0;
+            double pressMin = entryList.Count > 0 ? entryList.Min(e => e.PressMin) : double.MaxValue;
+            double pressMax = entryList.Count > 0 ? entryList.Max(e => e.PressMax) : double.MinValue;
+            double positionMin = entryList.Count > 0 ? entryList.Min(e => e.PositionMin) : double.MaxValue;
+            double positionMax = entryList.Count > 0 ? entryList.Max(e => e.PositionMax) : double.MinValue;
+
             if (timeMax <= 0) timeMax = 1000;
             if (pressMin == double.MaxValue) pressMin = 0;
             if (pressMax <= pressMin) pressMax = pressMin + 1.0;
@@ -540,9 +756,6 @@ namespace Luster.Motion.ReportUI.ViewModel
             _cachedPressMax = pressMax;
             _cachedPositionMin = positionMin;
             _cachedPositionMax = positionMax;
-
-            // 自动加载步骤配置
-            LoadSteps();
 
             RedrawChart();
         }
@@ -652,6 +865,7 @@ namespace Luster.Motion.ReportUI.ViewModel
                 SmoothCurveProcessingsEnabled = s.SmoothCurveProcessingsEnabled;
                 SliderValue = s.SliderValue;
                 IsMergedView = s.IsMergedView;
+                RemoveAnomalyEnabled = s.RemoveAnomalyEnabled;
             }
             catch (Exception ex)
             {
@@ -718,6 +932,7 @@ namespace Luster.Motion.ReportUI.ViewModel
                     SmoothCurveProcessingsEnabled = SmoothCurveProcessingsEnabled,
                     SliderValue = SliderValue,
                     IsMergedView = IsMergedView,
+                    RemoveAnomalyEnabled = RemoveAnomalyEnabled,
                 };
                 allConfigs[StepAnnotationConfig.DefaultKey] = current;
                 StepAnnotationConfig.SaveAll(recipePath, allConfigs);
@@ -808,6 +1023,10 @@ namespace Luster.Motion.ReportUI.ViewModel
             double xStep1 = XAxisStep > 0 ? XAxisStep : 50;
             double yStep1 = YAxisStep > 0 ? YAxisStep : 0.05;
             double yMax1 = YAxisMax > 0 ? YAxisMax : pressAbsMax * 1.05;
+            // 自适应：timeMax 异常大时（如异常数据 190 万 ms）用户设的小步长会产生过多刻度,
+            // 用 CalculateNiceStep 估算 ~12 个刻度的步长作为下限,避免标签挤成一团
+            double xNiceStep = CalculateNiceStep(timeMax, 12);
+            if (xStep1 < xNiceStep) xStep1 = xNiceStep;
             double xMax = Math.Ceiling(timeMax / xStep1) * xStep1 + xStep1;
 
             double niceStep1 = CalculateNiceStep(yMax1, 8);
@@ -913,6 +1132,10 @@ namespace Luster.Motion.ReportUI.ViewModel
             double xStep1 = XAxisStep > 0 ? XAxisStep : 50;
             double yStep1 = YAxisStep > 0 ? YAxisStep : 0.05;
             double yMax1 = YAxisMax > 0 ? YAxisMax : pressAbsMax * 1.05;
+            // 自适应：timeMax 异常大时（如异常数据 190 万 ms）用户设的小步长会产生过多刻度,
+            // 用 CalculateNiceStep 估算 ~12 个刻度的步长作为下限,避免标签挤成一团
+            double xNiceStep = CalculateNiceStep(timeMax, 12);
+            if (xStep1 < xNiceStep) xStep1 = xNiceStep;
             double xMax = Math.Ceiling(timeMax / xStep1) * xStep1 + xStep1;
 
             double niceStep1 = CalculateNiceStep(yMax1, 8);
