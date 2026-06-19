@@ -535,8 +535,8 @@ namespace Luster.Module.Motion.Device.Functions
             string dateStr = now.ToString("yyyyMMdd");
             string timeStr = now.ToString("HHmmss");
             string FileDir = @"D:\力控数据存储\" + dateStr + "\\" + SlaveNum.ToString() + "\\" + GStringVal + "\\";
-            string filename = GStringVal;
-            string picName = GStringVal;
+            string filename = GStringVal + "_" + timeStr;
+            string picName = GStringVal + "_" + timeStr;
             string filenameForce = "Force_Arc_" + timeStr;
             string filenameMove = "Move_Arc_" + timeStr;
 
