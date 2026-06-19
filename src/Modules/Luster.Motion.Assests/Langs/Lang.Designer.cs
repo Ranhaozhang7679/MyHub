@@ -8060,6 +8060,15 @@ namespace Luster.Motion.Assests.Langs {
                 return ResourceManager.GetString("TaikeAnnotatedCurve", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   查找类似 大寰音圈电机曲线监控 的本地化字符串。
+        /// </summary>
+        public static string DHVCMMonitor {
+            get {
+                return ResourceManager.GetString("DHVCMMonitor", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   查找类似 泰科统计 的本地化字符串。

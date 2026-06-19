@@ -321,17 +321,27 @@ namespace TaiKeCommon
             }
             axis_y.Name = titleAxisY;
 
+            // X/Y 轴上限根据实际数据自适应：避免硬编码上限导致数据压顶或分辨率浪费
+            // type==0: X=时间(interval*i), Y=扭矩 ; type==1: X=角度, Y=扭矩
+            double[] xAxisData = (type == 0)
+                ? Enumerable.Range(0, length).Select(i => (double)(interval * i)).ToArray()
+                : Angle_double;
+            double axis_x_max = ComputeAxisMaxFromZero(xAxisData, fallbackMax: 2500, minStep: 200);
+            double axis_y_max = ComputeAxisMaxFromZero(torq_double, fallbackMax: 1.0, minStep: 0.1);
+
             axis_x.NameTextSize = 16;
             axis_x.TextSize = 16;
             axis_x.MinLimit = 0;
-            axis_x.MaxLimit = 2500;
+            axis_x.MaxLimit = axis_x_max;
+            axis_x.MinStep = 200;
 
 
 
             axis_y.NameTextSize = 16;
             axis_x.TextSize = 16;
             axis_y.MinLimit = 0;
-            axis_y.MaxLimit = 1.0;
+            axis_y.MaxLimit = axis_y_max;
+            axis_y.MinStep = 0.1;
 
             chart.XAxes = new List<Axis>() { axis_x };
             chart.YAxes = new List<Axis>() { axis_y };
@@ -500,10 +510,11 @@ namespace TaiKeCommon
             axis_yEnd.NameTextSize = 16;
             axis_yEnd.TextSize = 16;
             axis_yEnd.MinLimit = 0;
-            axis_yEnd.MaxLimit = 2.5;
+            // Y 轴(Press)上限自适应：基于实际压力数据 + 余量，避免硬编码 2.5 导致曲线只占一半高度
+            axis_yEnd.MaxLimit = ComputeAxisMaxFromZero(Press, fallbackMax: 2.5, minStep: 0.2);
             axis_yEnd.ShowSeparatorLines = true;
             axis_yEnd.SeparatorsPaint = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
-            axis_yEnd.MinStep = 0.5;
+            axis_yEnd.MinStep = 0.2;
             axis_yEnd.Position = AxisPosition.Start;
 
 
@@ -629,12 +640,16 @@ namespace TaiKeCommon
             axis_x.NameTextSize = 16;
             axis_x.TextSize = 16;
             axis_x.MinLimit = 0;
-            axis_x.MaxLimit = 5000;
+            // X 轴(Time)上限自适应：基于实际时间数据 + 余量，避免硬编码 5000 浪费分辨率
+            axis_x.MaxLimit = ComputeAxisMaxFromZero(Time, fallbackMax: 5000, minStep: 500);
+            axis_x.MinStep = 500;
 
 
             axis_y.NameTextSize = 16;
             axis_y.TextSize = 16;
-            axis_y.MaxLimit = 2;
+            // Y 轴(Press)上限自适应：基于实际压力数据 + 余量，避免硬编码 2.0 导致压顶
+            axis_y.MaxLimit = ComputeAxisMaxFromZero(Press, fallbackMax: 2.0, minStep: 0.2);
+            axis_y.MinStep = 0.2;
             axis_y.MinLimit = 0;
 
             chart.XAxes = new List<Axis>() { axis_x };
@@ -799,8 +814,11 @@ namespace TaiKeCommon
             // 计算坐标轴范围
             //double xMin = xData.Min(), xMax = xData.Max();
             //double yMin = yData.Min(), yMax = yData.Max();
-            double xMin = 0, xMax = 2500;
-            double yMin = 0, yMax = 0.6;
+            double xMin = 0;
+            double yMin = 0;
+            // 角度 X 轴 / 扭矩 Y 轴上限自适应，避免硬编码导致数据压顶或分辨率浪费
+            double xMax = ComputeAxisMaxFromZero(xData, fallbackMax: 2500, minStep: 200);
+            double yMax = ComputeAxisMaxFromZero(yData, fallbackMax: 0.6, minStep: 0.05);
 
             // 防止极端数据导致坐标轴重叠
             if (xMax - xMin < 1e-6) { xMax = xMin + 1; }
@@ -816,7 +834,7 @@ namespace TaiKeCommon
                 // X轴
                 //canvas.DrawLine(marginLeft, height - marginBottom, marginLeft + plotWidth, height - marginBottom, axisPaint);
 
-                int angleStep = 200; // 可根据axis_xEnd.MinStep调整
+                int angleStep = (int)Math.Max(100, NiceNumber(xMax / 6.0)); // 角度刻度自适应，约 6 个主刻度
                 for (double x = Math.Ceiling(xMin / angleStep) * angleStep; x <= xMax; x += angleStep)
                 {
                     float px = marginLeft + (float)((x - xMin) / (xMax - xMin) * plotWidth);
@@ -827,7 +845,7 @@ namespace TaiKeCommon
                 // Y轴
                 //canvas.DrawLine(marginLeft, height - marginBottom, marginLeft, marginTop, axisPaint);
 
-                double yStep = 0.2; // 可根据axis_y.MinStep调整
+                double yStep = Math.Max(0.05, NiceNumber(yMax / 5.0)); // 扭矩刻度自适应，约 5 个主刻度
                 for (double y = Math.Ceiling(yMin / yStep) * yStep; y <= yMax; y += yStep)
                 {
                     float py = height - marginBottom - (float)((y - yMin) / (yMax - yMin) * plotHeight);
@@ -1018,9 +1036,10 @@ namespace TaiKeCommon
             double timeMaxRaw = time != null && time.Length > 0 ? time.Max() : 0;
             double timeMin = 0, timeMax = Math.Ceiling((timeMaxRaw + timeAxisStep) / (double)timeAxisStep) * timeAxisStep;
             if (timeMax < timeAxisStep * 2) timeMax = timeAxisStep * 2;
-            double angleMin = 0, angleMax = 3500;
-            double torqueMin = 0, torqueMax = 0.5;
-            double pressMin = 0, pressMax = 2.5;
+            // 角度/扭矩/压力轴上限自适应：避免硬编码导致数据压顶或分辨率浪费
+            double angleMin = 0, angleMax = ComputeAxisMaxFromZero(angle, fallbackMax: 3500, minStep: 200);
+            double torqueMin = 0, torqueMax = ComputeAxisMaxFromZero(torque, fallbackMax: 0.5, minStep: 0.05);
+            double pressMin = 0, pressMax = ComputeAxisMaxFromZero(press, fallbackMax: 2.5, minStep: 0.2);
 
             // 防止极端数据导致坐标轴重叠
             if (timeMax - timeMin < 1e-6) { timeMax = timeMin + 1; }
@@ -1196,29 +1215,33 @@ namespace TaiKeCommon
 
             bool hasPosData = posData != null && posData.Length > 0;
 
+            // 布局：上下两个独立子图共享 X 轴（参考现场参考图样式）
             int width = 900;
-            int marginLeft = 70, marginRight = hasPosData ? 70 : 30, marginTop = 40, marginBottom = 50;
+            int marginLeft = 80, marginRight = 40, marginTop = 60, marginBottom = 60;
             int plotWidth = width - marginLeft - marginRight;
-            int plotHeight = 450;
-            int height = marginTop + plotHeight + marginBottom;
+            int subPlotHeight = 220;             // 每个子图绘图区高度
+            int subGap = 30;                     // 子图间距
+            int totalPlotHeight = hasPosData ? (subPlotHeight * 2 + subGap) : subPlotHeight;
+            int height = marginTop + totalPlotHeight + marginBottom;
 
-            double timeMin = 0;
+            // X 轴范围（两个子图共享）
             double timeMax = timeData.Max();
-            if (timeMax - timeMin < 1e-6) timeMax = timeMin + 1;
-
-            // 固定静态Y轴范围：左右轴均关于0对称，保证原点(0)落在同一水平线上
-            // 左轴(Force)
-            double pressMax = 0.5;
-            double pressMin = -pressMax;
-            double pressStep = 0.1;         // 左轴固定刻度
-            // 右轴(Move)
-            double posMax = 8.0;
-            double posMin = -posMax;
-            double posStep = 2.0;           // 右轴固定刻度
-
-            // X轴(时间)固定刻度（timeMax仍取自数据以容纳全部曲线，避免截断）
-            double timeStep = 500;
+            if (timeMax < 1e-6) timeMax = 1;
+            double timeStep = NiceNumber(timeMax / 6.0);
+            if (timeStep < 1) timeStep = 1;
             timeMax = Math.Ceiling(timeMax / timeStep) * timeStep;
+
+            // Y 轴自适应
+            ComputeNiceAxis(pressData, out double pressMin, out double pressMax, out double pressStep);
+            double posMin = -1, posMax = 1, posStep = 0.5;
+            if (hasPosData)
+                ComputeNiceAxis(posData, out posMin, out posMax, out posStep);
+
+            // 子图 Y 坐标
+            int topY1 = marginTop;
+            int botY1 = marginTop + subPlotHeight;
+            int topY2 = botY1 + subGap;
+            int botY2 = topY2 + subPlotHeight;
 
             using (var bitmap = new SKBitmap(width, height))
             using (var canvas = new SKCanvas(bitmap))
@@ -1227,151 +1250,39 @@ namespace TaiKeCommon
 
                 var gridPaint = new SKPaint { Color = SKColors.Black, StrokeWidth = 1 };
                 var tickPaint = new SKPaint { Color = SKColors.Black, TextSize = 14, IsAntialias = true };
-                var tickPaintBlue = new SKPaint { Color = SKColors.Black, TextSize = 14, IsAntialias = true };
-                var tickPaintRed = new SKPaint { Color = SKColors.Black, TextSize = 14, IsAntialias = true };
                 var labelPaint = new SKPaint { Color = SKColors.Black, TextSize = 16, IsAntialias = true };
-                var labelPaintRed = new SKPaint { Color = SKColors.Black, TextSize = 16, IsAntialias = true };
-                var curvePaint = new SKPaint { Color = SKColors.Blue, StrokeWidth = 2, IsAntialias = true };
-                var curvePaintRed = new SKPaint { Color = SKColors.Red, StrokeWidth = 2, IsAntialias = true };
-                var axisPaint = new SKPaint { Color = SKColors.Black, StrokeWidth = 2, IsAntialias = true };
-                var axisPaintBlue = new SKPaint { Color = SKColors.Black, StrokeWidth = 2, IsAntialias = true };
-                var axisPaintRed = new SKPaint { Color = SKColors.Black, StrokeWidth = 2, IsAntialias = true };
-
-                int topY = marginTop;
-                int botY = marginTop + plotHeight;
-
-                // ===== 标题 =====
                 var titlePaint = new SKPaint { Color = SKColors.Black, TextSize = 20, IsAntialias = true };
-                canvas.DrawText("Force_Arc&&Move_Arc", marginLeft + plotWidth / 2 - 120, topY - 10, titlePaint);
+                var curvePaintRed = new SKPaint { Color = SKColors.Red, StrokeWidth = 2, IsAntialias = true };
+                var curvePaintBlue = new SKPaint { Color = SKColors.Blue, StrokeWidth = 2, IsAntialias = true };
+                var axisPaint = new SKPaint { Color = SKColors.Black, StrokeWidth = 2, IsAntialias = true };
 
-                // ===== X轴网格和刻度 =====
-                for (double x = 0; x <= timeMax; x += timeStep)
-                {
-                    float px = marginLeft + (float)(x / timeMax * plotWidth);
-                    canvas.DrawLine(px, topY, px, botY, gridPaint);
-                    canvas.DrawLine(px, botY, px, botY + 5, axisPaint);   // X轴主刻度线
-                    canvas.DrawText(x.ToString("0"), px - 10, botY + 18, tickPaint);
-                }
+                // 总标题
+                canvas.DrawText("Force_Arc&&Move_Arc", marginLeft + plotWidth / 2 - 120, marginTop - 25, titlePaint);
 
-                // X轴次刻度线（细分）
-                double timeMinorStep = 100;
-                for (double x = 0; x <= timeMax + 1e-9; x += timeMinorStep)
-                {
-                    if (Math.Abs(x - Math.Round(x / timeStep) * timeStep) < 1e-6) continue; // 跳过主刻度
-                    float px = marginLeft + (float)(x / timeMax * plotWidth);
-                    canvas.DrawLine(px, botY, px, botY + 3, axisPaint);
-                }
+                // 上方子图：Force（不画 X 轴刻度数字）
+                DrawPressureSubPlot(canvas, timeData, pressData,
+                    marginLeft, plotWidth, topY1, botY1,
+                    timeMax, timeStep,
+                    pressMin, pressMax, pressStep,
+                    "Force(Kgf)", "Force_Arc",
+                    curvePaintRed, gridPaint, tickPaint, labelPaint, axisPaint,
+                    drawXLabels: false);
 
-                // ===== 左Y轴（压力）网格和刻度 =====
-                for (double y = Math.Ceiling(pressMin / pressStep) * pressStep; y <= pressMax + 1e-9; y += pressStep)
-                {
-                    float py = botY - (float)((y - pressMin) / (pressMax - pressMin) * plotHeight);
-                    canvas.DrawLine(marginLeft, py, marginLeft + plotWidth, py, gridPaint);
-                    canvas.DrawLine(marginLeft - 5, py, marginLeft, py, axisPaint);   // 左Y轴主刻度线
-                    canvas.DrawText(y.ToString("0.##"), marginLeft - 50, py + 5, tickPaint);
-                }
-
-                // 左Y轴次刻度线（细分）
-                double pressMinorStep = 0.02;
-                for (double y = pressMin; y <= pressMax + 1e-9; y += pressMinorStep)
-                {
-                    if (Math.Abs(y - Math.Round(y / pressStep) * pressStep) < 1e-6) continue;
-                    float py = botY - (float)((y - pressMin) / (pressMax - pressMin) * plotHeight);
-                    canvas.DrawLine(marginLeft - 3, py, marginLeft, py, axisPaint);
-                }
-
-                var yLabelPaint = new SKPaint { Color = SKColors.Black, TextSize = 16, IsAntialias = true };
-
-                // 左Y轴标签
-                canvas.Save();
-                canvas.RotateDegrees(-90, marginLeft - 55, topY + plotHeight / 2);
-                canvas.DrawText("Force(Kgf)", marginLeft - 55, topY + plotHeight / 2, yLabelPaint);
-                canvas.Restore();
-
-                // ===== 右Y轴（位置）刻度 =====
+                // 下方子图：Move（带 X 轴刻度数字和标签）
                 if (hasPosData)
                 {
-                    for (double y = Math.Ceiling(posMin / posStep) * posStep; y <= posMax + 1e-9; y += posStep)
-                    {
-                        float py = botY - (float)((y - posMin) / (posMax - posMin) * plotHeight);
-                        canvas.DrawLine(marginLeft + plotWidth, py, marginLeft + plotWidth + 5, py, axisPaint);   // 右Y轴主刻度线
-                        canvas.DrawText(y.ToString("0.##"), marginLeft + plotWidth + 5, py + 5, tickPaint);
-                    }
-
-                    // 右Y轴次刻度线（细分）
-                    double posMinorStep = 0.5;
-                    for (double y = posMin; y <= posMax + 1e-9; y += posMinorStep)
-                    {
-                        if (Math.Abs(y - Math.Round(y / posStep) * posStep) < 1e-6) continue;
-                        float py = botY - (float)((y - posMin) / (posMax - posMin) * plotHeight);
-                        canvas.DrawLine(marginLeft + plotWidth, py, marginLeft + plotWidth + 3, py, axisPaint);
-                    }
-
-                    // 右Y轴标签
-                    canvas.Save();
-                    canvas.RotateDegrees(90, marginLeft + plotWidth + 55, topY + plotHeight / 2);
-                    canvas.DrawText("Move(mm)", marginLeft + plotWidth + 55, topY + plotHeight / 2, yLabelPaint);
-                    canvas.Restore();
+                    DrawPressureSubPlot(canvas, timeData, posData,
+                        marginLeft, plotWidth, topY2, botY2,
+                        timeMax, timeStep,
+                        posMin, posMax, posStep,
+                        "Move(mm)", "Move_Arc",
+                        curvePaintBlue, gridPaint, tickPaint, labelPaint, axisPaint,
+                        drawXLabels: true);
                 }
-
-                // ===== 坐标轴线 =====
-                // 左Y轴（蓝色）
-                canvas.DrawLine(marginLeft, topY, marginLeft, botY, axisPaint);
-                // X轴（黑色）
-                canvas.DrawLine(marginLeft, botY, marginLeft + plotWidth, botY, axisPaint);
-                // 右Y轴（红色）
-                if (hasPosData)
-                    canvas.DrawLine(marginLeft + plotWidth, topY, marginLeft + plotWidth, botY, axisPaint);
-
-                // X轴标签
-                var xLabelPaint = new SKPaint { Color = SKColors.Black, TextSize = 16, IsAntialias = true };
-                canvas.DrawText("Time(ms)", marginLeft + plotWidth / 2 - 30, botY + 40, xLabelPaint);
-
-                // ===== 画压力曲线（红色） =====
-                if (timeData.Length > 1 && pressData.Length == timeData.Length)
+                else
                 {
-                    for (int i = 1; i < timeData.Length; i++)
-                    {
-                        float x0 = marginLeft + (float)((timeData[i - 1]) / timeMax * plotWidth);
-                        float y0 = botY - (float)((pressData[i - 1] - pressMin) / (pressMax - pressMin) * plotHeight);
-                        float x1 = marginLeft + (float)((timeData[i]) / timeMax * plotWidth);
-                        float y1 = botY - (float)((pressData[i] - pressMin) / (pressMax - pressMin) * plotHeight);
-                        canvas.DrawLine(x0, y0, x1, y1, curvePaintRed);
-                    }
-                }
-
-                // ===== 画位置曲线（蓝色） =====
-                if (hasPosData)
-                {
-                    int posLen = Math.Min(timeData.Length, posData.Length);
-                    if (posLen > 1)
-                    {
-                        for (int i = 1; i < posLen; i++)
-                        {
-                            float x0 = marginLeft + (float)((timeData[i - 1]) / timeMax * plotWidth);
-                            float y0 = botY - (float)((posData[i - 1] - posMin) / (posMax - posMin) * plotHeight);
-                            float x1 = marginLeft + (float)((timeData[i]) / timeMax * plotWidth);
-                            float y1 = botY - (float)((posData[i] - posMin) / (posMax - posMin) * plotHeight);
-                            canvas.DrawLine(x0, y0, x1, y1, curvePaint);
-                        }
-                    }
-                }
-
-                // ===== 图例 =====
-                if (hasPosData)
-                {
-                    float legendX = marginLeft + plotWidth - 180;
-                    float legendY = topY + 20;
-                    var legendBgPaint = new SKPaint { Color = new SKColor(255, 255, 255, 220), IsAntialias = true };
-                    var legendBorderPaint = new SKPaint { Color = SKColors.Gray, StrokeWidth = 1, IsAntialias = true, Style = SKPaintStyle.Stroke };
-                    canvas.DrawRect(legendX - 10, legendY - 15, 180, 45, legendBgPaint);
-                    canvas.DrawRect(legendX - 10, legendY - 15, 180, 45, legendBorderPaint);
-                    // 压力图例
-                    canvas.DrawLine(legendX, legendY, legendX + 25, legendY, curvePaintRed);
-                    canvas.DrawText("Force_Arc", legendX + 30, legendY + 5, tickPaintRed);
-                    // 位置图例
-                    canvas.DrawLine(legendX, legendY + 20, legendX + 25, legendY + 20, curvePaint);
-                    canvas.DrawText("Move_Arc", legendX + 30, legendY + 25, tickPaintBlue);
+                    // 没有 pos 数据：直接给上方子图标 X 轴
+                    canvas.DrawText("Time(ms)", marginLeft + plotWidth / 2 - 30, botY1 + 42, labelPaint);
                 }
 
                 // 保存JPEG
@@ -1384,6 +1295,168 @@ namespace TaiKeCommon
                     data.SaveTo(stream);
                 }
             }
+        }
+
+        /// <summary>
+        /// 绘制单个子图（Y轴+X轴网格+曲线）。drawXLabels 控制是否绘制X轴刻度数字（仅最下层子图绘制）。
+        /// </summary>
+        private static void DrawPressureSubPlot(
+            SKCanvas canvas, double[] timeData, double[] valueData,
+            int marginLeft, int plotWidth, int topY, int botY,
+            double timeMax, double timeStep,
+            double vMin, double vMax, double vStep,
+            string yLabel, string curveName,
+            SKPaint curvePaint, SKPaint gridPaint, SKPaint tickPaint, SKPaint labelPaint, SKPaint axisPaint,
+            bool drawXLabels)
+        {
+            int plotHeight = botY - topY;
+            double vRange = vMax - vMin;
+            if (vRange < 1e-9) vRange = 1;
+
+            // ===== Y 轴主刻度 + 网格 =====
+            for (double y = Math.Ceiling(vMin / vStep) * vStep; y <= vMax + 1e-9; y += vStep)
+            {
+                float py = botY - (float)((y - vMin) / vRange * plotHeight);
+                canvas.DrawLine(marginLeft, py, marginLeft + plotWidth, py, gridPaint);
+                canvas.DrawLine(marginLeft - 5, py, marginLeft, py, axisPaint);
+                canvas.DrawText(y.ToString("0.###"), marginLeft - 55, py + 5, tickPaint);
+            }
+
+            // Y 轴次刻度
+            double vMinorStep = vStep / 5.0;
+            for (double y = vMin; y <= vMax + 1e-9; y += vMinorStep)
+            {
+                if (Math.Abs(y - Math.Round(y / vStep) * vStep) < 1e-6) continue;
+                float py = botY - (float)((y - vMin) / vRange * plotHeight);
+                canvas.DrawLine(marginLeft - 3, py, marginLeft, py, axisPaint);
+            }
+
+            // Y 轴标签（旋转 -90）
+            canvas.Save();
+            canvas.RotateDegrees(-90, marginLeft - 60, topY + plotHeight / 2);
+            canvas.DrawText(yLabel, marginLeft - 60, topY + plotHeight / 2, labelPaint);
+            canvas.Restore();
+
+            // 子图标题（左上角）
+            canvas.DrawText(curveName, marginLeft + 8, topY + 18, tickPaint);
+
+            // ===== X 轴主刻度 + 网格（贯穿子图） =====
+            for (double x = 0; x <= timeMax + 1e-9; x += timeStep)
+            {
+                float px = marginLeft + (float)(x / timeMax * plotWidth);
+                canvas.DrawLine(px, topY, px, botY, gridPaint);
+                canvas.DrawLine(px, botY, px, botY + 5, axisPaint);
+                if (drawXLabels)
+                    canvas.DrawText(x.ToString("0"), px - 10, botY + 20, tickPaint);
+            }
+
+            // X 轴次刻度
+            double timeMinorStep = timeStep / 5.0;
+            for (double x = 0; x <= timeMax + 1e-9; x += timeMinorStep)
+            {
+                if (Math.Abs(x - Math.Round(x / timeStep) * timeStep) < 1e-6) continue;
+                float px = marginLeft + (float)(x / timeMax * plotWidth);
+                canvas.DrawLine(px, botY, px, botY + 3, axisPaint);
+            }
+
+            // 坐标轴边框（左 Y 轴 + X 轴 + 顶边框 + 右边框）
+            canvas.DrawLine(marginLeft, topY, marginLeft, botY, axisPaint);
+            canvas.DrawLine(marginLeft, botY, marginLeft + plotWidth, botY, axisPaint);
+            canvas.DrawLine(marginLeft, topY, marginLeft + plotWidth, topY, axisPaint);
+            canvas.DrawLine(marginLeft + plotWidth, topY, marginLeft + plotWidth, botY, axisPaint);
+
+            // X 轴标签（仅最下层）
+            if (drawXLabels)
+                canvas.DrawText("Time(ms)", marginLeft + plotWidth / 2 - 30, botY + 42, labelPaint);
+
+            // ===== 曲线 =====
+            int len = Math.Min(timeData.Length, valueData.Length);
+            if (len > 1)
+            {
+                for (int i = 1; i < len; i++)
+                {
+                    float x0 = marginLeft + (float)(timeData[i - 1] / timeMax * plotWidth);
+                    float y0 = botY - (float)((valueData[i - 1] - vMin) / vRange * plotHeight);
+                    float x1 = marginLeft + (float)(timeData[i] / timeMax * plotWidth);
+                    float y1 = botY - (float)((valueData[i] - vMin) / vRange * plotHeight);
+                    canvas.DrawLine(x0, y0, x1, y1, curvePaint);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 根据数据实际范围计算"漂亮"的Y轴范围与刻度步长，使曲线占满绘图区。
+        /// 算法：取数据[min,max] -> 加10%余量 -> 用nice-number计算step -> 对齐到step整数倍。
+        /// </summary>
+        private static void ComputeNiceAxis(double[] data, out double min, out double max, out double step)
+        {
+            if (data == null || data.Length == 0)
+            {
+                min = -1; max = 1; step = 0.5;
+                return;
+            }
+            double dMin = data.Min();
+            double dMax = data.Max();
+            double range = dMax - dMin;
+            if (range < 1e-9)
+            {
+                // 退化情况：所有值相同。用绝对值构造一个对称小范围
+                double absV = Math.Max(Math.Abs(dMax), 1e-3);
+                dMin = -absV;
+                dMax = absV;
+                range = dMax - dMin;
+            }
+            double pad = range * 0.1;
+            double looseMin = dMin - pad;
+            double looseMax = dMax + pad;
+
+            // 取5个主刻度左右
+            step = NiceNumber((looseMax - looseMin) / 5.0);
+            if (step < 1e-9) step = 1;
+
+            min = Math.Floor(looseMin / step) * step;
+            max = Math.Ceiling(looseMax / step) * step;
+
+            // 至少包含0线（避免数据全正或全负时0线被切掉）
+            if (min > 0) min = 0;
+            if (max < 0) max = 0;
+        }
+
+        /// <summary>
+        /// 计算"漂亮的"刻度间隔：1, 2, 5 × 10^n 形式。
+        /// </summary>
+        private static double NiceNumber(double x)
+        {
+            if (x <= 0) return 1;
+            double exp = Math.Floor(Math.Log10(x));
+            double f = x / Math.Pow(10, exp);
+            double nf;
+            if (f < 1.5) nf = 1;
+            else if (f < 3) nf = 2;
+            else if (f < 7) nf = 5;
+            else nf = 10;
+            return nf * Math.Pow(10, exp);
+        }
+
+        /// <summary>
+        /// 从 0 开始计算 Y/X 轴的上限：基于数据最大值 + 10% 余量，向上取整到 NiceNumber 步长的整数倍。
+        /// 用于扭矩/压力/角度/时间等非负数据的坐标轴自适应，避免硬编码上限导致曲线压顶或分辨率浪费。
+        /// </summary>
+        /// <param name="data">实际数据数组（扭矩 / 压力 / 角度 / 时间等）</param>
+        /// <param name="fallbackMax">数据为空或全 0 时使用的默认上限</param>
+        /// <param name="minStep">最小刻度步长，避免刻度太密（如扭矩 0.1、压力 0.2、角度 200、时间 500）</param>
+        /// <returns>轴上限（>= minStep * 2）</returns>
+        private static double ComputeAxisMaxFromZero(double[] data, double fallbackMax, double minStep)
+        {
+            double dMax = (data != null && data.Length > 0) ? data.Max() : 0;
+            if (dMax <= 0) dMax = fallbackMax;
+            double pad = dMax * 0.1;                       // 10% 顶部余量
+            double looseMax = dMax + pad;
+            double step = NiceNumber(looseMax / 5.0);      // 约 5 个主刻度
+            if (step < minStep) step = minStep;
+            double max = Math.Ceiling(looseMax / step) * step;
+            if (max < step * 2) max = step * 2;            // 至少留出 2 个刻度的可视空间
+            return max;
         }
 
 

@@ -3210,6 +3210,9 @@
   <data name="TaikeAnnotatedCurve" xml:space="preserve">
     <value>PressureCurveStackedChart</value>
   </data>
+  <data name="DHVCMMonitor" xml:space="preserve">
+    <value>DH VCM Curve Monitor</value>
+  </data>
   <data name="ReadModbus" xml:space="preserve">
     <value>ReadModbus</value>
   </data>

@@ -41,6 +41,7 @@
 	<ItemGroup>
 	   <ProjectReference Include="..\Luster.Authorization.Client\Luster.Authorization.Client.csproj" />
 	  <ProjectReference Include="..\Luster.Motion.Integration\Luster.Motion.Integration.csproj" />
+	  <ProjectReference Include="..\Luster.Motion.ReportUI\Luster.Motion.ReportUI.csproj" />
 	  <ProjectReference Include="..\TaiKeCommon\TaiKeCommon.csproj" />
 	  <ProjectReference Include="..\Luster.SimDevice.EngineUI\Luster.SimDevice.EngineUI.csproj" />
 	  <ProjectReference Include="..\Luster.SimDevice.SubSystem\Luster.SimDevice.SubSystem.csproj" />
