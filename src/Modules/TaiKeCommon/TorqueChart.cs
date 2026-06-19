@@ -321,17 +321,27 @@ namespace TaiKeCommon
             }
             axis_y.Name = titleAxisY;
 
+            // X/Y 轴上限根据实际数据自适应：避免硬编码上限导致数据压顶或分辨率浪费
+            // type==0: X=时间(interval*i), Y=扭矩 ; type==1: X=角度, Y=扭矩
+            double[] xAxisData = (type == 0)
+                ? Enumerable.Range(0, length).Select(i => (double)(interval * i)).ToArray()
+                : Angle_double;
+            double axis_x_max = ComputeAxisMaxFromZero(xAxisData, fallbackMax: 2500, minStep: 200);
+            double axis_y_max = ComputeAxisMaxFromZero(torq_double, fallbackMax: 1.0, minStep: 0.1);
+
             axis_x.NameTextSize = 16;
             axis_x.TextSize = 16;
             axis_x.MinLimit = 0;
-            axis_x.MaxLimit = 2500;
+            axis_x.MaxLimit = axis_x_max;
+            axis_x.MinStep = 200;
 
 
 
             axis_y.NameTextSize = 16;
             axis_x.TextSize = 16;
             axis_y.MinLimit = 0;
-            axis_y.MaxLimit = 1.0;
+            axis_y.MaxLimit = axis_y_max;
+            axis_y.MinStep = 0.1;
 
             chart.XAxes = new List<Axis>() { axis_x };
             chart.YAxes = new List<Axis>() { axis_y };
@@ -500,10 +510,11 @@ namespace TaiKeCommon
             axis_yEnd.NameTextSize = 16;
             axis_yEnd.TextSize = 16;
             axis_yEnd.MinLimit = 0;
-            axis_yEnd.MaxLimit = 2.5;
+            // Y 轴(Press)上限自适应：基于实际压力数据 + 余量，避免硬编码 2.5 导致曲线只占一半高度
+            axis_yEnd.MaxLimit = ComputeAxisMaxFromZero(Press, fallbackMax: 2.5, minStep: 0.2);
             axis_yEnd.ShowSeparatorLines = true;
             axis_yEnd.SeparatorsPaint = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
-            axis_yEnd.MinStep = 0.5;
+            axis_yEnd.MinStep = 0.2;
             axis_yEnd.Position = AxisPosition.Start;
 
 
@@ -629,12 +640,16 @@ namespace TaiKeCommon
             axis_x.NameTextSize = 16;
             axis_x.TextSize = 16;
             axis_x.MinLimit = 0;
-            axis_x.MaxLimit = 5000;
+            // X 轴(Time)上限自适应：基于实际时间数据 + 余量，避免硬编码 5000 浪费分辨率
+            axis_x.MaxLimit = ComputeAxisMaxFromZero(Time, fallbackMax: 5000, minStep: 500);
+            axis_x.MinStep = 500;
 
 
             axis_y.NameTextSize = 16;
             axis_y.TextSize = 16;
-            axis_y.MaxLimit = 2;
+            // Y 轴(Press)上限自适应：基于实际压力数据 + 余量，避免硬编码 2.0 导致压顶
+            axis_y.MaxLimit = ComputeAxisMaxFromZero(Press, fallbackMax: 2.0, minStep: 0.2);
+            axis_y.MinStep = 0.2;
             axis_y.MinLimit = 0;
 
             chart.XAxes = new List<Axis>() { axis_x };
@@ -799,8 +814,11 @@ namespace TaiKeCommon
             // 计算坐标轴范围
             //double xMin = xData.Min(), xMax = xData.Max();
             //double yMin = yData.Min(), yMax = yData.Max();
-            double xMin = 0, xMax = 2500;
-            double yMin = 0, yMax = 0.6;
+            double xMin = 0;
+            double yMin = 0;
+            // 角度 X 轴 / 扭矩 Y 轴上限自适应，避免硬编码导致数据压顶或分辨率浪费
+            double xMax = ComputeAxisMaxFromZero(xData, fallbackMax: 2500, minStep: 200);
+            double yMax = ComputeAxisMaxFromZero(yData, fallbackMax: 0.6, minStep: 0.05);
 
             // 防止极端数据导致坐标轴重叠
             if (xMax - xMin < 1e-6) { xMax = xMin + 1; }
@@ -816,7 +834,7 @@ namespace TaiKeCommon
                 // X轴
                 //canvas.DrawLine(marginLeft, height - marginBottom, marginLeft + plotWidth, height - marginBottom, axisPaint);
 
-                int angleStep = 200; // 可根据axis_xEnd.MinStep调整
+                int angleStep = (int)Math.Max(100, NiceNumber(xMax / 6.0)); // 角度刻度自适应，约 6 个主刻度
                 for (double x = Math.Ceiling(xMin / angleStep) * angleStep; x <= xMax; x += angleStep)
                 {
                     float px = marginLeft + (float)((x - xMin) / (xMax - xMin) * plotWidth);
@@ -827,7 +845,7 @@ namespace TaiKeCommon
                 // Y轴
                 //canvas.DrawLine(marginLeft, height - marginBottom, marginLeft, marginTop, axisPaint);
 
-                double yStep = 0.2; // 可根据axis_y.MinStep调整
+                double yStep = Math.Max(0.05, NiceNumber(yMax / 5.0)); // 扭矩刻度自适应，约 5 个主刻度
                 for (double y = Math.Ceiling(yMin / yStep) * yStep; y <= yMax; y += yStep)
                 {
                     float py = height - marginBottom - (float)((y - yMin) / (yMax - yMin) * plotHeight);
@@ -1018,9 +1036,10 @@ namespace TaiKeCommon
             double timeMaxRaw = time != null && time.Length > 0 ? time.Max() : 0;
             double timeMin = 0, timeMax = Math.Ceiling((timeMaxRaw + timeAxisStep) / (double)timeAxisStep) * timeAxisStep;
             if (timeMax < timeAxisStep * 2) timeMax = timeAxisStep * 2;
-            double angleMin = 0, angleMax = 3500;
-            double torqueMin = 0, torqueMax = 0.5;
-            double pressMin = 0, pressMax = 2.5;
+            // 角度/扭矩/压力轴上限自适应：避免硬编码导致数据压顶或分辨率浪费
+            double angleMin = 0, angleMax = ComputeAxisMaxFromZero(angle, fallbackMax: 3500, minStep: 200);
+            double torqueMin = 0, torqueMax = ComputeAxisMaxFromZero(torque, fallbackMax: 0.5, minStep: 0.05);
+            double pressMin = 0, pressMax = ComputeAxisMaxFromZero(press, fallbackMax: 2.5, minStep: 0.2);
 
             // 防止极端数据导致坐标轴重叠
             if (timeMax - timeMin < 1e-6) { timeMax = timeMin + 1; }
@@ -1417,6 +1436,27 @@ namespace TaiKeCommon
             else if (f < 7) nf = 5;
             else nf = 10;
             return nf * Math.Pow(10, exp);
+        }
+
+        /// <summary>
+        /// 从 0 开始计算 Y/X 轴的上限：基于数据最大值 + 10% 余量，向上取整到 NiceNumber 步长的整数倍。
+        /// 用于扭矩/压力/角度/时间等非负数据的坐标轴自适应，避免硬编码上限导致曲线压顶或分辨率浪费。
+        /// </summary>
+        /// <param name="data">实际数据数组（扭矩 / 压力 / 角度 / 时间等）</param>
+        /// <param name="fallbackMax">数据为空或全 0 时使用的默认上限</param>
+        /// <param name="minStep">最小刻度步长，避免刻度太密（如扭矩 0.1、压力 0.2、角度 200、时间 500）</param>
+        /// <returns>轴上限（>= minStep * 2）</returns>
+        private static double ComputeAxisMaxFromZero(double[] data, double fallbackMax, double minStep)
+        {
+            double dMax = (data != null && data.Length > 0) ? data.Max() : 0;
+            if (dMax <= 0) dMax = fallbackMax;
+            double pad = dMax * 0.1;                       // 10% 顶部余量
+            double looseMax = dMax + pad;
+            double step = NiceNumber(looseMax / 5.0);      // 约 5 个主刻度
+            if (step < minStep) step = minStep;
+            double max = Math.Ceiling(looseMax / step) * step;
+            if (max < step * 2) max = step * 2;            // 至少留出 2 个刻度的可视空间
+            return max;
         }
 
 
