@@ -40,6 +40,15 @@ namespace Luster.Motion.ReportUI.ViewModel
         private DispatcherTimer _saveChartSettingsTimer;
 
         // 图表数据
+        // 合并模式专用 Series（独立实例，避免与分开左图共享 Series 导致 LiveCharts 内部状态混乱）
+        private List<ISeries> _seriesMerge = new List<ISeries>();
+        public List<ISeries> SeriesMerge
+        {
+            get => _seriesMerge;
+            set => SetProperty(ref _seriesMerge, value);
+        }
+
+        // 分开模式左图专用 Series（Time-Press）
         private List<ISeries> _series = new List<ISeries>();
         public List<ISeries> Series
         {
@@ -47,6 +56,60 @@ namespace Luster.Motion.ReportUI.ViewModel
             set => SetProperty(ref _series, value);
         }
 
+        // 时间筛选：默认覆盖昨天到明天（整点 00:00:00），由顶部 DateTimePicker 调整
+        private DateTime _filterStartTime = DateTime.Today.AddDays(-1);
+        public DateTime FilterStartTime
+        {
+            get => _filterStartTime;
+            set => SetProperty(ref _filterStartTime, value);
+        }
+
+        private DateTime _filterEndTime = DateTime.Today.AddDays(1);
+        public DateTime FilterEndTime
+        {
+            get => _filterEndTime;
+            set => SetProperty(ref _filterEndTime, value);
+        }
+
+        private bool _enableTimeFilter = true;
+        public bool EnableTimeFilter
+        {
+            get => _enableTimeFilter;
+            set => SetProperty(ref _enableTimeFilter, value);
+        }
+
+        // 合并模式专用轴（独立实例，避免与分开左图共享 Axis 导致标签重复渲染）
+        private List<Axis> _xAxesMerge = new List<Axis> { new Axis { Name = "Time/ms" } };
+        public List<Axis> XAxesMerge
+        {
+            get => _xAxesMerge;
+            set => SetProperty(ref _xAxesMerge, value);
+        }
+
+        private List<Axis> _yAxesMerge = new List<Axis>
+        {
+            new Axis
+            {
+                Name = "Press/kgf",
+                Position = AxisPosition.Start,
+                NamePaint = new SolidColorPaint(System.Windows.Media.Colors.Red.ToSKColor()),
+                LabelsPaint = new SolidColorPaint(System.Windows.Media.Colors.Red.ToSKColor()),
+            },
+            new Axis
+            {
+                Name = "Position/mm",
+                Position = AxisPosition.End,
+                NamePaint = new SolidColorPaint(System.Windows.Media.Colors.Blue.ToSKColor()),
+                LabelsPaint = new SolidColorPaint(System.Windows.Media.Colors.Blue.ToSKColor()),
+            },
+        };
+        public List<Axis> YAxesMerge
+        {
+            get => _yAxesMerge;
+            set => SetProperty(ref _yAxesMerge, value);
+        }
+
+        // 分开模式左图专用轴（Time-Press）
         private List<Axis> _xAxes = new List<Axis> { new Axis { Name = "Time/ms" } };
         public List<Axis> XAxes
         {
@@ -62,13 +125,6 @@ namespace Luster.Motion.ReportUI.ViewModel
                 Position = AxisPosition.Start,
                 NamePaint = new SolidColorPaint(System.Windows.Media.Colors.Red.ToSKColor()),
                 LabelsPaint = new SolidColorPaint(System.Windows.Media.Colors.Red.ToSKColor()),
-            },
-            new Axis
-            {
-                Name = "Position/mm",
-                Position = AxisPosition.End,
-                NamePaint = new SolidColorPaint(System.Windows.Media.Colors.Blue.ToSKColor()),
-                LabelsPaint = new SolidColorPaint(System.Windows.Media.Colors.Blue.ToSKColor()),
             },
         };
         public List<Axis> YAxes
@@ -424,6 +480,20 @@ namespace Luster.Motion.ReportUI.ViewModel
             {
                 MessageBox.Show("所选文件夹中没有找到任何 CSV 文件。", "提示");
                 return;
+            }
+
+            // 文件名时间戳过滤：保留 startTime <= fileTimestamp <= endTime 的文件
+            if (_enableTimeFilter)
+            {
+                files = files.Where(f =>
+                    FileNameTimestampParser.IsInTimeRange(f, _filterStartTime, _filterEndTime)).ToArray();
+                if (files.Length == 0)
+                {
+                    MessageBox.Show(
+                        $"在所选时间范围内没有找到 CSV 文件。\n开始: {_filterStartTime:yyyy-MM-dd HH:mm:ss}\n结束: {_filterEndTime:yyyy-MM-dd HH:mm:ss}",
+                        "提示");
+                    return;
+                }
             }
 
             _rawDataCache.Clear();
@@ -798,9 +868,9 @@ namespace Luster.Motion.ReportUI.ViewModel
 
             _dispatcher.Invoke(new Action(() =>
             {
-                XAxes = new List<Axis> { axis_x_time };
-                YAxes = new List<Axis> { axis_y_press, axis_y_position };
-                Series = chartSeries;
+                XAxesMerge = new List<Axis> { axis_x_time };
+                YAxesMerge = new List<Axis> { axis_y_press, axis_y_position };
+                SeriesMerge = chartSeries;
             }));
         }
 

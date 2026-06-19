@@ -53,6 +53,22 @@
                         Minimum="3" Maximum="51" Value="{Binding SliderValue}" IsSnapToTickEnabled="True" TickFrequency="2"/>
                 <Button Content="刷新" Command="{Binding RefreshChartCommand}"
                         Width="45" Height="26" Margin="10,0,0,0" />
+                <TextBlock Text="时间筛选:" VerticalAlignment="Center" FontSize="11" Margin="15,0,4,0" Foreground="#57a9fd" FontWeight="Bold" />
+                <CheckBox Content="启用" IsChecked="{Binding EnableTimeFilter}" VerticalAlignment="Center" Margin="0,0,6,0" FontSize="11" />
+                <hc:DateTimePicker Width="190" Height="24"
+                                   SelectedDateTime="{Binding FilterStartTime}"
+                                   DateTimeFormat="yyyy-MM-dd HH:mm:ss"
+                                   hc:InfoElement.Title="起"
+                                   hc:InfoElement.TitlePlacement="Left"
+                                   hc:InfoElement.TitleWidth="30"
+                                   Style="{StaticResource DateTimePickerExtend}" />
+                <hc:DateTimePicker Width="190" Height="24" Margin="6,0,0,0"
+                                   SelectedDateTime="{Binding FilterEndTime}"
+                                   DateTimeFormat="yyyy-MM-dd HH:mm:ss"
+                                   hc:InfoElement.Title="止"
+                                   hc:InfoElement.TitlePlacement="Left"
+                                   hc:InfoElement.TitleWidth="30"
+                                   Style="{StaticResource DateTimePickerExtend}" />
             </StackPanel>
 
             <!-- 第二行：合并/分开切换 + Position 参数 -->
@@ -91,9 +107,9 @@
                     <TextBlock Grid.Row="0" Text="Force &amp;&amp; Move Arc (Time-Press / Time-Position)" FontWeight="Bold"
                                HorizontalAlignment="Center" FontSize="13" Margin="0,2" />
                     <chart:CartesianChart Grid.Row="1"
-                        Series="{Binding Series}"
-                        XAxes="{Binding XAxes}"
-                        YAxes="{Binding YAxes}"
+                        Series="{Binding SeriesMerge}"
+                        XAxes="{Binding XAxesMerge}"
+                        YAxes="{Binding YAxesMerge}"
                         LegendPosition="Hidden"
                         TooltipPosition="Hidden" />
                 </Grid>
