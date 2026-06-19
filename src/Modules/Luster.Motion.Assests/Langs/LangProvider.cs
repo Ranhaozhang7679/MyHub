@@ -930,6 +930,7 @@ namespace Luster.Motion.Assests.Langs
 			OnPropertyChanged(nameof(TableCreate));
 			OnPropertyChanged(nameof(TableInsert));
 			OnPropertyChanged(nameof(TaikeAnnotatedCurve));
+			OnPropertyChanged(nameof(DHVCMMonitor));
 			OnPropertyChanged(nameof(TaikeContent));
 			OnPropertyChanged(nameof(TaikeCurve));
 			OnPropertyChanged(nameof(TaiKeScrewDriver));
@@ -5513,6 +5514,11 @@ namespace Luster.Motion.Assests.Langs
         ///   查找类似 压力曲线堆叠图 的本地化字符串。
         /// </summary>
 		public string TaikeAnnotatedCurve => Lang.TaikeAnnotatedCurve;
+
+        /// <summary>
+        ///   查找类似 大寰音圈电机曲线监控 的本地化字符串。
+        /// </summary>
+		public string DHVCMMonitor => Lang.DHVCMMonitor;
 
         /// <summary>
         ///   查找类似 泰科统计 的本地化字符串。
@@ -10677,6 +10683,11 @@ namespace Luster.Motion.Assests.Langs
         ///   查找类似 压力曲线堆叠图 的本地化字符串。
         /// </summary>
 		public static string TaikeAnnotatedCurve = nameof(TaikeAnnotatedCurve);
+
+        /// <summary>
+        ///   查找类似 大寰音圈电机曲线监控 的本地化字符串。
+        /// </summary>
+		public static string DHVCMMonitor = nameof(DHVCMMonitor);
 
         /// <summary>
         ///   查找类似 泰科统计 的本地化字符串。

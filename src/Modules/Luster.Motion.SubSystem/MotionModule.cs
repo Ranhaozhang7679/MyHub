@@ -30,7 +30,7 @@ namespace Luster.Motion.SubSystem
                     keyvalue = configValue;
                 }
             }
-            // ÊÓÍ¼×¢²á
+            // ï¿½ï¿½Í¼×¢ï¿½ï¿½
             var regionManager = containerProvider.Resolve<IRegionManager>();
             regionManager.RegisterViewWithRegion("ToolBarRegion", typeof(ToolBarContent));
             if (keyvalue == "LoginContentFX") regionManager.RegisterViewWithRegion("MainRegion", typeof(LoginContentFX));
@@ -56,25 +56,25 @@ namespace Luster.Motion.SubSystem
         {
             //containerRegistry.Register<Dispatcher>(() => Application.Current.Dispatcher);
 
-            // ×¢²áÊÓÍ¼ºÍÄ£ĞÍÊ¾Àı
-            ViewModelLocationProvider.Register<ToolBarContent, ToolBarContentVM>(); //ÊÖ¶¯×¢²áÌØ¶¨ÊÓÍ¼µÄViewModel
+            // ×¢ï¿½ï¿½ï¿½ï¿½Í¼ï¿½ï¿½Ä£ï¿½ï¿½Ê¾ï¿½ï¿½
+            ViewModelLocationProvider.Register<ToolBarContent, ToolBarContentVM>(); //ï¿½Ö¶ï¿½×¢ï¿½ï¿½ï¿½Ø¶ï¿½ï¿½ï¿½Í¼ï¿½ï¿½ViewModel
             //ViewModelLocationProvider.Register<MainContent, MainContentVM>();
             containerRegistry.RegisterForNavigation<MainContent, MainContentVM>();
             //ViewModelLocationProvider.Register<MainRightContent, MainRightContentVM>();
             //containerRegistry.RegisterForNavigation<StationDisplayContent, StationDisplayContentVM>();
 
-            //×¢²áToolBarµ¼º½
+            //×¢ï¿½ï¿½ToolBarï¿½ï¿½ï¿½ï¿½
             //containerRegistry.RegisterForNavigation<AlarmContent, AlarmContentVM>();
             containerRegistry.RegisterForNavigation<ProjectContent, ProjectContentVM>();
             containerRegistry.RegisterForNavigation<StatusContent, StatusContentVM>();
             containerRegistry.RegisterForNavigation<ConfigureContent, ConfigureContentVM>();
 
-            //µÇÂ¼
+            //ï¿½ï¿½Â¼
             containerRegistry.RegisterForNavigation<LoginContent, LoginContentVM>();
             containerRegistry.RegisterForNavigation<LoginContentFX, LoginContentFXVM>();
             
 
-            //×¢²áÅäÖÃµ¼º½
+            //×¢ï¿½ï¿½ï¿½ï¿½ï¿½Ãµï¿½ï¿½ï¿½
             containerRegistry.RegisterForNavigation<SoftConfigureContent, SoftConfigureContentVM>();
             containerRegistry.RegisterForNavigation<ProductInfoContent, ProductInfoContentVM>();
             containerRegistry.RegisterForNavigation<VisionConfig, VisionConfigVM>();
@@ -83,38 +83,38 @@ namespace Luster.Motion.SubSystem
             containerRegistry.RegisterForNavigation<RobotConfigureContent, RobotConfigureContentVM>();
             containerRegistry.RegisterForNavigation<FileConfigContent, FileConfigContentVM>();
             containerRegistry.RegisterForNavigation<FunctionEnableContent, FunctionEnableContentVM>();
-            //×¢²áÆ·ÖÊ¹ÜÀíµ¼º½
+            //×¢ï¿½ï¿½Æ·ï¿½Ê¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             containerRegistry.RegisterForNavigation<QualitySetContent, QualitySetContentVM>();
             //containerRegistry.RegisterForNavigation<UserDefineMainContent, UserDefineMainContentVM>();
 
-            //Ä£¿é¿ÉÊÓ»¯ÅäÖÃ
-            //containerRegistry.RegisterForNavigation<ChartConfigureContent, ChartConfigureContentVM>();//Chart¿ÉÅäÖÃ
-            containerRegistry.RegisterForNavigation<ModuleDisplayContent, ModuleDisplayContentVM>();//Ä£¿é¿ÉÊÓ»¯ÅäÖÃ
-            containerRegistry.RegisterForNavigation<GlobalVarContent, GlobalVarContentVM>();//È«¾Ö±äÁ¿
+            //Ä£ï¿½ï¿½ï¿½ï¿½Ó»ï¿½ï¿½ï¿½ï¿½ï¿½
+            //containerRegistry.RegisterForNavigation<ChartConfigureContent, ChartConfigureContentVM>();//Chartï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            containerRegistry.RegisterForNavigation<ModuleDisplayContent, ModuleDisplayContentVM>();//Ä£ï¿½ï¿½ï¿½ï¿½Ó»ï¿½ï¿½ï¿½ï¿½ï¿½
+            containerRegistry.RegisterForNavigation<GlobalVarContent, GlobalVarContentVM>();//È«ï¿½Ö±ï¿½ï¿½ï¿½
 
-            //Å¤Á¦ÇúÏß
-            containerRegistry.RegisterForNavigation<ChartTorqueContent, ChartTorqueContentVM>();//Ä£¿é¿ÉÊÓ»¯ÅäÖÃ
-            containerRegistry.RegisterForNavigation<ChartTorque2Content, ChartTorque2ContentVM>();//Ä£¿é¿ÉÊÓ»¯ÅäÖÃ
+            //Å¤ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            containerRegistry.RegisterForNavigation<ChartTorqueContent, ChartTorqueContentVM>();//Ä£ï¿½ï¿½ï¿½ï¿½Ó»ï¿½ï¿½ï¿½ï¿½ï¿½
+            containerRegistry.RegisterForNavigation<ChartTorque2Content, ChartTorque2ContentVM>();//Ä£ï¿½ï¿½ï¿½ï¿½Ó»ï¿½ï¿½ï¿½ï¿½ï¿½
 
-            //Ñ¹Á¦ÇúÏß
-            containerRegistry.RegisterForNavigation<Press1Content, Press1ContentVM>();//Ä£¿é¿ÉÊÓ»¯ÅäÖÃ
-            containerRegistry.RegisterForNavigation<Press2Content, Press2ContentVM>();//Ä£¿é¿ÉÊÓ»¯ÅäÖÃ
-            containerRegistry.RegisterForNavigation<Press3Content, Press3ContentVM>();//Ä£¿é¿ÉÊÓ»¯ÅäÖÃ
-            containerRegistry.RegisterForNavigation<Press4Content, Press4ContentVM>();//Ä£¿é¿ÉÊÓ»¯ÅäÖÃ
+            //Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+            containerRegistry.RegisterForNavigation<Press1Content, Press1ContentVM>();//Ä£ï¿½ï¿½ï¿½ï¿½Ó»ï¿½ï¿½ï¿½ï¿½ï¿½
+            containerRegistry.RegisterForNavigation<Press2Content, Press2ContentVM>();//Ä£ï¿½ï¿½ï¿½ï¿½Ó»ï¿½ï¿½ï¿½ï¿½ï¿½
+            containerRegistry.RegisterForNavigation<Press3Content, Press3ContentVM>();//Ä£ï¿½ï¿½ï¿½ï¿½Ó»ï¿½ï¿½ï¿½ï¿½ï¿½
+            containerRegistry.RegisterForNavigation<Press4Content, Press4ContentVM>();//Ä£ï¿½ï¿½ï¿½ï¿½Ó»ï¿½ï¿½ï¿½ï¿½ï¿½
 
-            containerRegistry.RegisterDialog<WinFormDialog, WinFormDialogVM>();       // ¼¯³ÉWindows Form
-            containerRegistry.RegisterDialog<HiveDialog, HiveDialogVM>();       // ¼¯³ÉWindows Form
-            containerRegistry.RegisterDialog<HiveDialog1, HiveDialogVM>();       // ¼¯³ÉWindows Form
+            containerRegistry.RegisterDialog<WinFormDialog, WinFormDialogVM>();       // ï¿½ï¿½ï¿½ï¿½Windows Form
+            containerRegistry.RegisterDialog<HiveDialog, HiveDialogVM>();       // ï¿½ï¿½ï¿½ï¿½Windows Form
+            containerRegistry.RegisterDialog<HiveDialog1, HiveDialogVM>();       // ï¿½ï¿½ï¿½ï¿½Windows Form
 
 
-            // Ê×Ò³¶¯Ì¬±¨±í
+            // ï¿½ï¿½Ò³ï¿½ï¿½Ì¬ï¿½ï¿½ï¿½ï¿½
             containerRegistry.RegisterForNavigation<ProReportContent, ProReportContentVM>();
             containerRegistry.RegisterForNavigation<ProIndexContent, ProIndexContentVM>();
 
             containerRegistry.RegisterForNavigation<ProOrderContent, ProOrderContentVM>();
 
 
-            containerRegistry.RegisterDialog<ModuleConfigureDialog, ModuleConfigureDialogVM>();   //Ä£¿éÅäÖÃ
+            containerRegistry.RegisterDialog<ModuleConfigureDialog, ModuleConfigureDialogVM>();   //Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             containerRegistry.RegisterForNavigation<HeartMonitorContent, HeartMonitorContentVM>();
             containerRegistry.RegisterForNavigation<WorkFlowContent, WorkFlowContentVM>();
 
@@ -126,7 +126,7 @@ namespace Luster.Motion.SubSystem
             containerRegistry.RegisterForNavigation<RollSetContent, RollSetContentVM>();
             containerRegistry.RegisterForNavigation<ProTestBottonContent, ProTestBottonContentVM>();
 
-            // Éè±¸µ÷ÊÔ
+            // ï¿½è±¸ï¿½ï¿½ï¿½ï¿½
             containerRegistry.RegisterForNavigation<DeviceDebugContent, DeviceDebugContentVM>();
             //FFU
             containerRegistry.RegisterForNavigation<FFUContent, FFUContentVM>();
@@ -135,18 +135,21 @@ namespace Luster.Motion.SubSystem
 
             containerRegistry.RegisterForNavigation<DustContent, DustContentVM>();
 
-            // Ó²¼şµ÷ÊÔÅäÖÃ¼¯³ÉÄÚÈİ
+            // å¤§å¯°éŸ³åœˆç”µæœºæ›²çº¿ç›‘æ§ï¼ˆä½œä¸º AvalonDock æ¨¡å—æŒ‚è½½åˆ°ä¸»é¡µï¼‰
+            containerRegistry.RegisterForNavigation<DHVCMMonitorContent, DHVCMMonitorContentVM>();
+
+            // Ó²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             containerRegistry.RegisterForNavigation<IntegratedHardwareContent, IntegratedHardwareContentVM>();
 
-            ////  Êı×Ö¼ÜÏß
-            //containerRegistry.RegisterForNavigation<DigitalAssContent, DigitalAssContentVM>();      //  Êı×Ö¼ÜÏßÒ»¼¶²Ëµ¥½çÃæ
-            //containerRegistry.RegisterForNavigation<IOinspectionContent, IOinspectionContentVM>();  // IOµã¼ì
-            //containerRegistry.RegisterForNavigation<AutoCommunicationConfigContent, AutoCommunicationConfigContentVM>();// Í¨Ñ¶¶Ë¿Ú×Ô¶¯ÅäÖÃ            
-            //containerRegistry.RegisterForNavigation<ParamConfirmContent, ParamConfirmContentVM>();  // ²ÎÊıµ¼ÈëÈ·ÈÏ
-            //containerRegistry.RegisterForNavigation<PlatformLevelAutoConfirmContent, PlatformLevelAutoConfirmContentVM>();// Æ½Ì¨Ë®Æ½×Ô¶¯È·ÈÏ
-            //containerRegistry.RegisterForNavigation<AutomaticLoadCellContent, AutomaticLoadCellContentVM>();// ×Ô¶¯LoadCell
-            //containerRegistry.RegisterForNavigation<AutomaticEmbossingContent, AutomaticEmbossingContentVM>();// ×Ô¶¯Ñ¹Ó¡
-            //containerRegistry.RegisterForNavigation<DigitalVisionContent, DigitalVisionContentVM>();// ÊÓ¾õ±ê¶¨            
+            ////  ï¿½ï¿½ï¿½Ö¼ï¿½ï¿½ï¿½
+            //containerRegistry.RegisterForNavigation<DigitalAssContent, DigitalAssContentVM>();      //  ï¿½ï¿½ï¿½Ö¼ï¿½ï¿½ï¿½Ò»ï¿½ï¿½ï¿½Ëµï¿½ï¿½ï¿½ï¿½ï¿½
+            //containerRegistry.RegisterForNavigation<IOinspectionContent, IOinspectionContentVM>();  // IOï¿½ï¿½ï¿½
+            //containerRegistry.RegisterForNavigation<AutoCommunicationConfigContent, AutoCommunicationConfigContentVM>();// Í¨Ñ¶ï¿½Ë¿ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½ï¿½ï¿½            
+            //containerRegistry.RegisterForNavigation<ParamConfirmContent, ParamConfirmContentVM>();  // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È·ï¿½ï¿½
+            //containerRegistry.RegisterForNavigation<PlatformLevelAutoConfirmContent, PlatformLevelAutoConfirmContentVM>();// Æ½Ì¨Ë®Æ½ï¿½Ô¶ï¿½È·ï¿½ï¿½
+            //containerRegistry.RegisterForNavigation<AutomaticLoadCellContent, AutomaticLoadCellContentVM>();// ï¿½Ô¶ï¿½LoadCell
+            //containerRegistry.RegisterForNavigation<AutomaticEmbossingContent, AutomaticEmbossingContentVM>();// ï¿½Ô¶ï¿½Ñ¹Ó¡
+            //containerRegistry.RegisterForNavigation<DigitalVisionContent, DigitalVisionContentVM>();// ï¿½Ó¾ï¿½ï¿½ê¶¨            
         }
     }
 }

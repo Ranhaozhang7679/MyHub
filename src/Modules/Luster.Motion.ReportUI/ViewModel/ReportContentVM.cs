@@ -54,7 +54,7 @@ namespace Luster.Control.Wpf.Motion
             Pages.Add(new ReportPageModel() { Name = "ChangeRecord", IsSelected = false, Region = "ChangeContent" });
             Pages.Add(new ReportPageModel() { Name = "TaikeCurve", IsSelected = false, Region = "TaikeContent" });
             Pages.Add(new ReportPageModel() { Name = "TaikeAnnotatedCurve", IsSelected = false, Region = "TaikeAnnotatedContent" });
-            //Pages.Add(new ReportPageModel() { Name = "CTLogÍ³¼Æ", IsSelected = false, Region = "CTLogStatContent" });
+            //Pages.Add(new ReportPageModel() { Name = "CTLogÍ³ï¿½ï¿½", IsSelected = false, Region = "CTLogStatContent" });
 
             LoadFromDll();
             SelectedReportPage = Pages.Where(x => x.IsSelected).FirstOrDefault();
@@ -74,7 +74,7 @@ namespace Luster.Control.Wpf.Motion
         }
 
         /// <summary>
-        /// ÊÇ·ñÏÔÊ¾
+        /// ï¿½Ç·ï¿½ï¿½ï¿½Ê¾
         /// </summary>
         private bool _reportSelectVisible;
         public bool ReportSelectVisible
@@ -107,7 +107,7 @@ namespace Luster.Control.Wpf.Motion
         }
 
         /// <summary>
-        /// ¼ÓÔØDll
+        /// ï¿½ï¿½ï¿½ï¿½Dll
         /// </summary>
         private void LoadFromDll()
         {
@@ -126,20 +126,20 @@ namespace Luster.Control.Wpf.Motion
 
                 foreach (var viewType in viewTypes)
                 {
-                    // Í¨¹ýView²éÕÒ¶ÔÓ¦µÄViewModel
+                    // Í¨ï¿½ï¿½Viewï¿½ï¿½ï¿½Ò¶ï¿½Ó¦ï¿½ï¿½ViewModel
                     var vmType = vmTypes.FirstOrDefault(u => u.Name.StartsWith(viewType.Name));
                     if (vmType != null)
                     {
                         var model = Activator.CreateInstance(vmType) as ReportBaseVM;
                         //Pages.Add(new ReportPageModel() { Name = model.ReportName, IsSelected = false, Region = viewType.Name });
-                        Pages.Add(new ReportPageModel() { Name = "ScanCodeStatistics", IsSelected = false, Region = viewType.Name });//Ç¿ÖÆ¸ÄÃûÏÔÊ¾£¬ºóÐøµ÷Õû
+                        Pages.Add(new ReportPageModel() { Name = "ScanCodeStatistics", IsSelected = false, Region = viewType.Name });//Ç¿ï¿½Æ¸ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                     }
                 }
             }
         }
 
         /// <summary>
-        /// Ò³Ãæ
+        /// Ò³ï¿½ï¿½
         /// </summary>
         private int _page;
         public int Page
@@ -149,7 +149,7 @@ namespace Luster.Control.Wpf.Motion
         }
 
         /// <summary>
-        /// Ã»Ò³Êý¾Ý¶àÉÙ¸ö
+        /// Ã»Ò³ï¿½ï¿½ï¿½Ý¶ï¿½ï¿½Ù¸ï¿½
         /// </summary>
         private int _total;
         public int Total

@@ -12,9 +12,9 @@ namespace Luster.Motion.ReportUI.Model
     /// 步骤标注配置容器，支持按 CSV 文件名映射的字典格式
     /// 配置文件格式：
     /// {
-    ///   "SN001": { "Steps": [...] },
-    ///   "SN002": { "Steps": [...] },
-    ///   "_default": { "Steps": [...] }
+    ///   "SN001": { "Steps": [...], "ChartSettings": {...} },
+    ///   "SN002": { "Steps": [...], "ChartSettings": {...} },
+    ///   "_default": { "Steps": [...], "ChartSettings": {...} }
     /// }
     /// </summary>
     public class StepAnnotationConfig
@@ -24,8 +24,14 @@ namespace Luster.Motion.ReportUI.Model
         /// </summary>
         public List<StepAnnotationConfigModel> Steps { get; set; } = new List<StepAnnotationConfigModel>();
 
+        /// <summary>
+        /// 图表参数设置（轴刻度、平滑、合并模式等），自动随配置文件持久化
+        /// </summary>
+        public ChartSettings ChartSettings { get; set; } = new ChartSettings();
+
         private const string ConfigFileName = "StepAnnotationConfig.json";
-        private const string DefaultKey = "_default";
+        /// <summary>默认键（无 CSV 文件名时使用），供外部读写时引用</summary>
+        public const string DefaultKey = "_default";
 
         /// <summary>
         /// 配置文件路径：配方父目录/Config/StepAnnotationConfig.json
@@ -132,5 +138,49 @@ namespace Luster.Motion.ReportUI.Model
             allConfigs[key] = config;
             SaveAll(recipePath, allConfigs);
         }
+    }
+
+    /// <summary>
+    /// 压力曲线堆叠图（TaikeAnnotatedContent）的图表参数持久化模型。
+    /// 与 StepAnnotationConfig 共用同一个 StepAnnotationConfig.json 的 _default 条目。
+    /// 旧版文件无此字段时，反序列化后使用代码默认值。
+    /// </summary>
+    public class ChartSettings
+    {
+        /// <summary>图表1 X轴刻度间隔（ms）</summary>
+        public double XAxisStep { get; set; } = 50;
+
+        /// <summary>图表1 Y轴刻度间隔（kgf）</summary>
+        public double YAxisStep { get; set; } = 0.05;
+
+        /// <summary>图表1 Y轴上限（kgf），0 表示自动</summary>
+        public double YAxisMax { get; set; } = 0.3;
+
+        /// <summary>图表2 X轴刻度间隔（ms）</summary>
+        public double XAxisStep2 { get; set; } = 50;
+
+        /// <summary>图表2 Y轴刻度间隔</summary>
+        public double YAxisStep2 { get; set; } = 0.5;
+
+        /// <summary>图表2 Y轴上限，0 表示自动</summary>
+        public double YAxisMax2 { get; set; } = 5.0;
+
+        /// <summary>是否只显示 Y 正半轴</summary>
+        public bool OnlyShowPositiveIsEnabled { get; set; } = false;
+
+        /// <summary>是否启用平滑曲线处理</summary>
+        public bool SmoothCurveProcessingsEnabled { get; set; } = false;
+
+        /// <summary>平滑窗口大小（奇数）</summary>
+        public int SliderValue { get; set; } = 11;
+
+        /// <summary>是否合并显示（单图双 Y 轴）；false 为左右双子图</summary>
+        public bool IsMergedView { get; set; } = true;
+
+        /// <summary>
+        /// 是否去除异常数据（点数超过 AnomalyMaxPoints 或 Time 超过 AnomalyMaxTimeMs 的 CSV 视为异常并跳过）。
+        /// 默认 false——保留全部数据，由用户主动开启。
+        /// </summary>
+        public bool RemoveAnomalyEnabled { get; set; } = false;
     }
 }
