@@ -81,6 +81,15 @@ namespace Luster.Module.Motion.Device.Functions
         [Parameter("产品条码", 8, CN = "产品码", CanRef = ParamRef.Ref)]
         public string SNCode { get; set; }
 
+        [Parameter("输出参数", 9, CN = "X最大压力", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
+        public double OutMaxXForce { get; set; }
+
+        [Parameter("输出参数", 10, CN = "Y最大压力", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
+        public double OutMaxYForce { get; set; }
+
+        [Parameter("输出参数", 11, CN = "Z最大压力", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
+        public double OutMaxZForce { get; set; }
+
         /// <summary>
         /// 压力值数组
         /// </summary>
@@ -302,6 +311,11 @@ namespace Luster.Module.Motion.Device.Functions
                 if (pVal.Equals(true)) break;
             }
             electricScrewDriver.UpdateToeinCurve(xforce.ToArray(), yforce.ToArray(), zforce.ToArray(), time.ToArray(),SNCode);
+
+            OutMaxXForce = xforce.Count > 0 ? xforce.Max() : 0;
+            OutMaxYForce = yforce.Count > 0 ? yforce.Max() : 0;
+            OutMaxZForce = zforce.Count > 0 ? zforce.Max() : 0;
+
             errMsg = string.Empty;
             return true;
         }
