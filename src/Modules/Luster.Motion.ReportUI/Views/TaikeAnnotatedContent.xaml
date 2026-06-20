@@ -44,38 +44,45 @@
                 <TextBox Text="{Binding YAxisMax, UpdateSourceTrigger=PropertyChanged}"
                          Width="50" Height="22" VerticalAlignment="Center"
                          VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="11" />
+
+            </StackPanel>
+            <!-- 第二行：公共按钮 + Time-Press 参数 + 刷新 -->
+            <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                <TextBlock Text="X上限(0自动):" VerticalAlignment="Center" FontSize="11" Margin="4,0,2,0" />
+                <TextBox Text="{Binding XAxisMax, UpdateSourceTrigger=PropertyChanged}"
+                         Width="50" Height="22" VerticalAlignment="Center"
+                         VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="11" />
                 <CheckBox Content="只显示正数"
-                        IsChecked="{Binding OnlyShowPositiveIsEnabled, Mode=TwoWay}" />
+            IsChecked="{Binding OnlyShowPositiveIsEnabled, Mode=TwoWay}" />
                 <CheckBox Content="平滑曲线处理"
-                        IsChecked="{Binding SmoothCurveProcessingsEnabled, Mode=TwoWay}" />
+            IsChecked="{Binding SmoothCurveProcessingsEnabled, Mode=TwoWay}" />
                 <CheckBox Content="去除异常数据"
-                        IsChecked="{Binding RemoveAnomalyEnabled, Mode=TwoWay}"
-                        Margin="6,0,0,0" />
+            IsChecked="{Binding RemoveAnomalyEnabled, Mode=TwoWay}"
+            Margin="6,0,0,0" />
                 <TextBlock Text="平滑窗口:" VerticalAlignment="Center" Margin="15,0,5,0" Foreground="#555"/>
                 <Slider x:Name="SliderWindow" Width="150" VerticalAlignment="Center"
-                        Minimum="3" Maximum="51" Value="{Binding SliderValue}" IsSnapToTickEnabled="True" TickFrequency="2"/>
+            Minimum="3" Maximum="51" Value="{Binding SliderValue}" IsSnapToTickEnabled="True" TickFrequency="2"/>
                 <Button Content="刷新" Command="{Binding RefreshChartCommand}"
-                        Width="45" Height="26" Margin="10,0,0,0" />
+            Width="45" Height="26" Margin="10,0,0,0" />
                 <TextBlock Text="时间筛选:" VerticalAlignment="Center" FontSize="11" Margin="15,0,4,0" Foreground="#57a9fd" FontWeight="Bold" />
                 <CheckBox Content="启用" IsChecked="{Binding EnableTimeFilter}" VerticalAlignment="Center" Margin="0,0,6,0" FontSize="11" />
                 <hc:DateTimePicker Width="190" Height="24"
-                                   SelectedDateTime="{Binding FilterStartTime}"
-                                   DateTimeFormat="yyyy-MM-dd HH:mm:ss"
-                                   hc:InfoElement.Title="起"
-                                   hc:InfoElement.TitlePlacement="Left"
-                                   hc:InfoElement.TitleWidth="30"
-                                   Style="{StaticResource DateTimePickerExtend}" />
+                       SelectedDateTime="{Binding FilterStartTime}"
+                       DateTimeFormat="yyyy-MM-dd HH:mm:ss"
+                       hc:InfoElement.Title="起"
+                       hc:InfoElement.TitlePlacement="Left"
+                       hc:InfoElement.TitleWidth="30"
+                       Style="{StaticResource DateTimePickerExtend}" />
                 <hc:DateTimePicker Width="190" Height="24" Margin="6,0,0,0"
-                                   SelectedDateTime="{Binding FilterEndTime}"
-                                   DateTimeFormat="yyyy-MM-dd HH:mm:ss"
-                                   hc:InfoElement.Title="止"
-                                   hc:InfoElement.TitlePlacement="Left"
-                                   hc:InfoElement.TitleWidth="30"
-                                   Style="{StaticResource DateTimePickerExtend}" />
+                       SelectedDateTime="{Binding FilterEndTime}"
+                       DateTimeFormat="yyyy-MM-dd HH:mm:ss"
+                       hc:InfoElement.Title="止"
+                       hc:InfoElement.TitlePlacement="Left"
+                       hc:InfoElement.TitleWidth="30"
+                       Style="{StaticResource DateTimePickerExtend}" />
             </StackPanel>
-
             <!-- 第二行：合并/分开切换 + Position 参数 + 分组下拉 -->
-            <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                 <Button Content="{Binding MergeViewButtonText}" Command="{Binding ToggleMergeViewCommand}"
                         MinWidth="80" Height="22" Margin="0,0,6,0" FontSize="11" Padding="4,0"
                         Style="{StaticResource ButtonInfo}" />
@@ -100,7 +107,7 @@
         <!-- 图表区：合并模式（单图双 Y 轴）/ 分开模式（左右双子图）。
              用 RowDefinition.Height 在 0/* 之间切换，让 CartesianChart 始终保持 Loaded，
              避免 Visibility 切换导致 LiveCharts 不刷新曲线。-->
-        <Grid Grid.Row="1" Margin="8,4">
+        <Grid Grid.Row="1" Margin="8,6">
             <Grid.RowDefinitions>
                 <RowDefinition Height="{Binding MergedHeight}" />
                 <RowDefinition Height="{Binding SplitHeight}" />
