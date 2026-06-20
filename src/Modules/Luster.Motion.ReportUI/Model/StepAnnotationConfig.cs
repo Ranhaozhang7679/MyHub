@@ -182,5 +182,11 @@ namespace Luster.Motion.ReportUI.Model
         /// 默认 false——保留全部数据，由用户主动开启。
         /// </summary>
         public bool RemoveAnomalyEnabled { get; set; } = false;
+
+        /// <summary>
+        /// 上次导入 CSV 的文件夹路径。下次打开 FolderBrowserDialog 时自动定位到此处。
+        /// 空字符串表示从未导入过，使用代码硬编码默认值。
+        /// </summary>
+        public string LastImportFolder { get; set; } = string.Empty;
     }
 }
