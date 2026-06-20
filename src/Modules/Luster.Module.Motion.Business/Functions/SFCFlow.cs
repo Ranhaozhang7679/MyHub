@@ -408,6 +408,8 @@ namespace Luster.Module.Motion.Business.Functions
             // 默认是失败
             Result = false;
             ThisPass = false;
+            // 重置维修机标志,避免上一片产品的状态残留导致后续产品误判为维修机
+            IsRepaired = false;
             //// 空跑模式
             if (IsEmptyMode || !IsSFCEnable)
             {
