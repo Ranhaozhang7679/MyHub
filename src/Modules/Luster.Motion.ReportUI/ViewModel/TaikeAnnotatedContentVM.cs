@@ -251,6 +251,20 @@ namespace Luster.Motion.ReportUI.ViewModel
             }
         }
 
+        private double _xAxisMax = 0;
+        /// <summary>
+        /// 图表1 Y轴上限（kgf），设置为0时自动调整
+        /// </summary>
+        public double XAxisMax
+        {
+            get => _xAxisMax;
+            set
+            {
+                if (SetProperty(ref _xAxisMax, value))
+                    ScheduleSaveChartSettings();
+            }
+        }
+
         private double _yAxisMax = 0.3;
         /// <summary>
         /// 图表1 Y轴上限（kgf），设置为0时自动调整
@@ -1030,7 +1044,7 @@ namespace Luster.Motion.ReportUI.ViewModel
             // 用 CalculateNiceStep 估算 ~12 个刻度的步长作为下限,避免标签挤成一团
             double xNiceStep = CalculateNiceStep(timeMax, 12);
             if (xStep1 < xNiceStep) xStep1 = xNiceStep;
-            double xMax = Math.Ceiling(timeMax / xStep1) * xStep1 + xStep1;
+            double xMax = XAxisMax > 0 ? XAxisMax : Math.Ceiling(timeMax / xStep1) * xStep1 + xStep1;
 
             double niceStep1 = CalculateNiceStep(yMax1, 8);
             if (yStep1 < niceStep1) yStep1 = niceStep1;
@@ -1139,7 +1153,7 @@ namespace Luster.Motion.ReportUI.ViewModel
             // 用 CalculateNiceStep 估算 ~12 个刻度的步长作为下限,避免标签挤成一团
             double xNiceStep = CalculateNiceStep(timeMax, 12);
             if (xStep1 < xNiceStep) xStep1 = xNiceStep;
-            double xMax = Math.Ceiling(timeMax / xStep1) * xStep1 + xStep1;
+            double xMax = XAxisMax > 0 ? XAxisMax : Math.Ceiling(timeMax / xStep1) * xStep1 + xStep1;
 
             double niceStep1 = CalculateNiceStep(yMax1, 8);
             if (yStep1 < niceStep1) yStep1 = niceStep1;
