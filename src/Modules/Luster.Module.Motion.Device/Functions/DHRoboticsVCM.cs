@@ -732,7 +732,7 @@ namespace Luster.Module.Motion.Device.Functions
                 // 保证 DataPath 输出的文件路径与最终落盘的 CSV/PNG 完全一致
                 _fileTimestamp = now.ToString("HHmmss");
                 string FileDir = @"D:\力控数据存储\" + dateStr + "\\" + SlaveNum.ToString() + "\\" + GStringVal + "\\";
-                DataPath = FileDir + GStringVal + "_" + _fileTimestamp + ".csv";
+                DataPath = @"D:\力控数据存储\" + dateStr + "\\" + SlaveNum.ToString() + "\\" + GStringVal;
                 while (stopwatch.ElapsedMilliseconds < (InstallTime-BcTime))
                 {
                     Thread.Sleep(5);

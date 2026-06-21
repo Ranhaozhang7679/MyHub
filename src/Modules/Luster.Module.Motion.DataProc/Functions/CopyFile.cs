@@ -31,7 +31,8 @@ namespace Luster.Module.Motion.DataProc.Functions
         [Parameter("目标文件夹", 2, CN = "目标图片路径", CanRef = ParamRef.Ref)]
         public string DstPath { get; set; }
 
-        [Parameter("拷贝结果", 10, CN = "拷贝文件结果", ParamType = ParamType.OUT)]
+
+        [Parameter("拷贝结果", 10, CN = "拷贝文件结果", ParamType = ParamType.OUT)] 
         public bool Result { get; set; }
 
         /// <summary>

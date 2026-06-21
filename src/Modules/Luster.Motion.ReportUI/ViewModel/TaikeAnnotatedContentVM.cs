@@ -79,7 +79,8 @@ namespace Luster.Motion.ReportUI.ViewModel
         }
 
         // 合并模式专用轴（独立实例，避免与分开左图共享 Axis 导致标签重复渲染）
-        private List<Axis> _xAxesMerge = new List<Axis> { new Axis { Name = "Time/ms" } };
+        // 未导入数据时不显示占位标签，由 RedrawMerged 重新填充完整配置
+        private List<Axis> _xAxesMerge = new List<Axis> { new Axis() };
         public List<Axis> XAxesMerge
         {
             get => _xAxesMerge;
@@ -88,20 +89,8 @@ namespace Luster.Motion.ReportUI.ViewModel
 
         private List<Axis> _yAxesMerge = new List<Axis>
         {
-            new Axis
-            {
-                Name = "Press/kgf",
-                Position = AxisPosition.Start,
-                NamePaint = new SolidColorPaint(System.Windows.Media.Colors.Red.ToSKColor()),
-                LabelsPaint = new SolidColorPaint(System.Windows.Media.Colors.Red.ToSKColor()),
-            },
-            new Axis
-            {
-                Name = "Position/mm",
-                Position = AxisPosition.End,
-                NamePaint = new SolidColorPaint(System.Windows.Media.Colors.Blue.ToSKColor()),
-                LabelsPaint = new SolidColorPaint(System.Windows.Media.Colors.Blue.ToSKColor()),
-            },
+            new Axis { Position = AxisPosition.Start },
+            new Axis { Position = AxisPosition.End },
         };
         public List<Axis> YAxesMerge
         {
@@ -110,23 +99,14 @@ namespace Luster.Motion.ReportUI.ViewModel
         }
 
         // 分开模式左图专用轴（Time-Press）
-        private List<Axis> _xAxes = new List<Axis> { new Axis { Name = "Time/ms" } };
+        private List<Axis> _xAxes = new List<Axis> { new Axis() };
         public List<Axis> XAxes
         {
             get => _xAxes;
             set => SetProperty(ref _xAxes, value);
         }
 
-        private List<Axis> _yAxes = new List<Axis>
-        {
-            new Axis
-            {
-                Name = "Press/kgf",
-                Position = AxisPosition.Start,
-                NamePaint = new SolidColorPaint(System.Windows.Media.Colors.Red.ToSKColor()),
-                LabelsPaint = new SolidColorPaint(System.Windows.Media.Colors.Red.ToSKColor()),
-            },
-        };
+        private List<Axis> _yAxes = new List<Axis> { new Axis() };
         public List<Axis> YAxes
         {
             get => _yAxes;
@@ -141,14 +121,14 @@ namespace Luster.Motion.ReportUI.ViewModel
             set => SetProperty(ref _series2, value);
         }
 
-        private List<Axis> _xAxes2 = new List<Axis> { new Axis { Name = "Time/ms" } };
+        private List<Axis> _xAxes2 = new List<Axis> { new Axis() };
         public List<Axis> XAxes2
         {
             get => _xAxes2;
             set => SetProperty(ref _xAxes2, value);
         }
 
-        private List<Axis> _yAxes2 = new List<Axis> { new Axis { Name = "Position/mm" } };
+        private List<Axis> _yAxes2 = new List<Axis> { new Axis() };
         public List<Axis> YAxes2
         {
             get => _yAxes2;
@@ -267,6 +247,20 @@ namespace Luster.Motion.ReportUI.ViewModel
             set
             {
                 if (SetProperty(ref _yAxisStep, value))
+                    ScheduleSaveChartSettings();
+            }
+        }
+
+        private double _xAxisMax = 0;
+        /// <summary>
+        /// 图表1 Y轴上限（kgf），设置为0时自动调整
+        /// </summary>
+        public double XAxisMax
+        {
+            get => _xAxisMax;
+            set
+            {
+                if (SetProperty(ref _xAxisMax, value))
                     ScheduleSaveChartSettings();
             }
         }
@@ -390,6 +384,18 @@ namespace Luster.Motion.ReportUI.ViewModel
                 }
             }
         }
+
+        // 上次导入 CSV 的文件夹路径：下次打开对话框时自动定位到此处
+        // 非绑定属性，仅持久化用；空串表示从未导入过
+        private string _lastImportFolder = string.Empty;
+        public string LastImportFolder
+        {
+            get => _lastImportFolder;
+            set => SetProperty(ref _lastImportFolder, value ?? string.Empty);
+        }
+
+        // 硬编码兜底路径：当从未导入过（LastImportFolder 为空）时作为首次对话框默认路径
+        private const string DefaultImportFolder = @"D:\lmv-2026-043011\0430FCLP2\CC上传\NUM1";
         // 原始数据缓存
         private List<List<ObservablePoint>> _rawDataCache = new List<List<ObservablePoint>>();
         private List<List<ObservablePoint>> _rawPositionPressCache = new List<List<ObservablePoint>>();
@@ -542,14 +548,15 @@ namespace Luster.Motion.ReportUI.ViewModel
             var folderDialog = new System.Windows.Forms.FolderBrowserDialog();
             folderDialog.Description = "请选择压力曲线数据所在文件夹（含子文件夹，将自动扫描所有 CSV）";
             folderDialog.ShowNewFolderButton = false;
-            folderDialog.RootFolder = Environment.SpecialFolder.Desktop;
-            try
-            {
-                var defaultPath = @"D:\lmv-2026-043011\0430FCLP2\CC上传\NUM1";
-                if (System.IO.Directory.Exists(defaultPath))
-                    folderDialog.SelectedPath = defaultPath;
-            }
-            catch { }
+            // 不设置 RootFolder=Desktop：该限制会让 SelectedPath 难以定位到 D 盘下路径，
+            // 参考 TaikeContentVM.ImportTotalAuto 的写法（同样未限制 RootFolder）。
+            // 优先用上次导入的文件夹，否则用硬编码兜底；都不存在时 SelectedPath 留空，
+            // FolderBrowserDialog 会自动回退到系统默认位置。
+            string initialFolder = !string.IsNullOrEmpty(_lastImportFolder) && System.IO.Directory.Exists(_lastImportFolder)
+                ? _lastImportFolder
+                : DefaultImportFolder;
+            if (System.IO.Directory.Exists(initialFolder))
+                folderDialog.SelectedPath = initialFolder;
 
             if (folderDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
 
@@ -653,6 +660,13 @@ namespace Luster.Motion.ReportUI.ViewModel
             // setter 的 SetProperty 返回 false 不会触发重绘
             SelectedGroupKey = displayKeys.Count > 0 ? displayKeys[0] : null;
             ApplyGroupSelection();
+
+            // 记忆本次选择的文件夹，供下次打开对话框时自动定位
+            if (!string.Equals(_lastImportFolder, selectedFolder, StringComparison.OrdinalIgnoreCase))
+            {
+                LastImportFolder = selectedFolder;
+                SaveChartSettings();
+            }
         }
 
         /// <summary>
@@ -855,6 +869,8 @@ namespace Luster.Motion.ReportUI.ViewModel
                 _isLoadingChartSettings = true;
                 var config = StepAnnotationConfig.LoadByCsvName(null, GetRecipePath());
                 var s = config.ChartSettings ?? new ChartSettings();
+                // 读取上次导入文件夹，仅作字段缓存；真实 SelectedPath 在 ImportCsvFiles 中按存在性校验
+                LastImportFolder = s.LastImportFolder ?? string.Empty;
                 XAxisStep = s.XAxisStep;
                 YAxisStep = s.YAxisStep;
                 YAxisMax = s.YAxisMax;
@@ -933,6 +949,7 @@ namespace Luster.Motion.ReportUI.ViewModel
                     SliderValue = SliderValue,
                     IsMergedView = IsMergedView,
                     RemoveAnomalyEnabled = RemoveAnomalyEnabled,
+                    LastImportFolder = LastImportFolder ?? string.Empty,
                 };
                 allConfigs[StepAnnotationConfig.DefaultKey] = current;
                 StepAnnotationConfig.SaveAll(recipePath, allConfigs);
@@ -1027,7 +1044,7 @@ namespace Luster.Motion.ReportUI.ViewModel
             // 用 CalculateNiceStep 估算 ~12 个刻度的步长作为下限,避免标签挤成一团
             double xNiceStep = CalculateNiceStep(timeMax, 12);
             if (xStep1 < xNiceStep) xStep1 = xNiceStep;
-            double xMax = Math.Ceiling(timeMax / xStep1) * xStep1 + xStep1;
+            double xMax = XAxisMax > 0 ? XAxisMax : Math.Ceiling(timeMax / xStep1) * xStep1 + xStep1;
 
             double niceStep1 = CalculateNiceStep(yMax1, 8);
             if (yStep1 < niceStep1) yStep1 = niceStep1;
@@ -1136,7 +1153,7 @@ namespace Luster.Motion.ReportUI.ViewModel
             // 用 CalculateNiceStep 估算 ~12 个刻度的步长作为下限,避免标签挤成一团
             double xNiceStep = CalculateNiceStep(timeMax, 12);
             if (xStep1 < xNiceStep) xStep1 = xNiceStep;
-            double xMax = Math.Ceiling(timeMax / xStep1) * xStep1 + xStep1;
+            double xMax = XAxisMax > 0 ? XAxisMax : Math.Ceiling(timeMax / xStep1) * xStep1 + xStep1;
 
             double niceStep1 = CalculateNiceStep(yMax1, 8);
             if (yStep1 < niceStep1) yStep1 = niceStep1;
