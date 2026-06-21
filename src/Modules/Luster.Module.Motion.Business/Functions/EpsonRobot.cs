@@ -177,8 +177,9 @@ namespace Luster.Module.Motion.Business.Functions
                 // 2.接收结果
                 if (OutString?.Trim() == "NG")
                 {
-                    errMsg = "通信接收超时，收到内容为空";
-                    OnAlarm(AlarmType.WarningTip, $"通信接收超时，收到内容为{OutString}");
+                    // 报警内容取自仿真通信(CommDevice)界面"报警配置"列配置，未配置时由 GetConfigMessage 回退
+                    errMsg = comm.GetConfigMessage(DeviceError.ConnectTimeFail);
+                    OnAlarm(AlarmType.WarningTip, comm.GetConfigMessage(DeviceError.ConnectTimeFail), comm.Errors[DeviceError.ConnectTimeFail]);
                 }
 
             }
@@ -206,8 +207,9 @@ namespace Luster.Module.Motion.Business.Functions
                 // 2.接收结果
                 if (OutString?.Trim() == "NG")
                 {
-                    errMsg = "通信接收超时，收到内容为空";
-                    OnAlarm(AlarmType.WarningTip, $"通信接收超时，收到内容为{OutString}");
+                    // 报警内容取自仿真通信(CommDevice)界面"报警配置"列配置，未配置时由 GetConfigMessage 回退
+                    errMsg = comm.GetConfigMessage(DeviceError.ConnectTimeFail);
+                    OnAlarm(AlarmType.WarningTip, comm.GetConfigMessage(DeviceError.ConnectTimeFail), comm.Errors[DeviceError.ConnectTimeFail]);
 
                     GetVDevice<VIO>(IO_Pause, out var io_Pause);
                     GetVDevice<VIO>(IO_PauseStatus, out var io_PauseStatus);
