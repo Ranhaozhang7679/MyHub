@@ -1043,7 +1043,7 @@ namespace Luster.Motion.DataStruct.DataModels
                 // 轴卡掉使能，需要重新回零
                 IsHome = false;
                 CurrentErrorCode = DeviceError.SerOnFail;
-                throw new DeviceException(Errors[CurrentErrorCode], this.ID);
+                throw new DeviceException(Errors[CurrentErrorCode], this.ID, GetConfigMessage(CurrentErrorCode));
             }
             else if (status[AxisStatus.Pel])
             {
@@ -1052,7 +1052,7 @@ namespace Luster.Motion.DataStruct.DataModels
                 // 如果真的是限位，重试也不会运行，仍然在原地
                 //IsHome = false;
                 CurrentErrorCode = DeviceError.PelFail;
-                throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, "超正限位", this.Module, this.Name);
+                throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, GetConfigMessage(CurrentErrorCode), this.Module, this.Name);
             }
             else if (status[AxisStatus.Mel])
             {
@@ -1061,13 +1061,13 @@ namespace Luster.Motion.DataStruct.DataModels
                 // 如果真的是限位，重试也不会运行，仍然在原地
                 //IsHome = false;
                 CurrentErrorCode = DeviceError.MelFail;
-                throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, "超负限位", this.Module, this.Name);
+                throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, GetConfigMessage(CurrentErrorCode), this.Module, this.Name);
 
             }
             else
             {
                 CurrentErrorCode = DeviceError.MoveTimeFail;
-                throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, "运行超时", this.Module, this.Name);
+                throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, GetConfigMessage(CurrentErrorCode), this.Module, this.Name);
             }
         }
 
