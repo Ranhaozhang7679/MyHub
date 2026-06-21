@@ -225,12 +225,19 @@ namespace Luster.Motion.DataStruct.Virtual
         /// <returns></returns>
         public string GetConfigMessage(DeviceError code)
         {
-            if (ErrorMessages != null && ErrorMessages.TryGetValue(code, out var msg) && !string.IsNullOrEmpty(msg))
+            // 三级回退，确保永不为 null/空，避免异常 Message 为 null 时被 .NET 替换成默认串：
+            // 1) 报警配置页"报警配置列"(ErrorMessages)；2) 设备级 ErrorMessage；3) 枚举 [Description] 兜底
+            if (ErrorMessages != null && ErrorMessages.TryGetValue(code, out var msg) && !string.IsNullOrWhiteSpace(msg))
             {
                 return msg;
             }
 
-            return ErrorMessage;
+            if (!string.IsNullOrWhiteSpace(ErrorMessage))
+            {
+                return ErrorMessage;
+            }
+
+            return code.GetDescription();
         }
         #endregion
 
