@@ -7,7 +7,7 @@ namespace Luster.Motion.DataStruct.DataModels
 {
     /// <summary>
     /// 联锁矩阵单条规则（ADR-C seam，TES-38 产出 / TES-28 P0-G 消费）。
-    /// 输入条件 AND 组合 → 触发动作 + 报警码 + 恢复策略。
+    /// 输入条件按 <see cref="JudgeMode"/> 聚合(All=AND / Any=OR) → 触发动作 + 报警码 + 恢复策略。
     /// 对齐架构师 ADR-C 绑定契约：<c>RuleId / Inputs / Actions / AlarmCode / Recovery</c>。
     /// </summary>
     /// <remarks>
@@ -20,8 +20,11 @@ namespace Luster.Motion.DataStruct.DataModels
         /// <summary>规则标识（配置追溯）</summary>
         public string RuleId { get; set; } = string.Empty;
 
-        /// <summary>输入条件集合，全部满足(AND)才视为触发</summary>
+        /// <summary>输入条件集合，按 <see cref="JudgeMode"/> 聚合</summary>
         public InterlockInput[] Inputs { get; set; } = new InterlockInput[0];
+
+        /// <summary>输入条件聚合模式，默认 All(全部满足)。Any=任一满足(OR)</summary>
+        public InterlockJudgeMode JudgeMode { get; set; } = InterlockJudgeMode.All;
 
         /// <summary>触发时要执行的动作集合（停轴/锁机/写 PLC/...）</summary>
         public InterlockAction[] Actions { get; set; } = new InterlockAction[0];
@@ -36,11 +39,26 @@ namespace Luster.Motion.DataStruct.DataModels
         public bool Enable { get; set; } = true;
 
         /// <summary>
-        /// 求值：所有 <see cref="Inputs"/> 是否全部成立。
+        /// 求值：按 <see cref="JudgeMode"/> 聚合 <see cref="Inputs"/>。
+        /// <para>All：所有条件成立才触发（源端 BuildSafeCondition 默认语义）。</para>
+        /// <para>Any：任一条件成立即触发（对齐源端"上游或下游载台不在安全位置"等 OR 判定）。</para>
         /// </summary>
         public bool Evaluate(IInputSnapshot snapshot)
         {
             if (!Enable || Inputs == null || Inputs.Length == 0) return false;
+
+            if (JudgeMode == InterlockJudgeMode.Any)
+            {
+                // 任一条件成立即触发
+                foreach (var input in Inputs)
+                {
+                    bool actual = snapshot?.IsTriggered(input.Kind, input.Target) ?? false;
+                    if (actual == input.Expected) return true;
+                }
+                return false;
+            }
+
+            // All：全部成立才触发
             foreach (var input in Inputs)
             {
                 bool actual = snapshot?.IsTriggered(input.Kind, input.Target) ?? false;

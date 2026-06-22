@@ -112,5 +112,56 @@ namespace Luster.Module.Motion.Safety.Tests
             matrix.Clear();
             Assert.Empty(matrix.Rules);
         }
+
+        [Fact]
+        public void Evaluate_Any模式_任一条件成立即触发()
+        {
+            // Any 模式：上游或下游任一互锁触发即报警（对齐源端"上游或下游载台不在安全位置"OR 判定）
+            var rule = Rule("ANY", RecoveryPolicy.Manual,
+                (SafetyInputKind.UpstreamInterlock, "上游A"), (SafetyInputKind.DownstreamInterlock, "下游A"));
+            rule.JudgeMode = InterlockJudgeMode.Any;
+            var matrix = new InterlockMatrix(new[] { rule });
+
+            // 仅上游触发 → Any 触发
+            var r1 = matrix.Evaluate(new FuncSnapshot((k, t) => k == SafetyInputKind.UpstreamInterlock));
+            Assert.Single(r1);
+            Assert.Equal("ANY", r1[0].RuleId);
+
+            // 仅下游触发 → Any 触发
+            var r2 = matrix.Evaluate(new FuncSnapshot((k, t) => k == SafetyInputKind.DownstreamInterlock));
+            Assert.Single(r2);
+
+            // 都不触发 → 不触发
+            var r3 = matrix.Evaluate(new FuncSnapshot((k, t) => false));
+            Assert.Empty(r3);
+        }
+
+        [Fact]
+        public void Evaluate_Any模式_全部不成立不触发()
+        {
+            var rule = Rule("ANY2", RecoveryPolicy.Manual,
+                (SafetyInputKind.EStop, "e1"), (SafetyInputKind.DoorLock, "d1"));
+            rule.JudgeMode = InterlockJudgeMode.Any;
+            var matrix = new InterlockMatrix(new[] { rule });
+
+            // 两个维度都不触发(返回的是不相关维度) → 不触发
+            Assert.Empty(matrix.Evaluate(new FuncSnapshot((k, t) => k == SafetyInputKind.Brake)));
+        }
+
+        [Fact]
+        public void Evaluate_JudgeMode默认All_保持向后兼容()
+        {
+            // 不显式设置 JudgeMode 时默认 All，行为与历史一致
+            var matrix = new InterlockMatrix(new[]
+            {
+                Rule("R", RecoveryPolicy.Manual,
+                    (SafetyInputKind.UpstreamInterlock, "u"), (SafetyInputKind.DownstreamInterlock, "d"))
+            });
+
+            // 只有一个条件触发 → All 不触发
+            Assert.Empty(matrix.Evaluate(new FuncSnapshot((k, t) => k == SafetyInputKind.UpstreamInterlock)));
+            // 两个都触发 → All 触发
+            Assert.Single(matrix.Evaluate(new FuncSnapshot((k, t) => true)));
+        }
     }
 }

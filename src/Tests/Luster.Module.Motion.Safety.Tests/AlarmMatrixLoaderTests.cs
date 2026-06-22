@@ -1,5 +1,6 @@
 using Luster.Module.Motion.Safety.Models;
 using Luster.Motion.DataStruct.Enums;
+using Luster.Motion.DataStruct.VDevice;
 using System.Linq;
 using Xunit;
 
@@ -116,6 +117,65 @@ namespace Luster.Module.Motion.Safety.Tests
             var expected = loader.Parse(lines);
             Assert.Single(expected);
             Assert.Equal("AXIS_PEL", expected[0].Code);
+        }
+
+        private static AlarmSchema Schema(string code, string message = "", string en = "")
+            => new AlarmSchema { Code = code, Message = message, EnglishName = en };
+
+        [Fact]
+        public void BuildVAlarms_按Code去重并映射字段()
+        {
+            var loader = new AlarmMatrixLoader();
+            var schemas = new[]
+            {
+                Schema("EMG", "急停", "Emergency"),
+                Schema("AXIS_PEL", "正限位", "PEL"),
+                Schema("EMG", "急停重复", "Dup") // 内部重复，应跳过
+            };
+
+            var result = loader.BuildVAlarms(schemas, existing: null);
+
+            Assert.Equal(2, result.Count);
+            Assert.Equal("EMG", result[0].AlarmKey);
+            Assert.Equal("急停", result[0].AlarmCN);
+            Assert.Equal("Emergency", result[0].AlarmEn);
+            Assert.Equal("急停", result[0].Name);
+            Assert.Equal("AXIS_PEL", result[1].AlarmKey);
+        }
+
+        [Fact]
+        public void BuildVAlarms_跳过引擎已有AlarmKey()
+        {
+            var loader = new AlarmMatrixLoader();
+            var schemas = new[]
+            {
+                Schema("EMG", "急停", "Emergency"),
+                Schema("NEW", "新报警", "New")
+            };
+            // 引擎已存在 EMG
+            var existing = new[] { new VAlarm { AlarmKey = "EMG" } };
+
+            var result = loader.BuildVAlarms(schemas, existing);
+
+            var only = Assert.Single(result);
+            Assert.Equal("NEW", only.AlarmKey);
+        }
+
+        [Fact]
+        public void BuildVAlarms_空Code与null跳过()
+        {
+            var loader = new AlarmMatrixLoader();
+            var schemas = new[]
+            {
+                Schema("", "空Code"),
+                null,
+                Schema("OK", "正常", "OK")
+            };
+
+            var result = loader.BuildVAlarms(schemas, existing: null);
+
+            var only = Assert.Single(result);
+            Assert.Equal("OK", only.AlarmKey);
         }
     }
 }

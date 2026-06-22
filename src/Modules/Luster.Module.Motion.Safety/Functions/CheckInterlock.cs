@@ -3,6 +3,7 @@ using Luster.Motion.DataStruct.Enums;
 using Luster.Motion.DataStruct.Interfaces;
 using Luster.TaskFlow.Common.Attributes;
 using Luster.TaskFlow.Motion;
+using System;
 using System.Collections.Generic;
 
 namespace Luster.Module.Motion.Safety.Functions
@@ -15,6 +16,9 @@ namespace Luster.Module.Motion.Safety.Functions
     /// <remarks>
     /// 不直接读 IO——IO 投影由 <see cref="IInputSnapshot"/> 实现（默认 <see cref="InputSnapshotAdapter"/>）。
     /// 上下游互锁(UpstreamInterlock/DownstreamInterlock)维度等 TES-37 <c>HandoverNode</c> 落地后在 snapshot 适配器中接入。
+    /// <para>检查模式对齐源端 <c>CheckNormalAction</c>：</para>
+    /// <para>· <see cref="InterlockCheckMode.One"/>：单次快照求值，触发即报警阻断。</para>
+    /// <para>· <see cref="InterlockCheckMode.Wait"/>：连续轮询，在 <see cref="TimeOut"/> 内等待互锁解除；超时仍触发则报警。</para>
     /// </remarks>
     public class CheckInterlock : MotionFunction
     {
@@ -25,6 +29,14 @@ namespace Luster.Module.Motion.Safety.Functions
         /// <summary>输入快照工厂名（宿主注入，缺省走 IOInput 适配器）</summary>
         [Parameter("输入快照工厂名", 1, CN = "快照工厂", DefaultV = "IOInput")]
         public string SnapshotFactoryName { get; set; } = "IOInput";
+
+        /// <summary>互锁检查模式：单次检查 / 连续检查(等待解除)</summary>
+        [Parameter("互锁检查模式", 2, CN = "检查模式", DefaultV = InterlockCheckMode.One)]
+        public InterlockCheckMode CheckMode { get; set; } = InterlockCheckMode.One;
+
+        /// <summary>连续检查超时时间(ms)，-1 表示不超时（仅 Wait 模式生效）</summary>
+        [Parameter("连续检查超时时间(ms)，-1表示不超时", 3, CN = "超时时间", DefaultV = -1)]
+        public int TimeOut { get; set; } = -1;
 
         public CheckInterlock()
         {
@@ -55,6 +67,39 @@ namespace Luster.Module.Motion.Safety.Functions
                 return false;
             }
 
+            // 单次检查：当前快照求值
+            if (CheckMode == InterlockCheckMode.One)
+            {
+                return EvaluateAndReport(matrix, snapshot, out errMsg);
+            }
+
+            // 连续检查：在超时时间内轮询等待互锁解除
+            bool resolved = false;
+            try
+            {
+                WaitFunc(() => matrix.Evaluate(snapshot).Count == 0,
+                    $"等待:{MyOwner.Alias} 互锁条件解除!", timeout: TimeOut);
+                resolved = true;
+            }
+            catch
+            {
+                // 超时仍未解除，按当前触发项报警
+                resolved = false;
+            }
+
+            if (resolved)
+            {
+                return base.DoExcute(out errMsg);
+            }
+            return EvaluateAndReport(matrix, snapshot, out errMsg);
+        }
+
+        /// <summary>
+        /// 求值矩阵并上报最高严重度触发项；无触发返回 true。
+        /// </summary>
+        private bool EvaluateAndReport(InterlockMatrix matrix, IInputSnapshot snapshot, out string errMsg)
+        {
+            errMsg = string.Empty;
             IReadOnlyList<InterlockRule> triggered = matrix.Evaluate(snapshot);
             if (triggered.Count == 0)
             {

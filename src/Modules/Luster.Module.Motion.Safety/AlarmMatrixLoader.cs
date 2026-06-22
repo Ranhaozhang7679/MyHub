@@ -1,8 +1,11 @@
+using Luster.Motion.DataStruct;
 using Luster.Motion.DataStruct.Enums;
+using Luster.Motion.DataStruct.VDevice;
 using Luster.Module.Motion.Safety.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Luster.Module.Motion.Safety
@@ -256,6 +259,81 @@ namespace Luster.Module.Motion.Safety
                 default:
                     return LatchPolicy.AutoClear;
             }
+        }
+
+        /// <summary>
+        /// 把 <see cref="AlarmSchema"/> 列表转换为 <see cref="VAlarm"/> 列表，
+        /// 按 <see cref="AlarmSchema.Code"/>(=AlarmKey) 去重：跳过 <paramref name="existing"/> 中已存在的 Code，
+        /// 以及 schemas 内部重复的 Code。纯逻辑，不触碰引擎，便于单测。
+        /// </summary>
+        /// <param name="schemas">从 ErrCode.csv 解析出的报警 schema</param>
+        /// <param name="existing">引擎中已存在的 VAlarm（其 AlarmKey 视为已占用）</param>
+        /// <returns>待新增的 VAlarm 列表（AlarmKey=Code, AlarmCN=Message, AlarmEn=EnglishName）</returns>
+        public List<VAlarm> BuildVAlarms(IEnumerable<AlarmSchema> schemas, IEnumerable<VAlarm> existing)
+        {
+            var result = new List<VAlarm>();
+            if (schemas == null) return result;
+
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            if (existing != null)
+            {
+                foreach (var a in existing)
+                {
+                    if (a != null && !string.IsNullOrEmpty(a.AlarmKey)) seen.Add(a.AlarmKey);
+                }
+            }
+
+            foreach (var s in schemas)
+            {
+                if (s == null || string.IsNullOrEmpty(s.Code)) continue;
+                if (!seen.Add(s.Code)) continue; // 引擎已有或本次重复，跳过
+
+                result.Add(new VAlarm
+                {
+                    ID = Guid.NewGuid(),
+                    Name = string.IsNullOrEmpty(s.Message) ? s.Code : s.Message,
+                    AlarmKey = s.Code,
+                    AlarmCN = s.Message,
+                    AlarmEn = s.EnglishName
+                });
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// 把已加载的 <see cref="AlarmSchema"/> 列表导入目标端 <see cref="IDeviceEngine"/>：
+        /// 转换为 <see cref="VAlarm"/> 并经 <see cref="IDeviceEngine.AddVirtual"/> 注入，
+        /// 按 <see cref="AlarmSchema.Code"/>(=AlarmKey) 去重。仅显式调用时生效。
+        /// </summary>
+        /// <param name="engine">目标端设备引擎</param>
+        /// <param name="schemas">从 ErrCode.csv 加载的报警 schema</param>
+        /// <returns>实际新增并注入的 VAlarm 数量</returns>
+        public int ImportToEngine(IDeviceEngine engine, IEnumerable<AlarmSchema> schemas)
+        {
+            if (engine == null || schemas == null) return 0;
+
+            var existing = engine.GetVDevices<VAlarm>();
+            var toAdd = BuildVAlarms(schemas, existing);
+
+            foreach (var alarm in toAdd)
+            {
+                // VAlarm 是配置型虚拟设备，setReal=false 避免查找真实硬件设备
+                engine.AddVirtual(alarm, false);
+            }
+            return toAdd.Count;
+        }
+
+        /// <summary>
+        /// 一站式：从 ErrCode.csv 加载并导入到 <see cref="IDeviceEngine"/>。
+        /// </summary>
+        /// <param name="engine">目标端设备引擎</param>
+        /// <param name="csvPath">ErrCode.csv 完整路径</param>
+        /// <param name="encoding">编码，默认 GBK</param>
+        /// <returns>实际新增并注入的 VAlarm 数量</returns>
+        public int ImportToEngine(IDeviceEngine engine, string csvPath, Encoding encoding = null)
+        {
+            var schemas = Load(csvPath, encoding);
+            return ImportToEngine(engine, schemas);
         }
     }
 }

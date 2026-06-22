@@ -116,4 +116,34 @@ namespace Luster.Motion.DataStruct.Enums
         [Description("下游互锁")]
         DownstreamInterlock
     }
+
+    /// <summary>
+    /// 互锁规则输入条件聚合模式（ADR-C seam，TES-38）。
+    /// 对齐源端 <c>BuildSafeCondition</c> 的 All(全部满足) 与任一满足(Any) 两种判定语义。
+    /// </summary>
+    public enum InterlockJudgeMode
+    {
+        /// <summary>全部满足(AND)：所有 Inputs 条件成立才触发规则</summary>
+        [Description("全部满足")]
+        All = 0,
+
+        /// <summary>任一满足(OR)：任一 Input 条件成立即触发规则</summary>
+        [Description("任一满足")]
+        Any = 1
+    }
+
+    /// <summary>
+    /// 互锁检查模式（TES-38）。
+    /// 对齐源端 <c>CheckNormalAction</c> 的单次快照判定与连续等待判定。
+    /// </summary>
+    public enum InterlockCheckMode
+    {
+        /// <summary>单次检查：当前快照求值，触发即报警阻断</summary>
+        [Description("单次检查")]
+        One = 0,
+
+        /// <summary>连续检查：在超时时间内轮询等待条件解除，超时则报警</summary>
+        [Description("连续检查")]
+        Wait = 1
+    }
 }
