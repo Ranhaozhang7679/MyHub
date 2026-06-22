@@ -139,7 +139,8 @@ namespace Luster.Module.Motion.Device.Functions
                 if (IsAlarm)
                 {
                     //throw  dte;
-                    throw new DeviceTimeoutException(io.Errors[DeviceError.SensorFail], io.ID, io.ErrorMessage, io.Module, io.Name);
+                    // 使用仿真IO界面"报警配置"列配置的描述(按错误类型存储)，未配置时由 GetConfigMessage 回退到设备级 ErrorMessage
+                    throw new DeviceTimeoutException(io.Errors[DeviceError.SensorFail], io.ID, io.GetConfigMessage(DeviceError.SensorFail), io.Module, io.Name);
                 }
                 else
                 {
