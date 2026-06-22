@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AoiSiteProfile ProfileId="WIPE-PROD-V1" SiteType="Wipe" Version="1.0.0"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <RecipeRoot>Config/Recipes/Wipe</RecipeRoot>
+  <TraceRoot>Config/Traces/Wipe</TraceRoot>
+  <LogRoot>Logs/Wipe</LogRoot>
+  <CardConfigPath>Config/Card/Wipe</CardConfigPath>
+  <EntryStation>Wipe 擦拭站</EntryStation>
+
+  <!-- Wipe 站无五轴运动模块 -->
+  <MotionModules>
+    <Module Name="Luster.Module.Motion.AOI.Core" />
+    <Module Name="Luster.Module.Motion.Stations" />
+  </MotionModules>
+
+  <!-- Wipe 站无光源/相机/激光模块 -->
+  <DeviceModules>
+    <Module Name="Luster.SimDevice.MotionCard.ZMotion" />
+  </DeviceModules>
+
+  <!-- 设备别名表 -->
+  <Devices>
+    <Device Alias="MotionCard" Name="ZMotion 运动控制卡" />
+    <Device Alias="AlcoholSensor" Name="酒精浓度报警器" />
+  </Devices>
+
+  <!-- Wipe 站只需要较少轴 -->
+  <!-- ⚠ 待人类现场确认 Wipe 站实际轴号和映射 -->
+  <AxisMap X="X" Y="Y" Z="Z" U="" V="">
+    <Channel Name="X" CardAxis="0" />
+    <Channel Name="Y" CardAxis="1" />
+    <Channel Name="Z" CardAxis="2" />
+  </AxisMap>
+
+  <!-- Wipe 站不需要 RTCP，此项可为空 -->
+  <!-- <Rtcp /> -->
+
+  <!-- Wipe 站通讯配置 -->
+  <!-- ⚠ 待人类补充实际端口号 -->
+  <Handshakes>
+    <Channel Key="Upstream" Config="Config/Handshake/Wipe/长盈FQC_擦拭上游通讯配置.csv" />
+    <Channel Key="Downstream" Config="Config/Handshake/Wipe/长盈FQC_擦拭下游通讯配置.csv" />
+    <Channel Key="ICW" Config="Config/Handshake/Wipe/长盈FQC_擦拭ICW通讯配置.csv" />
+  </Handshakes>
+</AoiSiteProfile>

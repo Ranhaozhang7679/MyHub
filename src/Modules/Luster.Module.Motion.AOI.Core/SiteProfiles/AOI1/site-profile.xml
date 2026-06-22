@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AoiSiteProfile ProfileId="AOI1-PROD-V1" SiteType="Aoi1" Version="1.0.0"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <RecipeRoot>Config/Recipes/AOI1</RecipeRoot>
+  <TraceRoot>Config/Traces/AOI1</TraceRoot>
+  <LogRoot>Logs/AOI1</LogRoot>
+  <CardConfigPath>Config/Card/AOI1</CardConfigPath>
+  <EntryStation>AOI#1 金属外观检测</EntryStation>
+
+  <!-- 运动模块清单 -->
+  <MotionModules>
+    <Module Name="Luster.Module.Motion.AOI.Core" />
+    <Module Name="Luster.Module.Motion.AOI.FiveAxis" />
+    <Module Name="Luster.Module.Motion.Stations" />
+  </MotionModules>
+
+  <!-- 设备模块清单 -->
+  <DeviceModules>
+    <Module Name="Luster.SimDevice.MotionCard.ZMotion" />
+    <Module Name="Luster.SimDevice.Light.BX" />
+    <Module Name="Luster.SimDevice.Camera.LusterCamera" />
+    <Module Name="Luster.SimDevice.Laser" />
+  </DeviceModules>
+
+  <!-- 设备别名表 -->
+  <Devices>
+    <Device Alias="MotionCard" Name="ZMotion 运动控制卡" />
+    <Device Alias="LightController" Name="BX 8通道光源控制器" />
+    <Device Alias="Camera" Name="LusterCamera 相机" />
+    <Device Alias="Laser" Name="激光传感器" />
+  </Devices>
+
+  <!-- X/Y/Z/U/V 轴到 ZMotion 卡物理轴号映射 -->
+  <!-- ⚠ 待人类现场确认各轴卡号 -->
+  <AxisMap X="X" Y="Y" Z="Z" U="U" V="V">
+    <Channel Name="X" CardAxis="0" />
+    <Channel Name="Y" CardAxis="1" />
+    <Channel Name="Z" CardAxis="2" />
+    <Channel Name="U" CardAxis="3" />
+    <Channel Name="V" CardAxis="4" />
+  </AxisMap>
+
+  <!-- RTCP 五轴刀尖跟随配置 -->
+  <!-- ⚠ 待人类补充旋转中心、刀尖点坐标和坐标系号 -->
+  <Rtcp CoordinateSystem="0">
+    <Virtual>
+      <Axis Name="X" />
+      <Axis Name="Y" />
+      <Axis Name="Z" />
+      <Axis Name="U" />
+      <Axis Name="V" />
+    </Virtual>
+    <Real>
+      <Axis Name="X" />
+      <Axis Name="Y" />
+      <Axis Name="Z" />
+      <Axis Name="U" />
+      <Axis Name="V" />
+    </Real>
+    <RotationCenter X="0" Y="0" Z="0" />  <!-- 待人类补充 -->
+    <ToolCenterPoint X="0" Y="0" Z="0" />  <!-- 待人类补充 -->
+  </Rtcp>
+
+  <!-- 通讯通道：引用 CSV 配置文件的相对路径 -->
+  <!-- ⚠ 待人类补充实际端口号/协议参数 -->
+  <Handshakes>
+    <Channel Key="Upstream" Config="Config/Handshake/AOI1/长盈FQC_AOI#1上游通讯配置.csv" />
+    <Channel Key="Downstream" Config="Config/Handshake/AOI1/长盈FQC_AOI#1下游通讯配置.csv" />
+    <Channel Key="ICW" Config="Config/Handshake/AOI1/长盈FQC_AOI的ICW通讯配置.csv" />
+  </Handshakes>
+</AoiSiteProfile>
