@@ -6,6 +6,16 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<!-- ScanOnce 为 internal，暴露给单测确定性驱动（对齐 IOTriggerService 风格） -->
+		<InternalsVisibleTo Include="Luster.Module.Motion.Handover.Tests" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- AutoCommandDispatcher 派发到 IMotionController 命令入口（Start/Stop/Pause/Recovery/Home） -->
+		<ProjectReference Include="..\Luster.Motion.TaskFlow.Engine\Luster.Motion.TaskFlow.Engine.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="MinVer" />
 	</ItemGroup>
 
