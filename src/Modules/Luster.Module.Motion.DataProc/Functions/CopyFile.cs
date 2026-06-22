@@ -23,16 +23,14 @@ namespace Luster.Module.Motion.DataProc.Functions
     public class CopyFile : MotionFunction
     {
 
-        [NotEmpty]
         [Parameter("要拷贝的文件夹", 1, CN = "源图片路径", CanRef = ParamRef.Ref)]
         public string SourcePath { get; set; }
 
-        [NotEmpty]
         [Parameter("目标文件夹", 2, CN = "目标图片路径", CanRef = ParamRef.Ref)]
         public string DstPath { get; set; }
 
 
-        [Parameter("拷贝结果", 10, CN = "拷贝文件结果", ParamType = ParamType.OUT)] 
+        [Parameter("拷贝结果", 10, CN = "拷贝文件结果", ParamType = ParamType.OUT)]
         public bool Result { get; set; }
 
         /// <summary>
@@ -52,6 +50,12 @@ namespace Luster.Module.Motion.DataProc.Functions
         /// </summary>
         [Parameter("后缀名", 5, CN = "后缀名", CanRef = ParamRef.Ref)]
         public string FileExtensions { get; set; }
+
+        /// <summary>
+        /// SN 码：为空时目标图片路径不变；非空时实际目标路径 = 目标图片路径 + SN（自动拼接到子目录）
+        /// </summary>
+        [Parameter("SN码", 6, CN = "SN码", CanRef = ParamRef.Ref)]
+        public string SN { get; set; }
         /// <summary>
         /// 构造函数
         /// </summary>
@@ -246,6 +250,26 @@ namespace Luster.Module.Motion.DataProc.Functions
         {
             try
             {
+                if (string.IsNullOrWhiteSpace(SourcePath))
+                {
+                    Result = false;
+                    MyOwner.OnLog(LogType.Error, "源图片路径为空");
+                    errMsg = "源图片路径为空";
+                    return false;
+                }
+                if (string.IsNullOrWhiteSpace(DstPath))
+                {
+                    Result = false;
+                    MyOwner.OnLog(LogType.Error, "目标图片路径为空");
+                    errMsg = "目标图片路径为空";
+                    return false;
+                }
+
+                // 计算 SN 拼接后的实际目标路径
+                string actualDst = !string.IsNullOrWhiteSpace(SN)
+                    ? Path.Combine(DstPath, SN.Trim())
+                    : DstPath;
+
                 DirectoryInfo a = new DirectoryInfo(SourcePath);
                 if (!a.Exists)
                 {
@@ -262,10 +286,10 @@ namespace Luster.Module.Motion.DataProc.Functions
                 if (!string.IsNullOrEmpty(ExcludePattern)) filters.Add($"排除[{ExcludePattern}]");
                 string filterInfo = filters.Count > 0 ? "，过滤：" + string.Join("，", filters) : "";
 
-                MyOwner.OnLog(LogType.Info, $"开始复制：{SourcePath} → {DstPath}{filterInfo}");
+                MyOwner.OnLog(LogType.Info, $"开始复制：{SourcePath} → {actualDst}{filterInfo}");
 
                 // 目标文件夹不存在时由 CopyFolder 内部自动创建
-                var (copied, skipped) = CopyFolder(SourcePath, DstPath,
+                var (copied, skipped) = CopyFolder(SourcePath, actualDst,
                     MatchPattern, ExcludePattern, FileExtensions,
                     (type, msg) => MyOwner.OnLog(type, msg));
 

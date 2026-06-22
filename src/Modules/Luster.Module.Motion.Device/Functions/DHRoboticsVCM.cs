@@ -187,6 +187,14 @@ namespace Luster.Module.Motion.Device.Functions
         [Parameter("微抬位置(mm)", 36, CN = "微抬位置")]
         public VAxisPos StPosition { get; set; }
 
+        [DependOn("ActionType", VCMActionType.SoftLanding)]
+        [Parameter("是否启用FX命名", 37, CN = "是否启用FX命名", DefaultV = false)]
+        public bool IsFXName { get; set; }
+
+        [DependOn("ActionType", VCMActionType.SoftLanding)]
+        [Parameter("撕膜次数", 38, CN = "撕膜次数", CanRef = ParamRef.Ref)]
+        public int PeelOffTimes { get; set; }
+
         // ===== 输出参数 =====
         [Parameter("执行结果", 40, CN = "执行结果", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
         public bool OutResult { get; set; }
@@ -542,9 +550,9 @@ namespace Luster.Module.Motion.Device.Functions
             string timeStr = _fileTimestamp ?? now.ToString("HHmmss");
             string FileDir = @"D:\力控数据存储\" + dateStr + "\\" + SlaveNum.ToString() + "\\" + GStringVal + "\\";
             string filename = GStringVal + "_" + timeStr;
-            string picName = GStringVal + "_" + timeStr;
-            string filenameForce = "Force_Arc_" + timeStr;
-            string filenameMove = "Move_Arc_" + timeStr;
+            string picName = IsFXName ? "Arc_Force_Move_1" + "_" + timeStr + "_" + PeelOffTimes + "A" : GStringVal + "_" + timeStr;
+            string filenameForce = "Force_Arc_" + timeStr + "_" + PeelOffTimes + "A";
+            string filenameMove = "Move_Arc_" + timeStr + "_" + PeelOffTimes + "A";
 
             // 确保目录存在(原 CRecordValue 内部会自动创建)
             Directory.CreateDirectory(FileDir);
@@ -575,12 +583,19 @@ namespace Luster.Module.Motion.Device.Functions
             }
 
             // 批量构建 CSV 文本(替代原 3N 次 RecordValue 调用)
+            // IsFXName=true 时额外生成 Force/Move 两个子集 CSV,false 时只生成主文件
             StringBuilder sbAll = new StringBuilder(count * 32);
-            StringBuilder sbForce = new StringBuilder(count * 24);
-            StringBuilder sbMove = new StringBuilder(count * 24);
             sbAll.AppendLine("No,Time,Press,Position");
-            sbForce.AppendLine("No,Time,Press");
-            sbMove.AppendLine("No,Time,Position");
+
+            StringBuilder sbForce = null;
+            StringBuilder sbMove = null;
+            if (IsFXName)
+            {
+                sbForce = new StringBuilder(count * 24);
+                sbMove = new StringBuilder(count * 24);
+                sbForce.AppendLine("No,Time,Press");
+                sbMove.AppendLine("No,Time,Position");
+            }
 
             for (int i = 0; i < count; i++)
             {
@@ -590,16 +605,22 @@ namespace Luster.Module.Motion.Device.Functions
                 double pos = (i < posCount) ? positionSamples[i] : 0;
 
                 sbAll.Append(num).Append(',').Append(timenum).Append(',').Append(press).Append(',').Append(pos).AppendLine();
-                sbForce.Append(num).Append(',').Append(timenum).Append(',').Append(press).AppendLine();
-                sbMove.Append(num).Append(',').Append(timenum).Append(',').Append(pos).AppendLine();
+                if (IsFXName)
+                {
+                    sbForce.Append(num).Append(',').Append(timenum).Append(',').Append(press).AppendLine();
+                    sbMove.Append(num).Append(',').Append(timenum).Append(',').Append(pos).AppendLine();
+                }
             }
 
-            // 一次性覆盖写入(等价于原 FileInfo.Delete + 写入,但 I/O 次数从 3N 降到 3)
+            // 一次性覆盖写入(主文件始终写入;Force/Move 仅 IsFXName=true 时生成)
             try
             {
                 File.WriteAllText(FileDir + filename + ".csv", sbAll.ToString());
-                File.WriteAllText(FileDir + filenameForce + ".csv", sbForce.ToString());
-                File.WriteAllText(FileDir + filenameMove + ".csv", sbMove.ToString());
+                if (IsFXName)
+                {
+                    File.WriteAllText(FileDir + filenameForce + ".csv", sbForce.ToString());
+                    File.WriteAllText(FileDir + filenameMove + ".csv", sbMove.ToString());
+                }
             }
             catch (Exception ex)
             {
@@ -733,19 +754,19 @@ namespace Luster.Module.Motion.Device.Functions
                 _fileTimestamp = now.ToString("HHmmss");
                 string FileDir = @"D:\力控数据存储\" + dateStr + "\\" + SlaveNum.ToString() + "\\" + GStringVal + "\\";
                 DataPath = @"D:\力控数据存储\" + dateStr + "\\" + SlaveNum.ToString() + "\\" + GStringVal;
-                while (stopwatch.ElapsedMilliseconds < (InstallTime-BcTime))
+                while (stopwatch.ElapsedMilliseconds < (InstallTime - BcTime))
                 {
                     Thread.Sleep(5);
                 }
                 if (_isBreak) return;
                 //方案3
-                
+
                 MoveAbsFixed(StPosition[0].Position, PTVelocity, MoveAcc, MoveDec);
                 //由于很小的力矩导致我点位运动直接失败，但是又不能一下设置最大，会过冲，所以尝试缓慢增加
                 WriteTorqueLimit(TorqueLimit2);
                 Thread.Sleep(TimeOut1);
                 _axis.CheckMotionDone();
-                
+
                 //方案4
                 // Step 100: 完成
 
@@ -868,4 +889,3 @@ namespace Luster.Module.Motion.Device.Functions
         }
     }
 }
-
