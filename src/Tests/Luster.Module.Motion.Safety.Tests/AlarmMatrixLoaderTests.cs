@@ -79,6 +79,20 @@ namespace Luster.Module.Motion.Safety.Tests
         }
 
         [Fact]
+        public void Parse_视觉器件映射为Camera类别()
+        {
+            var loader = new AlarmMatrixLoader();
+            var lines = new[] {
+                Header,
+                "视觉,A面相机,4,0,CheckFail,相机丢帧,CamLost,CAM_LOST,采集丢帧,Frame lost,检查相机"
+            };
+            var result = loader.Parse(lines);
+            var s = Assert.Single(result);
+            Assert.Equal(AlarmCategory.Camera, s.Category);
+            Assert.Equal(RecoveryPolicy.Retry, s.RecoveryPolicy);
+        }
+
+        [Fact]
         public void Parse_多行按序加载()
         {
             var loader = new AlarmMatrixLoader();
@@ -91,6 +105,17 @@ namespace Luster.Module.Motion.Safety.Tests
             var result = loader.Parse(lines);
             Assert.Equal(3, result.Count);
             Assert.Equal(new[] { "AXIS_PEL", "EMG", "PLC_LOST" }, result.Select(s => s.Code).ToArray());
+        }
+
+        [Fact]
+        public void Import_实现IAlarmMatrixImporter接口()
+        {
+            IAlarmMatrixImporter importer = new AlarmMatrixLoader();
+            var lines = new[] { Header, "马达,X轴,1,0,EL_Fail,X轴正限位,XAxisPEL,AXIS_PEL,正限位,PEL,退回" };
+            var loader = (AlarmMatrixLoader)importer;
+            var expected = loader.Parse(lines);
+            Assert.Single(expected);
+            Assert.Equal("AXIS_PEL", expected[0].Code);
         }
     }
 }

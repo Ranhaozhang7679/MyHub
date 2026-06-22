@@ -1,5 +1,6 @@
 using Luster.Module.Motion.Safety.Models;
 using Luster.Motion.DataStruct.Enums;
+using Luster.Motion.DataStruct.Interfaces;
 using Xunit;
 
 namespace Luster.Module.Motion.Safety.Tests
@@ -39,8 +40,6 @@ namespace Luster.Module.Motion.Safety.Tests
         [InlineData(AlarmSeverity.Warning, AlarmProc.Check)]
         public void 严重级别映射处置策略(AlarmSeverity sev, AlarmProc expectedProc)
         {
-            // 由 AlarmMatrixLoader / CheckSafety 填充 PlatformAlarmProc，
-            // 此处仅校验枚举值可正常赋值与读取
             var s = new AlarmSchema { Severity = sev, PlatformAlarmProc = expectedProc };
             Assert.Equal(expectedProc, s.PlatformAlarmProc);
         }
@@ -52,6 +51,16 @@ namespace Luster.Module.Motion.Safety.Tests
             Assert.True(System.Enum.IsDefined(typeof(RecoveryPolicy), RecoveryPolicy.Clean));
             Assert.True(System.Enum.IsDefined(typeof(RecoveryPolicy), RecoveryPolicy.Resume));
             Assert.True(System.Enum.IsDefined(typeof(RecoveryPolicy), RecoveryPolicy.Scrap));
+        }
+
+        [Fact]
+        public void 共享枚举来源框架层()
+        {
+            // 确保共享枚举定义在框架层 Luster.Motion.DataStruct.Enums，非业务模块私有副本
+            Assert.Equal("Luster.Motion.DataStruct.Enums", typeof(RecoveryPolicy).Namespace);
+            Assert.Equal("Luster.Motion.DataStruct.Enums", typeof(AlarmSeverity).Namespace);
+            Assert.Equal("Luster.Motion.DataStruct.Enums", typeof(SafetyInputKind).Namespace);
+            Assert.Equal("Luster.Motion.DataStruct.Interfaces", typeof(IInputSnapshot).Namespace);
         }
     }
 }

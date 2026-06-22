@@ -8,22 +8,36 @@ using System.Text;
 namespace Luster.Module.Motion.Safety
 {
     /// <summary>
-    /// 报警矩阵 CSV 配置化导入（TES-38）。
+    /// 报警矩阵 CSV 导入契约（ADR-A seam）。
+    /// TES-38 产出，供 TES-28 / ErrorManager 配置化加载报警矩阵。
+    /// </summary>
+    public interface IAlarmMatrixImporter
+    {
+        /// <summary>从 CSV 导入报警矩阵为 <see cref="AlarmSchema"/> 列表</summary>
+        IReadOnlyList<AlarmSchema> Import(string csvPath);
+    }
+
+    /// <summary>
+    /// 报警矩阵 CSV 配置化导入（TES-38，实现 <see cref="IAlarmMatrixImporter"/>）。
     /// 对齐源端 <c>CheckStationTask.GetAlarmList</c> 读取 <c>data\ErrCode.csv</c> 的 11 列 schema：
     /// 器件类型, 位置类型名, Index, &lt;unused&gt;, ResultType, Name, EName, Code, Description, EDescription, Suggestion
-    /// 解析为 <see cref="AlarmSchema"/> 列表，供 <see cref="InterlockMatrix"/> 与平台 ErrorManager 共用。
+    /// 解析为 <see cref="AlarmSchema"/> 列表。
     /// </summary>
     /// <remarks>
     /// 源端用 <c>Encoding.Default</c>（GBK）读取，本实现同样默认 GBK 以兼容既有 CSV；
-    /// 缺列/空行跳过并计入 <see cref="LastSkipped"/> 便于排查。
+    /// 缺列/空行/空 Code 跳过并计入 <see cref="LastSkipped"/> 便于排查。
+    /// 共享枚举（<see cref="AlarmSeverity"/>/<see cref="RecoveryPolicy"/> 等）来自框架层。
     /// </remarks>
-    public class AlarmMatrixLoader
+    public class AlarmMatrixLoader : IAlarmMatrixImporter
     {
         /// <summary>CSV 列数（源端 schema）</summary>
         public const int ExpectedColumnCount = 11;
 
-        /// <summary>上次解析跳过的行数（含表头）</summary>
+        /// <summary>上次解析跳过的行数（含空行/缺列/空 Code，不含表头）</summary>
         public int LastSkipped { get; private set; }
+
+        /// <inheritdoc/>
+        public IReadOnlyList<AlarmSchema> Import(string csvPath) => Load(csvPath);
 
         /// <summary>
         /// 从文件加载报警矩阵。
@@ -85,7 +99,7 @@ namespace Luster.Module.Motion.Safety
                     RecoveryPolicy = MapRecovery(cols[4].Trim()),
                     PlatformAlarmType = MapAlarmType(cols[4].Trim()),
                     PlatformAlarmProc = MapAlarmProc(cols[4].Trim()),
-                    LatchPolicy = MapLatch(cols[0].Trim(), cols[4].Trim()),
+                    LatchPolicy = MapLatch(cols[4].Trim()),
                     SuppressPolicy = SuppressPolicy.None
                 };
 
@@ -112,7 +126,7 @@ namespace Luster.Module.Motion.Safety
                 case "通讯":
                     return AlarmCategory.Communication;
                 case "视觉":
-                    return AlarmCategory.Manual;
+                    return AlarmCategory.Camera;
                 case "数字量输入":
                 case "数字量输出":
                 case "输入输出组合":
@@ -120,6 +134,12 @@ namespace Luster.Module.Motion.Safety
                 case "真空":
                 case "模拟量输入":
                 case "模拟量输出":
+                case "光源":
+                case "低速锁存":
+                case "高速锁存":
+                case "高速比较":
+                case "扫码枪":
+                case "机械手":
                 default:
                     return AlarmCategory.Device;
             }
@@ -128,7 +148,6 @@ namespace Luster.Module.Motion.Safety
         /// <summary>源端 SyncResultType → AlarmSeverity</summary>
         private static AlarmSeverity MapSeverity(string resultType)
         {
-            // 源端 SyncResultType：Success=0, NoAlarmFail=1, ActionFail=2, ... EL_Fail=7, NEL_Fail=8, PEL_Fail=9, Alarm_Fail=12 ...
             switch (resultType)
             {
                 case "Success":
@@ -224,7 +243,7 @@ namespace Luster.Module.Motion.Safety
         }
 
         /// <summary>急停/限位/伺服报警类必锁存，其余默认 AutoClear</summary>
-        private static LatchPolicy MapLatch(string deviceType, string resultType)
+        private static LatchPolicy MapLatch(string resultType)
         {
             switch (resultType)
             {
