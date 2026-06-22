@@ -4,38 +4,51 @@ namespace Luster.Module.Motion.Safety.Network
 {
     /// <summary>
     /// 32 位握手信号位定义（TES-37/TES-38 共用基础件）。
-    /// 忠实迁移自源端 SP-2025140 <c>Plugin.CommonPlugin\Model\Args\ModbusSignal.cs</c>，
-    /// 一个 32 位 Modbus 字承载上下游交接的全部状态位：
-    /// bit0-15 = 4 产品 × {Exist, OK, NG1, NG2}；bit16 Ready；bit17 Sending/Receiving；
-    /// bit18 Transfer；bit19 Interlock；bit20 Heartbeat；bit21 Request；bit22-30 预留；bit31 DoorLock。
+    /// 忠实迁移自源端 SP-2025140 <c>Plugin.CommonPlugin\Model\Args\ModbusSignal.cs</c> 的
+    /// <c>LocalSend</c>/<c>LocalReceive</c> 枚举真值，一个 32 位 Modbus 字承载上下游交接的全部状态位：
+    /// bit0-3 = 4 产品在籍 Exist（Exist=i）；bit4-15 = 4 产品 × {OK, NG1, NG2}（每产品 3 位，
+    /// OK=4+i*3 / NG1=4+i*3+1 / NG2=4+i*3+2，i=产品序号 0-3）；
+    /// bit16 Ready；bit17 Sending/Receiving；bit18 Transfer；bit19 Interlock；
+    /// bit20 Heartbeat；bit21 Request；bit22-30 预留；bit31 DoorLock。
     /// </summary>
     /// <remarks>
+    /// <b>位布局对齐源端（TES-51 修正）</b>：早先版本误作"每产品 4 位 {Exist,OK,NG1,NG2}"（bit0-3=产品1
+    /// 四态、bit4-7=产品2…），与源端 <c>LocalSend</c>/<c>LocalReceive</c> 真值不一致，属错件。
+    /// 现按源端"Exist 独立 4 位 + 每产品 3 位 OK/NG"对齐，与 TES-48 Handover 件
+    /// <c>HandoverSignalBit</c> 同语义位偏移一致（防漂移契约见 <c>HandshakeBitDriftContractTests</c>）。
+    /// <para>
     /// 源端在线缆上会做高/低 16 位交换（<c>ModbusSignal.GetValue</c>），本结构提供
     /// <see cref="ToWire"/> / <see cref="FromWire"/> 透明处理，业务层直接操作位语义即可。
     /// 另修正源端 <c>SendProduct3OK</c>/<c>SendProduct4OK</c> setter 互换 bug（源端 :371-372）。
+    /// </para>
     /// </remarks>
     [Flags]
     public enum HandshakeBit : uint
     {
         None = 0,
 
-        // ===== bit0-15：4 产品 × {Exist, OK, NG1, NG2} =====
+        // ===== bit0-3：4 产品在籍信号 Exist（源端 S_ProductExist_1..4 = 0..3） =====
         Product1Exist = 1u << 0,
-        Product1_OK = 1u << 1,
-        Product1_NG1 = 1u << 2,
-        Product1_NG2 = 1u << 3,
+        Product2Exist = 1u << 1,
+        Product3Exist = 1u << 2,
+        Product4Exist = 1u << 3,
 
-        Product2Exist = 1u << 4,
-        Product2_OK = 1u << 5,
-        Product2_NG1 = 1u << 6,
-        Product2_NG2 = 1u << 7,
+        // ===== bit4-6：产品1 结果（源端 S_Product_1_OK/NG1/NG2 = 4/5/6） =====
+        Product1_OK = 1u << 4,
+        Product1_NG1 = 1u << 5,
+        Product1_NG2 = 1u << 6,
 
-        Product3Exist = 1u << 8,
-        Product3_OK = 1u << 9,
-        Product3_NG1 = 1u << 10,
-        Product3_NG2 = 1u << 11,
+        // ===== bit7-9：产品2 结果（源端 S_Product_2_OK/NG1/NG2 = 7/8/9） =====
+        Product2_OK = 1u << 7,
+        Product2_NG1 = 1u << 8,
+        Product2_NG2 = 1u << 9,
 
-        Product4Exist = 1u << 12,
+        // ===== bit10-12：产品3 结果（源端 S_Product_3_OK/NG1/NG2 = 10/11/12，3-4 互换 bug 修正点 :371-372） =====
+        Product3_OK = 1u << 10,
+        Product3_NG1 = 1u << 11,
+        Product3_NG2 = 1u << 12,
+
+        // ===== bit13-15：产品4 结果（源端 S_Product_4_OK/NG1/NG2 = 13/14/15，3-4 互换 bug 修正点 :371-372） =====
         Product4_OK = 1u << 13,
         Product4_NG1 = 1u << 14,
         Product4_NG2 = 1u << 15,
@@ -105,9 +118,10 @@ namespace Luster.Module.Motion.Safety.Network
             }
         }
 
-        private static uint ProductExistBit(int i) => 1u << (i * 4 + 0);
-        private static uint ProductOkBit(int i) => 1u << (i * 4 + 1);
-        private static uint ProductNg1Bit(int i) => 1u << (i * 4 + 2);
-        private static uint ProductNg2Bit(int i) => 1u << (i * 4 + 3);
+        // 源端布局：Exist=i / OK=4+i*3 / NG1=4+i*3+1 / NG2=4+i*3+2（i=产品序号 0-3）
+        private static uint ProductExistBit(int i) => 1u << i;
+        private static uint ProductOkBit(int i) => 1u << (4 + i * 3);
+        private static uint ProductNg1Bit(int i) => 1u << (4 + i * 3 + 1);
+        private static uint ProductNg2Bit(int i) => 1u << (4 + i * 3 + 2);
     }
 }

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- 启用统一拷贝功能，编译产物自动进 Motions\ 目录 -->
+		<CopyToMotionsFolder>true</CopyToMotionsFolder>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="MinVer" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Reference Include="System.ComponentModel.DataAnnotations" />
+	</ItemGroup>
+
+</Project>

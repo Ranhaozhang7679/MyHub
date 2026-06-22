@@ -67,11 +67,14 @@ namespace Luster.Module.Motion.Safety.Tests
                 ng1:  new[] { false, false, true, false },
                 ng2:  new[] { false, false, false, true });
 
+            // 源端布局：Exist=i / OK=4+i*3 / NG1=4+i*3+1 / NG2=4+i*3+2
             // 产品1 Exist = bit0
             Assert.True(sig.GetBit(HandshakeBit.Product1Exist));
-            // 产品2 OK = bit5
+            // 产品3 Exist = bit2
+            Assert.True(sig.GetBit(HandshakeBit.Product3Exist));
+            // 产品2 OK = bit7
             Assert.True(sig.GetBit(HandshakeBit.Product2_OK));
-            // 产品3 NG1 = bit10
+            // 产品3 NG1 = bit11
             Assert.True(sig.GetBit(HandshakeBit.Product3_NG1));
             // 产品4 NG2 = bit15
             Assert.True(sig.GetBit(HandshakeBit.Product4_NG2));

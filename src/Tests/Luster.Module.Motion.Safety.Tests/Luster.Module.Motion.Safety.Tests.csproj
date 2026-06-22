@@ -14,6 +14,12 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Modules\Luster.Module.Motion.Safety\Luster.Module.Motion.Safety.csproj" />
+		<!--
+			仅测试引用 Handover 件（TES-48），用于跨模块防漂移契约单测
+			（HandshakeBit ↔ HandoverSignalBit ↔ 源端枚举三者钉死）。
+			非生产跨模块引用：Safety 生产件不依赖 Handover，仅测试项目为校验语义一致而引用。
+		-->
+		<ProjectReference Include="..\..\Modules\Luster.Module.Motion.Handover\Luster.Module.Motion.Handover.csproj" />
 	</ItemGroup>
 
 </Project>
