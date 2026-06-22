@@ -146,7 +146,7 @@ namespace Luster.Motion.DataStruct.DataModels
 
             InVacuumSensor.WaitIO<bool>(state, timeout, () =>
             {
-                throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID,"",this.Module, this.Name);
+                throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, GetConfigMessage(CurrentErrorCode), this.Module, this.Name);
             });
         }
 

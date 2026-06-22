@@ -87,6 +87,22 @@ namespace Luster.Motion.DataStruct
             AlarmCode = errorCode.ToString();
             DeviceID = id.ToString();
         }
+
+        /// <summary>
+        /// 支持报警代码、设备ID和报警描述
+        /// </summary>
+        /// <param name="code"></param>
+        /// <param name="deviceID"></param>
+        /// <param name="message"></param>
+        /// <param name="moduleName"></param>
+        /// <param name="name"></param>
+        public DeviceException(string code, Guid deviceID, string message = "", string moduleName = "", string name = "") : base(message)
+        {
+            AlarmCode = code;
+            DeviceID = deviceID.ToString();
+            ModuleName = moduleName;
+            Name = name;
+        }
     }
 
     /// <summary>

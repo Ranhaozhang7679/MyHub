@@ -494,7 +494,7 @@ namespace Luster.Motion.DataStruct.VDevice
                 return isTrue;
             }, timeout, 20, () =>
             {
-                throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID);
+                throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, GetConfigMessage(CurrentErrorCode));
             });
 
             VStatus = VStatus.Idle;
@@ -523,7 +523,7 @@ namespace Luster.Motion.DataStruct.VDevice
             if (!commResult.IsSuccess)
             {
                 PlcComm.Close();
-                throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, commResult.ErrorMsg);
+                throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, GetConfigMessage(CurrentErrorCode));
             }
         }
 
@@ -563,7 +563,7 @@ namespace Luster.Motion.DataStruct.VDevice
             if (!commResult.IsSuccess)
             {
                 PlcComm.Close();
-                throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, commResult.ErrorMsg);
+                throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, GetConfigMessage(CurrentErrorCode));
             }
 
             return commResult.Datas;

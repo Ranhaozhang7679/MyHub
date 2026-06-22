@@ -134,8 +134,8 @@ namespace Luster.Motion.DataStruct
 
                     WaitDiagital(timeout, ios.ToArray(), result.ToArray(), () =>
                     {
-                        throw new DeviceTimeoutException(Errors[Enums.DeviceError.SensorFail], 
-                            this.ID, $"Action:{checkAction} timeout>{timeout}!",this.Module);
+                        throw new DeviceTimeoutException(Errors[Enums.DeviceError.SensorFail],
+                            this.ID, GetConfigMessage(DeviceError.SensorFail), this.Module);
                     });
                 }
             }

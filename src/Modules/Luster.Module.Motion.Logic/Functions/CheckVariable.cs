@@ -209,7 +209,7 @@ namespace Luster.Module.Motion.Logic.Functions
             }
             catch (DeviceTimeoutException ex)
             {
-                OnAlarm(AlarmType.WarningTip, $"等待变量{GlobalVar.Replace("Extend_", "")} == {Value}超时!");
+                OnAlarm(AlarmType.WarningTip, $"等待变量 模块名:{MyOwner.Alias} 变量:{GlobalVar.Replace("Extend_", "")} == {Value}超时!");
             }
 
             // 数据转移
