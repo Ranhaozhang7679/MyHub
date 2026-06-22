@@ -1786,17 +1786,19 @@ namespace Luster.Motion.Integration.Web
                 IsRobotEnabledMem = robotEnabled;
             }
 
-            //根据FX的需求,CGL CGSFA CGSF等工站临时添加机器人速度,定值
+            //机械手速度: 仅在存在机械手通讯设备时上传, 优先读取配方 Config 目录下的本地文件真实值
+            //文件: {RecipeConfigPath}\R1.txt (纯数值字符串), 本地没有文件或解析失败时固定上传 100
             var vComms = mController.MotionEngine.DeviceEngine.GetVDevices<VCommuncation>();
             foreach (var item in vComms)
             {
                 if (item.Name.Contains("机器人") || item.Name.Contains("机械手"))
                 {
+                    int robotSpeed = LoadRobotSpeedFromDisk();
                     var addSpdContent = new
                     {
                         parameter = $"Robot Speed",
-                        preValue = 100,
-                        aftValue = 100,
+                        preValue = robotSpeed,
+                        aftValue = robotSpeed,
                         changeReason = "NoRepair"
                     };
                     ctList.Add(addSpdContent);
@@ -1878,6 +1880,42 @@ namespace Luster.Motion.Integration.Web
             ArrayList array = new ArrayList();
             array.Add(jsonData);
             return array;
+        }
+
+
+        /// <summary>
+        /// 从配方 Config 目录读取机械手速度(由配方 ReadRobotSpeed Function 写入)
+        /// 路径: {RecipeConfigPath}\R1.txt, 内容是纯数值字符串
+        /// 本地没有文件或解析失败时固定返回 100
+        /// </summary>
+        private int LoadRobotSpeedFromDisk()
+        {
+            try
+            {
+                string dir = mController?.MotionEngine?.DeviceEngine?.RecipeConfigPath;
+                if (string.IsNullOrEmpty(dir))
+                {
+                    return 100;
+                }
+                string filePath = Path.Combine(dir, "R1.txt");
+                if (File.Exists(filePath))
+                {
+                    string content = File.ReadAllText(filePath).Trim();
+                    if (int.TryParse(content, out int speed))
+                    {
+                        return speed;
+                    }
+                    if (double.TryParse(content, out double dSpeed))
+                    {
+                        return (int)Math.Round(dSpeed);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                LogTool.Debug($"读取机械手速度文件失败: {ex.Message}", "VisionAPI");
+            }
+            return 100;
         }
 
 

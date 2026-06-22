@@ -20,6 +20,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!--<Grid Grid.Row="0" Visibility="{Binding IsVisible, Converter={StaticResource Boolean2VisibilityConverter}}">
@@ -75,7 +76,7 @@
             <Border Grid.Row="1" Grid.Column="0" Margin="4" Padding="4" BorderBrush="#57a9fd" BorderThickness="1">
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Margin="2" FontSize="12" Text="AngleTorque" />
-                    <chart:CartesianChart x:Name="AngleTorqueChart" Margin="0" />
+                    <chart:CartesianChart x:Name="AngleTorqueChart" Margin="0" TooltipPosition="Hidden" />
                 </DockPanel>
             </Border>
 
@@ -83,7 +84,7 @@
             <Border Grid.Row="1" Grid.Column="1" Margin="4" Padding="4" BorderBrush="#57a9fd" BorderThickness="1">
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Margin="2" FontSize="12" Text="Torque/Angle/Press-time" />
-                    <chart:CartesianChart x:Name="Time_TorqueAnglePressChart" Margin="0" />
+                    <chart:CartesianChart x:Name="Time_TorqueAnglePressChart" Margin="0" TooltipPosition="Hidden" />
                 </DockPanel>
             </Border>
 
@@ -91,7 +92,7 @@
             <Border Grid.Row="1" Grid.Column="2" Margin="4" Padding="4" BorderBrush="#57a9fd" BorderThickness="1">
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Margin="2" FontSize="12" Text="Press" />
-                    <chart:CartesianChart x:Name="TimePressChart" Margin="0" />
+                    <chart:CartesianChart x:Name="TimePressChart" Margin="0" TooltipPosition="Hidden" />
                 </DockPanel>
             </Border>
 
@@ -99,7 +100,7 @@
             <Border Grid.Row="2" Grid.Column="0" Margin="4" Padding="4" BorderBrush="#57a9fd" BorderThickness="1">
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Margin="2" FontSize="12" Text="ToeIn XForce" />
-                    <chart:CartesianChart x:Name="ToeInXForceChart" Margin="0" />
+                    <chart:CartesianChart x:Name="ToeInXForceChart" Margin="0" TooltipPosition="Hidden" />
                 </DockPanel>
             </Border>
 
@@ -107,7 +108,7 @@
             <Border Grid.Row="2" Grid.Column="1" Margin="4" Padding="4" BorderBrush="#57a9fd" BorderThickness="1">
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Margin="2" FontSize="12" Text="ToeIn YForce" />
-                    <chart:CartesianChart x:Name="ToeInYForceChart" Margin="0" />
+                    <chart:CartesianChart x:Name="ToeInYForceChart" Margin="0" TooltipPosition="Hidden" />
                 </DockPanel>
             </Border>
 
@@ -115,25 +116,45 @@
             <Border Grid.Row="2" Grid.Column="2" Margin="4" Padding="4" BorderBrush="#57a9fd" BorderThickness="1">
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Margin="2" FontSize="12" Text="ToeIn ZForce" />
-                    <chart:CartesianChart x:Name="ToeInZForceChart" Margin="0" />
+                    <chart:CartesianChart x:Name="ToeInZForceChart" Margin="0" TooltipPosition="Hidden" />
                 </DockPanel>
             </Border>
         </Grid>
-        <StackPanel Grid.Row="1" Orientation="Vertical">
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,4,0,2">
             <StackPanel.Resources>
                 <Style TargetType="{x:Type TextBlock}">
                     <Setter Property="FontSize" Value="10" />
                 </Style>
             </StackPanel.Resources>
+            <CheckBox Content="启用时间筛选"
+                      IsChecked="{Binding EnableTimeFilter}"
+                      VerticalAlignment="Center" Margin="0,0,10,0" FontSize="12" />
+            <hc:DateTimePicker Width="210" Height="28"
+                               SelectedDateTime="{Binding FilterStartTime}"
+                               DateTimeFormat="yyyy-MM-dd HH:mm:ss"
+                               hc:InfoElement.Title="开始"
+                               hc:InfoElement.TitlePlacement="Left"
+                               hc:InfoElement.TitleWidth="40"
+                               Style="{StaticResource DateTimePickerExtend}" />
+            <hc:DateTimePicker Width="210" Height="28" Margin="10,0,0,0"
+                               SelectedDateTime="{Binding FilterEndTime}"
+                               DateTimeFormat="yyyy-MM-dd HH:mm:ss"
+                               hc:InfoElement.Title="结束"
+                               hc:InfoElement.TitlePlacement="Left"
+                               hc:InfoElement.TitleWidth="40"
+                               Style="{StaticResource DateTimePickerExtend}" />
+        </StackPanel>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,2,0,4">
             <Button
-                        Margin="0,0,0,0"
-                        Command="{Binding ImportTotalCommand}"                       
+                        Margin="0,0,10,0"
+                        Command="{Binding ImportTotalCommand}"
                         Content="导入曲线"
                         Style="{StaticResource ButtonPrimary}" Width="150" />
-            <!--<Label
-                        Margin="0"
-                        Content="TCR->TimeTorque->Press"
-                         Width="200"  HorizontalAlignment="Center" VerticalAlignment="Center" />-->
+            <Button
+                        Margin="10,0,0,0"
+                        Command="{Binding ImportTotalAutoCommand}"
+                        Content="一键导入"
+                        Style="{StaticResource ButtonPrimary}" Width="150" />
         </StackPanel>
 
     </Grid>

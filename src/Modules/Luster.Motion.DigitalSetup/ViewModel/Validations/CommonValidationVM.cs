@@ -495,6 +495,12 @@ namespace Luster.Motion.DigitalSetup.ViewModel.Validations
 
             string basePath = BasePath;
 
+            // 加载期间抑制配置变化事件：标量属性（Description/ScriptPath/PyexePath/ValidationResult）
+            // 的 setter 会调用 OnConfigChanged()，而此时 ConfigItems 尚未重新填充，会生成空快照，
+            // 进而被订阅者写回缓存/磁盘，导致"刚选中的验证项配置被清空"。
+            bool previousSuppress = _suppressConfigChanged;
+            _suppressConfigChanged = true;
+
             // 暂时取消集合变化监听
             ConfigItems.CollectionChanged -= OnConfigItemsCollectionChanged;
 
@@ -552,6 +558,8 @@ namespace Luster.Motion.DigitalSetup.ViewModel.Validations
             {
                 // 恢复集合变化监听
                 ConfigItems.CollectionChanged += OnConfigItemsCollectionChanged;
+                // 恢复抑制标志（保留调用者原本的设置）
+                _suppressConfigChanged = previousSuppress;
             }
 
             // 已有本地配置时不补回默认参数，保留用户的手动修改（如删除参数）

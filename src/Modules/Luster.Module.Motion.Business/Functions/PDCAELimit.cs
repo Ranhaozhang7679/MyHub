@@ -228,6 +228,10 @@ namespace Luster.Module.Motion.Business.Functions
         [Parameter("是否上传力控图片", 18, CN = "是否上传力控图片", DefaultV = false)]
         public bool IsUploadDHPic { get; set; }
 
+        [DependOn("PDCAMode", PDCAType.Whole)]
+        [Parameter("全部拷贝", 19, CN = "全部拷贝", DefaultV = false)]
+        public bool FullCopy { get; set; }
+
 
         /// <summary>
         /// 输出结果
@@ -550,7 +554,7 @@ namespace Luster.Module.Motion.Business.Functions
                     }
 
                     // 2.拼接完整批量消息（start + attr + data + submit 一次性发送）
-                    if(IsManual)
+                    if (IsManual)
                         sendStr = GetSendDataContinuous(OutWIP, ProdData, IsCPKMode, IsGRRMode, WorkId);
                     else
                         sendStr = GetSendDataContinuousNew(OutWIP, ProdData, IsCPKMode, IsGRRMode, WorkId);
@@ -1163,51 +1167,60 @@ namespace Luster.Module.Motion.Business.Functions
                     {
                         Directory.CreateDirectory(dstImgFolder);
                     }
-
-                    //string[] picList = Directory.GetFiles(srcImgFolder, "*.jpg");
-                    string[] picList = Directory.GetFiles(srcImgFolder, "*.jpg")
-                                                .Concat(Directory.GetFiles(srcImgFolder, "*.png"))
-                                                .ToArray();
-                    foreach (var fPath in picList)
+                    if (FullCopy)
                     {
-                        //string fName = fPath.Substring(srcImgFolder.Length + 1);
-                        //if (fName.Contains(IsImageRol))
-                        //{
-                        //    File.Copy(Path.Combine(srcImgFolder, fName), Path.Combine(dstImgFolder, fName), true);
-                        var fName = Path.GetFileName(fPath);
-                        if (!string.IsNullOrEmpty(IsImageRol) && fName.IndexOf(IsImageRol, StringComparison.OrdinalIgnoreCase) >= 0)
+                        string[] picList = Directory.GetFiles(srcImgFolder);
+                        foreach (var fPath in picList)
                         {
+                            var fName = Path.GetFileName(fPath);
                             File.Copy(fPath, Path.Combine(dstImgFolder, fName), true);
-                            MyOwner.OnLog(LogType.Warning, $"PDCAELimit文件复制OK;{Path.Combine(srcImgFolder, fName)}->{Path.Combine(dstImgFolder, fName)}\r\n");
                         }
                     }
-
-                    //遍历OK和NG文件夹
-                    if (Is3ANG)
+                    else
                     {
-                        if (srcImgFolder.Contains("\\OK\\"))
+                        string[] picList = Directory.GetFiles(srcImgFolder, "*.jpg")
+                                .Concat(Directory.GetFiles(srcImgFolder, "*.png"))
+                                .ToArray();
+                        foreach (var fPath in picList)
                         {
-                            srcImgFolderEx = srcImgFolder.Replace("\\OK\\", "\\NG\\");
-                        }
-                        if (srcImgFolder.Contains("\\NG\\"))
-                        {
-                            srcImgFolderEx = srcImgFolder.Replace("\\NG\\", "\\OK\\");
-                        }
-                        if (!string.IsNullOrEmpty(srcImgFolderEx) && Directory.Exists(srcImgFolderEx))
-                        {
-                            picList = Directory.GetFiles(srcImgFolderEx, "*.jpg");
-                            foreach (var fPath in picList)
+                            //string fName = fPath.Substring(srcImgFolder.Length + 1);
+                            //if (fName.Contains(IsImageRol))
+                            //{
+                            //    File.Copy(Path.Combine(srcImgFolder, fName), Path.Combine(dstImgFolder, fName), true);
+                            var fName = Path.GetFileName(fPath);
+                            if (!string.IsNullOrEmpty(IsImageRol) && fName.IndexOf(IsImageRol, StringComparison.OrdinalIgnoreCase) >= 0)
                             {
-                                string fName = fPath.Substring(srcImgFolderEx.Length + 1);
-                                if (fName.Contains(IsImageRol))
+                                File.Copy(fPath, Path.Combine(dstImgFolder, fName), true);
+                                MyOwner.OnLog(LogType.Warning, $"PDCAELimit文件复制OK;{Path.Combine(srcImgFolder, fName)}->{Path.Combine(dstImgFolder, fName)}\r\n");
+                            }
+                        }
+
+                        //遍历OK和NG文件夹
+                        if (Is3ANG)
+                        {
+                            if (srcImgFolder.Contains("\\OK\\"))
+                            {
+                                srcImgFolderEx = srcImgFolder.Replace("\\OK\\", "\\NG\\");
+                            }
+                            if (srcImgFolder.Contains("\\NG\\"))
+                            {
+                                srcImgFolderEx = srcImgFolder.Replace("\\NG\\", "\\OK\\");
+                            }
+                            if (!string.IsNullOrEmpty(srcImgFolderEx) && Directory.Exists(srcImgFolderEx))
+                            {
+                                picList = Directory.GetFiles(srcImgFolderEx, "*.jpg");
+                                foreach (var fPath in picList)
                                 {
-                                    File.Copy(Path.Combine(srcImgFolderEx, fName), Path.Combine(dstImgFolder, fName), true);
-                                    MyOwner.OnLog(LogType.Warning, $"PDCAELimit文件3ANG复制OK;{Path.Combine(srcImgFolderEx, fName)}->{Path.Combine(dstImgFolder, fName)}\r\n");
+                                    string fName = fPath.Substring(srcImgFolderEx.Length + 1);
+                                    if (fName.Contains(IsImageRol))
+                                    {
+                                        File.Copy(Path.Combine(srcImgFolderEx, fName), Path.Combine(dstImgFolder, fName), true);
+                                        MyOwner.OnLog(LogType.Warning, $"PDCAELimit文件3ANG复制OK;{Path.Combine(srcImgFolderEx, fName)}->{Path.Combine(dstImgFolder, fName)}\r\n");
+                                    }
                                 }
                             }
                         }
                     }
-
                     // 成功
                     return true;
                 }

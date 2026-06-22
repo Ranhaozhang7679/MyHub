@@ -2442,6 +2442,8 @@ namespace Luster.Motion.TaskFlow.Engine
                     MotionEngine.OnAlarm(modeAlarm);
                 }
 
+                // 触发属性变更事件，让 VisionAPI.MachineParaUpload 上传"生产模式启用"/"空跑模式启用"等控制参数
+                OnPropertyChanged("生产模式启用", currentMode, mode);
             }
 
             // 非离线模式切换成功
