@@ -80,17 +80,30 @@ namespace Luster.Motion.DataStruct.Checkpoint
         /// <summary>对端站点标识</summary>
         public string PeerStationId { get; }
 
+        /// <summary>
+        /// 角色专用扩展状态（ICW 用：装 "Recipe=X;Mode=Y;Result=Z" 等ICW特有字段；
+        /// Feed/Leave 留空）。向后兼容，默认空字符串。
+        /// </summary>
+        public string ExtraState { get; }
+
         /// <summary>采集时间（UTC）</summary>
         public DateTime CapturedAtUtc { get; }
 
         public HandoverStateSnapshot(string role, int currentStep, bool isOnline,
             HandoverSignalState signals, string peerStationId, DateTime capturedAtUtc)
+            : this(role, currentStep, isOnline, signals, peerStationId, string.Empty, capturedAtUtc)
+        {
+        }
+
+        public HandoverStateSnapshot(string role, int currentStep, bool isOnline,
+            HandoverSignalState signals, string peerStationId, string extraState, DateTime capturedAtUtc)
         {
             Role = role ?? string.Empty;
             CurrentStep = currentStep;
             IsOnline = isOnline;
             Signals = signals;
             PeerStationId = peerStationId ?? string.Empty;
+            ExtraState = extraState ?? string.Empty;
             CapturedAtUtc = capturedAtUtc;
         }
     }

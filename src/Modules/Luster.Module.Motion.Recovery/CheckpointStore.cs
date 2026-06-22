@@ -132,6 +132,7 @@ namespace Luster.Module.Motion.Recovery
             public bool IsOnline { get; set; }
             public HandoverSignalStateDto Signals { get; set; }
             public string PeerStationId { get; set; }
+            public string ExtraState { get; set; }
             public DateTime CapturedAtUtc { get; set; }
 
             public static HandoverStateSnapshotDto FromModel(HandoverStateSnapshot m)
@@ -141,14 +142,16 @@ namespace Luster.Module.Motion.Recovery
                 {
                     Role = m.Role, CurrentStep = m.CurrentStep, IsOnline = m.IsOnline,
                     Signals = HandoverSignalStateDto.FromModel(m.Signals),
-                    PeerStationId = m.PeerStationId, CapturedAtUtc = m.CapturedAtUtc
+                    PeerStationId = m.PeerStationId, ExtraState = m.ExtraState,
+                    CapturedAtUtc = m.CapturedAtUtc
                 };
             }
 
             public HandoverStateSnapshot ToModel()
             {
                 return new HandoverStateSnapshot(
-                    Role, CurrentStep, IsOnline, Signals?.ToModel(), PeerStationId, CapturedAtUtc);
+                    Role, CurrentStep, IsOnline, Signals?.ToModel(),
+                    PeerStationId, ExtraState, CapturedAtUtc);
             }
         }
 

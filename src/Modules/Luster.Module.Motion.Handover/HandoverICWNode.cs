@@ -12,6 +12,7 @@
 
 using Luster.Common.DataStruct.Attributes;
 using Luster.Common.DataStruct.Enums;
+using Luster.Motion.DataStruct.Checkpoint;
 using Luster.Motion.DataStruct.DataModels;
 using Luster.Motion.DataStruct.Enums;
 using Luster.Motion.DataStruct.VDevice;
@@ -437,6 +438,45 @@ namespace Luster.Module.Motion.Handover
         /// 当前时间(对齐源端 <c>DateTime.Now</c>;提为虚方法便于单测注入固定时钟)。
         /// </summary>
         protected virtual DateTime DateTimeNow() => DateTime.Now;
+
+        #endregion
+
+        #region checkpoint 快照(ADR-TES-28 ADR-B,ICW 特有字段进 ExtraState)
+
+        /// <summary>
+        /// ICW 快照:base 采集基础交握态 + ICW 特有字段(配方/模式/当前结果码)进 <see cref="HandoverStateSnapshot.ExtraState"/>。
+        /// <para>只读采集,不改 Req/Resp 状态机。</para>
+        /// </summary>
+        public override HandoverStateSnapshot GetSnapshot()
+        {
+            var baseSnap = base.GetSnapshot();
+            if (baseSnap == null) return null;
+
+            // 读当前 ICW 响应码(只读,不推进状态机)
+            string resultCode = "Unknown";
+            try
+            {
+                if (ReadEndStatus(out var code))
+                {
+                    resultCode = code.ToString();
+                }
+            }
+            catch
+            {
+                resultCode = "ReadFail";
+            }
+
+            string extra = $"Recipe={RecipeValue};Mode={ModeValue};Result={resultCode}";
+
+            return new HandoverStateSnapshot(
+                role: baseSnap.Role,
+                currentStep: baseSnap.CurrentStep,
+                isOnline: baseSnap.IsOnline,
+                signals: baseSnap.Signals,
+                peerStationId: baseSnap.PeerStationId,
+                extraState: extra,
+                capturedAtUtc: baseSnap.CapturedAtUtc);
+        }
 
         #endregion
     }
