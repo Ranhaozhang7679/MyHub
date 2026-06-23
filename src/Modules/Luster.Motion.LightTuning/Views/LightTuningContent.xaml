@@ -1,0 +1,139 @@
+﻿<UserControl
+    x:Class="Luster.Motion.LightTuning.Views.LightTuningContent"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:param="clr-namespace:Luster.Control.Wpf.Motion;assembly=Luster.Control.Wpf.Motion"
+    xmlns:prism="http://prismlibrary.com/"
+    d:DesignHeight="600"
+    d:DesignWidth="780"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{DynamicResource RegionBrush}"
+    mc:Ignorable="d">
+    <UserControl.Resources>
+        <!-- 通道表行样式：回读列只读、编辑列可写（受权限） -->
+        <Style x:Key="ChannelDataGridStyle" TargetType="DataGrid" BasedOn="{StaticResource {x:Type DataGrid}}">
+            <Setter Property="AutoGenerateColumns" Value="False" />
+            <Setter Property="CanUserAddRows" Value="False" />
+            <Setter Property="CanUserDeleteRows" Value="False" />
+            <Setter Property="HeadersVisibility" Value="Column" />
+            <Setter Property="GridLinesVisibility" Value="All" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="6">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="220" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 顶部按钮区（Admin/Engineer 权限门控） -->
+        <Grid Grid.Row="0" Margin="0,0,0,6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Button
+                Grid.Column="0"
+                Margin="0,0,6,0"
+                Command="{Binding ApplyCommand}"
+                Content="下发到设备"
+                IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Engineer}" />
+            <Button
+                Grid.Column="1"
+                Margin="0,0,6,0"
+                Command="{Binding RefreshFeedbackCommand}"
+                Content="回读亮度" />
+            <Button
+                Grid.Column="2"
+                Margin="0,0,6,0"
+                Command="{Binding SyncFromParamCommand}"
+                Content="同步通道"
+                IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Engineer}" />
+            <Button
+                Grid.Column="3"
+                Margin="0,0,6,0"
+                Command="{Binding SaveCommand}"
+                Content="保存配置"
+                IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Engineer}" />
+            <Button
+                Grid.Column="4"
+                Margin="0,0,6,0"
+                Command="{Binding LoadCommand}"
+                Content="加载配置"
+                IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Engineer}" />
+            <TextBlock
+                Grid.Column="5"
+                VerticalAlignment="Center"
+                Foreground="{DynamicResource InfoBrush}"
+                Text="{Binding Status}" />
+        </Grid>
+
+        <!-- ParamGrid：编辑光源参数（分组/通道亮度/通道绑定/目标联动） -->
+        <Grid Grid.Row="1" Margin="0,0,0,6">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0" Margin="2,0,0,4" FontWeight="Bold" Text="光源参数（ParamGrid）" />
+            <ScrollViewer Grid.Row="1">
+                <param:ParamGrid
+                    MinHeight="120"
+                    Margin="0"
+                    HasPermission="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Engineer}"
+                    SelectedObject="{Binding ModuleObj}" />
+            </ScrollViewer>
+        </Grid>
+
+        <!-- 通道亮度表（DataGrid 编辑 + 实时回读，对齐源端 DataGridView） -->
+        <Grid Grid.Row="2" Margin="0,0,0,6">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0" Margin="2,0,0,4" FontWeight="Bold" Text="通道亮度表（脉宽/延时/回读）" />
+            <DataGrid
+                Grid.Row="1"
+                ItemsSource="{Binding Channels}"
+                SelectedItem="{Binding SelectedChannel, Mode=TwoWay}"
+                Style="{StaticResource ChannelDataGridStyle}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn
+                        Binding="{Binding Channel}"
+                        Header="通道"
+                        IsReadOnly="True" />
+                    <DataGridTextColumn
+                        Binding="{Binding Width, UpdateSourceTrigger=PropertyChanged}"
+                        Header="脉宽(亮度)" />
+                    <DataGridTextColumn
+                        Binding="{Binding Delay, UpdateSourceTrigger=PropertyChanged}"
+                        Header="延时" />
+                    <DataGridTextColumn
+                        Binding="{Binding Feedback}"
+                        Header="回读亮度"
+                        IsReadOnly="True" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </Grid>
+
+        <!-- 底部说明 -->
+        <TextBlock
+            Grid.Row="3"
+            Margin="2"
+            FontSize="11"
+            Foreground="{DynamicResource DarkInfoBrush}"
+            TextWrapping="Wrap">
+            光调 UI（TES-64 P6-F）：ParamGrid 编辑光源参数 + DataGrid 通道亮度表，下发 P2-A BX 设备（ILightController）。
+            通道亮度走接口契约；触发模式/分组参数经反射调 BX 厂家方法（待全栈提升进 ILightController 后切强类型）。
+            可还原：移除本模块（删 AddModule + ProjectReference + sln 块 + 模块目录）不影响平台标准 UI。
+        </TextBlock>
+    </Grid>
+</UserControl>

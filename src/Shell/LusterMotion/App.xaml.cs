@@ -239,6 +239,8 @@ namespace LusterMotion
 
             moduleCatalog.AddModule<Luster.Motion.DigitalSetup.DigitalSetupModule>(); //数字架线
 
+            moduleCatalog.AddModule<Luster.Motion.LightTuning.LightTuningModule>(); //光调 UI（TES-64 P6-F）
+
             // 注册动态页面
             var commBus = Container.Resolve<ICommonBus>();
             commBus.RegisterSystemDll();
