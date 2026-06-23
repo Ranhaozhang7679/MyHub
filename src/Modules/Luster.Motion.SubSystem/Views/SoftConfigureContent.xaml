@@ -251,7 +251,7 @@
                                     <ToggleButton
                                         Margin="20,9"
                                         HorizontalAlignment="Center"
-                                        IsChecked="{Binding IsEnableSafetyDoor}"
+                                        IsChecked="{Binding IsEnableSaftyDoor}"
                                         IsEnabled="{Binding IsEdit}"
                                         Style="{StaticResource ToggleButtonSwitch}">
                                         <hc:Interaction.Triggers>

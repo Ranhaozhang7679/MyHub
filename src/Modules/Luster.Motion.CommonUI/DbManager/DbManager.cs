@@ -803,7 +803,7 @@ namespace Luster.Motion.CommonUI
             }
 
             // 开启CT统计，则写入数据库
-            if (_motionController.SysConfig.IsEnableCTStatistics)
+            if (_motionController.SysConfig.IsEnableCTStatistics && IsUseLog)
             {
                 if (stationTimes != null && stationTimes.Count() > 0)
                 {
