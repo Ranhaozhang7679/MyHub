@@ -245,15 +245,19 @@ namespace DC.Authorization.WPF.ViewModels
             {
                 return;
             }
-            Logs.Clear();
-            LogCurrentPage--;
             QueryModel queryModel = new QueryModel()
             {
                 StartTime = _startDate,
                 EndTime = endDate,
-                PageIndex = LogCurrentPage - 1
+                PageIndex = LogCurrentPage - 2
             };
-            Logs.AddRange(_auditLogRepository.Query(queryModel));
+            var result = _auditLogRepository.Query(queryModel);
+            if (result != null && result.Count > 0)
+            {
+                Logs.Clear();
+                LogCurrentPage--;
+                Logs.AddRange(result);
+            }
         }
 
         private DelegateCommand _nextPageCommand;
@@ -265,15 +269,19 @@ namespace DC.Authorization.WPF.ViewModels
             {
                 return;
             }
-            Logs.Clear();
-            LogCurrentPage++;
             QueryModel queryModel = new QueryModel()
             {
                 StartTime = _startDate,
                 EndTime = endDate,
-                PageIndex = LogCurrentPage - 1
+                PageIndex = LogCurrentPage
             };
-            Logs.AddRange(_auditLogRepository.Query(queryModel));
+            var result = _auditLogRepository.Query(queryModel);
+            if (result != null && result.Count > 0)
+            {
+                Logs.Clear();
+                LogCurrentPage++;
+                Logs.AddRange(result);
+            }
         }
 
         public bool CanCloseDialog()
@@ -294,6 +302,40 @@ namespace DC.Authorization.WPF.ViewModels
 
 
         public int LogCurrentPage { get => _logCurrentPage; set => SetProperty(ref _logCurrentPage, value); }
+
+        private string _jumpPageText;
+        /// <summary>
+        /// 页码跳转输入
+        /// </summary>
+        public string JumpPageText { get => _jumpPageText; set => SetProperty(ref _jumpPageText, value); }
+
+        private DelegateCommand _jumpPageCommand;
+        public ICommand JumpPageCommand => _jumpPageCommand ??= new DelegateCommand(JumpPage);
+
+        private void JumpPage()
+        {
+            if (int.TryParse(JumpPageText, out int targetPage) && targetPage >= 1)
+            {
+                QueryModel queryModel = new QueryModel()
+                {
+                    StartTime = _startDate,
+                    EndTime = endDate,
+                    PageIndex = targetPage - 1
+                };
+                var result = _auditLogRepository.Query(queryModel);
+                if (result == null || result.Count == 0)
+                {
+                    MessageBox.Show($"第 {targetPage} 页不存在", "提示", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+                else
+                {
+                    Logs.Clear();
+                    LogCurrentPage = targetPage;
+                    Logs.AddRange(result);
+                }
+            }
+            JumpPageText = string.Empty;
+        }
 
         //public DialogCloseListener RequestClose => _requestClose;
 

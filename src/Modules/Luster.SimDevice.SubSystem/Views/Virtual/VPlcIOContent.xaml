@@ -94,6 +94,7 @@
                         VerticalAlignment="Center"
                         Command="{Binding BatchImportCommand}"
                         Content="导入"
+                        ToolTip="导入数据必须包含：地址、名称、分类 三列实际内容（对应Excel的第2、3、4列）"
                         Style="{StaticResource ButtonInfo.Small}" />
                     <Button
                         Margin="0,0,4,0"
