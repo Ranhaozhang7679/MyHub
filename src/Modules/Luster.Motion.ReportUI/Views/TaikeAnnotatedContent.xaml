@@ -12,6 +12,10 @@
     prism:ViewModelLocator.AutoWireViewModel="True"
     mc:Ignorable="d">
 
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -40,81 +44,138 @@
                 <TextBox Text="{Binding YAxisMax, UpdateSourceTrigger=PropertyChanged}"
                          Width="50" Height="22" VerticalAlignment="Center"
                          VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="11" />
-                <CheckBox Content="只显示正数"
-                        IsChecked="{Binding OnlyShowPositiveIsEnabled, Mode=TwoWay}" />
-                <CheckBox Content="平滑曲线处理"
-                        IsChecked="{Binding SmoothCurveProcessingsEnabled, Mode=TwoWay}" />
-                <TextBlock Text="平滑窗口:" VerticalAlignment="Center" Margin="15,0,5,0" Foreground="#555"/>
-                <Slider x:Name="SliderWindow" Width="150" VerticalAlignment="Center"
-                        Minimum="3" Maximum="51" Value="{Binding SliderValue}" IsSnapToTickEnabled="True" TickFrequency="2"/>
-                <Button Content="刷新" Command="{Binding RefreshChartCommand}"
-                        Width="45" Height="26" Margin="10,0,0,0" />
-            </StackPanel>
 
-            <!-- 第二行：图表2 参数 -->
+            </StackPanel>
+            <!-- 第二行：公共按钮 + Time-Press 参数 + 刷新 -->
             <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                <Button Content="切换模式" Command="{Binding ToggleChart2ModeCommand}"
-                        MinWidth="70" Height="22" Margin="0,0,6,0" FontSize="11" Padding="4,0" />
-                <TextBlock Text="{Binding Chart2Title}" FontWeight="Bold" VerticalAlignment="Center" FontSize="11" Margin="0,0,4,0" Foreground="#57a9fd" />
-                <TextBlock Text="{Binding Chart2XLabel}" VerticalAlignment="Center" FontSize="11" Margin="0,0,2,0" />
-                <TextBox Text="{Binding XAxisStep2, UpdateSourceTrigger=PropertyChanged}"
+                <TextBlock Text="X上限(0自动):" VerticalAlignment="Center" FontSize="11" Margin="4,0,2,0" />
+                <TextBox Text="{Binding XAxisMax, UpdateSourceTrigger=PropertyChanged}"
                          Width="50" Height="22" VerticalAlignment="Center"
                          VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="11" />
-                <TextBlock Text="{Binding Chart2YLabel}" VerticalAlignment="Center" FontSize="11" Margin="4,0,2,0" />
+                <CheckBox Content="只显示正数"
+            IsChecked="{Binding OnlyShowPositiveIsEnabled, Mode=TwoWay}" />
+                <CheckBox Content="平滑曲线处理"
+            IsChecked="{Binding SmoothCurveProcessingsEnabled, Mode=TwoWay}" />
+                <CheckBox Content="去除异常数据"
+            IsChecked="{Binding RemoveAnomalyEnabled, Mode=TwoWay}"
+            Margin="6,0,0,0" />
+                <TextBlock Text="平滑窗口:" VerticalAlignment="Center" Margin="15,0,5,0" Foreground="#555"/>
+                <Slider x:Name="SliderWindow" Width="150" VerticalAlignment="Center"
+            Minimum="3" Maximum="51" Value="{Binding SliderValue}" IsSnapToTickEnabled="True" TickFrequency="2"/>
+                <Button Content="刷新" Command="{Binding RefreshChartCommand}"
+            Width="45" Height="26" Margin="10,0,0,0" />
+                <TextBlock Text="时间筛选:" VerticalAlignment="Center" FontSize="11" Margin="15,0,4,0" Foreground="#57a9fd" FontWeight="Bold" />
+                <CheckBox Content="启用" IsChecked="{Binding EnableTimeFilter}" VerticalAlignment="Center" Margin="0,0,6,0" FontSize="11" />
+                <hc:DateTimePicker Width="190" Height="24"
+                       SelectedDateTime="{Binding FilterStartTime}"
+                       DateTimeFormat="yyyy-MM-dd HH:mm:ss"
+                       hc:InfoElement.Title="起"
+                       hc:InfoElement.TitlePlacement="Left"
+                       hc:InfoElement.TitleWidth="30"
+                       Style="{StaticResource DateTimePickerExtend}" />
+                <hc:DateTimePicker Width="190" Height="24" Margin="6,0,0,0"
+                       SelectedDateTime="{Binding FilterEndTime}"
+                       DateTimeFormat="yyyy-MM-dd HH:mm:ss"
+                       hc:InfoElement.Title="止"
+                       hc:InfoElement.TitlePlacement="Left"
+                       hc:InfoElement.TitleWidth="30"
+                       Style="{StaticResource DateTimePickerExtend}" />
+            </StackPanel>
+            <!-- 第二行：合并/分开切换 + Position 参数 + 分组下拉 -->
+            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                <Button Content="{Binding MergeViewButtonText}" Command="{Binding ToggleMergeViewCommand}"
+                        MinWidth="80" Height="22" Margin="0,0,6,0" FontSize="11" Padding="4,0"
+                        Style="{StaticResource ButtonInfo}" />
+                <TextBlock Text="【Time-Position】" FontWeight="Bold" VerticalAlignment="Center" FontSize="11" Margin="0,0,4,0" Foreground="#57a9fd" />
+                <TextBlock Text="Y间隔(mm):" VerticalAlignment="Center" FontSize="11" Margin="0,0,2,0" />
                 <TextBox Text="{Binding YAxisStep2, UpdateSourceTrigger=PropertyChanged}"
                          Width="50" Height="22" VerticalAlignment="Center"
                          VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="11" />
-                <TextBlock Text="{Binding Chart2YMaxLabel}" VerticalAlignment="Center" FontSize="11" Margin="4,0,2,0" />
+                <TextBlock Text="Y上限(mm,0自动):" VerticalAlignment="Center" FontSize="11" Margin="4,0,2,0" />
                 <TextBox Text="{Binding YAxisMax2, UpdateSourceTrigger=PropertyChanged}"
                          Width="50" Height="22" VerticalAlignment="Center"
                          VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="11" />
+                <TextBlock Text="分组:" VerticalAlignment="Center" FontSize="11" Margin="12,0,4,0"
+                           Foreground="#57a9fd" FontWeight="Bold" />
+                <ComboBox ItemsSource="{Binding GroupKeys}"
+                          SelectedItem="{Binding SelectedGroupKey, Mode=TwoWay}"
+                          Width="320" Height="22" VerticalAlignment="Center"
+                          FontSize="11" />
             </StackPanel>
         </StackPanel>
 
-        <!-- 双图表区域 -->
-        <Grid Grid.Row="1" Margin="8,4">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+        <!-- 图表区：合并模式（单图双 Y 轴）/ 分开模式（左右双子图）。
+             用 RowDefinition.Height 在 0/* 之间切换，让 CartesianChart 始终保持 Loaded，
+             避免 Visibility 切换导致 LiveCharts 不刷新曲线。-->
+        <Grid Grid.Row="1" Margin="8,6">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="{Binding MergedHeight}" />
+                <RowDefinition Height="{Binding SplitHeight}" />
+            </Grid.RowDefinitions>
 
-            <!-- 图表1：Time-Press -->
-            <Border Grid.Column="0" Margin="0,0,4,0" Padding="4"
-                    BorderBrush="#57a9fd" BorderThickness="1">
+            <!-- 合并模式 -->
+            <Border Grid.Row="0" Padding="4" BorderBrush="#57a9fd" BorderThickness="1">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="Time-Press" FontWeight="Bold"
+                    <TextBlock Grid.Row="0" Text="Force &amp;&amp; Move Arc (Time-Press / Time-Position)" FontWeight="Bold"
                                HorizontalAlignment="Center" FontSize="13" Margin="0,2" />
                     <chart:CartesianChart Grid.Row="1"
-                        Series="{Binding Series}"
-                        XAxes="{Binding XAxes}"
-                        YAxes="{Binding YAxes}"
+                        Series="{Binding SeriesMerge}"
+                        XAxes="{Binding XAxesMerge}"
+                        YAxes="{Binding YAxesMerge}"
                         LegendPosition="Hidden"
                         TooltipPosition="Hidden" />
                 </Grid>
             </Border>
 
-            <!-- 图表2（可切换模式）-->
-            <Border Grid.Column="1" Margin="4,0,0,0" Padding="4"
-                    BorderBrush="#57a9fd" BorderThickness="1">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Text="{Binding Chart2Title}" FontWeight="Bold"
-                               HorizontalAlignment="Center" FontSize="13" Margin="0,2" />
-                    <chart:CartesianChart Grid.Row="1"
-                        Series="{Binding Series2}"
-                        XAxes="{Binding XAxes2}"
-                        YAxes="{Binding YAxes2}"
-                        LegendPosition="Hidden"
-                        TooltipPosition="Hidden" />
-                </Grid>
-            </Border>
+            <!-- 分开模式：左右双子图，共享 Time X 轴 -->
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- 左侧子图：Time-Press -->
+                <Border Grid.Column="0" Margin="0,0,4,0" Padding="4"
+                        BorderBrush="#57a9fd" BorderThickness="1">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="Force_Arc (Time-Press)" FontWeight="Bold"
+                                   HorizontalAlignment="Center" FontSize="13" Margin="0,2" />
+                        <chart:CartesianChart Grid.Row="1"
+                            Series="{Binding Series}"
+                            XAxes="{Binding XAxes}"
+                            YAxes="{Binding YAxes}"
+                            LegendPosition="Hidden"
+                            TooltipPosition="Hidden" />
+                    </Grid>
+                </Border>
+
+                <!-- 右侧子图：Time-Position -->
+                <Border Grid.Column="1" Margin="4,0,0,0" Padding="4"
+                        BorderBrush="#57a9fd" BorderThickness="1">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="Move_Arc (Time-Position)" FontWeight="Bold"
+                                   HorizontalAlignment="Center" FontSize="13" Margin="0,2" />
+                        <chart:CartesianChart Grid.Row="1"
+                            Series="{Binding Series2}"
+                            XAxes="{Binding XAxes2}"
+                            YAxes="{Binding YAxes2}"
+                            LegendPosition="Hidden"
+                            TooltipPosition="Hidden" />
+                    </Grid>
+                </Border>
+            </Grid>
         </Grid>
     </Grid>
 

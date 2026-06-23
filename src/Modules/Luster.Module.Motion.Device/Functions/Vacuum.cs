@@ -25,6 +25,7 @@ using Luster.Common.DataStruct.Attributes;
 using Luster.Motion.DataStruct;
 using Luster.Motion.DataStruct.DataModels;
 using Luster.Motion.DataStruct.Enums;
+using Luster.SimDevice.Adapter;
 using Luster.TaskFlow.Common.Attributes;
 using Luster.TaskFlow.Common.Functions;
 using Luster.TaskFlow.Motion;
@@ -131,7 +132,8 @@ namespace Luster.Module.Motion.Device.Functions
                 {
                     if (IsAlarm)
                     {
-                        throw new DeviceTimeoutException(vacuum.Errors[DeviceError.SuckFail],$"{vacuum.Name} timeout>{DelayTime}!"); 
+                        //throw new DeviceTimeoutException(vacuum.Errors[DeviceError.SuckFail],$"{vacuum.Name} timeout>{DelayTime}!"); 
+                        throw new DeviceTimeoutException(vacuum.Errors[DeviceError.SuckFail], vacuum.GetConfigMessage(DeviceError.SuckFail));
                     }
                     else
                     {

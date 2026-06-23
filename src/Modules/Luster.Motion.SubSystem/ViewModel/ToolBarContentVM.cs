@@ -130,7 +130,7 @@ namespace Luster.Motion.SubSystem.ViewModel
         /// <summary>
         /// 默认软件标题，之前是：SKP产品线
         /// </summary>
-        private string _defaultTitle = "Motion";
+        private string _defaultTitle = "";
 
         /// <summary>
         /// 错误管理器
@@ -675,10 +675,10 @@ namespace Luster.Motion.SubSystem.ViewModel
             //
             bus.GetEvent<SystemConfigChangeEvent>().Subscribe(() =>
             {
-                Title = webConfig.MachineName ?? "CGLink";
+                Title = TitleVisible ? (commonBus.CurrentRecipe?.ProjInfo?.ProjName ?? "") : "";
                 StationId = webConfig.StationId;
                 if (TitleVisible)
-                    ProjName = $"{commonBus.CurrentRecipe?.ProjInfo?.ProjName}-{commonBus.CurrentRecipe?.Name}  {webConfig.SoftVersion}";
+                    ProjName = $"{webConfig.SoftVersion}";
             });
 
             bus.GetEvent<AlarmEvent>().Subscribe(a =>
@@ -1060,9 +1060,9 @@ namespace Luster.Motion.SubSystem.ViewModel
 
         protected virtual void RecipeActive(Recipe recipe)
         {
-            ProjName = $"{recipe.ProjInfo.ProjName}-{recipe.Name}  {webConfig.SoftVersion}";
+            ProjName = $"{webConfig.SoftVersion}";
             TitleVisible = true;
-            Title = webConfig.MachineName ?? "CGLink";
+            Title = recipe.ProjInfo.ProjName;
             StationId = webConfig.StationId;
             InitModes();
         }

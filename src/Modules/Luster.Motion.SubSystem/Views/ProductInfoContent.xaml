@@ -107,7 +107,7 @@
                             Command="{Binding ChangeDoorCommand}"
                             CommandParameter="{Binding Path=., RelativeSource={RelativeSource Mode=Self}}"
                             Content="{lang:Lang Key={x:Static lang:LangKeys.isShieldDoor}}"
-                            IsChecked="{Binding isShieldDoor}"
+                            IsChecked="{Binding IsShieldDoor}"
                             IsEnabled="True"
                             Style="{StaticResource ToggleButtonSwitch}" />
                     </StackPanel>

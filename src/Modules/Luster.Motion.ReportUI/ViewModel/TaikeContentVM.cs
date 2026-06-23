@@ -86,6 +86,28 @@ namespace Luster.Motion.ReportUI.ViewModel
             set { SetProperty(ref _btnEnable, value); }
         }
 
+        // 时间筛选：默认覆盖昨天到明天（整点 00:00:00），可由顶部 DateTimePicker 调整
+        private DateTime _filterStartTime = DateTime.Today.AddDays(-1);
+        public DateTime FilterStartTime
+        {
+            get => _filterStartTime;
+            set => SetProperty(ref _filterStartTime, value);
+        }
+
+        private DateTime _filterEndTime = DateTime.Today.AddDays(1);
+        public DateTime FilterEndTime
+        {
+            get => _filterEndTime;
+            set => SetProperty(ref _filterEndTime, value);
+        }
+
+        private bool _enableTimeFilter = true;
+        public bool EnableTimeFilter
+        {
+            get => _enableTimeFilter;
+            set => SetProperty(ref _enableTimeFilter, value);
+        }
+
         // 界面的控件集合，需要传递给扭力类使用
         object[] screwControls = null;
         object[] pressControls = null;
@@ -169,7 +191,13 @@ namespace Luster.Motion.ReportUI.ViewModel
         Axis axis_ZForce_Y = new Axis();//Z方向力_Y轴
         Axis axis_ZForce_YY = new Axis();//Z方向力_Y轴
 
-
+        // 6 个图表的曲线集合，作为类字段供 ImportTotal / ImportTotalAuto 共用
+        List<ISeries> chart_series = new List<ISeries>();
+        List<ISeries> chart_series_press = new List<ISeries>();
+        List<ISeries> chart_series_torque = new List<ISeries>();
+        List<ISeries> chart_series_xforce = new List<ISeries>();
+        List<ISeries> chart_series_yforce = new List<ISeries>();
+        List<ISeries> chart_series_zforce = new List<ISeries>();
 
         private IMotionController _mController;
 
@@ -647,13 +675,6 @@ namespace Luster.Motion.ReportUI.ViewModel
             ((CartesianChart)yForceControls[0]).Series = null;
             ((CartesianChart)zForceControls[0]).Series = null;
 
-            var chart_series = new List<ISeries>();
-            var chart_series_press = new List<ISeries>();
-            var chart_series_torque = new List<ISeries>();
-            var chart_series_xforce = new List<ISeries>();
-            var chart_series_yforce = new List<ISeries>();
-            var chart_series_zforce = new List<ISeries>();
-
             chart_series.Clear();
             chart_series_press.Clear();
             chart_series_torque.Clear();
@@ -670,286 +691,18 @@ namespace Luster.Motion.ReportUI.ViewModel
 
             if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                string[] files = Directory.GetFiles(folderBrowserDialog.SelectedPath);
-                foreach (string file in files)
-                {
-                    LineSeries<ObservablePoint> torq_line = new LineSeries<ObservablePoint>();    //扭力线
-
-                    List<double> torq_double = new List<double>();
-                    List<double> Angle_double = new List<double>();
-                    List<TaikeModel> _taikeModel = CSVTool.OpenCSV<TaikeModel>(file);
-                    foreach (var item in _taikeModel)
-                    {
-                        torq_double.Add(item.Angle1);
-                        Angle_double.Add(item.Torque1);
-                    }
-
-
-                    double Max_Torque = Math.Round(torq_double.ToArray().Max(), 3);  //求最大扭力
-                    double Max_Angle = Math.Round(Angle_double.ToArray().Max(), 3);    //求最大角度
-
-                    if (Max_Torque > TorqueLow * 5 && Max_Torque < TorqueUp * 5 && Max_Angle * 5 > AngleLow * 5 && Max_Angle < AngleUp * 5 || true)
-                    {
-                        torq_line.Stroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);  //定义颜色
-                        torq_line.LineSmoothness = 0;
-                        torq_line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
-                        torq_line.GeometrySize = 0.3;
-                        torq_line.GeometryStroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
-                        torq_line.MiniatureShapeSize = 0;
-                        torq_line.Name = null;
-                    }
-                    else
-                    {
-                        torq_line.Stroke = new SolidColorPaint(Colors.Red.ToSKColor(), 1);  //定义颜色
-                        torq_line.LineSmoothness = 0;
-                        torq_line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
-                        torq_line.GeometrySize = 0.3;
-                        torq_line.GeometryStroke = new SolidColorPaint(Colors.Red.ToSKColor(), 1);
-                        torq_line.MiniatureShapeSize = 0;
-                        torq_line.Name = null;
-                    }
-
-                    var torq_line_values = new List<ObservablePoint>();
-                    int length = torq_double.Count;
-                    for (int i = 0; i < length; i += 10)
-                    {
-                        torq_line_values.Add(new ObservablePoint(Math.Abs(Angle_double[i]), torq_double[i]));
-                    }
-
-                    torq_line.Values = torq_line_values;
-                    torq_line.ScalesXAt = 0;
-                    torq_line.ScalesYAt = 0;
-                    chart_series.Add(torq_line);
-                }
+                LoadAngleTorqueFromDir(folderBrowserDialog.SelectedPath);
             }
-
-            _dispatcher.Invoke(new Action(() =>
-            {
-                ((CartesianChart)screwControls[0]).Series = chart_series;
-            }));
-
-            axis_x.Name = "angle/deg";
-            axis_y.Name = "torque/kgf.cm";
-
-            axis_x.NameTextSize = 12;
-            axis_x.TextSize = 12;
-
-            axis_y.NameTextSize = 12;
-            axis_y.TextSize = 12;
-
-            ((CartesianChart)screwControls[0]).XAxes = new List<Axis>() { axis_x}; // , axis_x 
-            ((CartesianChart)screwControls[0]).YAxes = new List<Axis>() { axis_y}; // , axis_y 
-            ((CartesianChart)screwControls[0]).LegendPosition = LiveChartsCore.Measure.LegendPosition.Hidden;
-            ((CartesianChart)screwControls[0]).LegendTextSize = 12;
             #endregion
 
             #region  扭矩-角度/压力-时间
-            // 动态范围
-            double timeMin = 0;
-            double timeMax = double.MinValue;
-            double angleMin = 0;
-            double angleMax = double.MinValue;
-            double torqueMax = double.MinValue;
-            double pressMax = double.MinValue;
-
-            // 新增：记录两条曲线末点值（用于Y轴对齐）
-            double torqueEnd = 0;
-            double pressEnd = 0;
-            // 新增：获取最后一个有效Y值
-            double GetLastPositiveY(List<ObservablePoint> points)
-            {
-                for (int i = points.Count - 1; i >= 0; i--)
-                {
-                    var y = points[i].Y ?? 0;
-                    if (y > 0) return y;
-                }
-                return 0;
-            }
             folderBrowserDialog = new FolderBrowserDialog();
             folderBrowserDialog.SelectedPath = @"D:\TaiKeScrewDatas";
             folderBrowserDialog.Description = "请选择时间-扭矩/角度/压力数据文件夹";
             if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                string[] files = Directory.GetFiles(folderBrowserDialog.SelectedPath);
-                foreach (string file in files)
-                {
-                    // 扭矩-角度曲线（蓝色，对应底部X轴-角度，左侧Y轴-扭矩）
-                    var torqueSeries = new LineSeries<ObservablePoint>();
-                    torqueSeries.Stroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
-                    torqueSeries.LineSmoothness = 0;
-                    torqueSeries.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
-                    torqueSeries.GeometrySize = 0.1;
-                    torqueSeries.GeometryStroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
-                    torqueSeries.MiniatureShapeSize = 0;
-                    torqueSeries.Name = null;
-
-                    // 压力-时间曲线（红色，对应顶部X轴-时间，右侧Y轴-压力）
-                    var pressSeries = new LineSeries<ObservablePoint>();
-                    pressSeries.Stroke = new SolidColorPaint(Colors.Red.ToSKColor(), 1);
-                    pressSeries.LineSmoothness = 0;
-                    pressSeries.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
-                    pressSeries.GeometrySize = 0.1;
-                    pressSeries.GeometryStroke = new SolidColorPaint(Colors.Red.ToSKColor(), 1);
-                    pressSeries.MiniatureShapeSize = 0;
-                    pressSeries.Name = null;
-
-                    // 原来（已替换）的声明位置：
-                    List<double> noList = new List<double>();
-                    List<double> torqueList = new List<double>();
-                    List<double> angleList = new List<double>();
-                    List<double> timeList = new List<double>();
-                    List<double> pressList = new List<double>();
-
-                    // 读取CSV文件，格式：No,Torque1,Angle1,Time,Press
-                    List<TimeTorqueAnglePressModel> dataModels = CSVTool.OpenCSV<TimeTorqueAnglePressModel>(file);
-
-                    foreach (var item in dataModels)
-                    {
-                        noList.Add(item.No);
-                        torqueList.Add(item.Torque1);
-                        angleList.Add(item.Angle1);
-                        // Time 和 Press 不再使用可空类型，直接添加
-                        timeList.Add(item.Time);
-                        pressList.Add(item.Press);
-                    }
-
-                    var torqueValues = new List<ObservablePoint>();
-                    for (int i = 0; i < torqueList.Count; i++)
-                    {
-                        double angleVal = Math.Abs(angleList[i]);
-                        torqueValues.Add(new ObservablePoint(angleVal, torqueList[i]));
-                        if (angleVal > angleMax) angleMax = angleVal;
-                        if (torqueList[i] > torqueMax) torqueMax = torqueList[i];
-                    }
-                    if (torqueValues.Count > 0)
-                    {
-                        torqueSeries.Values = torqueValues;
-                        torqueSeries.ScalesXAt = 0; // 底部 X 轴 = Angle
-                        torqueSeries.ScalesYAt = 0; // 左侧 Y 轴 = Torque
-                        chart_series_torque.Add(torqueSeries);
-
-                        // 记录末点
-                        // 记录末点（取最后一个有效值）
-                        var lastTorque = GetLastPositiveY(torqueValues);
-                        if (lastTorque > torqueEnd) torqueEnd = lastTorque;
-                    }
-
-                    // 压力-时间曲线数据（X轴为Time，Y轴为Press，过滤无效点）
-                    var pressValues = new List<ObservablePoint>();
-                    for (int i = 0; i < pressList.Count; i++)
-                    {
-                        // 使用非空的 IsValidPressPoint(double time, double press)
-                        if (IsValidPressPoint(timeList[i], pressList[i]))
-                        {
-                            var tx = Math.Abs(timeList[i]);
-                            pressValues.Add(new ObservablePoint(tx, pressList[i]));
-                            if (tx > timeMax) timeMax = tx;
-                            if (pressList[i] > pressMax) pressMax = pressList[i];
-                        }
-                    }
-                    if (pressValues.Count > 0)
-                    {
-                        pressSeries.Values = pressValues;
-                        pressSeries.ScalesXAt = 1; // 顶部X轴-时间
-                        pressSeries.ScalesYAt = 1; // 右侧Y轴-压力
-                        chart_series_torque.Add(pressSeries);
-
-                        // 记录末点
-                        var lastPress = pressValues[pressValues.Count - 1].Y ?? 0;
-                        if (lastPress > pressEnd) pressEnd = lastPress;
-                    }
-
-                }
+                LoadTimeTorqueAnglePressFromDir(folderBrowserDialog.SelectedPath);
             }
-
-            _dispatcher.Invoke(new Action(() =>
-            {
-                ((CartesianChart)torqueControls[0]).Series = chart_series_torque;
-            }));
-
-            // 确保最大值有合理的默认值
-            if (torqueMax <= 0) torqueMax = 0.5;
-            if (angleMax <= 0) angleMax = 1500;
-            if (pressMax <= 0) pressMax = 1.5;
-            if (timeMax <= 0) timeMax = 1500;
-
-            // 新增：保护末点默认值
-            if (torqueEnd <= 0) torqueEnd = torqueMax;
-            if (pressEnd <= 0) pressEnd = pressMax;
-
-            // 底部X轴配置（角度 - 蓝色）
-            var axis_x_angle = new Axis();
-            axis_x_angle.Name = "Angle/deg";
-            axis_x_angle.NameTextSize = 12;
-            axis_x_angle.TextSize = 12;
-            axis_x_angle.MinLimit = 0;
-            axis_x_angle.MaxLimit = Math.Ceiling(angleMax / 500) * 500 + 500;
-            axis_x_angle.MinStep = 500;
-            axis_x_angle.ShowSeparatorLines = true;
-            axis_x_angle.SeparatorsPaint = new SolidColorPaint(Colors.LightGray.ToSKColor(), 1);
-            axis_x_angle.Padding = new LiveChartsCore.Drawing.Padding(0, 0, 0, 0);
-            axis_x_angle.NamePadding = new LiveChartsCore.Drawing.Padding(0, 0, 0, 0);
-            axis_x_angle.Position = AxisPosition.Start; // 底部
-            axis_x_angle.NamePaint = new SolidColorPaint(Colors.Blue.ToSKColor());
-            axis_x_angle.LabelsPaint = new SolidColorPaint(Colors.Blue.ToSKColor());
-
-            // 顶部X轴配置（时间 - 红色）
-            var axis_x_time = new Axis();
-            axis_x_time.Name = "Time/ms";
-            axis_x_time.NameTextSize = 12;
-            axis_x_time.TextSize = 12;
-            axis_x_time.MinLimit = 0;
-            axis_x_time.MaxLimit = Math.Ceiling(timeMax / 500) * 500 + 500;
-            axis_x_time.MinStep = 500;
-            axis_x_time.ShowSeparatorLines = false; // 避免与底部X轴分隔线重叠
-            axis_x_time.Padding = new LiveChartsCore.Drawing.Padding(0, 0, 0, 0);
-            axis_x_time.NamePadding = new LiveChartsCore.Drawing.Padding(0, 0, 0, 0);
-            axis_x_time.Position = AxisPosition.End; // 顶部
-            axis_x_time.NamePaint = new SolidColorPaint(Colors.Red.ToSKColor());
-            axis_x_time.LabelsPaint = new SolidColorPaint(Colors.Red.ToSKColor());
-
-            // 左侧Y轴配置（扭矩 - 蓝色）
-            var axis_y_torque = new Axis();
-            axis_y_torque.Name = "Torque/kgf.cm";
-            axis_y_torque.NameTextSize = 12;
-            axis_y_torque.TextSize = 12;
-            axis_y_torque.MinLimit = 0;
-            axis_y_torque.MaxLimit = Math.Ceiling(torqueMax * 10) / 10 + 0.1;
-            axis_y_torque.MinStep = 0.1;
-            axis_y_torque.ShowSeparatorLines = true;
-            axis_y_torque.SeparatorsPaint = new SolidColorPaint(Colors.LightGray.ToSKColor(), 1);
-            axis_y_torque.Position = AxisPosition.Start; // 左侧
-            axis_y_torque.Padding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
-            axis_y_torque.NamePadding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
-            axis_y_torque.NamePaint = new SolidColorPaint(Colors.Blue.ToSKColor());
-            axis_y_torque.LabelsPaint = new SolidColorPaint(Colors.Blue.ToSKColor());
-
-            // 右侧Y轴配置（压力 - 红色）
-            var axis_y_press = new Axis();
-            axis_y_press.Name = "Press/kgf";
-            axis_y_press.NameTextSize = 12;
-            axis_y_press.TextSize = 12;
-            axis_y_press.MinLimit = 0;
-
-            // 关键调整：按末点比例换算，使两条曲线终点视觉对齐
-            var ratio = torqueEnd > 0 ? pressEnd / torqueEnd : 1;
-            var pressAlignedMax = axis_y_torque.MaxLimit * ratio;
-            axis_y_press.MaxLimit = Math.Max(pressAlignedMax ?? 0 * 1.02, pressEnd);
-            axis_y_press.MinStep = axis_y_press.MaxLimit / 5 ?? 0;
-
-            axis_y_press.MinStep = 0.2;
-            axis_y_press.ShowSeparatorLines = false; // 避免分隔线重叠
-            axis_y_press.Position = AxisPosition.End; // 右侧
-            axis_y_press.Padding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
-            axis_y_press.NamePadding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
-            axis_y_press.NamePaint = new SolidColorPaint(Colors.Red.ToSKColor());
-            axis_y_press.LabelsPaint = new SolidColorPaint(Colors.Red.ToSKColor());
-
-            ((CartesianChart)torqueControls[0]).XAxes = new List<Axis>() { axis_x_angle, axis_x_time };
-            ((CartesianChart)torqueControls[0]).YAxes = new List<Axis>() { axis_y_torque, axis_y_press };
-
-            ((CartesianChart)torqueControls[0]).LegendPosition = LiveChartsCore.Measure.LegendPosition.Hidden;
-            ((CartesianChart)torqueControls[0]).LegendTextSize = 12;
             #endregion
 
             #region  扭矩-角度/压力-时间
@@ -1468,198 +1221,32 @@ namespace Luster.Motion.ReportUI.ViewModel
             #region  时间压力
             folderBrowserDialog = new FolderBrowserDialog();
             folderBrowserDialog.SelectedPath = @"D:\TaiKeScrewDatas";
-
             folderBrowserDialog.Description = "请选择时间压力数据文件夹";
-
             if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                string[] files = Directory.GetFiles(folderBrowserDialog.SelectedPath);
-
-                foreach (string file in files)
-                {
-                    LineSeries<ObservablePoint> torq_line = new LineSeries<ObservablePoint>();
-                    torq_line.Stroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
-                    torq_line.LineSmoothness = 0;
-                    torq_line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
-                    torq_line.GeometrySize = 0.5;
-                    torq_line.GeometryStroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
-                    torq_line.MiniatureShapeSize = 0;
-                    torq_line.Name = null;
-
-                    List<double> time = new List<double>();
-                    List<double> press = new List<double>();
-                    List<TotalPressModel> _taikeModel = CSVTool.OpenCSV<TotalPressModel>(file);
-                    foreach (var item in _taikeModel)
-                    {
-                        time.Add(item.Time);
-                        press.Add(item.Press);
-                    }
-
-                    var torq_line_values = new List<ObservablePoint>();
-                    int length = press.Count;
-                    for (int i = 0; i < length; i++)
-                    {
-                        torq_line_values.Add(new ObservablePoint(Math.Abs(time[i]), press[i]));
-                    }
-
-                    torq_line.Values = torq_line_values;
-                    torq_line.ScalesXAt = 0;
-                    torq_line.ScalesYAt = 1;
-                    chart_series_press.Add(torq_line);
-                }
+                LoadTimePressFromDir(folderBrowserDialog.SelectedPath);
             }
-
-            _dispatcher.Invoke(new Action(() =>
-            {
-                ((CartesianChart)pressControls[0]).Series = chart_series_press;
-            }));
-
-            axis_xp.Name = "time/ms";
-            axis_yp.Name = "Press/kgf";
-            axis_xp.NameTextSize = 12;
-            axis_xp.TextSize = 12;
-            axis_yp.NameTextSize = 12;
-            axis_yp.TextSize = 12;
-
-            ((CartesianChart)pressControls[0]).XAxes = new List<Axis>() { axis_xp}; // , axis_xp 
-            ((CartesianChart)pressControls[0]).YAxes = new List<Axis>() { axis_yp}; // , axis_yp 
-
-            ((CartesianChart)pressControls[0]).LegendPosition = LiveChartsCore.Measure.LegendPosition.Hidden;
-            ((CartesianChart)pressControls[0]).LegendTextSize = 12;
             #endregion
 
             #region Cowling Toe in X
             folderBrowserDialog = new FolderBrowserDialog();
             folderBrowserDialog.SelectedPath = @"D:\TaiKeScrewDatas";
-            folderBrowserDialog.SelectedPath = @"D:\TaiKeScrewDatas";
             folderBrowserDialog.Description = "请选择Cowling Toe In X压力数据文件夹";
             if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                string[] files = Directory.GetFiles(folderBrowserDialog.SelectedPath);
-
-                foreach (string file in files)
-                {
-                    LineSeries<ObservablePoint> xforce_line = new LineSeries<ObservablePoint>();    
-
-                    List<double> time_double = new List<double>();
-                    List<double> force_double = new List<double>();
-                    List<CowlingForceModel> _cowlingForceModel = CSVTool.OpenCSV<CowlingForceModel>(file);
-                    foreach (var item in _cowlingForceModel)
-                    {
-                        time_double.Add(item.Time);
-                        force_double.Add(item.Force);
-                    }
-
-                    xforce_line.Stroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);  
-                    xforce_line.LineSmoothness = 0;
-                    xforce_line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
-                    xforce_line.GeometrySize = 0.5;
-                    xforce_line.GeometryStroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
-                    xforce_line.MiniatureShapeSize = 0;
-                    xforce_line.Name = null;
-
-
-                    var xforce_line_values = new List<ObservablePoint>();
-                    int length = force_double.Count;
-                    for (int i = 0; i < length; i++)
-                    {
-                        xforce_line_values.Add(new ObservablePoint(Math.Abs(time_double[i])/1000, force_double[i]));
-                    }
-
-                    xforce_line.Values = xforce_line_values;
-                    xforce_line.ScalesXAt = 1;
-                    xforce_line.ScalesYAt = 0;
-                    chart_series_xforce.Add(xforce_line);
-                }
+                LoadToeinXForceFromDir(folderBrowserDialog.SelectedPath);
             }
-
-            _dispatcher.Invoke(new Action(() =>
-            {
-                ((CartesianChart)xForceControls[0]).Series = chart_series_xforce;
-            }));
-
-            axis_XForce_X.Name = "time/S";
-            axis_XForce_Y.Name = "force/N";
-
-            axis_XForce_X.NameTextSize = 12;
-            axis_XForce_X.TextSize = 12;
-            axis_XForce_X.ShowSeparatorLines = true;
-
-            axis_XForce_Y.NameTextSize = 12;
-            axis_XForce_Y.TextSize = 12;
-            axis_XForce_Y.ShowSeparatorLines = true;
-
-            ((CartesianChart)xForceControls[0]).XAxes = new List<Axis>() { axis_XForce_X, axis_XForce_X };
-            ((CartesianChart)xForceControls[0]).YAxes = new List<Axis>() { axis_XForce_Y, axis_XForce_YY };
-
-            ((CartesianChart)xForceControls[0]).LegendPosition = LiveChartsCore.Measure.LegendPosition.Hidden;
-            ((CartesianChart)xForceControls[0]).LegendTextSize = 12;
             #endregion
 
 
             #region Cowling Toe in Y
             folderBrowserDialog = new FolderBrowserDialog();
             folderBrowserDialog.SelectedPath = @"D:\TaiKeScrewDatas";
-
             folderBrowserDialog.Description = "请选择Cowling Toe In Y压力数据文件夹";
             if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                string[] files = Directory.GetFiles(folderBrowserDialog.SelectedPath);
-
-                foreach (string file in files)
-                {
-                    LineSeries<ObservablePoint> yforce_line = new LineSeries<ObservablePoint>();
-
-                    List<double> time_double = new List<double>();
-                    List<double> force_double = new List<double>();
-                    List<CowlingForceModel> _cowlingForceModel = CSVTool.OpenCSV<CowlingForceModel>(file);
-                    foreach (var item in _cowlingForceModel)
-                    {
-                        time_double.Add(item.Time);
-                        force_double.Add(item.Force);
-                    }
-
-                    yforce_line.Stroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
-                    yforce_line.LineSmoothness = 0;
-                    yforce_line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
-                    yforce_line.GeometrySize = 0.3;
-                    yforce_line.GeometryStroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
-                    yforce_line.MiniatureShapeSize = 0;
-                    yforce_line.Name = null;
-
-
-                    var yforce_line_values = new List<ObservablePoint>();
-                    int length = force_double.Count;
-                    for (int i = 0; i < length; i++)
-                    {
-                        yforce_line_values.Add(new ObservablePoint(Math.Abs(time_double[i]) / 1000, force_double[i]));
-                    }
-
-                    yforce_line.Values = yforce_line_values;
-                    yforce_line.ScalesXAt = 1;
-                    yforce_line.ScalesYAt = 0;
-                    chart_series_yforce.Add(yforce_line);
-                }
+                LoadToeinYForceFromDir(folderBrowserDialog.SelectedPath);
             }
-
-            _dispatcher.Invoke(new Action(() =>
-            {
-                ((CartesianChart)yForceControls[0]).Series = chart_series_yforce;
-            }));
-
-            axis_YForce_X.Name = "time/S";
-            axis_YForce_Y.Name = "force/N";
-
-            axis_YForce_X.NameTextSize = 12;
-            axis_YForce_X.TextSize = 12;
-
-            axis_YForce_Y.NameTextSize = 12;
-            axis_YForce_Y.TextSize = 12;
-
-            ((CartesianChart)yForceControls[0]).XAxes = new List<Axis>() { axis_YForce_X, axis_YForce_X };
-            ((CartesianChart)yForceControls[0]).YAxes = new List<Axis>() { axis_YForce_Y, axis_YForce_YY };
-            ((CartesianChart)yForceControls[0]).LegendPosition = LiveChartsCore.Measure.LegendPosition.Hidden;
-            ((CartesianChart)yForceControls[0]).LegendTextSize = 12;
             #endregion
 
 
@@ -1669,65 +1256,8 @@ namespace Luster.Motion.ReportUI.ViewModel
             folderBrowserDialog.Description = "请选择Cowling Toe In Z压力数据文件夹";
             if (folderBrowserDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                string[] files = Directory.GetFiles(folderBrowserDialog.SelectedPath);
-
-                foreach (string file in files)
-                {
-                    LineSeries<ObservablePoint> zforce_line = new LineSeries<ObservablePoint>();
-
-                    List<double> time_double = new List<double>();
-                    List<double> force_double = new List<double>();
-                    List<CowlingForceModel> _cowlingForceModel = CSVTool.OpenCSV<CowlingForceModel>(file);
-                    foreach (var item in _cowlingForceModel)
-                    {
-                        time_double.Add(item.Time);
-                        force_double.Add(item.Force);
-                    }
-
-                    zforce_line.Stroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
-                    zforce_line.LineSmoothness = 0;
-                    zforce_line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
-                    zforce_line.GeometrySize = 0.3;
-                    zforce_line.GeometryStroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
-                    zforce_line.MiniatureShapeSize = 0;
-                    zforce_line.Name = null;
-
-
-                    var zforce_line_values = new List<ObservablePoint>();
-                    int length = force_double.Count;
-                    for (int i = 0; i < length; i++)
-                    {
-                        zforce_line_values.Add(new ObservablePoint(Math.Abs(time_double[i]) / 1000, force_double[i]));
-                    }
-
-                    zforce_line.Values = zforce_line_values;
-                    zforce_line.ScalesXAt = 1;
-                    zforce_line.ScalesYAt = 0;
-                    chart_series_zforce.Add(zforce_line);
-                }
+                LoadToeinZForceFromDir(folderBrowserDialog.SelectedPath);
             }
-
-            _dispatcher.Invoke(new Action(() =>
-            {
-                ((CartesianChart)zForceControls[0]).Series = chart_series_zforce;
-            }));
-
-            axis_ZForce_X.Name = "time/S";
-            axis_ZForce_Y.Name = "force/N";
-
-            axis_ZForce_X.NameTextSize = 12;
-            axis_ZForce_X.TextSize = 12;
-
-            axis_ZForce_Y.NameTextSize = 12;
-            axis_ZForce_Y.TextSize = 12;
-
-          
-
-            ((CartesianChart)zForceControls[0]).XAxes = new List<Axis>() { axis_ZForce_X, axis_ZForce_X };
-            ((CartesianChart)zForceControls[0]).YAxes = new List<Axis>() { axis_ZForce_Y, axis_ZForce_YY };
-
-            ((CartesianChart)zForceControls[0]).LegendPosition = LiveChartsCore.Measure.LegendPosition.Hidden;
-            ((CartesianChart)zForceControls[0]).LegendTextSize = 12;
             #endregion
 
 
@@ -1740,6 +1270,895 @@ namespace Luster.Motion.ReportUI.ViewModel
             if (double.IsNaN(time) || double.IsNaN(press)) return false;
             if (time == 0 || press == 0) return false;
             return true;
+        }
+
+        // 获取 ObservablePoint 列表中最后一个 Y>0 的值（用于扭矩/压力末点对齐）
+        private double GetLastPositiveY(List<ObservablePoint> points)
+        {
+            for (int i = points.Count - 1; i >= 0; i--)
+            {
+                var y = points[i].Y ?? 0;
+                if (y > 0) return y;
+            }
+            return 0;
+        }
+
+        // 按文件名时间戳过滤文件列表（仅当 EnableTimeFilter 打开时生效）
+        private string[] FilterFilesByTime(string[] files)
+        {
+            if (!_enableTimeFilter || files == null) return files;
+            return files.Where(f =>
+                FileNameTimestampParser.IsInTimeRange(f, _filterStartTime, _filterEndTime)).ToArray();
+        }
+
+        // 加载角度扭矩曲线（screwControls[0]），自适应 X(angle)/Y(torque) 上限
+        private void LoadAngleTorqueFromDir(string dir)
+        {
+            if (!Directory.Exists(dir))
+            {
+                System.Diagnostics.Trace.WriteLine($"LoadAngleTorqueFromDir: 目录不存在 {dir}");
+                return;
+            }
+
+            double angleTorque_MaxAngle = 0;
+            double angleTorque_MaxTorque = 0;
+
+            string[] files = Directory.GetFiles(dir);
+            files = FilterFilesByTime(files);
+            foreach (string file in files)
+            {
+                LineSeries<ObservablePoint> torq_line = new LineSeries<ObservablePoint>();
+
+                List<double> torq_double = new List<double>();
+                List<double> Angle_double = new List<double>();
+                List<TaikeModel> _taikeModel = CSVTool.OpenCSV<TaikeModel>(file);
+                foreach (var item in _taikeModel)
+                {
+                    torq_double.Add(item.Angle1);
+                    Angle_double.Add(item.Torque1);
+                }
+
+                double Max_Torque = Math.Round(torq_double.ToArray().Max(), 3);
+                double Max_Angle = Math.Round(Angle_double.ToArray().Max(), 3);
+
+                if (Max_Torque > angleTorque_MaxAngle) angleTorque_MaxAngle = Max_Torque;
+                if (Max_Angle > angleTorque_MaxTorque) angleTorque_MaxTorque = Max_Angle;
+
+                if (Max_Torque > TorqueLow * 5 && Max_Torque < TorqueUp * 5 && Max_Angle * 5 > AngleLow * 5 && Max_Angle < AngleUp * 5 || true)
+                {
+                    torq_line.Stroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
+                    torq_line.LineSmoothness = 0;
+                    torq_line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
+                    torq_line.GeometrySize = 0.3;
+                    torq_line.GeometryStroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
+                    torq_line.MiniatureShapeSize = 0;
+                    torq_line.Name = null;
+                }
+                else
+                {
+                    torq_line.Stroke = new SolidColorPaint(Colors.Red.ToSKColor(), 1);
+                    torq_line.LineSmoothness = 0;
+                    torq_line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
+                    torq_line.GeometrySize = 0.3;
+                    torq_line.GeometryStroke = new SolidColorPaint(Colors.Red.ToSKColor(), 1);
+                    torq_line.MiniatureShapeSize = 0;
+                    torq_line.Name = null;
+                }
+
+                var torq_line_values = new List<ObservablePoint>();
+                int length = torq_double.Count;
+                for (int i = 0; i < length; i += 10)
+                {
+                    torq_line_values.Add(new ObservablePoint(Math.Abs(Angle_double[i]), torq_double[i]));
+                }
+
+                torq_line.Values = torq_line_values;
+                torq_line.ScalesXAt = 0;
+                torq_line.ScalesYAt = 0;
+                chart_series.Add(torq_line);
+            }
+
+            _dispatcher.Invoke(new Action(() =>
+            {
+                ((CartesianChart)screwControls[0]).Series = chart_series;
+            }));
+
+            if (angleTorque_MaxAngle > 0)
+                axis_x.MaxLimit = Math.Ceiling((angleTorque_MaxAngle + 100) / 500.0) * 500;
+            if (angleTorque_MaxTorque > 0)
+                axis_y.MaxLimit = Math.Ceiling((angleTorque_MaxTorque + 0.05) / 0.1) * 0.1;
+
+            axis_x.Name = "angle/deg";
+            axis_y.Name = "torque/kgf.cm";
+
+            axis_x.NameTextSize = 12;
+            axis_x.TextSize = 12;
+
+            axis_y.NameTextSize = 12;
+            axis_y.TextSize = 12;
+
+            ((CartesianChart)screwControls[0]).XAxes = new List<Axis>() { axis_x };
+            ((CartesianChart)screwControls[0]).YAxes = new List<Axis>() { axis_y };
+            ((CartesianChart)screwControls[0]).LegendPosition = LiveChartsCore.Measure.LegendPosition.Hidden;
+            ((CartesianChart)screwControls[0]).LegendTextSize = 12;
+        }
+
+        // 加载扭矩-角度/压力-时间双 X 双 Y 曲线（torqueControls[0]）
+        // 右侧 Y(press) 上限取 pressMax 峰值与末点对齐值的较大者，避免峰值被截断
+        private void LoadTimeTorqueAnglePressFromDir(string dir)
+        {
+            if (!Directory.Exists(dir))
+            {
+                System.Diagnostics.Trace.WriteLine($"LoadTimeTorqueAnglePressFromDir: 目录不存在 {dir}");
+                return;
+            }
+
+            double timeMax = double.MinValue;
+            double angleMax = double.MinValue;
+            double torqueMax = double.MinValue;
+            double pressMax = double.MinValue;
+            double torqueEnd = 0;
+            double pressEnd = 0;
+
+            string[] files = Directory.GetFiles(dir);
+            files = FilterFilesByTime(files);
+            foreach (string file in files)
+            {
+                var torqueSeries = new LineSeries<ObservablePoint>();
+                torqueSeries.Stroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
+                torqueSeries.LineSmoothness = 0;
+                torqueSeries.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
+                torqueSeries.GeometrySize = 0.1;
+                torqueSeries.GeometryStroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
+                torqueSeries.MiniatureShapeSize = 0;
+                torqueSeries.Name = null;
+
+                var pressSeries = new LineSeries<ObservablePoint>();
+                pressSeries.Stroke = new SolidColorPaint(Colors.Red.ToSKColor(), 1);
+                pressSeries.LineSmoothness = 0;
+                pressSeries.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
+                pressSeries.GeometrySize = 0.1;
+                pressSeries.GeometryStroke = new SolidColorPaint(Colors.Red.ToSKColor(), 1);
+                pressSeries.MiniatureShapeSize = 0;
+                pressSeries.Name = null;
+
+                List<double> torqueList = new List<double>();
+                List<double> angleList = new List<double>();
+                List<double> timeList = new List<double>();
+                List<double> pressList = new List<double>();
+
+                List<TimeTorqueAnglePressModel> dataModels = CSVTool.OpenCSV<TimeTorqueAnglePressModel>(file);
+
+                foreach (var item in dataModels)
+                {
+                    torqueList.Add(item.Torque1);
+                    angleList.Add(item.Angle1);
+                    timeList.Add(item.Time);
+                    pressList.Add(item.Press);
+                }
+
+                var torqueValues = new List<ObservablePoint>();
+                for (int i = 0; i < torqueList.Count; i++)
+                {
+                    double angleVal = Math.Abs(angleList[i]);
+                    torqueValues.Add(new ObservablePoint(angleVal, torqueList[i]));
+                    if (angleVal > angleMax) angleMax = angleVal;
+                    if (torqueList[i] > torqueMax) torqueMax = torqueList[i];
+                }
+                if (torqueValues.Count > 0)
+                {
+                    torqueSeries.Values = torqueValues;
+                    torqueSeries.ScalesXAt = 0;
+                    torqueSeries.ScalesYAt = 0;
+                    chart_series_torque.Add(torqueSeries);
+
+                    var lastTorque = GetLastPositiveY(torqueValues);
+                    if (lastTorque > torqueEnd) torqueEnd = lastTorque;
+                }
+
+                var pressValues = new List<ObservablePoint>();
+                for (int i = 0; i < pressList.Count; i++)
+                {
+                    if (IsValidPressPoint(timeList[i], pressList[i]))
+                    {
+                        var tx = Math.Abs(timeList[i]);
+                        pressValues.Add(new ObservablePoint(tx, pressList[i]));
+                        if (tx > timeMax) timeMax = tx;
+                        if (pressList[i] > pressMax) pressMax = pressList[i];
+                    }
+                }
+                if (pressValues.Count > 0)
+                {
+                    pressSeries.Values = pressValues;
+                    pressSeries.ScalesXAt = 1;
+                    pressSeries.ScalesYAt = 1;
+                    chart_series_torque.Add(pressSeries);
+
+                    var lastPress = pressValues[pressValues.Count - 1].Y ?? 0;
+                    if (lastPress > pressEnd) pressEnd = lastPress;
+                }
+            }
+
+            _dispatcher.Invoke(new Action(() =>
+            {
+                ((CartesianChart)torqueControls[0]).Series = chart_series_torque;
+            }));
+
+            if (torqueMax <= 0) torqueMax = 0.5;
+            if (angleMax <= 0) angleMax = 1500;
+            if (pressMax <= 0) pressMax = 1.5;
+            if (timeMax <= 0) timeMax = 1500;
+            if (torqueEnd <= 0) torqueEnd = torqueMax;
+            if (pressEnd <= 0) pressEnd = pressMax;
+
+            var axis_x_angle = new Axis();
+            axis_x_angle.Name = "Angle/deg";
+            axis_x_angle.NameTextSize = 12;
+            axis_x_angle.TextSize = 12;
+            axis_x_angle.MinLimit = 0;
+            axis_x_angle.MaxLimit = Math.Ceiling(angleMax / 500) * 500 + 500;
+            axis_x_angle.MinStep = 500;
+            axis_x_angle.ShowSeparatorLines = true;
+            axis_x_angle.SeparatorsPaint = new SolidColorPaint(Colors.LightGray.ToSKColor(), 1);
+            axis_x_angle.Padding = new LiveChartsCore.Drawing.Padding(0, 0, 0, 0);
+            axis_x_angle.NamePadding = new LiveChartsCore.Drawing.Padding(0, 0, 0, 0);
+            axis_x_angle.Position = AxisPosition.Start;
+            axis_x_angle.NamePaint = new SolidColorPaint(Colors.Blue.ToSKColor());
+            axis_x_angle.LabelsPaint = new SolidColorPaint(Colors.Blue.ToSKColor());
+
+            var axis_x_time = new Axis();
+            axis_x_time.Name = "Time/ms";
+            axis_x_time.NameTextSize = 12;
+            axis_x_time.TextSize = 12;
+            axis_x_time.MinLimit = 0;
+            axis_x_time.MaxLimit = Math.Ceiling(timeMax / 500) * 500 + 500;
+            axis_x_time.MinStep = 500;
+            axis_x_time.ShowSeparatorLines = false;
+            axis_x_time.Padding = new LiveChartsCore.Drawing.Padding(0, 0, 0, 0);
+            axis_x_time.NamePadding = new LiveChartsCore.Drawing.Padding(0, 0, 0, 0);
+            axis_x_time.Position = AxisPosition.End;
+            axis_x_time.NamePaint = new SolidColorPaint(Colors.Red.ToSKColor());
+            axis_x_time.LabelsPaint = new SolidColorPaint(Colors.Red.ToSKColor());
+
+            var axis_y_torque = new Axis();
+            axis_y_torque.Name = "Torque/kgf.cm";
+            axis_y_torque.NameTextSize = 12;
+            axis_y_torque.TextSize = 12;
+            axis_y_torque.MinLimit = 0;
+            axis_y_torque.MaxLimit = Math.Ceiling(torqueMax * 10) / 10 + 0.1;
+            axis_y_torque.MinStep = 0.1;
+            axis_y_torque.ShowSeparatorLines = true;
+            axis_y_torque.SeparatorsPaint = new SolidColorPaint(Colors.LightGray.ToSKColor(), 1);
+            axis_y_torque.Position = AxisPosition.Start;
+            axis_y_torque.Padding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_y_torque.NamePadding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_y_torque.NamePaint = new SolidColorPaint(Colors.Blue.ToSKColor());
+            axis_y_torque.LabelsPaint = new SolidColorPaint(Colors.Blue.ToSKColor());
+
+            var axis_y_press = new Axis();
+            axis_y_press.Name = "Press/kgf";
+            axis_y_press.NameTextSize = 12;
+            axis_y_press.TextSize = 12;
+            axis_y_press.MinLimit = 0;
+
+            // 关键修复：右侧 Y(press) 上限必须覆盖实际数据峰值，避免末点远小于峰值时曲线被截断
+            double pressPeak = Math.Max(pressMax, pressEnd);
+            double pressPeakLimit = Math.Ceiling((pressPeak + 0.05) / 0.2) * 0.2;
+            var ratio = torqueEnd > 0 ? pressEnd / torqueEnd : 1;
+            var pressAlignedMax = (axis_y_torque.MaxLimit * ratio) ?? 0;
+            axis_y_press.MaxLimit = Math.Max(pressAlignedMax, pressPeakLimit);
+            axis_y_press.MinStep = 0.2;
+
+            axis_y_press.ShowSeparatorLines = false;
+            axis_y_press.Position = AxisPosition.End;
+            axis_y_press.Padding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_y_press.NamePadding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_y_press.NamePaint = new SolidColorPaint(Colors.Red.ToSKColor());
+            axis_y_press.LabelsPaint = new SolidColorPaint(Colors.Red.ToSKColor());
+
+            ((CartesianChart)torqueControls[0]).XAxes = new List<Axis>() { axis_x_angle, axis_x_time };
+            ((CartesianChart)torqueControls[0]).YAxes = new List<Axis>() { axis_y_torque, axis_y_press };
+
+            ((CartesianChart)torqueControls[0]).LegendPosition = LiveChartsCore.Measure.LegendPosition.Hidden;
+            ((CartesianChart)torqueControls[0]).LegendTextSize = 12;
+        }
+
+        // 加载时间压力曲线（pressControls[0]），自适应 X(time)/Y(press) 上限
+        private void LoadTimePressFromDir(string dir)
+        {
+            if (!Directory.Exists(dir))
+            {
+                System.Diagnostics.Trace.WriteLine($"LoadTimePressFromDir: 目录不存在 {dir}");
+                return;
+            }
+
+            double pressTimeMax = 0;
+            double pressValueMax = 0;
+
+            string[] files = Directory.GetFiles(dir);
+            files = FilterFilesByTime(files);
+            foreach (string file in files)
+            {
+                LineSeries<ObservablePoint> torq_line = new LineSeries<ObservablePoint>();
+                torq_line.Stroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
+                torq_line.LineSmoothness = 0;
+                torq_line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
+                torq_line.GeometrySize = 0.5;
+                torq_line.GeometryStroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
+                torq_line.MiniatureShapeSize = 0;
+                torq_line.Name = null;
+
+                List<double> time = new List<double>();
+                List<double> press = new List<double>();
+                try
+                {
+                    // 兼容 No,Time,Press 和 No,Time,Press,Position 两种格式
+                    var lines = File.ReadAllLines(file);
+                    for (int li = 1; li < lines.Length; li++)
+                    {
+                        var row = lines[li];
+                        if (string.IsNullOrWhiteSpace(row)) continue;
+                        var cells = row.Split(',');
+                        if (cells.Length < 3) continue;
+                        if (double.TryParse(cells[1], out double t) &&
+                            double.TryParse(cells[2], out double p))
+                        {
+                            time.Add(t);
+                            press.Add(p);
+                            if (t > pressTimeMax) pressTimeMax = t;
+                            if (p > pressValueMax) pressValueMax = p;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Trace.WriteLine($"读取文件失败 {file}: {ex.Message}");
+                    continue;
+                }
+
+                var torq_line_values = new List<ObservablePoint>();
+                int length = press.Count;
+                for (int i = 0; i < length; i++)
+                {
+                    torq_line_values.Add(new ObservablePoint(Math.Abs(time[i]), press[i]));
+                }
+
+                torq_line.Values = torq_line_values;
+                torq_line.ScalesXAt = 0;
+                torq_line.ScalesYAt = 0;
+                chart_series_press.Add(torq_line);
+            }
+
+            _dispatcher.Invoke(new Action(() =>
+            {
+                ((CartesianChart)pressControls[0]).Series = chart_series_press;
+            }));
+
+            axis_xp.MinLimit = 0;
+            axis_xp.MaxLimit = Math.Ceiling((pressTimeMax + 100) / 100.0) * 100;
+            axis_yp.MinLimit = 0;
+            axis_yp.MaxLimit = Math.Ceiling((pressValueMax + 0.1) / 0.2) * 0.2;
+
+            axis_xp.Name = "time/ms";
+            axis_yp.Name = "Press/kgf";
+            axis_xp.NameTextSize = 12;
+            axis_xp.TextSize = 12;
+            axis_yp.NameTextSize = 12;
+            axis_yp.TextSize = 12;
+
+            ((CartesianChart)pressControls[0]).XAxes = new List<Axis>() { axis_xp };
+            ((CartesianChart)pressControls[0]).YAxes = new List<Axis>() { axis_yp };
+
+            ((CartesianChart)pressControls[0]).LegendPosition = LiveChartsCore.Measure.LegendPosition.Hidden;
+            ((CartesianChart)pressControls[0]).LegendTextSize = 12;
+        }
+
+        // 加载 Cowling Toe In X 力曲线（xForceControls[0]），自适应 X(time/S)/Y(force/N) 上限
+        private void LoadToeinXForceFromDir(string dir)
+        {
+            if (!Directory.Exists(dir))
+            {
+                System.Diagnostics.Trace.WriteLine($"LoadToeinXForceFromDir: 目录不存在 {dir}");
+                return;
+            }
+
+            double xforce_MaxTimeSec = 0;
+            double xforce_MaxForce = 0;
+
+            string[] files = Directory.GetFiles(dir);
+            files = FilterFilesByTime(files);
+            foreach (string file in files)
+            {
+                LineSeries<ObservablePoint> xforce_line = new LineSeries<ObservablePoint>();
+
+                List<double> time_double = new List<double>();
+                List<double> force_double = new List<double>();
+                List<CowlingForceModel> _cowlingForceModel = CSVTool.OpenCSV<CowlingForceModel>(file);
+                foreach (var item in _cowlingForceModel)
+                {
+                    time_double.Add(item.Time);
+                    force_double.Add(item.Force);
+                }
+
+                if (time_double.Count > 0)
+                {
+                    double tMaxSec = Math.Abs(time_double.Max()) / 1000.0;
+                    if (tMaxSec > xforce_MaxTimeSec) xforce_MaxTimeSec = tMaxSec;
+                }
+                if (force_double.Count > 0)
+                {
+                    double fMax = Math.Abs(force_double.Max());
+                    if (fMax > xforce_MaxForce) xforce_MaxForce = fMax;
+                }
+
+                xforce_line.Stroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
+                xforce_line.LineSmoothness = 0;
+                xforce_line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
+                xforce_line.GeometrySize = 0.5;
+                xforce_line.GeometryStroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
+                xforce_line.MiniatureShapeSize = 0;
+                xforce_line.Name = null;
+
+                var xforce_line_values = new List<ObservablePoint>();
+                int length = force_double.Count;
+                for (int i = 0; i < length; i++)
+                {
+                    xforce_line_values.Add(new ObservablePoint(Math.Abs(time_double[i]) / 1000, force_double[i]));
+                }
+
+                xforce_line.Values = xforce_line_values;
+                xforce_line.ScalesXAt = 1;
+                xforce_line.ScalesYAt = 0;
+                chart_series_xforce.Add(xforce_line);
+            }
+
+            _dispatcher.Invoke(new Action(() =>
+            {
+                ((CartesianChart)xForceControls[0]).Series = chart_series_xforce;
+            }));
+
+            if (xforce_MaxTimeSec > 0)
+                axis_XForce_X.MaxLimit = Math.Ceiling((xforce_MaxTimeSec + 0.5) / 1.0) * 1.0;
+            if (xforce_MaxForce > 0)
+            {
+                double ym = Math.Ceiling((xforce_MaxForce + 1) / 2.0) * 2.0;
+                axis_XForce_Y.MaxLimit = ym;
+                axis_XForce_YY.MaxLimit = ym;
+            }
+
+            axis_XForce_X.Name = "time/S";
+            axis_XForce_Y.Name = "force/N";
+            axis_XForce_X.NameTextSize = 12;
+            axis_XForce_X.TextSize = 12;
+            axis_XForce_X.ShowSeparatorLines = true;
+            axis_XForce_Y.NameTextSize = 12;
+            axis_XForce_Y.TextSize = 12;
+            axis_XForce_Y.ShowSeparatorLines = true;
+
+            ((CartesianChart)xForceControls[0]).XAxes = new List<Axis>() { axis_XForce_X, axis_XForce_X };
+            ((CartesianChart)xForceControls[0]).YAxes = new List<Axis>() { axis_XForce_Y, axis_XForce_YY };
+            ((CartesianChart)xForceControls[0]).LegendPosition = LiveChartsCore.Measure.LegendPosition.Hidden;
+            ((CartesianChart)xForceControls[0]).LegendTextSize = 12;
+        }
+
+        // 加载 Cowling Toe In Y 力曲线（yForceControls[0]）
+        private void LoadToeinYForceFromDir(string dir)
+        {
+            if (!Directory.Exists(dir))
+            {
+                System.Diagnostics.Trace.WriteLine($"LoadToeinYForceFromDir: 目录不存在 {dir}");
+                return;
+            }
+
+            double yforce_MaxTimeSec = 0;
+            double yforce_MaxForce = 0;
+
+            string[] files = Directory.GetFiles(dir);
+            files = FilterFilesByTime(files);
+            foreach (string file in files)
+            {
+                LineSeries<ObservablePoint> yforce_line = new LineSeries<ObservablePoint>();
+
+                List<double> time_double = new List<double>();
+                List<double> force_double = new List<double>();
+                List<CowlingForceModel> _cowlingForceModel = CSVTool.OpenCSV<CowlingForceModel>(file);
+                foreach (var item in _cowlingForceModel)
+                {
+                    time_double.Add(item.Time);
+                    force_double.Add(item.Force);
+                }
+
+                if (time_double.Count > 0)
+                {
+                    double tMaxSec = Math.Abs(time_double.Max()) / 1000.0;
+                    if (tMaxSec > yforce_MaxTimeSec) yforce_MaxTimeSec = tMaxSec;
+                }
+                if (force_double.Count > 0)
+                {
+                    double fMax = Math.Abs(force_double.Max());
+                    if (fMax > yforce_MaxForce) yforce_MaxForce = fMax;
+                }
+
+                yforce_line.Stroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
+                yforce_line.LineSmoothness = 0;
+                yforce_line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
+                yforce_line.GeometrySize = 0.3;
+                yforce_line.GeometryStroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
+                yforce_line.MiniatureShapeSize = 0;
+                yforce_line.Name = null;
+
+                var yforce_line_values = new List<ObservablePoint>();
+                int length = force_double.Count;
+                for (int i = 0; i < length; i++)
+                {
+                    yforce_line_values.Add(new ObservablePoint(Math.Abs(time_double[i]) / 1000, force_double[i]));
+                }
+
+                yforce_line.Values = yforce_line_values;
+                yforce_line.ScalesXAt = 1;
+                yforce_line.ScalesYAt = 0;
+                chart_series_yforce.Add(yforce_line);
+            }
+
+            _dispatcher.Invoke(new Action(() =>
+            {
+                ((CartesianChart)yForceControls[0]).Series = chart_series_yforce;
+            }));
+
+            if (yforce_MaxTimeSec > 0)
+                axis_YForce_X.MaxLimit = Math.Ceiling((yforce_MaxTimeSec + 0.5) / 1.0) * 1.0;
+            if (yforce_MaxForce > 0)
+            {
+                double ym = Math.Ceiling((yforce_MaxForce + 1) / 2.0) * 2.0;
+                axis_YForce_Y.MaxLimit = ym;
+                axis_YForce_YY.MaxLimit = ym;
+            }
+
+            axis_YForce_X.Name = "time/S";
+            axis_YForce_Y.Name = "force/N";
+            axis_YForce_X.NameTextSize = 12;
+            axis_YForce_X.TextSize = 12;
+            axis_YForce_Y.NameTextSize = 12;
+            axis_YForce_Y.TextSize = 12;
+
+            ((CartesianChart)yForceControls[0]).XAxes = new List<Axis>() { axis_YForce_X, axis_YForce_X };
+            ((CartesianChart)yForceControls[0]).YAxes = new List<Axis>() { axis_YForce_Y, axis_YForce_YY };
+            ((CartesianChart)yForceControls[0]).LegendPosition = LiveChartsCore.Measure.LegendPosition.Hidden;
+            ((CartesianChart)yForceControls[0]).LegendTextSize = 12;
+        }
+
+        // 加载 Cowling Toe In Z 力曲线（zForceControls[0]）
+        private void LoadToeinZForceFromDir(string dir)
+        {
+            if (!Directory.Exists(dir))
+            {
+                System.Diagnostics.Trace.WriteLine($"LoadToeinZForceFromDir: 目录不存在 {dir}");
+                return;
+            }
+
+            double zforce_MaxTimeSec = 0;
+            double zforce_MaxForce = 0;
+
+            string[] files = Directory.GetFiles(dir);
+            files = FilterFilesByTime(files);
+            foreach (string file in files)
+            {
+                LineSeries<ObservablePoint> zforce_line = new LineSeries<ObservablePoint>();
+
+                List<double> time_double = new List<double>();
+                List<double> force_double = new List<double>();
+                List<CowlingForceModel> _cowlingForceModel = CSVTool.OpenCSV<CowlingForceModel>(file);
+                foreach (var item in _cowlingForceModel)
+                {
+                    time_double.Add(item.Time);
+                    force_double.Add(item.Force);
+                }
+
+                if (time_double.Count > 0)
+                {
+                    double tMaxSec = Math.Abs(time_double.Max()) / 1000.0;
+                    if (tMaxSec > zforce_MaxTimeSec) zforce_MaxTimeSec = tMaxSec;
+                }
+                if (force_double.Count > 0)
+                {
+                    double fMax = Math.Abs(force_double.Max());
+                    if (fMax > zforce_MaxForce) zforce_MaxForce = fMax;
+                }
+
+                zforce_line.Stroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
+                zforce_line.LineSmoothness = 0;
+                zforce_line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
+                zforce_line.GeometrySize = 0.3;
+                zforce_line.GeometryStroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
+                zforce_line.MiniatureShapeSize = 0;
+                zforce_line.Name = null;
+
+                var zforce_line_values = new List<ObservablePoint>();
+                int length = force_double.Count;
+                for (int i = 0; i < length; i++)
+                {
+                    zforce_line_values.Add(new ObservablePoint(Math.Abs(time_double[i]) / 1000, force_double[i]));
+                }
+
+                zforce_line.Values = zforce_line_values;
+                zforce_line.ScalesXAt = 1;
+                zforce_line.ScalesYAt = 0;
+                chart_series_zforce.Add(zforce_line);
+            }
+
+            _dispatcher.Invoke(new Action(() =>
+            {
+                ((CartesianChart)zForceControls[0]).Series = chart_series_zforce;
+            }));
+
+            if (zforce_MaxTimeSec > 0)
+                axis_ZForce_X.MaxLimit = Math.Ceiling((zforce_MaxTimeSec + 0.5) / 1.0) * 1.0;
+            if (zforce_MaxForce > 0)
+            {
+                double ym = Math.Ceiling((zforce_MaxForce + 1) / 2.0) * 2.0;
+                axis_ZForce_Y.MaxLimit = ym;
+                axis_ZForce_YY.MaxLimit = ym;
+            }
+
+            axis_ZForce_X.Name = "time/S";
+            axis_ZForce_Y.Name = "force/N";
+            axis_ZForce_X.NameTextSize = 12;
+            axis_ZForce_X.TextSize = 12;
+            axis_ZForce_Y.NameTextSize = 12;
+            axis_ZForce_Y.TextSize = 12;
+
+            ((CartesianChart)zForceControls[0]).XAxes = new List<Axis>() { axis_ZForce_X, axis_ZForce_X };
+            ((CartesianChart)zForceControls[0]).YAxes = new List<Axis>() { axis_ZForce_Y, axis_ZForce_YY };
+            ((CartesianChart)zForceControls[0]).LegendPosition = LiveChartsCore.Measure.LegendPosition.Hidden;
+            ((CartesianChart)zForceControls[0]).LegendTextSize = 12;
+        }
+
+        // 一键导入：单次 FolderBrowserDialog，自动查找 STD1 子目录并加载 6 个图表
+        // 现场目录结构示例：电批_2号电批\STD1\{TimeTorAngPre, Press, TimeTorque, Curve\Toein_X/Y/Z_Force}
+        protected void ImportTotalAuto()
+        {
+            if (screwControls == null || screwControls.Length == 0 || screwControls[0] == null)
+            {
+                System.Diagnostics.Trace.WriteLine("ImportTotalAuto: screwControls not ready - aborting.");
+                System.Windows.MessageBox.Show("图表尚未初始化，请稍候再试。");
+                return;
+            }
+            if (_dispatcher == null) _dispatcher = System.Windows.Application.Current?.Dispatcher;
+
+            // 复用 ImportTotal 的坐标轴初始化逻辑
+            SetupAxisDefaults();
+            ((CartesianChart)screwControls[0]).Series = null;
+            ((CartesianChart)pressControls[0]).Series = null;
+            ((CartesianChart)torqueControls[0]).Series = null;
+            ((CartesianChart)xForceControls[0]).Series = null;
+            ((CartesianChart)yForceControls[0]).Series = null;
+            ((CartesianChart)zForceControls[0]).Series = null;
+
+            chart_series.Clear();
+            chart_series_press.Clear();
+            chart_series_torque.Clear();
+            chart_series_xforce.Clear();
+            chart_series_yforce.Clear();
+            chart_series_zforce.Clear();
+
+            var folderBrowserDialog = new FolderBrowserDialog();
+            folderBrowserDialog.SelectedPath = @"D:\3.Y26CG\6X\5.现场问题点资料\CGSF-1-二合一";
+            folderBrowserDialog.Description = "请选择电批根目录（自动查找 STD1 子目录）";
+
+            if (folderBrowserDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+                return;
+
+            string root = folderBrowserDialog.SelectedPath;
+
+            // 自动查找 STD1 子目录（不区分大小写，支持嵌套一层）
+            string std1Dir = null;
+            var di = new DirectoryInfo(root);
+            if (string.Equals(di.Name, "STD1", StringComparison.OrdinalIgnoreCase))
+            {
+                std1Dir = root;
+            }
+            else
+            {
+                var directChild = di.GetDirectories("STD1", SearchOption.TopDirectoryOnly).FirstOrDefault();
+                if (directChild != null)
+                {
+                    std1Dir = directChild.FullName;
+                }
+                else
+                {
+                    // 兜底：在直接子目录里查找 STD1（最多深一层）
+                    foreach (var sub in di.GetDirectories())
+                    {
+                        var hit = sub.GetDirectories("STD1", SearchOption.TopDirectoryOnly).FirstOrDefault();
+                        if (hit != null) { std1Dir = hit.FullName; break; }
+                    }
+                }
+            }
+
+            if (std1Dir == null)
+            {
+                // 未找到 STD1，把根目录当 STD1 用，让用户自行确认结构
+                std1Dir = root;
+                System.Diagnostics.Trace.WriteLine($"ImportTotalAuto: 未找到 STD1 子目录，使用根目录 {root}");
+            }
+
+            // 子目录映射：现场 TimeTorAngPre 同时用于 AngleTorque 和 Time-Torque-Angle-Press
+            string timeTorAngPreDir = Path.Combine(std1Dir, "TimeTorAngPre");
+            string pressDir = Path.Combine(std1Dir, "Press");
+            string toeinXDir = Path.Combine(std1Dir, "Curve", "Toein_X_Force");
+            string toeinYDir = Path.Combine(std1Dir, "Curve", "Toein_Y_Force");
+            string toeinZDir = Path.Combine(std1Dir, "Curve", "Toein_Z_Force");
+
+            // AngleTorque 和 Time-Torque-Angle-Press 都使用 TimeTorAngPre 目录的数据
+            if (Directory.Exists(timeTorAngPreDir))
+            {
+                LoadAngleTorqueFromDir(timeTorAngPreDir);
+                LoadTimeTorqueAnglePressFromDir(timeTorAngPreDir);
+            }
+            else
+            {
+                System.Diagnostics.Trace.WriteLine($"ImportTotalAuto: 目录不存在 {timeTorAngPreDir}");
+            }
+
+            if (Directory.Exists(pressDir))
+            {
+                LoadTimePressFromDir(pressDir);
+            }
+            else
+            {
+                System.Diagnostics.Trace.WriteLine($"ImportTotalAuto: 目录不存在 {pressDir}");
+            }
+
+            // ToeIn 三个力曲线目录：现场通常只有 PNG 无 CSV，缺失时显示空图（不中断流程）
+            LoadToeinXForceFromDir(toeinXDir);
+            LoadToeinYForceFromDir(toeinYDir);
+            LoadToeinZForceFromDir(toeinZDir);
+        }
+
+        private DelegateCommand _importTotalAutoCommand;
+        public DelegateCommand ImportTotalAutoCommand =>
+            _importTotalAutoCommand ?? (_importTotalAutoCommand = new DelegateCommand(ImportTotalAuto));
+
+        // 坐标轴默认值初始化（从 ImportTotal 抽出，供 ImportTotal/ImportTotalAuto 复用）
+        private void SetupAxisDefaults()
+        {
+            //1 AngleTorque
+            axis_x.MinLimit = 0;
+            axis_x.MaxLimit = 2500;
+            axis_x.ShowSeparatorLines = true;
+            axis_x.Padding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_x.NamePadding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_x.SeparatorsPaint = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
+            axis_x.MinStep = 500;
+            axis_x.ForceStepToMin = true;
+
+            axis_y.MinLimit = 0;
+            axis_y.MaxLimit = 0.6;
+            axis_y.ShowSeparatorLines = true;
+            axis_y.Padding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_y.NamePadding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_y.SeparatorsPaint = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
+            axis_y.MinStep = 0.1;
+
+            //2
+            axis_x2.MinLimit = 0;
+            axis_x2.MaxLimit = 1000;
+            axis_x2.ShowSeparatorLines = true;
+            axis_x2.Padding = new LiveChartsCore.Drawing.Padding(0, 0, 0, 0);
+            axis_x2.NamePadding = new LiveChartsCore.Drawing.Padding(0, 0, 0, 0);
+            axis_x2.SeparatorsPaint = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
+
+            axis_y2.MinLimit = 0;
+            axis_y2.MaxLimit = 0.6;
+            axis_y2.ShowSeparatorLines = true;
+            axis_y2.Padding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_y2.NamePadding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_y2.SeparatorsPaint = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
+            axis_y2.MinStep = 0.1;
+
+            axis_y2y.MinLimit = 0;
+            axis_y2y.MaxLimit = 0.6;
+            axis_y2y.ShowSeparatorLines = true;
+            axis_y2y.Padding = new LiveChartsCore.Drawing.Padding(0, 0, 0, 0);
+            axis_y2y.NamePadding = new LiveChartsCore.Drawing.Padding(0, 0, 0, 0);
+            axis_y2y.SeparatorsPaint = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
+            axis_y2y.MinStep = 0.1;
+            axis_y2y.TextSize = 0;
+            axis_y2y.Position = LiveChartsCore.Measure.AxisPosition.End;
+
+            //3 TimePress
+            axis_xp.MinLimit = 0;
+            axis_xp.MaxLimit = 1500;
+            axis_xp.ShowSeparatorLines = true;
+            axis_xp.Padding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_xp.NamePadding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_xp.SeparatorsPaint = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
+
+            axis_yp.MinLimit = 0;
+            axis_yp.MaxLimit = 2.5;
+            axis_yp.ShowSeparatorLines = true;
+            axis_yp.Padding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_yp.NamePadding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_yp.SeparatorsPaint = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
+            axis_yp.MinStep = 0.5;
+
+            //X方向力
+            axis_XForce_X.MinLimit = 0;
+            axis_XForce_X.MaxLimit = 8;
+            axis_XForce_X.ShowSeparatorLines = true;
+            axis_XForce_X.Padding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_XForce_X.NamePadding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_XForce_X.SeparatorsPaint = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
+            axis_XForce_X.Position = LiveChartsCore.Measure.AxisPosition.Start;
+
+            axis_XForce_Y.MinLimit = 0;
+            axis_XForce_Y.MaxLimit = 10;
+            axis_XForce_Y.ShowSeparatorLines = true;
+            axis_XForce_Y.Padding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_XForce_Y.NamePadding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_XForce_Y.SeparatorsPaint = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
+            axis_XForce_Y.Position = LiveChartsCore.Measure.AxisPosition.Start;
+
+            axis_XForce_YY.MinLimit = 0;
+            axis_XForce_YY.MaxLimit = 1;
+            axis_XForce_YY.ShowSeparatorLines = true;
+            axis_XForce_YY.Padding = new LiveChartsCore.Drawing.Padding(0, 0, 0, 0);
+            axis_XForce_YY.NamePadding = new LiveChartsCore.Drawing.Padding(0, 0, 0, 0);
+            axis_XForce_YY.SeparatorsPaint = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
+            axis_XForce_YY.Position = LiveChartsCore.Measure.AxisPosition.End;
+            axis_XForce_YY.TextSize = 0;
+
+            //Y方向力
+            axis_YForce_X.MinLimit = 0;
+            axis_YForce_X.MaxLimit = 8;
+            axis_YForce_X.ShowSeparatorLines = true;
+            axis_YForce_X.Padding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_YForce_X.NamePadding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_YForce_X.SeparatorsPaint = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
+            axis_YForce_X.Position = LiveChartsCore.Measure.AxisPosition.Start;
+
+            axis_YForce_Y.MinLimit = 0;
+            axis_YForce_Y.MaxLimit = 10;
+            axis_YForce_Y.ShowSeparatorLines = true;
+            axis_YForce_Y.Padding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_YForce_Y.NamePadding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_YForce_Y.SeparatorsPaint = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
+            axis_YForce_Y.Position = LiveChartsCore.Measure.AxisPosition.Start;
+
+            axis_YForce_YY.MinLimit = 0;
+            axis_YForce_YY.MaxLimit = 1;
+            axis_YForce_YY.ShowSeparatorLines = true;
+            axis_YForce_YY.Padding = new LiveChartsCore.Drawing.Padding(0, 0, 0, 0);
+            axis_YForce_YY.NamePadding = new LiveChartsCore.Drawing.Padding(0, 0, 0, 0);
+            axis_YForce_YY.SeparatorsPaint = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
+            axis_YForce_YY.Position = LiveChartsCore.Measure.AxisPosition.End;
+            axis_YForce_YY.TextSize = 0;
+
+            //Z方向力
+            axis_ZForce_X.MinLimit = 0;
+            axis_ZForce_X.MaxLimit = 8;
+            axis_ZForce_X.ShowSeparatorLines = true;
+            axis_ZForce_X.Padding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_ZForce_X.NamePadding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_ZForce_X.SeparatorsPaint = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
+            axis_ZForce_X.Position = LiveChartsCore.Measure.AxisPosition.Start;
+
+            axis_ZForce_Y.MinLimit = 0;
+            axis_ZForce_Y.MaxLimit = 10;
+            axis_ZForce_Y.ShowSeparatorLines = true;
+            axis_ZForce_Y.Padding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_ZForce_Y.NamePadding = new LiveChartsCore.Drawing.Padding(4, 0, 4, 0);
+            axis_ZForce_Y.SeparatorsPaint = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
+            axis_ZForce_Y.Position = LiveChartsCore.Measure.AxisPosition.Start;
+
+            axis_ZForce_YY.MinLimit = 0;
+            axis_ZForce_YY.MaxLimit = 1;
+            axis_ZForce_YY.ShowSeparatorLines = true;
+            axis_ZForce_YY.Padding = new LiveChartsCore.Drawing.Padding(0, 0, 0, 0);
+            axis_ZForce_YY.NamePadding = new LiveChartsCore.Drawing.Padding(0, 0, 0, 0);
+            axis_ZForce_YY.SeparatorsPaint = new SolidColorPaint(Colors.Black.ToSKColor(), 1);
+            axis_ZForce_YY.Position = LiveChartsCore.Measure.AxisPosition.End;
+            axis_ZForce_YY.TextSize = 0;
         }
     }
 

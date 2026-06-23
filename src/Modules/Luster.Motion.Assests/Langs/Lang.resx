@@ -2874,6 +2874,9 @@
   <data name="LSMesUnLoad" xml:space="preserve">
     <value>MCH弹片测量数据上传</value>
   </data>
+  <data name="CableSNManager" xml:space="preserve">
+    <value>排线SN管理</value>
+  </data>
   <data name="TimerJudge" xml:space="preserve">
     <value>定时判断</value>
   </data>
@@ -3207,10 +3210,16 @@
   <data name="TaikeAnnotatedCurve" xml:space="preserve">
     <value>压力曲线堆叠图</value>
   </data>
+  <data name="DHVCMMonitor" xml:space="preserve">
+    <value>大寰音圈电机曲线监控</value>
+  </data>
   <data name="ReadModbus" xml:space="preserve">
     <value>读取Modbus</value>
   </data>
   <data name="SetModbusEx" xml:space="preserve">
     <value>设置Modbus</value>
+  </data>
+  <data name="ReadRobotSpeed" xml:space="preserve">
+    <value>读取机械手速度</value>
   </data>
 </root>

@@ -1349,7 +1349,6 @@ namespace Luster.SimDevice.SubSystem.ViewModel
             new[] { "Efficiency loss due to own process", "E99OOOO-90", "Waiting for OP", "设备本身的效率损失", "无", "E99OOOO-90" },
             new[] { "Downstream blocked", "E99OOOO-99", "Waiting for OP", "下游导致的效率损失", "无", "E99OOOO-99" },
             new[] { "PC/SW crashed", "N99PCSW-01", "Actual downtime", "电脑死机或软件崩溃", "无", "N99PCSW-01" },
-            new[] { "Undefined error", "TBD", "Actual downtime", "未定义的异常", "无", "TBD" },
             new[] { "Manual triggered DT", "F99OOOO-20", "Actual downtime", "手动触发的停机", "无", "F99OOOO-20" },
             new[] { "1st tier vendor", "F99OOOO-01", "Actual downtime", "一级供应商", "无", "F99OOOO-01" },
             new[] { "1st and 2nd tier vendor", "F99OOOO-02", "Actual downtime", "一级供应商和二级供应商", "无", "F99OOOO-02" },

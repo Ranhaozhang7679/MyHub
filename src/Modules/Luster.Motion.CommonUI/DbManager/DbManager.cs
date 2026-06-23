@@ -314,6 +314,8 @@ namespace Luster.Motion.CommonUI
         List<string> listA = new List<string>();
         // by模块（自由工站）存储CTLog的TimeSlot
         public Dictionary<string, DateTime> timeSlotByModule = new Dictionary<string, DateTime>();
+        // CTLog，下一个CT动作的开始是上一个CT动作的结束，时间完美连续
+        DateTime? lastEndTime = null;
         public void LoadCtConfig(string Path)
         {
             try
@@ -1249,22 +1251,25 @@ namespace Luster.Motion.CommonUI
                         ctInfoSelected.Add(tbStart);
                         timeSlotByModule[parts[1]] = tbStart.开始时间;
                         //tbStartPerUnit = tbStart;
+                        lastEndTime = tbStart.结束时间;
                     }
                     if (second != null)
                     {
+                        var actionStartTime = lastEndTime ?? first.开始时间;
                         // 第一个key的界面CT暂时写为：动作CT
                         TbCTInfo2 infoSelect = new TbCTInfo2
                         {
                             模块 = moduleNameTrim,
                             动作 = firstValue,
                             SN = station,
-                            开始时间 = first.开始时间,
+                            开始时间 = actionStartTime,  // 开始时间 = first.开始时间,
                             结束时间 = second.结束时间,
                             Actual_CT = Math.Round((second.结束时间 - first.开始时间).TotalMilliseconds / 1000.0, 3),
                             Target_CT = first.Target_CT,
                             Gap = Math.Round((second.结束时间 - first.开始时间).TotalMilliseconds / 1000.0 - first.Target_CT, 3),
                             Time_Slot = timeSlotByModule[parts[1]] //tbStartPerUnit.开始时间
                         };
+                        lastEndTime = infoSelect.结束时间;
                         ctInfoSelected.Add(infoSelect);
                     }
                     // 匹配到两行后

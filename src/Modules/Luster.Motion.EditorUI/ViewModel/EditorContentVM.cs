@@ -629,6 +629,53 @@ namespace Luster.Motion.EditorUI.ViewModel
         }, () => IsBtnEnabled).ObservesCanExecute(() => IsBtnEnabled));
 
         /// <summary>
+        /// 查找同名工站并删除
+        /// </summary>
+        private DelegateCommand _findDuplicateCommand;
+        public DelegateCommand FindDuplicateCommand => _findDuplicateCommand ?? (_findDuplicateCommand = new DelegateCommand(() =>
+        {
+            if (!IsAdmin) return;
+
+            var modules = GetSelectModules();
+            if (modules.Count == 0) return;
+
+            var selected = modules[0];
+            if (!(selected.TaskFunction is IStation))
+            {
+                _dialogService.ShowInfoTip("请选中一个工站后再执行此操作");
+                return;
+            }
+
+            var duplicates = eventBus.GetDuplicateStations(selected);
+            if (duplicates.Count == 0)
+            {
+                _dialogService.ShowInfoTip($"未找到与 [{selected.Alias}] 同名的其他工站");
+                return;
+            }
+
+            var station = selected.TaskFunction as IStation;
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"当前选中: {selected.Alias} (行:{station.Row} 列:{station.Column})");
+            sb.AppendLine();
+            sb.AppendLine("以下同名工站将被删除:");
+            foreach (var dup in duplicates)
+            {
+                var dupStation = dup.TaskFunction as IStation;
+                sb.AppendLine($"  - {dup.Alias} (行:{dupStation.Row} 列:{dupStation.Column} 子模块:{dup.Children.Count})");
+            }
+            sb.AppendLine();
+            sb.Append("确认删除?");
+
+            _dialogService.ShowConfirm(sb.ToString(), r =>
+            {
+                if (r.Result == ButtonResult.OK)
+                {
+                    eventBus.OnRemoveModule(duplicates.ToArray());
+                }
+            });
+        }, () => IsBtnEnabled).ObservesCanExecute(() => IsBtnEnabled));
+
+        /// <summary>
         /// 模块移除
         /// </summary>
         private DelegateCommand<object> _removeLineCommand;
