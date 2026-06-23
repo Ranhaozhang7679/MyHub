@@ -378,6 +378,7 @@ namespace Luster.Motion.SubSystem.ViewModel
             {
                 SetProperty(ref _issEnableBuzzer, value);
                 _mController.SysConfig.IsEnableBuzzer = value;
+                IsSave = true;
             }
         }
 
@@ -392,6 +393,7 @@ namespace Luster.Motion.SubSystem.ViewModel
             {
                 SetProperty(ref _issEnableLightCurtain, value);
                 _mController.SysConfig.EnableLightCurtain = value;
+                IsSave = true;
             }
         }
 
@@ -1452,7 +1454,7 @@ namespace Luster.Motion.SubSystem.ViewModel
         /// </summary>
         private DelegateCommand _enableSafetyDoorCommand;
 
-        public DelegateCommand EnableSafetyDoorCommand => _enableBuzzerCommand ?? (_enableBuzzerCommand = new DelegateCommand(() =>
+        public DelegateCommand EnableSafetyDoorCommand => _enableSafetyDoorCommand ?? (_enableSafetyDoorCommand = new DelegateCommand(() =>
         {
             _mController.SysConfig.EnableSaftyDoor = true;
         }));
@@ -1462,7 +1464,7 @@ namespace Luster.Motion.SubSystem.ViewModel
         /// </summary>
         private DelegateCommand _disableSafetyDoorCommand;
 
-        public DelegateCommand DisableSafetyDoorCommand => _enableBuzzerCommand ?? (_enableBuzzerCommand = new DelegateCommand(() =>
+        public DelegateCommand DisableSafetyDoorCommand => _disableSafetyDoorCommand ?? (_disableSafetyDoorCommand = new DelegateCommand(() =>
         {
             _mController.SysConfig.EnableSaftyDoor = false;
         }));

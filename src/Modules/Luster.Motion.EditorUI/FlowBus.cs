@@ -905,7 +905,7 @@ namespace Luster.Motion.EditorUI
             if (module != null && module.TaskFunction is IGroup)
             {
                 var curModule = GetCurrent();
-                curModule.IsCurrent = false;
+                if (curModule != null) curModule.IsCurrent = false;
                 module.IsCurrent = true;
 
                 // 将已有被选择的取消选中
@@ -1470,7 +1470,7 @@ namespace Luster.Motion.EditorUI
         /// <summary>
         /// 在 新增、修改、删除、移动、复制粘贴模块后触发该事件，记录撤销命令
         /// </summary>
-        private void OnRecipeChanged(IUndoCommand command)
+        internal void OnRecipeChanged(IUndoCommand command)
         {
             // 只保留10次记录,超过10次，则给最远的一次删除掉
             Remain10Stack(backStack);

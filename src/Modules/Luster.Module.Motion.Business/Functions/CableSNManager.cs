@@ -5,12 +5,11 @@ using Luster.TaskFlow.Common.Enums;
 using Luster.TaskFlow.Motion;
 using System;
 using System.ComponentModel;
-using System.Linq;
 
 namespace Luster.Module.Motion.Business.Functions
 {
     /// <summary>
-    /// 排线SN管理 — 保存/读取/标记使用
+    /// 排线SN管理 — 保存/读取(预占)/标记/归还
     /// </summary>
     public class CableSNManager : MotionFunction
     {
@@ -31,7 +30,10 @@ namespace Luster.Module.Motion.Business.Functions
             Read,
 
             [Description("标记已使用")]
-            MarkUsed
+            MarkUsed,
+
+            [Description("归还SN")]
+            Release
         }
 
         /// <summary>
@@ -64,7 +66,10 @@ namespace Luster.Module.Motion.Business.Functions
             SNExist = 8,
 
             [Description("未知异常")]
-            UnknownError = 9
+            UnknownError = 9,
+
+            [Description("已使用不可归还")]
+            AlreadyUsed = 10
         }
 
         #region 输入参数
@@ -73,7 +78,7 @@ namespace Luster.Module.Motion.Business.Functions
         [Parameter("操作模式", 0, CN = "操作模式", DefaultV = CableSNMode.Save)]
         public CableSNMode Mode { get; set; }
 
-        [DependOn("Mode", CableSNMode.Save, CableSNMode.MarkUsed)]
+        [DependOn("Mode", CableSNMode.Save, CableSNMode.MarkUsed, CableSNMode.Release)]
         [Parameter("排线SN码", 5, CN = "排线SN码", CanRef = ParamRef.Ref)]
         public string SN { get; set; }
 
@@ -84,7 +89,7 @@ namespace Luster.Module.Motion.Business.Functions
         [Parameter("文件路径", 1, CN = "文件路径", ParamType = ParamType.OUT)]
         public string FilePath { get; set; }
 
-        [Parameter("操作结果(1:成功 2:SN为空 3:文件不存在 4:无数据 5:SN不存在 6:写入失败 7:所有SN已使用 8:SN已存在 9:未知异常)", 10, CN = "操作结果", ParamType = ParamType.OUT)]
+        [Parameter("操作结果(1:成功 2:SN为空 3:文件不存在 4:无数据 5:SN不存在 6:写入失败 7:所有SN已使用 8:SN已存在 9:未知异常 10:已使用不可归还)", 10, CN = "操作结果", ParamType = ParamType.OUT)]
         public int Result { get; set; }
 
         [DependOn("Mode", CableSNMode.Read)]
@@ -95,7 +100,7 @@ namespace Luster.Module.Motion.Business.Functions
 
         public CableSNManager()
         {
-            Tips = "排线SN管理：保存SN到CSV、读取最早未使用的SN、标记SN为已使用";
+            Tips = "排线SN管理：保存SN、读取(预占)最早未使用SN、标记已使用、归还预占SN";
             Icon = "\xe679";
         }
 
@@ -106,6 +111,7 @@ namespace Luster.Module.Motion.Business.Functions
             OutSN = string.Empty;
             FilePath = DefaultFilePath;
 
+            // 设备空跑模式：直接跳过执行
             if (IsEmptyMode)
             {
                 return false;
@@ -124,6 +130,9 @@ namespace Luster.Module.Motion.Business.Functions
                     case CableSNMode.MarkUsed:
                         DoMarkUsed();
                         break;
+                    case CableSNMode.Release:
+                        DoRelease();
+                        break;
                 }
             }
             catch (Exception ex)
@@ -132,14 +141,12 @@ namespace Luster.Module.Motion.Business.Functions
                 MyOwner.OnLog(LogType.Error, $"[排线SN管理] 异常：{ex.Message}");
             }
 
-            // 所有模式：模块始终绿色，通过Result值判断业务结果
-            return base.DoExcute(out errMsg);
-
+            // 所有业务动作：模块始终绿色，业务结果通过 Result 值判断
             return base.DoExcute(out errMsg);
         }
 
         /// <summary>
-        /// 保存SN到CSV文件，若已存在则返回失败
+        /// 保存SN到CSV文件，若已存在则结果为已存在(码8)
         /// </summary>
         private void DoSave()
         {
@@ -150,61 +157,34 @@ namespace Luster.Module.Motion.Business.Functions
                 return;
             }
 
-            var records = CableSNFileHelper.ReadAllRecords(DefaultFilePath);
-            var existing = records?.FirstOrDefault(r => r.SN == SN);
+            Result = CableSNFileHelper.SaveSN(DefaultFilePath, SN);
 
-            if (existing != null)
+            switch (Result)
             {
-                Result = (int)CableSNResult.SNExist;
-                MyOwner.OnLog(LogType.Error, $"[排线SN管理] 保存失败：SN {SN} 已存在");
-                return;
+                case 1: MyOwner.OnLog(LogType.Info, $"[排线SN管理] 保存成功（新增）：{SN}"); break;
+                case 3: MyOwner.OnLog(LogType.Error, $"[排线SN管理] 保存失败：文件处理异常 {DefaultFilePath}"); break;
+                case 6: MyOwner.OnLog(LogType.Error, $"[排线SN管理] 保存失败：无法写入文件 {DefaultFilePath}"); break;
+                case 8: MyOwner.OnLog(LogType.Error, $"[排线SN管理] 保存失败：SN {SN} 已存在"); break;
+                case 9: MyOwner.OnLog(LogType.Error, $"[排线SN管理] 保存失败：未知异常 {DefaultFilePath}"); break;
             }
-
-            // SN不存在：新增记录
-            if (!CableSNFileHelper.AppendRecord(DefaultFilePath, SN))
-            {
-                Result = (int)CableSNResult.FileWriteFail;
-                MyOwner.OnLog(LogType.Error, $"[排线SN管理] 保存失败：无法写入文件 {DefaultFilePath}");
-                return;
-            }
-
-            MyOwner.OnLog(LogType.Info, $"[排线SN管理] 保存成功（新增）：{SN}");
         }
 
         /// <summary>
-        /// 从CSV读取最早未使用的SN（模块始终不变红）
+        /// 读取最早未使用SN并预占（模块始终不变红）
         /// </summary>
         private void DoRead()
         {
-            var records = CableSNFileHelper.ReadAllRecords(DefaultFilePath);
+            Result = CableSNFileHelper.OccupyEarliestSN(DefaultFilePath, out var sn);
+            OutSN = sn;
 
-            if (records == null)
+            switch (Result)
             {
-                Result = (int)CableSNResult.FileNotExist;
-                MyOwner.OnLog(LogType.Error, $"[排线SN管理] 读取失败：文件不存在 {DefaultFilePath}");
-                return;
-            }
-
-            if (records.Count == 0)
-            {
-                Result = (int)CableSNResult.FileEmpty;
-                MyOwner.OnLog(LogType.Error, "[排线SN管理] 读取失败：文件中无数据");
-                return;
-            }
-
-            var target = records
-                .OrderBy(r => r.Time)
-                .FirstOrDefault(r => r.IsUsed == "否");
-
-            if (target != null)
-            {
-                OutSN = target.SN;
-                MyOwner.OnLog(LogType.Info, $"[排线SN管理] 读取成功：{target.SN}");
-            }
-            else
-            {
-                Result = (int)CableSNResult.AllSNUsed;
-                MyOwner.OnLog(LogType.Error, "[排线SN管理] 读取失败：所有SN均已使用");
+                case 1: MyOwner.OnLog(LogType.Info, $"[排线SN管理] 读取预占成功：{sn}"); break;
+                case 3: MyOwner.OnLog(LogType.Error, $"[排线SN管理] 读取失败：文件不存在 {DefaultFilePath}"); break;
+                case 4: MyOwner.OnLog(LogType.Error, "[排线SN管理] 读取失败：文件中无数据"); break;
+                case 6: MyOwner.OnLog(LogType.Error, $"[排线SN管理] 读取失败：文件回写异常 {DefaultFilePath}"); break;
+                case 7: MyOwner.OnLog(LogType.Error, "[排线SN管理] 读取失败：所有SN均已使用或预占"); break;
+                case 9: MyOwner.OnLog(LogType.Error, $"[排线SN管理] 读取失败：未知异常 {DefaultFilePath}"); break;
             }
         }
 
@@ -220,46 +200,47 @@ namespace Luster.Module.Motion.Business.Functions
                 return;
             }
 
-            var records = CableSNFileHelper.ReadAllRecords(DefaultFilePath);
+            Result = CableSNFileHelper.MarkUsedSN(DefaultFilePath, SN, out var alreadyUsed);
 
-            if (records == null)
+            switch (Result)
             {
-                Result = (int)CableSNResult.FileNotExist;
-                MyOwner.OnLog(LogType.Error, $"[排线SN管理] 标记失败：文件不存在 {DefaultFilePath}");
+                case 1:
+                    MyOwner.OnLog(LogType.Info, alreadyUsed
+                        ? $"[排线SN管理] 标记跳过：SN {SN} 已是使用状态"
+                        : $"[排线SN管理] 标记成功：SN {SN}");
+                    break;
+                case 3: MyOwner.OnLog(LogType.Error, $"[排线SN管理] 标记失败：文件不存在 {DefaultFilePath}"); break;
+                case 4: MyOwner.OnLog(LogType.Error, "[排线SN管理] 标记失败：文件中无数据"); break;
+                case 5: MyOwner.OnLog(LogType.Error, $"[排线SN管理] 标记失败：SN {SN} 不存在于文件中"); break;
+                case 6: MyOwner.OnLog(LogType.Error, $"[排线SN管理] 标记失败：文件回写异常 {DefaultFilePath}"); break;
+                case 9: MyOwner.OnLog(LogType.Error, $"[排线SN管理] 标记失败：未知异常 {DefaultFilePath}"); break;
+            }
+        }
+
+        /// <summary>
+        /// 归还预占的SN（预占→未使用），用于配方异常分支回收；已使用则失败(码10)
+        /// </summary>
+        private void DoRelease()
+        {
+            if (string.IsNullOrWhiteSpace(SN))
+            {
+                Result = (int)CableSNResult.SNEmpty;
+                MyOwner.OnLog(LogType.Error, "[排线SN管理] 归还失败：SN码为空");
                 return;
             }
 
-            if (records.Count == 0)
+            Result = CableSNFileHelper.ReleaseSN(DefaultFilePath, SN);
+
+            switch (Result)
             {
-                Result = (int)CableSNResult.FileEmpty;
-                MyOwner.OnLog(LogType.Error, "[排线SN管理] 标记失败：文件中无数据");
-                return;
+                case 1: MyOwner.OnLog(LogType.Info, $"[排线SN管理] 归还成功：SN {SN} 已恢复未使用"); break;
+                case 3: MyOwner.OnLog(LogType.Error, $"[排线SN管理] 归还失败：文件不存在 {DefaultFilePath}"); break;
+                case 4: MyOwner.OnLog(LogType.Error, "[排线SN管理] 归还失败：文件中无数据"); break;
+                case 5: MyOwner.OnLog(LogType.Error, $"[排线SN管理] 归还失败：SN {SN} 不存在于文件中"); break;
+                case 6: MyOwner.OnLog(LogType.Error, $"[排线SN管理] 归还失败：文件回写异常 {DefaultFilePath}"); break;
+                case 9: MyOwner.OnLog(LogType.Error, $"[排线SN管理] 归还失败：未知异常 {DefaultFilePath}"); break;
+                case 10: MyOwner.OnLog(LogType.Error, $"[排线SN管理] 归还失败：SN {SN} 已使用不可归还"); break;
             }
-
-            var target = records.FirstOrDefault(r => r.SN == SN);
-
-            if (target == null)
-            {
-                Result = (int)CableSNResult.SNNotExist;
-                MyOwner.OnLog(LogType.Error, $"[排线SN管理] 标记失败：SN {SN} 不存在于文件中");
-                return;
-            }
-
-            if (target.IsUsed == "是")
-            {
-                MyOwner.OnLog(LogType.Info, $"[排线SN管理] 标记跳过：SN {SN} 已是使用状态");
-                return;
-            }
-
-            target.IsUsed = "是";
-            if (!CableSNFileHelper.SaveAllRecords(DefaultFilePath, records))
-            {
-                Result = (int)CableSNResult.FileWriteFail;
-                MyOwner.OnLog(LogType.Error, $"[排线SN管理] 标记失败：文件回写异常 {DefaultFilePath}");
-                return;
-            }
-
-            MyOwner.OnLog(LogType.Info, $"[排线SN管理] 标记成功：SN {SN}");
         }
     }
 }

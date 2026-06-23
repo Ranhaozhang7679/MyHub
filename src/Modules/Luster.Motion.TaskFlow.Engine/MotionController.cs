@@ -1130,7 +1130,7 @@ namespace Luster.Motion.TaskFlow.Engine
                 if (SysConfig.ListOpenCloseDoor != null && SysConfig.ListOpenCloseDoor.Count > 0)
                 {
                     var door = SysConfig.ListOpenCloseDoor.FirstOrDefault(u => u.DoorType == DoorType.DoorContact);
-                    if (door != null)
+                    if (door != null && door.ListLockIO != null)
                     {
                         foreach (var item in door.ListLockIO)
                         {
@@ -2096,17 +2096,24 @@ namespace Luster.Motion.TaskFlow.Engine
                     // 换成对象
                     if (item.GlobalParameter == null)
                     {
-                        var parameters = MotionEngine.Get(GlobalModule.GlobalID).Parameters;
+                        var globalModule = MotionEngine.Get(GlobalModule.GlobalID);
+                        if (globalModule == null) { isRet = false; return; }
+                        var parameters = globalModule.Parameters;
                         if (parameters.ContainsKey(item.GlobalKey))
                         {
                             item.GlobalParameter = parameters[item.GlobalKey];
                         }
                     }
 
+                    // GlobalParameter 查找失败仍为 null，视为不安全
+                    if (item.GlobalParameter == null) { isRet = false; return; }
+
                     // 全部变量如果开启，代表进行光幕检查
                     if (item.GlobalParameter.Type == typeof(bool)
                     && bool.TryParse(item.GlobalParameter.Value?.ToString(), out var isOn) && isOn)
                     {
+                        // Device 为 null，视为不安全
+                        if (item.Device == null) { isRet = false; return; }
                         var vIO = item.Device.GetVDevice<VIO>(_deviceEngine);
                         if (!vIO.GetDigitalIn())
                         {

@@ -813,12 +813,12 @@ namespace Luster.Motion.TaskFlow.Engine.Models
         /// <summary>
         /// 启用安全门
         /// </summary>
-        public bool EnableSaftyDoor=false;
+        public bool EnableSaftyDoor { get; set; } = false;
 
         /// <summary>
         /// 启用光栅
         /// </summary>
-        public bool EnableLightCurtain=false;
+        public bool EnableLightCurtain { get; set; } = false;
 
         /// <summary>
         /// 班次列表
