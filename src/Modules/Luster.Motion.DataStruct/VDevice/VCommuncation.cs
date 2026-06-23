@@ -170,12 +170,12 @@ namespace Luster.Motion.DataStruct.VDevice
                     {
                         // 超时后关闭通讯
                         Communication.Close();
-                        throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, res.ErrorMsg);
+                        throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, GetConfigMessage(CurrentErrorCode));
                     }
                 }
                 catch (TimeoutException timeEx)
                 {
-                    throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, timeEx.Message);
+                    throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, GetConfigMessage(CurrentErrorCode));
                 }
 
                 Communication.LogEvent -= OnLog;
@@ -234,7 +234,7 @@ namespace Luster.Motion.DataStruct.VDevice
                 else
                 {
                     Communication.Close();
-                    throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID);
+                    throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, GetConfigMessage(CurrentErrorCode));
                 }
 
                 VStatus = VStatus.Idle;
@@ -308,7 +308,7 @@ namespace Luster.Motion.DataStruct.VDevice
                 if (!commResult.IsSuccess)
                 {
                     Communication.Close();
-                    throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, commResult.ErrorMsg);
+                    throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, GetConfigMessage(CurrentErrorCode));
                 }
             }, () => { Thread.Sleep(TargetValue); });
         }
@@ -338,7 +338,7 @@ namespace Luster.Motion.DataStruct.VDevice
                 if (!commResult.IsSuccess)
                 {
                     Communication.Close();
-                    throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, commResult.ErrorMsg);
+                    throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, GetConfigMessage(CurrentErrorCode));
                 }
             }, () => { Thread.Sleep(TargetValue); });
 
@@ -570,7 +570,7 @@ namespace Luster.Motion.DataStruct.VDevice
             }
             catch (TimeoutException ex)
             {
-                throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, ex.Message);
+                throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, GetConfigMessage(CurrentErrorCode));
             }
         }
 

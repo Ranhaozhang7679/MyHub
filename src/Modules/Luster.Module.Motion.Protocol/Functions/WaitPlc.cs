@@ -198,7 +198,7 @@ namespace Luster.Module.Motion.Protocol.Functions
             }
             catch (DeviceTimeoutException ex)
             {
-                OnAlarm(AlarmType.WarningTip, $"等待变量{OpRule.GetDescription()} == {v}超时!");
+                OnAlarm(AlarmType.WarningTip, $"等待PLC 模块名:{MyOwner.Alias} 地址:[{Address}] {OpRule.GetDescription()} {v}超时!");
             }
             // PLC发生初始化，将中断循环的条件关闭
             if (IsPlcInit)
