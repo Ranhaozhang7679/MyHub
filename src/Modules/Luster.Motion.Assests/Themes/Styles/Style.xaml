@@ -597,6 +597,15 @@
             </Setter.Value>
         </Setter>
     </Style>
+    <!--  DataGrid 列头：右侧加竖线，使列分隔与拖拽列宽位置清晰可见（配合下方 GridLinesVisibility=All）  -->
+    <Style
+        x:Key="DataGridColumnHeaderVLineStyle"
+        BasedOn="{StaticResource DataGridColumnHeaderStyle.Small}"
+        TargetType="DataGridColumnHeader">
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="0,0,1,1" />
+    </Style>
+
     <Style BasedOn="{StaticResource DataGrid.Small}" TargetType="DataGrid">
         <Setter Property="hc:DataGridAttach.ShowRowNumber" Value="True" />
         <Setter Property="hc:Empty.ShowEmpty" Value="True" />
@@ -607,6 +616,12 @@
         <Setter Property="hc:DataGridAttach.ApplyDefaultStyle" Value="False" />
         <Setter Property="hc:DataGridAttach.CanUnselectAllWithBlankArea" Value="True" />
         <Setter Property="AutoGenerateColumns" Value="False" />
+        <!--  显示横/竖网格线，使列分隔清晰、列宽可拖拽（解决"看不到列分隔/找不到拖拽位置"）  -->
+        <Setter Property="GridLinesVisibility" Value="All" />
+        <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="VerticalGridLinesBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="CanUserResizeColumns" Value="True" />
+        <Setter Property="ColumnHeaderStyle" Value="{StaticResource DataGridColumnHeaderVLineStyle}" />
     </Style>
 
     <Style
