@@ -3536,6 +3536,16 @@ namespace Luster.Motion.Assests.Langs
 		public string CableSNManager => Lang.CableSNManager;
 
         /// <summary>
+        ///   查找类似 复制文件 的本地化字符串。
+        /// </summary>
+        public string CopyFile => Lang.CopyFile;
+
+        /// <summary>
+        ///   查找类似 保压后生成压力曲线 的本地化字符串。
+        /// </summary>
+        public string PressurizeChart => Lang.PressurizeChart;
+
+        /// <summary>
         ///   查找类似 智能驾驶舱 的本地化字符串。
         /// </summary>
 		public string LusterSmartCockpit => Lang.LusterSmartCockpit;
@@ -8722,6 +8732,16 @@ namespace Luster.Motion.Assests.Langs
         ///   查找类似 排线SN管理 的本地化字符串。
         /// </summary>
 		public static string CableSNManager = nameof(CableSNManager);
+
+        /// <summary>
+        ///   查找类似 复制文件 的本地化字符串。
+        /// </summary>
+        public static string CopyFile = nameof(CopyFile);
+
+        /// <summary>
+        ///   查找类似 保压后生成压力曲线 的本地化字符串。
+        /// </summary>
+        public static string PressurizeChart = nameof(PressurizeChart);
 
         /// <summary>
         ///   查找类似 智能驾驶舱 的本地化字符串。
