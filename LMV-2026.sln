@@ -129,6 +129,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{184DA593-972D-4910-8998-38FB42523586}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Luster.Module.Motion.TestToolchain.Tests", "src\Tests\Luster.Module.Motion.TestToolchain.Tests\Luster.Module.Motion.TestToolchain.Tests.csproj", "{C7ECF266-92E7-4659-A7C6-3B614C6CBC28}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Luster.Motion.FiveAxis.UI", "src\Modules\Luster.Motion.FiveAxis.UI\Luster.Motion.FiveAxis.UI.csproj", "{F5C647B7-B157-4049-AA63-A6D13CCF7A7C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -704,6 +705,18 @@ Global
 		{C7ECF266-92E7-4659-A7C6-3B614C6CBC28}.Release|x64.Build.0 = Release|Any CPU
 		{C7ECF266-92E7-4659-A7C6-3B614C6CBC28}.Release|x86.ActiveCfg = Release|Any CPU
 		{C7ECF266-92E7-4659-A7C6-3B614C6CBC28}.Release|x86.Build.0 = Release|Any CPU
+		{F5C647B7-B157-4049-AA63-A6D13CCF7A7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5C647B7-B157-4049-AA63-A6D13CCF7A7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5C647B7-B157-4049-AA63-A6D13CCF7A7C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F5C647B7-B157-4049-AA63-A6D13CCF7A7C}.Debug|x64.Build.0 = Debug|Any CPU
+		{F5C647B7-B157-4049-AA63-A6D13CCF7A7C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F5C647B7-B157-4049-AA63-A6D13CCF7A7C}.Debug|x86.Build.0 = Debug|Any CPU
+		{F5C647B7-B157-4049-AA63-A6D13CCF7A7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5C647B7-B157-4049-AA63-A6D13CCF7A7C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F5C647B7-B157-4049-AA63-A6D13CCF7A7C}.Release|x64.ActiveCfg = Release|Any CPU
+		{F5C647B7-B157-4049-AA63-A6D13CCF7A7C}.Release|x64.Build.0 = Release|Any CPU
+		{F5C647B7-B157-4049-AA63-A6D13CCF7A7C}.Release|x86.ActiveCfg = Release|Any CPU
+		{F5C647B7-B157-4049-AA63-A6D13CCF7A7C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -761,5 +774,6 @@ Global
 		{D76076E1-530B-4EF0-8D44-23E4DFCE8704} = {EC447DCF-ABFA-6E24-52A5-D7FD48A5C558}
 		{184DA593-972D-4910-8998-38FB42523586} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{C7ECF266-92E7-4659-A7C6-3B614C6CBC28} = {184DA593-972D-4910-8998-38FB42523586}
+		{F5C647B7-B157-4049-AA63-A6D13CCF7A7C} = {EC447DCF-ABFA-6E24-52A5-D7FD48A5C558}
 	EndGlobalSection
 EndGlobal
