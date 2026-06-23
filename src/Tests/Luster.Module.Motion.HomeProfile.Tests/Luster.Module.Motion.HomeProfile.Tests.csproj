@@ -13,6 +13,9 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Modules\Luster.Module.Motion.HomeProfile\Luster.Module.Motion.HomeProfile.csproj" />
+		<!-- 引擎端到端冒烟:DeviceEngine + ZMotion 模拟卡 + VAxis -->
+		<ProjectReference Include="..\..\Modules\Luster.SimDevice\Luster.SimDevice.csproj" />
+		<ProjectReference Include="..\..\Modules\Luster.SimDevice.MotionCard\Luster.SimDevice.MotionCard.csproj" />
 	</ItemGroup>
 
 </Project>
