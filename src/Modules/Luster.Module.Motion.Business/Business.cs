@@ -37,6 +37,8 @@ namespace Luster.Module.Motion.Business
             AddFunction<EpsonRobot>();
             AddFunction<ReadRobotSpeed>();
             AddFunction<CalibByPosMove>();
+            // 五轴标定参数数据模型(P2-D 补遗/P6-A 配套,前端 P6-B 标定 UI SelectedObject 契约)
+            AddFunction<FiveAxisCaliParam>();
 
             AddFunction<PDCAFlow>();
             AddFunction<PDCAELimit>();
