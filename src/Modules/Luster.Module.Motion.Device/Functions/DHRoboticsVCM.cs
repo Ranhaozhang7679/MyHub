@@ -188,12 +188,12 @@ namespace Luster.Module.Motion.Device.Functions
         public VAxisPos StPosition { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("是否启用FX命名", 37, CN = "是否启用FX命名", DefaultV = false)]
+        [Parameter("是否启用六四命名", 37, CN = "是否启用六四命名", DefaultV = false)]
         public bool IsFXName { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
         [Parameter("撕膜次数", 38, CN = "撕膜次数", CanRef = ParamRef.Ref)]
-        public int PeelOffTimes { get; set; }
+        public double PeelOffTimes { get; set; }
 
         // ===== 输出参数 =====
         [Parameter("执行结果", 40, CN = "执行结果", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
