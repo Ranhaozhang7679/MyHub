@@ -168,8 +168,11 @@ namespace Luster.Module.Motion.Protocol.Functions
             // 2.接收结果
             if (OutString?.Trim() == "NG")
             {
-                errMsg = "通信接收超时，收到内容为空";
-                OnAlarm(AlarmType.WarningTip, $"通信接收超时，收到内容为{OutString}", "N03VSOO-01@Communication timeout");
+                //errMsg = "通信接收超时，收到内容为空";
+                //OnAlarm(AlarmType.WarningTip, $"通信接收超时，收到内容为{OutString}", "N03VSOO-01@Communication timeout");
+                // 报警内容与代码取自仿真通信(CommDevice)界面"报警配置"列配置，未配置时由 GetConfigMessage 回退
+                errMsg = comm.GetConfigMessage(DeviceError.ConnectTimeFail);
+                OnAlarm(AlarmType.WarningTip, comm.GetConfigMessage(DeviceError.ConnectTimeFail), comm.Errors[DeviceError.ConnectTimeFail]);
             }
 
             return base.DoExcute(out errMsg);

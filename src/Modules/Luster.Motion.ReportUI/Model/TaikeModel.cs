@@ -41,7 +41,13 @@ namespace Luster.Motion.ReportUI.Model
             get => _no;
             set => SetProperty(ref _no, value);
         }
+        private double _torque1;
 
+        public double Torque1
+        {
+            get => _torque1;
+            set => SetProperty(ref _torque1, value);
+        }
         /// <summary> 
         /// 角度
         /// </summary> 
@@ -51,14 +57,6 @@ namespace Luster.Motion.ReportUI.Model
         {
             get => _angle1;
             set => SetProperty(ref _angle1, value);
-        }
-
-        private double _torque1;
-
-        public double Torque1
-        {
-            get => _torque1;
-            set => SetProperty(ref _torque1, value);
         }
     }
     public class TotalPressModel : BindableBase

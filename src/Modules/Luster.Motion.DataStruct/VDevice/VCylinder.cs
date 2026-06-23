@@ -200,7 +200,7 @@ namespace Luster.Motion.DataStruct.DataModels
                 {
                     WaitDiagital(timeOut, new VIO[] { InExtendSensor, InRetractSensor }, new bool[] { true, false }, () =>
                     {
-                        throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, $"Action:{Name} timeout>{timeOut}!", this.Module,this.Name);
+                        throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, GetConfigMessage(CurrentErrorCode), this.Module,this.Name);
                         
                     });
                 }
@@ -210,7 +210,7 @@ namespace Luster.Motion.DataStruct.DataModels
                 }
             }, () =>
             {
-                throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, $"Action:{Name} timeout>{timeOut}!", this.Module, this.Name);
+                throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, GetConfigMessage(CurrentErrorCode), this.Module, this.Name);
                 Thread.Sleep(TargetValue);
             }
             ) ;
@@ -248,7 +248,7 @@ namespace Luster.Motion.DataStruct.DataModels
                 if (!GetIsShield())
                 {
                     WaitDiagital(timeOut, new VIO[] { InExtendSensor, InRetractSensor }, new bool[] { false, true }, 
-                        () => { throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID,"",this.Module, this.Name); });
+                        () => { throw new DeviceTimeoutException(Errors[CurrentErrorCode], this.ID, GetConfigMessage(CurrentErrorCode),this.Module, this.Name); });
                 }
                 else
                 {

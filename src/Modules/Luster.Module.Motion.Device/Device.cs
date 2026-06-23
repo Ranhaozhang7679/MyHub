@@ -95,6 +95,7 @@ namespace Luster.Module.Motion.IO
             //ÒôÈ¦µç»ú
             AddFunction<JunRudderVCM>();
             AddFunction<DHRoboticsVCM>();
+            AddFunction<DHCalcu>();
         }
     }
 

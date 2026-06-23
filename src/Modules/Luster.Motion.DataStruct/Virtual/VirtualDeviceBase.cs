@@ -216,6 +216,29 @@ namespace Luster.Motion.DataStruct.Virtual
 
             return "None";
         }
+
+        /// <summary>
+        /// 获取指定错误类型的报警描述：优先取仿真界面"报警配置"列配置的内容(ErrorMessages字典)，
+        /// 未配置时回退到设备级 ErrorMessage。
+        /// </summary>
+        /// <param name="code"></param>
+        /// <returns></returns>
+        public string GetConfigMessage(DeviceError code)
+        {
+            // 三级回退，确保永不为 null/空，避免异常 Message 为 null 时被 .NET 替换成默认串：
+            // 1) 报警配置页"报警配置列"(ErrorMessages)；2) 设备级 ErrorMessage；3) 枚举 [Description] 兜底
+            if (ErrorMessages != null && ErrorMessages.TryGetValue(code, out var msg) && !string.IsNullOrWhiteSpace(msg))
+            {
+                return msg;
+            }
+
+            if (!string.IsNullOrWhiteSpace(ErrorMessage))
+            {
+                return ErrorMessage;
+            }
+
+            return code.GetDescription();
+        }
         #endregion
 
         /// <summary>

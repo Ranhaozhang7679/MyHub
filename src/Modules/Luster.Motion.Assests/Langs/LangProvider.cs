@@ -6255,6 +6255,25 @@ namespace Luster.Motion.Assests.Langs
         /// </summary>
 		public string ZoomOut => Lang.ZoomOut;
 
+        /// <summary>
+        ///   查找模拟量生成csv 的本地化字符串。
+        /// </summary>
+        public static string AnalogConvertChart => Lang.AnalogConvertChart;
+
+        /// <summary>
+        ///   查找拟合计算大寰K和B 的本地化字符串。
+        /// </summary>
+        public static string DHCalcu => Lang.DHCalcu;
+
+        /// <summary>
+        ///   查找拟合计算大寰K和B 的本地化字符串。
+        /// </summary>
+        public static string PressurizeChart => Lang.PressurizeChart;
+
+        /// <summary>
+        ///   查找复制文件 的本地化字符串。
+        /// </summary>
+        public static string CopyFile => Lang.CopyFile;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -11424,5 +11443,24 @@ namespace Luster.Motion.Assests.Langs
         /// </summary>
 		public static string ZoomOut = nameof(ZoomOut);
 
+        /// <summary>
+        ///   查找类似 模拟量生成csv 的本地化字符串。
+        /// </summary>
+        public static string AnalogConvertChart = nameof(AnalogConvertChart);
+
+        /// <summary>
+        ///   查找类似 模拟量生成csv 的本地化字符串。
+        /// </summary>
+        public static string DHCalcu = nameof(DHCalcu);
+
+        /// <summary>
+        ///   查找类似 保压并生成曲线 的本地化字符串。
+        /// </summary>
+        public static string PressurizeChart = nameof(PressurizeChart);
+
+        /// <summary>
+        ///   查找类似 保压并生成曲线 的本地化字符串。
+        /// </summary>
+        public static string CopyFile = nameof(CopyFile);
     }
 }
