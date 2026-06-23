@@ -1314,15 +1314,15 @@ namespace Luster.Motion.ReportUI.ViewModel
                 List<TaikeModel> _taikeModel = CSVTool.OpenCSV<TaikeModel>(file);
                 foreach (var item in _taikeModel)
                 {
-                    torq_double.Add(item.Angle1);
-                    Angle_double.Add(item.Torque1);
+                    torq_double.Add(item.Torque1);
+                    Angle_double.Add(item.Angle1);
                 }
 
                 double Max_Torque = Math.Round(torq_double.ToArray().Max(), 3);
                 double Max_Angle = Math.Round(Angle_double.ToArray().Max(), 3);
 
-                if (Max_Torque > angleTorque_MaxAngle) angleTorque_MaxAngle = Max_Torque;
-                if (Max_Angle > angleTorque_MaxTorque) angleTorque_MaxTorque = Max_Angle;
+                if (Max_Torque > angleTorque_MaxTorque) angleTorque_MaxTorque = Max_Torque;
+                if (Max_Angle > angleTorque_MaxAngle) angleTorque_MaxAngle = Max_Angle;
 
                 if (Max_Torque > TorqueLow * 5 && Max_Torque < TorqueUp * 5 && Max_Angle * 5 > AngleLow * 5 && Max_Angle < AngleUp * 5 || true)
                 {

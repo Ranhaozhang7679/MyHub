@@ -3228,4 +3228,16 @@
   <data name="ReadRobotSpeed" xml:space="preserve">
     <value>读取机械手速度</value>
   </data>
+  <data name="AnalogConvertChart" xml:space="preserve">
+    <value>模拟量获取并记录进csv文件</value>
+  </data>
+  <data name="DHCalcu" xml:space="preserve">
+    <value>拟合计算大寰K和B</value>
+  </data>
+  <data name="PressurizeChart" xml:space="preserve">
+    <value>保压并生成曲线</value>
+  </data>
+    <data name="CopyFile" xml:space="preserve">
+    <value>复制文件</value>
+  </data> 
 </root>

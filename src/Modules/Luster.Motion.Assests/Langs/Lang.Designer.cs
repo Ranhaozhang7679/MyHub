@@ -19,7 +19,7 @@ namespace Luster.Motion.Assests.Langs {
     // 类通过类似于 ResGen 或 Visual Studio 的工具自动生成的。
     // 若要添加或移除成员，请编辑 .ResX 文件，然后重新运行 ResGen
     // (以 /str 作为命令选项)，或重新生成 VS 项目。
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Lang {
@@ -417,6 +417,15 @@ namespace Luster.Motion.Assests.Langs {
         public static string AnalogConvert {
             get {
                 return ResourceManager.GetString("AnalogConvert", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 模拟量获取并记录进csv文件 的本地化字符串。
+        /// </summary>
+        public static string AnalogConvertChart {
+            get {
+                return ResourceManager.GetString("AnalogConvertChart", resourceCulture);
             }
         }
         
@@ -896,7 +905,7 @@ namespace Luster.Motion.Assests.Langs {
                 return ResourceManager.GetString("CableSNManager", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   查找类似 缓存数据 的本地化字符串。
         /// </summary>
@@ -2041,11 +2050,29 @@ namespace Luster.Motion.Assests.Langs {
         }
         
         /// <summary>
+        ///   查找类似 拟合计算大寰K和B 的本地化字符串。
+        /// </summary>
+        public static string DHCalcu {
+            get {
+                return ResourceManager.GetString("DHCalcu", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 大寰音圈电机 的本地化字符串。
         /// </summary>
         public static string DHRoboticsVCM {
             get {
                 return ResourceManager.GetString("DHRoboticsVCM", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 大寰音圈电机曲线监控 的本地化字符串。
+        /// </summary>
+        public static string DHVCMMonitor {
+            get {
+                return ResourceManager.GetString("DHVCMMonitor", resourceCulture);
             }
         }
         
@@ -6332,7 +6359,7 @@ namespace Luster.Motion.Assests.Langs {
                 return ResourceManager.GetString("ReadPlc", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   查找类似 读取机械手速度 的本地化字符串。
         /// </summary>
@@ -6341,7 +6368,7 @@ namespace Luster.Motion.Assests.Langs {
                 return ResourceManager.GetString("ReadRobotSpeed", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   查找类似 加载STL 的本地化字符串。
         /// </summary>
@@ -8058,15 +8085,6 @@ namespace Luster.Motion.Assests.Langs {
         public static string TaikeAnnotatedCurve {
             get {
                 return ResourceManager.GetString("TaikeAnnotatedCurve", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   查找类似 大寰音圈电机曲线监控 的本地化字符串。
-        /// </summary>
-        public static string DHVCMMonitor {
-            get {
-                return ResourceManager.GetString("DHVCMMonitor", resourceCulture);
             }
         }
         
