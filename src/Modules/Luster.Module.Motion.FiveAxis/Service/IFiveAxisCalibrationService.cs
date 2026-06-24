@@ -1,6 +1,8 @@
 using Luster.Motion.FiveAxis.Data.Calibration;
 using Luster.Motion.FiveAxis.Kinematics;
 using Luster.Motion.FiveAxis.Position;
+using Luster.Motion.DataStruct.Real;
+using System.Collections.Generic;
 
 namespace Luster.Motion.FiveAxis.Service
 {
@@ -12,11 +14,9 @@ namespace Luster.Motion.FiveAxis.Service
     /// - 粗标 RoughCalibrate:纯 C# 几何(AngleHelper.CalculateRoateCenter 由三点示教结果算旋转中心),软件可验。
     /// - 激光标定 LaserCalibrate:纯 C# 计算(两点激光读数+Z 高度 → LinearConverter + CameraOffset),软件可验。
     /// - 工件原点示教 CalibrateWorkOrigin:纯 C# 几何(见 TeachWorkOriginResult.CalculateOriginOffset),软件可验。
-    /// - 精标 AccurateCalibrate:⚠️ 源端核心 = station.FrameCal(...) 为**运动卡 SDK 卡端调用**(需先 Frame 进逆解模式),
-    ///   非纯 C#,软件不可复现。实现待 P5-5b:需决策"卡端 FrameCal 接口如何暴露(P0-A ZMotion 适配器?新 IFiveAxisFrameCal?)"。
-    ///
-    /// 「标定输出参数 diff(源端 vs 迁移后)」验收需源端参考标定输出做基准,且精标依赖卡端 FrameCal ——
-    /// 两者均待项目经理/人类决策,故本接口仅定义契约,实现随 P5-5b 落地。
+    /// - 精标 AccurateCalibrate:卡端 FrameCal(ADR-TES-110 已就位),经 IFiveAxisFrame 旁路接口编排 Frame 生命周期。
+    ///   算法在卡端 Basic 固件,PC 侧无可剥离 C#;同卡同固件输入相同采样点 → 输出一致,diff≤1e-6 自然满足。
+    ///   精标 diff 真机验收(卡端 FrameCal + 硬件采点)⚠️ 待人类现场验证(ADR R-F4),软件层不阻塞。
     /// </summary>
     public interface IFiveAxisCalibrationService
     {
@@ -30,11 +30,14 @@ namespace Luster.Motion.FiveAxis.Service
         bool RoughCalibrate(RoughCaliResult rough, double mrxPulses, double mrzPulses);
 
         /// <summary>
-        /// 精标:由采样球心点列表(accurate.ResultFirstPosi + ResultRxPosiLis + ResultRzPosiLis)+ 粗标参数 + 球半径,
-        /// 计算 accurate.Accurate5Para + ZeroRx。对应源端 Form5Cali.frameCal(:1312)。
-        /// ⚠️ 源端核心计算 station.FrameCal 为运动卡 SDK 卡端调用,实现待 P5-5b 卡端接口决策。
+        /// 精标:由采样球心点列表(accurate.ResultFirstPosi + ResultRxPosiLis + ResultRzPosiLis)+ 粗标参数,
+        /// 经卡端 FrameCal 解算,写入 accurate.Accurate5Para + ZeroRx。对应源端 Form5Cali.frameCal(:1312)。
+        /// 编排严格对齐源端 :1322-1376 顺序:ExitFrame(清残留)→ Frame(粗标 Rough5Para)→ FrameCal → ExitFrame(必退)。
+        /// Frame 生命周期由 try/finally 保证 ExitFrame(R-F2 缓解)。卡端解算经 IFiveAxisFrame 旁路接口(ADR-TES-110)。
         /// </summary>
-        bool AccurateCalibrate(AccurateCaliResult accurate, Coord5Axis rough5Para, double ballRadius, double mrxPulses, double mrzPulses);
+        /// <param name="accurate">精标结果(含采样球心点列表,调用方需先采点填 ResultFirstPosi/ResultRxPosiLis/ResultRzPosiLis)</param>
+        /// <param name="ctx">精标编排上下文(卡端 Frame 接口 + 坐标系 + 实/虚轴列表 + 粗标参数 + Rx/Rz 一圈脉冲)</param>
+        bool AccurateCalibrate(AccurateCaliResult accurate, AccurateCalibrateContext ctx);
 
         /// <summary>
         /// 激光标定:由两点激光读数+Z 高度 + 标准值 + 激光/相机示教位置,

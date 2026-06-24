@@ -151,14 +151,35 @@ namespace Luster.SimDevice.MotionCard.ZMotion
             return zmcaux.ZAux_Direct_MoveDelay(handle, axis, ms);
         }
 
-        public int GetTable(IntPtr handle, int tableStart, int numes, float[] values)
-        {
-            return zmcaux.ZAux_Direct_GetTable(handle, tableStart, numes, values);
-        }
-
         public int GetRemainBuffer(IntPtr handle, int axis, ref int value)
         {
             return zmcaux.ZAux_Direct_GetRemain_Buffer(handle, axis, ref value);
+        }
+
+        // —— ADR-TES-110 五轴 Frame/FrameCal 卡端原语(P5-5b)——
+        public int SetTable(IntPtr handle, int startAddr, int count, float[] data)
+        {
+            return zmcaux.ZAux_Direct_SetTable(handle, startAddr, count, data);
+        }
+
+        public int GetTable(IntPtr handle, int startAddr, int count, float[] data)
+        {
+            return zmcaux.ZAux_Direct_GetTable(handle, startAddr, count, data);
+        }
+
+        public int ConnFrame(IntPtr handle, int realCount, int[] realAxes, int frame, int paraAddr, int virCount, int[] virAxes)
+        {
+            return zmcaux.ZAux_Direct_Connframe(handle, realCount, realAxes, frame, paraAddr, virCount, virAxes);
+        }
+
+        public int GetLoaded(IntPtr handle, int axis, ref int loaded)
+        {
+            return zmcaux.ZAux_Direct_GetLoaded(handle, axis, ref loaded);
+        }
+
+        public int CancelAxisList(IntPtr handle, int count, int[] axes, int mode)
+        {
+            return zmcaux.ZAux_Direct_CancelAxisList(handle, count, axes, mode);
         }
     }
 
@@ -251,9 +272,23 @@ namespace Luster.SimDevice.MotionCard.ZMotion
         public static extern int ZAux_Direct_MoveDelay(IntPtr handle, int iaxis, int itimems);
 
         [DllImport("cszmcaux.dll", CallingConvention = CallingConvention.StdCall)]
-        public static extern int ZAux_Direct_GetTable(IntPtr handle, int tabstart, int numes, float[] pfValue);
+        public static extern int ZAux_Direct_GetRemain_Buffer(IntPtr handle, int iaxis, ref int piValue);
+
+        // —— ADR-TES-110 五轴 Frame/FrameCal 卡端原语(P5-5b,对齐源端 Zmcaux.cs 签名)——
 
         [DllImport("cszmcaux.dll", CallingConvention = CallingConvention.StdCall)]
-        public static extern int ZAux_Direct_GetRemain_Buffer(IntPtr handle, int iaxis, ref int piValue);
+        public static extern int ZAux_Direct_SetTable(IntPtr handle, int startAddr, int count, float[] data);
+
+        [DllImport("cszmcaux.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int ZAux_Direct_GetTable(IntPtr handle, int startAddr, int count, float[] data);
+
+        [DllImport("cszmcaux.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int ZAux_Direct_Connframe(IntPtr handle, int realCount, int[] realAxes, int frame, int paraAddr, int virCount, int[] virAxes);
+
+        [DllImport("cszmcaux.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int ZAux_Direct_GetLoaded(IntPtr handle, int axis, ref int loaded);
+
+        [DllImport("cszmcaux.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int ZAux_Direct_CancelAxisList(IntPtr handle, int count, int[] axes, int mode);
     }
 }

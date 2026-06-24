@@ -10,6 +10,10 @@
 		<ProjectReference Include="..\Luster.TaskFlow.Motion\Luster.TaskFlow.Motion.csproj" />
 		<!-- P5-5:标定/配置数据模型实现 IXMLParser(平台 XElement round-trip 约定),需平台数据结构接口 -->
 		<ProjectReference Include="..\Luster.Common.DataStruct\Luster.Common.DataStruct.csproj" />
+		<!-- P5-5b:精标 FrameCal 编排用 IFiveAxisFrame 旁路接口(ADR-TES-110,落点 Motion.DataStruct) -->
+		<ProjectReference Include="..\Luster.Motion.DataStruct\Luster.Motion.DataStruct.csproj" />
+		<!-- P5-4:单点激光虚拟模式读离线点云(VCloud.ReadPly/ReadTxt),真机走 ILaserController(待人类现场) -->
+		<ProjectReference Include="..\Luster.ThreeD.Algorithm\Luster.ThreeD.Algorithm.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -4,9 +4,9 @@ using Luster.TaskFlow.Motion;
 namespace Luster.Module.Motion.FiveAxis
 {
     /// <summary>
-    /// 五轴运动学模块(P5-1 骨架 + P5-2 Coord5Axis 正逆解 + P5-3 连续插补/锁存节点 + P5-6 检测站编排节点)。
+    /// 五轴运动学模块(P5-1 骨架 + P5-2 Coord5Axis 正逆解 + P5-3 连续插补/锁存节点 + P5-4 激光节点 + P5-6 检测站编排节点)。
     /// 提供五轴能力接入 lmv 的工程骨架 + MathNet.Numerics / MathNetExtend 依赖底座,
-    /// 供 P5-2(Coord5Axis 正逆解)、P5-3(连续插补接口)、P5-6(检测站编排)在此挂载 MotionFunction 算子节点。
+    /// 供 P5-2(Coord5Axis 正逆解)、P5-3(连续插补接口)、P5-4(单点激光)、P5-6(检测站编排)在此挂载 MotionFunction 算子节点。
     /// 模块 DLL 经 CopyToMotionsFolder 落 Motions\,由 ModuleFactory 反射自动加载(Shell/引擎零改动)。
     /// </summary>
     public class FiveAxisModule : MotionModule
@@ -38,6 +38,11 @@ namespace Luster.Module.Motion.FiveAxis
             AddFunction<RtcpFrameEnter>();
             AddFunction<RtcpFrameExit>();
             AddFunction<HandoverNode>();
+
+            // P5-4:单点激光测距 + 激光 Z 单点标定(TES-99)
+            //   LaserMeasure 产出 (激光读数, 当前Z),LaserZCalibrate 两点定标调 FiveAxisCalibrationService.LaserCalibrate
+            AddFunction<LaserMeasureNode>();
+            AddFunction<LaserZCalibrateNode>();
         }
     }
 
@@ -73,4 +78,3 @@ namespace Luster.Module.Motion.FiveAxis
         public override string System => "FiveAxis";
     }
 }
-
