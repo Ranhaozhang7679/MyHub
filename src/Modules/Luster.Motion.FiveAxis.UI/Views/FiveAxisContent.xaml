@@ -39,7 +39,7 @@
             </Grid>
 
             <!-- ParamGrid：按 [Parameter] 特性自动生成编辑面板。
-                 HasPermission 绑定 SysRole，ConverterParameter=Admin 对齐源端 [Permission(Administrator)]。
+                 HasPermission 绑定 SysRole，ConverterParameter=Integrator 对齐 TES-86 裁定：Admin/Integrator 可编辑、Maintenance/Operator 只读（Tab 级口径收窄，非源端字段级 [Permission(Administrator)]）。
                  SelectedObject 当前为 stand-in（既有标定算子），待全栈交付真实五轴 [Parameter] 数据模型后替换。
                  特性对齐：[DisplayName]→CN / [Category]→Group / [Description]→Tips /
                            [Editor(UITypeEditor)]→EditorType / [Browsable(false)]→Visible=false /
@@ -49,7 +49,7 @@
                     <param:ParamGrid
                         MinHeight="120"
                         Margin="0"
-                        HasPermission="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Admin}"
+                        HasPermission="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Integrator}"
                         SelectedObject="{Binding CaliParamModule}" />
 
                     <!-- 占位提示：真实五轴标定 [Parameter] 数据模型（IModule）待全栈交付。
