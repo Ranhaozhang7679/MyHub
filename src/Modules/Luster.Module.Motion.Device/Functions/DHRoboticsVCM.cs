@@ -100,7 +100,7 @@ namespace Luster.Module.Motion.Device.Functions
         public double PTVelocity { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("寻力扭矩限制(千分比)", 13, CN = "一段扭矩", DefaultV = 500)]
+        [Parameter("寻力扭矩限制(千分比)", 13, CN = "一段扭矩", CanRef = ParamRef.Ref, DefaultV = 500)]
         public int TorqueLimit { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
@@ -125,11 +125,11 @@ namespace Luster.Module.Motion.Device.Functions
         public double SpeedThreshold { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("压力标定系数K(压力=K×电流+B)", 19, CN = "标定系数K", DefaultV = 1.0)]
+        [Parameter("压力标定系数K(压力=K×电流+B)", 19, CN = "标定系数K", CanRef = ParamRef.Ref, DefaultV = 1.0)]
         public double PressureCalibrationK { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("压力标定偏移B", 20, CN = "标定偏移B", DefaultV = 0.0)]
+        [Parameter("压力标定偏移B", 20, CN = "标定偏移B", CanRef = ParamRef.Ref, DefaultV = 0.0)]
         public double PressureCalibrationB { get; set; }
 
         // ===== 回零参数 =====
@@ -172,7 +172,7 @@ namespace Luster.Module.Motion.Device.Functions
         public string GlobalVar { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
-        [Parameter("抬起扭矩限制(千分比)", 32, CN = "抬起扭矩", DefaultV = 500)]
+        [Parameter("抬起扭矩限制(千分比)", 32, CN = "抬起扭矩", CanRef = ParamRef.Ref, DefaultV = 500)]
         public int TorqueLimit2 { get; set; }
 
         [DependOn("ActionType", VCMActionType.SoftLanding)]
@@ -211,8 +211,8 @@ namespace Luster.Module.Motion.Device.Functions
         [Parameter("CSV和图片路径输出", 45, CN = "CSV路径输出", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
         public string DataPath { get; set; }
 
-        [Parameter("保压多余时间(ms)", 46, CN = "保压多余时间", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
-        public double Dytime { get; set; }
+        [Parameter("抬起拉力", 46, CN = "抬起拉力", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
+        public double OutPull { get; set; }
         #endregion
 
         public override string[] NoteParams => new string[] { nameof(DeviceParam), nameof(ActionType) };
@@ -226,8 +226,6 @@ namespace Luster.Module.Motion.Device.Functions
         private ParameterAttribute gParameter;
         //按压数据
         private System.Collections.Generic.List<double> pressureSamples;
-        //上拉数据
-        private System.Collections.Generic.List<double> PullSamples;
 
         private System.Collections.Generic.List<double> positionSamples;
 
@@ -767,6 +765,7 @@ namespace Luster.Module.Motion.Device.Functions
                 Thread.Sleep(TimeOut1);
                 _axis.CheckMotionDone();
 
+                OutPull = pressureSamples.Min();
                 //方案4
                 // Step 100: 完成
 
