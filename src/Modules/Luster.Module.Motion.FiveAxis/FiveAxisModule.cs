@@ -16,6 +16,11 @@ namespace Luster.Module.Motion.FiveAxis
             // P5-2:Coord5Axis 五轴正逆解算子节点(经 XML recipe 可编排)
             AddFunction<FiveAxisKinematicsNode>();
             // P5-3:连续插补节点(待 P5-3 挂载)
+
+            // P5-4:单点激光测距 + 激光 Z 单点标定(TES-99)
+            // LaserMeasure 产出 (激光读数, 当前Z),LaserZCalibrate 两点定标调 FiveAxisCalibrationService.LaserCalibrate
+            AddFunction<LaserMeasureNode>();
+            AddFunction<LaserZCalibrateNode>();
         }
     }
 
