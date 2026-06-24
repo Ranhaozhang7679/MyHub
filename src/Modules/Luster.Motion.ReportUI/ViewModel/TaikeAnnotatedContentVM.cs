@@ -573,8 +573,8 @@ namespace Luster.Motion.ReportUI.ViewModel
 
         private DelegateCommand _deleteHoveredCurveCommand;
         /// <summary>
-        /// 右键删除当前悬停的配对曲线：从 SeriesMerge 临时移除（仅删当前显示，不动源数据）。
-        /// 仅在 _hoveredCurveIndex ≥ 0 时可执行。
+        /// 通过右键菜单删除当前选中的配对曲线：从 SeriesMerge 临时移除（仅删当前显示，不动源数据）。
+        /// 选中由左键命中检测（View 层）写入 _hoveredCurveIndex；仅在 _hoveredCurveIndex ≥ 0 时可执行。
         /// </summary>
         public DelegateCommand DeleteHoveredCurveCommand =>
             _deleteHoveredCurveCommand ?? (_deleteHoveredCurveCommand = new DelegateCommand(

@@ -14,7 +14,7 @@ namespace Luster.Motion.ReportUI.Views
 {
     /// <summary>
     /// TaikeAnnotatedContent.xaml 的交互逻辑。
-    /// 仅负责合并视图 CartesianChart 的右键命中检测转发到 VM；业务逻辑在 VM。
+    /// 仅负责合并视图 CartesianChart 的左键命中检测转发到 VM；业务逻辑在 VM。
     /// </summary>
     public partial class TaikeAnnotatedContent : UserControl
     {
@@ -33,15 +33,15 @@ namespace Luster.Motion.ReportUI.Views
         {
             if (MergedChart == null) return;
             // Loaded 可能多次触发（容器切换），先 -= 再 += 避免重复订阅
-            // 只订阅右键事件：hover 高亮需要重建 SeriesMerge 才能刷新（LiveCharts2 修改 Stroke 不重绘），
-            // 鼠标移动时频繁重建会卡顿，因此改为仅在右键时确定选中曲线
-            MergedChart.PreviewMouseRightButtonDown -= HandlePreviewMouseRightButtonDown;
-            MergedChart.PreviewMouseRightButtonDown += HandlePreviewMouseRightButtonDown;
+            // 只订阅左键事件：hover 高亮需要重建 SeriesMerge 才能刷新（LiveCharts2 修改 Stroke 不重绘），
+            // 鼠标移动时频繁重建会卡顿，因此改为仅在左键时确定选中曲线
+            MergedChart.PreviewMouseLeftButtonDown -= HandlePreviewMouseLeftButtonDown;
+            MergedChart.PreviewMouseLeftButtonDown += HandlePreviewMouseLeftButtonDown;
         }
 
-        private void HandlePreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        private void HandlePreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            // 右键隧道事件先于 ContextMenu 弹出，确保命中状态最新 → CanExecute 正确
+            // 左键选中曲线：右键 ContextMenu 弹出前 IsCurveHovered 已由上次左键更新，CanExecute 正确
             if (!(DataContext is TaikeAnnotatedContentVM vm) || MergedChart == null) return;
             vm.SetHoveredCurveByIndex(HitTestCurve(e.GetPosition(MergedChart)));
         }
@@ -105,7 +105,7 @@ namespace Luster.Motion.ReportUI.Views
             }
             catch
             {
-                // CoreChart 未就绪/异常时按"未命中"处理，不阻塞右键交互
+                // CoreChart 未就绪/异常时按"未命中"处理，不阻塞左键交互
                 return -1;
             }
         }
