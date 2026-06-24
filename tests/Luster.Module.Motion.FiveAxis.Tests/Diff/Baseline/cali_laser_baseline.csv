@@ -1,0 +1,16 @@
+LaserStandard,12.34
+Map1.DirectValue,1
+Map1.UnitValue,100
+Map2.DirectValue,5
+Map2.UnitValue,500
+LaserMap.k,100
+LaserMap.b,0
+LaserPosi.X,10
+LaserPosi.Y,20
+LaserPosi.Z,30
+CameraPosi.X,12
+CameraPosi.Y,22
+CameraPosi.Z,31
+CameraOffset.X,2
+CameraOffset.Y,2
+CameraOffset.Z,1

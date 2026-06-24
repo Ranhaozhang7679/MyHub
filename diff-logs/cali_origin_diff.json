@@ -1,0 +1,45 @@
+{
+  "Mode": "cali",
+  "Baseline": "artifacts/bin/net472/Diff/Baseline/cali_origin_baseline.csv",
+  "Actual": "artifacts/bin/net472/Diff/Actual/cali_origin_actual.csv",
+  "Threshold": 1E-06,
+  "Total": 4,
+  "Passed": 4,
+  "Failed": 0,
+  "MaxError": 0.0,
+  "Result": "PASS",
+  "Items": [
+    {
+      "Key": "Trans.X",
+      "Baseline": "1",
+      "Actual": "1",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "Trans.Y",
+      "Baseline": "2",
+      "Actual": "2",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "Trans.Z",
+      "Baseline": "3",
+      "Actual": "3",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "Trans.RZ",
+      "Baseline": "0.92729521800161219",
+      "Actual": "0.92729521800161219",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    }
+  ]
+}

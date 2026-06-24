@@ -1,0 +1,14 @@
+ACenter.X,0
+ACenter.Y,10
+ACenter.Z,5
+ADir.X,1
+ADir.Y,0
+ADir.Z,0
+ACirPulses,360000
+CCenter.X,30
+CCenter.Y,10
+CCenter.Z,0
+CDir.X,0
+CDir.Y,0
+CDir.Z,1
+CCirPulses,720000

@@ -25,6 +25,11 @@
 			<Link>Recipes\AOI1_ThreeSegment.runtime.recipe.xml</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
+		<!-- TES-118:标定 diff 回归基线 CSV(源端算法语义独立手算,见 Diff/BASELINE-Provenance.md),拷贝到输出目录供 diff 工具比对 -->
+		<Content Include="Diff\Baseline\*.csv">
+			<Link>Diff\Baseline\%(Filename)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
 	</ItemGroup>
 
 </Project>

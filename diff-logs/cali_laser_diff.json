@@ -1,0 +1,141 @@
+{
+  "Mode": "cali",
+  "Baseline": "artifacts/bin/net472/Diff/Baseline/cali_laser_baseline.csv",
+  "Actual": "artifacts/bin/net472/Diff/Actual/cali_laser_actual.csv",
+  "Threshold": 1E-06,
+  "Total": 16,
+  "Passed": 16,
+  "Failed": 0,
+  "MaxError": 0.0,
+  "Result": "PASS",
+  "Items": [
+    {
+      "Key": "LaserStandard",
+      "Baseline": "12.34",
+      "Actual": "12.34",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "Map1.DirectValue",
+      "Baseline": "1",
+      "Actual": "1",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "Map1.UnitValue",
+      "Baseline": "100",
+      "Actual": "100",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "Map2.DirectValue",
+      "Baseline": "5",
+      "Actual": "5",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "Map2.UnitValue",
+      "Baseline": "500",
+      "Actual": "500",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "LaserMap.k",
+      "Baseline": "100",
+      "Actual": "100",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "LaserMap.b",
+      "Baseline": "0",
+      "Actual": "0",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "LaserPosi.X",
+      "Baseline": "10",
+      "Actual": "10",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "LaserPosi.Y",
+      "Baseline": "20",
+      "Actual": "20",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "LaserPosi.Z",
+      "Baseline": "30",
+      "Actual": "30",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "CameraPosi.X",
+      "Baseline": "12",
+      "Actual": "12",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "CameraPosi.Y",
+      "Baseline": "22",
+      "Actual": "22",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "CameraPosi.Z",
+      "Baseline": "31",
+      "Actual": "31",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "CameraOffset.X",
+      "Baseline": "2",
+      "Actual": "2",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "CameraOffset.Y",
+      "Baseline": "2",
+      "Actual": "2",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "CameraOffset.Z",
+      "Baseline": "1",
+      "Actual": "1",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    }
+  ]
+}

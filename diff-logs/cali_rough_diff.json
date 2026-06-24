@@ -1,0 +1,125 @@
+{
+  "Mode": "cali",
+  "Baseline": "artifacts/bin/net472/Diff/Baseline/cali_rough_baseline.csv",
+  "Actual": "artifacts/bin/net472/Diff/Actual/cali_rough_actual.csv",
+  "Threshold": 1E-06,
+  "Total": 14,
+  "Passed": 14,
+  "Failed": 0,
+  "MaxError": 3.5527136788005009E-15,
+  "Result": "PASS",
+  "Items": [
+    {
+      "Key": "ACenter.X",
+      "Baseline": "0",
+      "Actual": "0",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "ACenter.Y",
+      "Baseline": "10",
+      "Actual": "10",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "ACenter.Z",
+      "Baseline": "5",
+      "Actual": "5.0000000000000018",
+      "Error": 1.7763568394002505E-15,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "ADir.X",
+      "Baseline": "1",
+      "Actual": "1",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "ADir.Y",
+      "Baseline": "0",
+      "Actual": "0",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "ADir.Z",
+      "Baseline": "0",
+      "Actual": "0",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "ACirPulses",
+      "Baseline": "360000",
+      "Actual": "360000",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "CCenter.X",
+      "Baseline": "30",
+      "Actual": "29.999999999999996",
+      "Error": 3.5527136788005009E-15,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "CCenter.Y",
+      "Baseline": "10",
+      "Actual": "10",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "CCenter.Z",
+      "Baseline": "0",
+      "Actual": "0",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "CDir.X",
+      "Baseline": "0",
+      "Actual": "0",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "CDir.Y",
+      "Baseline": "0",
+      "Actual": "0",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "CDir.Z",
+      "Baseline": "1",
+      "Actual": "1",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    },
+    {
+      "Key": "CCirPulses",
+      "Baseline": "720000",
+      "Actual": "720000",
+      "Error": 0.0,
+      "Pass": true,
+      "Note": "absolute"
+    }
+  ]
+}
