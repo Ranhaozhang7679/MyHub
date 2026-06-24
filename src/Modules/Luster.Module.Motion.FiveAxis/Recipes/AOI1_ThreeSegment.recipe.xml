@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  AOI#1 三段式 recipe 节点链模板(P5-6,P2-D + P2-E)。
+
+  ⚠️ 这是【结构模板】,非可直接加载的 .recipe(ID/设备绑定需在 FlowEditor 里拖拽生成)。
+     作用:固化源端 CheckNormalAction.cs(1473 行)三段式(prepare/work/complete)到 lmv 节点链的
+     映射关系,供 P5-7(TES-102)在 FlowEditor 里据此搭出可虚拟端到端跑通的 recipe。
+     节点名对应 FiveAxisModule / FiveAxisStationModule 经 AddFunction 注册的 MotionFunction。
+
+  范式:全 MotionModule + MotionFunction + recipe,无硬编码 Action(TES-29 范式合规)。
+  映射依据:知识库 P5端到端集成范围评估.md §2(源端 file:line → lmv 节点链)。
+
+  源端三段式 → lmv 三个 Group 容器(站模块 Children):
+    prepare(:128-193):Z 抬安全 → 上料(交握 15 步)→ SetDataSource
+    work  (:194-302):AsyncGroup(ICW)→ PreWorkPosi → CheckActionsInfo 核心(Coord5Axis+CrdConti+锁存)
+    complete(:303-373):ForceLeave → 数据上传 → 下料(交握 13 步)→ ProEvent(UnLoaded)
+
+  异常结构化:段间急停门 = MotionRunEngine.IsBreak/BrokenOff;节点级 try/finally =
+    CrdConti(M-13 Stop/Close)、LatchWait(M-13 ClearLatch)、RtcpFrameExit(幂等退出);
+    交握超时 = DeviceTimeoutException → AlarmType(FailError)结构化报警(源端 step 101/102)。
+  数据上传聚合:prepare 首 ProEvent(Loaded)→ OnProLoaded;work 段 IsOutData 节点自动 OnDataUpload;
+    complete 末 UploadData(AddProductRecord)+ ProEvent(UnLoaded)→ OnProUnloaded。
+  多套轨迹:TrajectoryActions[CheckModeID](内腔/CG/BG/螺纹孔)→ Switch(CheckModeID) 4 分支。
+-->
+<Recipe>
+  <!-- 全局变量(CheckModeID 轨迹切换 / ManLoad 手动上料 / ManUnLoad 手动下料) -->
+  <Global ID="aaaaaaaa-0000-0000-0000-000000000000">
+    <Parameter Name="CheckModeID" CN="检测模式" Value="0" />
+    <Parameter Name="ManLoad" CN="手动上料" Value="false" />
+    <Parameter Name="ManUnLoad" CN="手动下料" Value="false" />
+  </Global>
+
+  <Modules>
+    <!-- ===== AOI#1 五轴检测站(站模块,Function=FiveAxisStation) ===== -->
+    <Module Name="FiveAxisStationModule" Alias="AOI#1检测站" Tips="五轴检测站">
+      <Function Name="FiveAxisStation">
+        <Parameter Name="IsEnabled" Value="true" />
+        <Parameter Name="Module" Value="FiveAxis" />
+      </Function>
+
+      <Children>
+        <!-- ============ prepare 段(:128-193)============ -->
+        <Module Name="Group" Alias="prepare" Tips="上料准备段">
+          <Function Name="Group" />
+          <Children>
+            <!-- Z 抬安全(源端 prepare 首步)-->
+            <Module Name="FiveAxisModule" Alias="Z抬安全" Tips="Z轴抬至安全位">
+              <Function Name="AxisMoveTo" /><!-- 既有运动节点(定位运动,非交握) -->
+            </Module>
+
+            <!-- 上料:手动/联机切换(源端 while(全 NoProduct))-->
+            <Module Name="Group" Alias="上料切换" Tips="手动上料或联机交握">
+              <Function Name="Judge" />
+              <Children>
+                <!-- ManLoad=true:手动上料(开真空/刷在籍)-->
+                <Module Name="FiveAxisModule" Alias="手动上料" Tips="手动上料分支">
+                  <Function Name="AxisMoveTo" />
+                </Module>
+                <!-- ManLoad=false:联机上料交握(15 步状态机抽离,不混入运动链)-->
+                <Module Name="FiveAxisModule" Alias="联机上料交握" Tips="上游15步交握">
+                  <Function Name="HandoverNode">
+                    <Parameter Name="Direction" Value="Feed" />
+                    <Parameter Name="RecReady" RefID=".." /><!-- 绑定 VIO 信号点 -->
+                    <Parameter Name="SendInterLock" RefID=".." />
+                    <Parameter Name="RecInterLock" RefID=".." />
+                    <Parameter Name="Sending" RefID=".." />
+                    <Parameter Name="Recing" RefID=".." />
+                    <Parameter Name="SendTransfer" RefID=".." />
+                    <Parameter Name="RecTransfer" RefID=".." />
+                    <Parameter Name="VacuumOn" RefID=".." />
+                    <Parameter Name="SignalTimeoutMs" Value="30000" />
+                  </Function>
+                </Module>
+              </Children>
+            </Module>
+
+            <!-- 入料事件(对应源端 SetDataSource / 在籍产品)-->
+            <Module Name="FiveAxisModule" Alias="入料事件" Tips="ProEvent Loaded">
+              <Function Name="ProEvent">
+                <Parameter Name="EventType" Value="Loaded" />
+              </Function>
+            </Module>
+          </Children>
+        </Module>
+
+        <!-- ============ work 段(:194-302,CheckActionsInfo 核心)============ -->
+        <Module Name="Group" Alias="work" Tips="检测工作段">
+          <Function Name="Group" />
+          <Children>
+            <!-- 异步 ICW 入料(源端 ICWFrontCheckStart)-->
+            <Module Name="FiveAxisModule" Alias="ICW入料" Tips="异步ICW入料">
+              <Function Name="AsyncGroup" />
+            </Module>
+
+            <!-- 移 PreWorkPosi → WaitAll → ICW_LoadEnd(定位运动节点)-->
+            <Module Name="FiveAxisModule" Alias="移至预检位" Tips="PreWorkPosi">
+              <Function Name="AxisMoveTo" />
+            </Module>
+
+            <!-- 建立 RTCP 帧(BuildFrame,源端 :426-430)-->
+            <Module Name="FiveAxisModule" Alias="RTCP帧建立" Tips="BuildFrame">
+              <Function Name="RtcpFrameEnter">
+                <Parameter Name="AxisDevice" RefID=".." />
+                <Parameter Name="CoordinateSystem" Value="0" />
+                <Parameter Name="RotationCenterX" Value="0" />
+                <!-- 旋转中心/刀具偏置取自标定结果(P5-5 CalibratedCoord5Axis)-->
+              </Function>
+            </Module>
+
+            <!-- 多套轨迹切换:TrajectoryActions[CheckModeID] → Switch 4 分支 -->
+            <Module Name="FiveAxisModule" Alias="轨迹切换" Tips="CheckModeID 多轨迹">
+              <Function Name="Switch" />
+              <Children>
+                <!-- 分支 0:内腔轨迹 -->
+                <Module Name="Group" Alias="内腔轨迹" Tips="CheckMode=0">
+                  <Function Name="Group" />
+                  <Children>
+                    <!-- 正逆解算子(P5-2)→ 速度前瞻 → CrdConti 飞拍链(P5-3)→ 锁存 -->
+                    <Module Name="FiveAxisModule" Alias="正逆解" Tips="Coord5Axis">
+                      <Function Name="FiveAxisKinematicsNode" />
+                    </Module>
+                    <Module Name="FiveAxisModule" Alias="连续插补飞拍" Tips="CrdConti open→addline×N→waitdone→stop→close">
+                      <Function Name="CrdConti">
+                        <Parameter Name="AxisDevice" RefID=".." />
+                        <Parameter Name="EndPoints" Value=".." />
+                      </Function>
+                    </Module>
+                    <Module Name="FiveAxisModule" Alias="锁存等待" Tips="WaitLatched">
+                      <Function Name="LatchWait" />
+                    </Module>
+                    <Module Name="FiveAxisModule" Alias="锁存偏移" Tips="LatchedOffset">
+                      <Function Name="LatchOffsetCalc" />
+                    </Module>
+                  </Children>
+                </Module>
+                <!-- 分支 1:CG 轨迹(结构同上,EndPoints 不同)-->
+                <Module Name="Group" Alias="CG轨迹" Tips="CheckMode=1"><Function Name="Group" /></Module>
+                <!-- 分支 2:BG 轨迹 -->
+                <Module Name="Group" Alias="BG轨迹" Tips="CheckMode=2"><Function Name="Group" /></Module>
+                <!-- 分支 3:螺纹孔轨迹 -->
+                <Module Name="Group" Alias="螺纹孔轨迹" Tips="CheckMode=3"><Function Name="Group" /></Module>
+              </Children>
+            </Module>
+
+            <!-- 退出 RTCP 帧(ExitFrame,源端 :734-739;幂等,急停路径亦安全)-->
+            <Module Name="FiveAxisModule" Alias="RTCP帧退出" Tips="ExitFrame">
+              <Function Name="RtcpFrameExit">
+                <Parameter Name="AxisDevice" RefID=".." />
+              </Function>
+            </Module>
+          </Children>
+        </Module>
+
+        <!-- ============ complete 段(:303-373)============ -->
+        <Module Name="Group" Alias="complete" Tips="下料收尾段">
+          <Function Name="Group" />
+          <Children>
+            <!-- 数据上传①:AddProductRecord(源端 :316)-->
+            <Module Name="FiveAxisModule" Alias="数据上传" Tips="UploadData AddProductRecord">
+              <Function Name="UploadData" />
+            </Module>
+
+            <!-- 移下料位(定位运动节点)-->
+            <Module Name="FiveAxisModule" Alias="移至下料位" Tips="LeavePosi">
+              <Function Name="AxisMoveTo" />
+            </Module>
+
+            <!-- 下料:手动/联机切换 -->
+            <Module Name="Group" Alias="下料切换" Tips="手动下料或联机交握">
+              <Function Name="Judge" />
+              <Children>
+                <!-- ManUnLoad=true:手动下料 -->
+                <Module Name="FiveAxisModule" Alias="手动下料" Tips="手动下料分支">
+                  <Function Name="AxisMoveTo" />
+                </Module>
+                <!-- ManUnLoad=false:联机下料交握(13 步状态机抽离)-->
+                <Module Name="FiveAxisModule" Alias="联机下料交握" Tips="下游13步交握">
+                  <Function Name="HandoverNode">
+                    <Parameter Name="Direction" Value="Leave" />
+                    <Parameter Name="RecReady" RefID=".." />
+                    <Parameter Name="VacuumOn" RefID=".." /><!-- Leave 时破真空 -->
+                    <!-- 其余信号绑定见 HandoverNode 参数 -->
+                    <Parameter Name="SignalTimeoutMs" Value="30000" />
+                  </Function>
+                </Module>
+              </Children>
+            </Module>
+
+            <!-- 出料事件(源端 PostMessage(USER_TT_UPDATE) + OnProUnloaded)-->
+            <Module Name="FiveAxisModule" Alias="出料事件" Tips="ProEvent UnLoaded">
+              <Function Name="ProEvent">
+                <Parameter Name="EventType" Value="UnLoaded" />
+              </Function>
+            </Module>
+          </Children>
+        </Module>
+      </Children>
+    </Module>
+  </Modules>
+</Recipe>
