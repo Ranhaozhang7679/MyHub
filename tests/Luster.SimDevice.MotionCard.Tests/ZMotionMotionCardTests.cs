@@ -1,6 +1,8 @@
 using FluentAssertions;
 using Luster.Motion.DataStruct.Enums;
 using Luster.Motion.DataStruct.Real;
+using Luster.Motion.FiveAxis.Device;
+using Luster.Motion.FiveAxis.Kinematics;
 using Luster.SimDevice.MotionCard.ZMotion;
 using NUnit.Framework;
 using System;
@@ -19,6 +21,7 @@ namespace Luster.SimDevice.MotionCard.Tests
 
             card.Should().BeAssignableTo<IMotionCard>();
             card.Should().BeAssignableTo<IFiveAxisRTCP>();
+            card.Should().BeAssignableTo<IFiveAxisFrame>();
             card.Brand.Should().Be("正运动");
         }
 
@@ -112,6 +115,41 @@ namespace Luster.SimDevice.MotionCard.Tests
 
             Action callPdo = () => { card.PDOWrite(1, 0x6040, 0x00, 1, 16); var v = 0; card.PDORead(1, 0x6040, 0x00, 16, ref v, 1); };
             callPdo.Should().NotThrow<NotImplementedException>();
+        }
+
+        [Test]
+        public void FiveAxisFrame_SimulationMode_OrchestratesFrameLifecycleWithoutHardware()
+        {
+            // ADR-TES-110:IFiveAxisFrame 卡端实现。SimulationMode 下短路返回 true,供软件层编排联调。
+            var frame = new ZMotionMotionCard { SimulationMode = true, AxisCount = 8 };
+            frame.InitApi();
+            var realLis = new List<int> { 1, 2, 3, 4, 5 };
+            var virLis = new List<int> { 6, 7, 8, 9, 10 };
+            var para = new Coord5Axis();
+
+            frame.ExitFrame(realLis, virLis).Should().BeTrue();
+            frame.Frame(crdIndex: 1, realLis, virLis, para).Should().BeTrue();
+            var axisPosi = new List<double[]>
+            {
+                new double[] { 1, 2, 3, 10, 20 },
+                new double[] { 4, 5, 6, 30, 40 },
+            };
+            var ok = frame.FrameCal(crdIndex: 1, realLis.Take(3).ToList(), axisPosi, out var aZero, out var accuratePara);
+
+            ok.Should().BeTrue();
+            aZero.Should().Be(0);                       // 模拟模式给默认零点(真机精度见 R-F4)
+            accuratePara.Should().NotBeNull();
+        }
+
+        [Test]
+        public void FiveAxisFrame_Reframe_ThrowsNotImplemented_AsContractStub()
+        {
+            // ADR-TES-110 范围冻结:Reframe 只留签名,本期不实现,抛 NotImplementedException。
+            var frame = new ZMotionMotionCard { SimulationMode = true, AxisCount = 8 };
+            frame.InitApi();
+
+            Action act = () => frame.Reframe(crdIndex: 1, new List<int> { 1, 2, 3 }, new List<int> { 4, 5 }, new Coord5Axis());
+            act.Should().Throw<NotImplementedException>();
         }
     }
 }

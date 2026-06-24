@@ -43,6 +43,8 @@
     <ItemGroup>
         <!--<ProjectReference Include="..\Luster.Motion.DataStruct\Luster.Motion.DataStruct.csproj" />-->
         <ProjectReference Include="..\Luster.SimDevice\Luster.SimDevice.csproj" />
+        <!-- ADR-TES-110:IFiveAxisFrame 落在五轴模块(与 Coord5Axis 同栈),ZMotionMotionCard 实现该旁路接口 -->
+        <ProjectReference Include="..\Luster.Module.Motion.FiveAxis\Luster.Module.Motion.FiveAxis.csproj" />
     </ItemGroup>
 
 </Project>

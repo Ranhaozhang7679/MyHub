@@ -1,18 +1,21 @@
 using FluentAssertions;
 using Luster.Motion.FiveAxis.Data.Calibration;
+using Luster.Motion.FiveAxis.Device;
 using Luster.Motion.FiveAxis.Kinematics;
 using Luster.Motion.FiveAxis.Position;
 using Luster.Motion.FiveAxis.Service;
 using Luster.Motion.FiveAxis.Utils;
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 
 namespace Luster.Module.Motion.FiveAxis.Tests
 {
     /// <summary>
     /// P5-5b 五轴标定 Service 算法验收(TES-111)。
     /// 验收点:粗标/激光/原点三阶段纯 C# 算法 —— 输入示教点/采点 → 输出参数,断言关键值与源端 Form5Cali 语义一致;
-    /// 精标(AccurateCalibrate)阻塞于卡端 FrameCal ADR,断言抛 NotSupportedException(不编造卡端算法)。
+    /// 精标(AccurateCalibrate)卡端 FrameCal 接入(ADR-TES-110)——断言 Frame 生命周期编排顺序正确(进/退/解算)、
+    /// try/finally 保证 ExitFrame、无五轴卡时抛 InvalidOperationException、回填字段正确。
     /// </summary>
     [TestFixture]
     public class FiveAxisCalibrationServiceTests
@@ -22,6 +25,7 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         [SetUp]
         public void SetUp()
         {
+            // 粗标/激光/原点三阶段不依赖卡端 frame,无参构造即可
             _service = new FiveAxisCalibrationService();
         }
 
@@ -224,22 +228,127 @@ namespace Luster.Module.Motion.FiveAxis.Tests
 
         #endregion
 
-        #region 精标 AccurateCalibrate(阻塞,待 FrameCal ADR)
+        #region 精标 AccurateCalibrate(卡端 FrameCal 接入,ADR-TES-110)
 
         /// <summary>
-        /// 精标阻塞:源端核心 station.FrameCal 为运动卡 SDK 卡端调用,非纯 C#。
-        /// ADR 落地前抛 NotSupportedException,不编造卡端算法。
+        /// 无五轴卡(frame=null)时精标不可用,抛 InvalidOperationException——
+        /// 不编造卡端算法,显式暴露缺卡阻塞。
         /// </summary>
         [Test]
-        public void AccurateCalibrate_BlockedUntilFrameCalAdr_ThrowsNotSupported()
+        public void AccurateCalibrate_NoCard_ThrowsInvalidOperation()
         {
-            var accurate = new AccurateCaliResult();
+            var service = new FiveAxisCalibrationService(frame: null);
+            var accurate = new AccurateCaliResult { ResultFirstPosi = new PositionXYZRxRyRz { X = 0, Y = 0, Z = 0, RX = 0, RY = 0, RZ = 0 } };
+            var profile = new FiveAxisFrameProfile { CrdIndex = 1, RealAxisIds = new List<int> { 1, 2, 3 }, VirtualAxisIds = new List<int> { 4, 5, 6, 7, 8 } };
+
+            Action act = () => service.AccurateCalibrate(profile, accurate, new Coord5Axis(), ballRadius: 12.7, mrxPulses: 360000, mrzPulses: 720000);
+
+            act.Should().Throw<InvalidOperationException>().WithMessage("*IFiveAxisFrame*");
+        }
+
+        /// <summary>
+        /// 精标 Frame 生命周期编排:严格顺序 ExitFrame→Frame→FrameCal→ExitFrame(try/finally 保证末尾 ExitFrame),
+        /// realAxisList 取前 3 轴(Take(3)),回填 ZeroRx/Accurate5Para/ACirPulses/CCirPulses。
+        /// 对齐源端 frameCal(Form5Cali.cs:1322-1343)。
+        /// </summary>
+        [Test]
+        public void AccurateCalibrate_OrchestratesFrameLifecycle_InStrictOrder_WithFinallyExit()
+        {
+            var fake = new FakeFrame();
+            var service = new FiveAxisCalibrationService(fake);
+            var accurate = new AccurateCaliResult
+            {
+                ResultFirstPosi = new PositionXYZRxRyRz { X = 1, Y = 2, Z = 3, RX = 10, RY = 0, RZ = 20 },
+                ResultRxPosiLis = new List<PositionXYZRxRyRz> { new PositionXYZRxRyRz { X = 1, Y = 2, Z = 3, RX = 10, RY = 0, RZ = 20 } },
+                ResultRzPosiLis = new List<PositionXYZRxRyRz> { new PositionXYZRxRyRz { X = 1, Y = 2, Z = 3, RX = 10, RY = 0, RZ = 20 } },
+            };
             var rough5Para = new Coord5Axis();
+            var profile = new FiveAxisFrameProfile
+            {
+                CrdIndex = 1,
+                RealAxisIds = new List<int> { 11, 22, 33, 44, 55 },
+                VirtualAxisIds = new List<int> { 101, 102, 103, 104, 105 },
+            };
 
-            Action act = () => _service.AccurateCalibrate(accurate, rough5Para, ballRadius: 12.7, mrxPulses: 360000, mrzPulses: 720000);
+            bool ok = service.AccurateCalibrate(profile, accurate, rough5Para, ballRadius: 12.7, mrxPulses: 360000, mrzPulses: 720000);
 
-            act.Should().Throw<NotSupportedException>()
-                .WithMessage("*FrameCal*");
+            ok.Should().BeTrue();
+            // 严格顺序:ExitFrame(清残留) → Frame(粗标) → FrameCal → ExitFrame(必退)
+            fake.Calls.Should().Equal(new[] { "ExitFrame", "Frame", "FrameCal", "ExitFrame" });
+            // Frame 用完整 5 实轴;FrameCal 取前 3 轴(源端 :670 Take(3))
+            fake.FrameRealAxes.Should().Equal(new[] { 11, 22, 33, 44, 55 });
+            fake.FrameCalRealAxes.Should().Equal(new[] { 11, 22, 33 });
+            // 回填(源端 frameCal:1340-1343)
+            accurate.ZeroRx.Should().Be(FakeFrame.AZeroOut);
+            accurate.Accurate5Para.Should().NotBeNull();
+            accurate.Accurate5Para.ACirPulses.Should().Be(360000);
+            accurate.Accurate5Para.CCirPulses.Should().Be(720000);
+        }
+
+        /// <summary>
+        /// FrameCal 失败时仍保证 finally ExitFrame(R-F2 缓解):FrameCal 返回 false → 函数返回 false,但 ExitFrame 仍被调用。
+        /// </summary>
+        [Test]
+        public void AccurateCalibrate_FrameCalFails_StillExitsFrameInFinally()
+        {
+            var fake = new FakeFrame { FrameCalResult = false };
+            var service = new FiveAxisCalibrationService(fake);
+            var accurate = new AccurateCaliResult
+            {
+                ResultFirstPosi = new PositionXYZRxRyRz { X = 0, Y = 0, Z = 0, RX = 0, RY = 0, RZ = 0 },
+            };
+            var profile = new FiveAxisFrameProfile
+            {
+                CrdIndex = 1,
+                RealAxisIds = new List<int> { 1, 2, 3 },
+                VirtualAxisIds = new List<int> { 4, 5, 6, 7, 8 },
+            };
+
+            bool ok = service.AccurateCalibrate(profile, accurate, new Coord5Axis(), 12.7, 360000, 720000);
+
+            ok.Should().BeFalse();
+            // 即便 FrameCal 失败,ExitFrame(必退)仍被调用两次:开头的清残留 + finally 的必退
+            fake.ExitFrameCount.Should().Be(2);
+        }
+
+        /// <summary>可记录调用顺序的 IFiveAxisFrame 假实现,用于断言 Frame 生命周期编排。</summary>
+        private sealed class FakeFrame : IFiveAxisFrame
+        {
+            public const double AZeroOut = 123.456;
+            private readonly List<string> calls = new List<string>();
+            public IReadOnlyList<string> Calls => calls;
+            public List<int> FrameRealAxes { get; } = new List<int>();
+            public List<int> FrameCalRealAxes { get; } = new List<int>();
+            public bool FrameCalResult { get; set; } = true;
+            public int ExitFrameCount { get; private set; }
+
+            public bool Frame(int crdIndex, IReadOnlyList<int> realAxisList, IReadOnlyList<int> virAxisList, Coord5Axis para)
+            {
+                calls.Add("Frame");
+                FrameRealAxes.AddRange(realAxisList);
+                return true;
+            }
+
+            public bool Reframe(int crdIndex, IReadOnlyList<int> realAxisList, IReadOnlyList<int> virAxisList, Coord5Axis para)
+            {
+                throw new System.NotImplementedException();
+            }
+
+            public bool ExitFrame(IReadOnlyList<int> realAxisList, IReadOnlyList<int> virAxisList)
+            {
+                calls.Add("ExitFrame");
+                ExitFrameCount++;
+                return true;
+            }
+
+            public bool FrameCal(int crdIndex, IReadOnlyList<int> realAxisList, IReadOnlyList<double[]> axisPosi, out double aZero, out Coord5Axis para)
+            {
+                calls.Add("FrameCal");
+                FrameCalRealAxes.AddRange(realAxisList);
+                aZero = AZeroOut;
+                para = new Coord5Axis();
+                return FrameCalResult;
+            }
         }
 
         #endregion
