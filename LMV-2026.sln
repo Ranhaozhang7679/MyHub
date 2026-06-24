@@ -124,6 +124,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LCVersionCollector", "src\T
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LCVersionSimTest", "src\Tools\LCVersionSimTest\LCVersionSimTest.csproj", "{2835E0E6-D41A-4F6D-86E5-36E164185D3F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Luster.Tools.DiffRegression", "src\Tools\Luster.Tools.DiffRegression\Luster.Tools.DiffRegression.csproj", "{594AF85B-4A23-42B7-BB8E-4154935CD667}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -674,6 +676,18 @@ Global
 		{2835E0E6-D41A-4F6D-86E5-36E164185D3F}.Release|x64.Build.0 = Release|Any CPU
 		{2835E0E6-D41A-4F6D-86E5-36E164185D3F}.Release|x86.ActiveCfg = Release|Any CPU
 		{2835E0E6-D41A-4F6D-86E5-36E164185D3F}.Release|x86.Build.0 = Release|Any CPU
+		{594AF85B-4A23-42B7-BB8E-4154935CD667}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{594AF85B-4A23-42B7-BB8E-4154935CD667}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{594AF85B-4A23-42B7-BB8E-4154935CD667}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{594AF85B-4A23-42B7-BB8E-4154935CD667}.Debug|x64.Build.0 = Debug|Any CPU
+		{594AF85B-4A23-42B7-BB8E-4154935CD667}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{594AF85B-4A23-42B7-BB8E-4154935CD667}.Debug|x86.Build.0 = Debug|Any CPU
+		{594AF85B-4A23-42B7-BB8E-4154935CD667}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{594AF85B-4A23-42B7-BB8E-4154935CD667}.Release|Any CPU.Build.0 = Release|Any CPU
+		{594AF85B-4A23-42B7-BB8E-4154935CD667}.Release|x64.ActiveCfg = Release|Any CPU
+		{594AF85B-4A23-42B7-BB8E-4154935CD667}.Release|x64.Build.0 = Release|Any CPU
+		{594AF85B-4A23-42B7-BB8E-4154935CD667}.Release|x86.ActiveCfg = Release|Any CPU
+		{594AF85B-4A23-42B7-BB8E-4154935CD667}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -728,5 +742,6 @@ Global
 		{BE3BB9E3-F1B7-4D12-8DA0-A9EE9E686A98} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{EEEDB658-0B10-FE74-13A1-FCD7D066844B} = {BE3BB9E3-F1B7-4D12-8DA0-A9EE9E686A98}
 		{2835E0E6-D41A-4F6D-86E5-36E164185D3F} = {BE3BB9E3-F1B7-4D12-8DA0-A9EE9E686A98}
+		{594AF85B-4A23-42B7-BB8E-4154935CD667} = {BE3BB9E3-F1B7-4D12-8DA0-A9EE9E686A98}
 	EndGlobalSection
 EndGlobal
