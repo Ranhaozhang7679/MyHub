@@ -8,6 +8,8 @@
 	<ItemGroup>
 		<!-- 五轴运动学模块依赖运控功能节点基类 MotionModule / MotionModuleCreator -->
 		<ProjectReference Include="..\Luster.TaskFlow.Motion\Luster.TaskFlow.Motion.csproj" />
+		<!-- P5-5:标定/配置数据模型实现 IXMLParser(平台 XElement round-trip 约定),需平台数据结构接口 -->
+		<ProjectReference Include="..\Luster.Common.DataStruct\Luster.Common.DataStruct.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -16,19 +18,9 @@
 		<PackageReference Include="MinVer" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<!-- MathNetExtend 子集原样迁:
-		     PositionBase 继承 RpcLibrary.Components.FieldToPropertyTypeDescriptor,
-		     PositionCustom 用 [RpcLibrary.Attr.Permission(RpcLibrary.Users.UserRoleTypeEnum.Administrator)],
-		     故按"直接引用 dll"既定处理引入 RpcLibrary.dll
-		     (源端 SP-2025140 MathNetExtend.csproj 亦以 ..\vendor\Release\RpcLibrary.dll 引用同一二进制) -->
-		<Reference Include="RpcLibrary">
-			<HintPath>libs\RpcLibrary.dll</HintPath>
-			<Private>true</Private>
-		</Reference>
-		<Reference Include="System.ComponentModel.DataAnnotations" />
-		<Reference Include="System.Drawing" />
-		<Reference Include="System.Windows.Forms" />
-	</ItemGroup>
+	<!-- ADR 修正版(风险解除):不引入 RpcLibrary.Components dll。
+	     UI 耦合基类 FieldToPropertyTypeDescriptor 已从 PositionBase/Coord5Axis 剥离(改普通类),
+	     WinForm PropertyGrid 特性([TypeConverter]/[Category]/[DisplayName])已去,节点层改挂 lmv [Parameter]。
+	     故无需 RpcLibrary.dll / System.Windows.Forms / System.Drawing / System.ComponentModel.DataAnnotations 引用。 -->
 
 </Project>

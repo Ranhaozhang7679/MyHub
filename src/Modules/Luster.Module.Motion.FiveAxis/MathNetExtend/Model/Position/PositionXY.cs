@@ -1,19 +1,15 @@
-using MathNetExtend.Converter;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
-namespace MathNetExtend.Model.Position
+namespace Luster.Motion.FiveAxis.Position
 {
     /// <summary>
     /// 包括XY的位置类型
     /// </summary>
     [Serializable]
-    [TypeConverter(typeof(PositionXYConverter))]
     public class PositionXY : PositionBase
     {
         public PositionXY() : this(0, 0)
