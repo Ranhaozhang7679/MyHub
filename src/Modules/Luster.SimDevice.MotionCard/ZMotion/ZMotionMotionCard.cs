@@ -12,7 +12,7 @@ namespace Luster.SimDevice.MotionCard.ZMotion
     /// <summary>
     /// 正运动 ZMotion 运动控制卡。
     /// </summary>
-    public class ZMotionMotionCard : MotionCardBase, IMotionCard, IFiveAxisRTCP
+    public class ZMotionMotionCard : MotionCardBase, IMotionCard, IFiveAxisRTCP, IFiveAxisFrame
     {
         private readonly IZMotionSdk sdk;
         private readonly Dictionary<int, double> currentPositions = new Dictionary<int, double>();
@@ -24,6 +24,8 @@ namespace Luster.SimDevice.MotionCard.ZMotion
         private readonly Dictionary<int, double> analogOutputs = new Dictionary<int, double>();
         private readonly Dictionary<string, int> sdoValues = new Dictionary<string, int>();
         private readonly Dictionary<string, int> pdoValues = new Dictionary<string, int>();
+        // ADR-TES-110:五轴 Frame/FrameCal 卡端表地址,按 crdIndex 查表(对应源端 GetCrdProfile(crdIndex).CrdAddr)
+        private readonly Dictionary<int, FiveAxisFrameTableAddr> frameTableAddrs = new Dictionary<int, FiveAxisFrameTableAddr>();
         private IntPtr cardHandle = IntPtr.Zero;
         private bool interpolationDone = true;
 
@@ -71,6 +73,10 @@ namespace Luster.SimDevice.MotionCard.ZMotion
 
         [DisplayName("日志路径")]
         public string LogPath { get; set; }
+
+        /// <summary>五轴 Frame 模式进/退超时(ms)(对齐源端 ZMCMotion.FrameTimeOut,默认 5000)。</summary>
+        [DisplayName("Frame超时(ms)")]
+        public int FrameTimeOut { get; set; } = 5000;
 
         public FiveAxisRtcpConfig RtcpConfig { get; private set; }
 
@@ -440,6 +446,178 @@ namespace Luster.SimDevice.MotionCard.ZMotion
                 SafeNativeMethod(() => sdk.MoveAbsSp(cardHandle, 1, axes, positions) == 0, $"轴:{axisNo} 连续运动失败");
             }
         }
+
+        #region IFiveAxisFrame（ADR-TES-110 五轴 Frame/FrameCal 卡端接入）
+
+        /// <summary>
+        /// 配置坐标系对应的卡端表地址(对应源端 GetCrdProfile(crdIndex).CrdAddr)。
+        /// ⚠️ 地址具体值待人类现场验证(ADR R-F4)。
+        /// </summary>
+        public bool ConfigureFrameTableAddr(int crdIndex, FiveAxisFrameTableAddr addr)
+        {
+            if (addr == null) throw new ArgumentNullException(nameof(addr));
+            frameTableAddrs[crdIndex] = addr;
+            return true;
+        }
+
+        /// <summary>
+        /// 进入五轴逆解模式(对齐源端 Z5Axes_Frame / Check5AxisStationBase.Frame:597)。
+        /// SimulationMode 短路返回 true(对齐源端 VIRTUAL_MODE);真机转发卡端原语:
+        /// 停轴(cancel idle)→ SetTable(Axis5ParaAddr, 26-float robotPara)→ Connframe(frame=29)→ 轮询 GetLoaded 至 Loaded。
+        /// </summary>
+        public bool Frame(int crdIndex, IReadOnlyList<int> realAxisList, IReadOnlyList<int> virAxisList, FiveAxisFramePara para)
+        {
+            CheckInit();
+            if (para == null) throw new ArgumentNullException(nameof(para));
+            if (SimulationMode) return true;
+            if (!TryGetFrameTableAddr(crdIndex, out var addr)) return false;
+
+            var realLis = realAxisList as List<int> ?? new List<int>(realAxisList);
+            var virLis = virAxisList as List<int> ?? new List<int>(virAxisList);
+
+            // 停轴:非 idle 则 cancel(对齐源端 :2758-2773)
+            if (!StopAxesUntilIdle(virLis) || !StopAxesUntilIdle(realLis)) return false;
+
+            // 26-float 结构参数(对齐源端 robotPara 布局 :2781-2790)
+            var robotPara = new float[]
+            {
+                (float)para.ACenterX, (float)para.ACenterY, (float)para.ACenterZ,
+                (float)para.ADirX, (float)para.ADirY, (float)para.ADirZ,
+                (float)para.ACirPulses,
+                (float)para.CCenterX, (float)para.CCenterY, (float)para.CCenterZ,
+                (float)para.CDirX, (float)para.CDirY, (float)para.CDirZ,
+                (float)para.CCirPulses,
+                0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+            };
+            if (sdk.SetTable(cardHandle, addr.Axis5ParaAddr, robotPara.Length, robotPara) != 0) return false;
+
+            // 进入逆解(frame=29,对齐源端 :2795)
+            if (sdk.ConnFrame(cardHandle, realLis.Count, realLis.ToArray(), 29, addr.Axis5ParaAddr, virLis.Count, virLis.ToArray()) != 0)
+                return false;
+
+            // 等待物理轴 Loaded(对齐源端 :2799-2813)
+            return WaitRealAxisLoaded(realLis[0]);
+        }
+
+        /// <summary>
+        /// 进入五轴正解模式(对齐源端 Z5Axes_Reframe)。本期留签名,后续正解 Issue 实现。
+        /// </summary>
+        public bool Reframe(int crdIndex, IReadOnlyList<int> realAxisList, IReadOnlyList<int> virAxisList, FiveAxisFramePara para)
+        {
+            throw new NotSupportedException("五轴正解 Reframe 本期未实现(ADR-TES-110 留签名,待后续正解 Issue)。");
+        }
+
+        /// <summary>
+        /// 退出五轴正逆解模式(对齐源端 Z5Axes_ExitFrame / Check5AxisStationBase.ExitFrame:616)。
+        /// SimulationMode 短路返回 true;真机停实轴/虚轴组(CancelAxisList)+ 单轴 Single_Cancel(对齐源端 :3160-3173)。
+        /// </summary>
+        public bool ExitFrame(IReadOnlyList<int> realAxisList, IReadOnlyList<int> virAxisList)
+        {
+            CheckInit();
+            if (SimulationMode) return true;
+
+            var realLis = realAxisList as List<int> ?? new List<int>(realAxisList);
+            var virLis = virAxisList as List<int> ?? new List<int>(virAxisList);
+
+            if (realLis.Count > 0 && sdk.CancelAxisList(cardHandle, realLis.Count, realLis.ToArray(), 2) != 0) return false;
+            if (virLis.Count > 0 && sdk.CancelAxisList(cardHandle, virLis.Count, virLis.ToArray(), 2) != 0) return false;
+            foreach (var axis in realLis)
+            {
+                if (sdk.SingleCancel(cardHandle, axis, 2) != 0) return false;
+            }
+            foreach (var axis in virLis)
+            {
+                if (sdk.SingleCancel(cardHandle, axis, 2) != 0) return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// 卡端精标解算(对齐源端 ZFrameCali:2794 / Check5AxisStationBase.FrameCal:651)。
+        /// SimulationMode 短路返回 true(输出默认值);真机转发卡端原语:
+        /// SetTable(InAxisPosiTb, 采样点)→ DirectCommand("BASE(...) FRAME_CAL(...)")→ GetTable(OutZeroTb→aZero=vs[3])→ GetTable(OutRobotTb→16-float→para)。
+        /// </summary>
+        public bool FrameCal(int crdIndex, IReadOnlyList<int> realAxisList, IReadOnlyList<double[]> axisPosi,
+                             out double aZero, out FiveAxisFramePara para)
+        {
+            aZero = 0;
+            para = new FiveAxisFramePara();
+            CheckInit();
+            if (SimulationMode) return true;
+            if (axisPosi == null || axisPosi.Count == 0) return false;
+            if (!TryGetFrameTableAddr(crdIndex, out var addr)) return false;
+
+            // 采样点拍平为 float[](对齐源端 :3196-3202)
+            var fLis = new List<float>(axisPosi.Count * 5);
+            foreach (var gp in axisPosi)
+            {
+                if (gp == null || gp.Length == 0) return false;
+                foreach (var item in gp) fLis.Add((float)item);
+            }
+            int space = axisPosi[0].Length;
+            int group = axisPosi.Count;
+            if (sdk.SetTable(cardHandle, addr.InAxisPosiTb, group * space, fLis.ToArray()) != 0) return false;
+
+            // BASE(实轴前3) FRAME_CAL(输入表,间隔,组数,扩展表,零点输出表,结构参数输出表)(对齐源端 :3204-3207)
+            var cmd = $"BASE({string.Join(",", realAxisList)}) FRAME_CAL({addr.InAxisPosiTb},{space},{group},{addr.InExtendTb},{addr.OutZeroTb},{addr.OutRobotTb}){Environment.NewLine}";
+            if (sdk.DirectCommand(cardHandle, cmd, out _, 0) != 0) return false;
+
+            // aZero = OutZeroTb[3](对齐源端 :3212-3215)
+            var vs = new float[5];
+            if (sdk.GetTable(cardHandle, addr.OutZeroTb, vs.Length, vs) != 0) return false;
+            aZero = vs[3];
+
+            // 16-float 结构参数(对齐源端 :3217-3236,读前 14 字段)
+            var p = new float[16];
+            if (sdk.GetTable(cardHandle, addr.OutRobotTb, p.Length, p) != 0) return false;
+            int i = 0;
+            para.ACenterX = p[i++]; para.ACenterY = p[i++]; para.ACenterZ = p[i++];
+            para.ADirX = p[i++]; para.ADirY = p[i++]; para.ADirZ = p[i++];
+            para.ACirPulses = p[i++];
+            para.CCenterX = p[i++]; para.CCenterY = p[i++]; para.CCenterZ = p[i++];
+            para.CDirX = p[i++]; para.CDirY = p[i++]; para.CDirZ = p[i++];
+            para.CCirPulses = p[i++];
+            return true;
+        }
+
+        /// <summary>查表地址,缺失返回 false 并记日志(地址需先 ConfigureFrameTableAddr,ADR R-F4 现场配置)。</summary>
+        private bool TryGetFrameTableAddr(int crdIndex, out FiveAxisFrameTableAddr addr)
+        {
+            if (frameTableAddrs.TryGetValue(crdIndex, out addr)) return true;
+            OnLog(LogType.Warning, $"坐标系[{crdIndex}]未配置 Frame 表地址,请先 ConfigureFrameTableAddr(ADR R-F4 现场验证)");
+            return false;
+        }
+
+        /// <summary>停轴:非 idle 则 Single_Cancel(对齐源端 :2758-2773)。</summary>
+        private bool StopAxesUntilIdle(List<int> axes)
+        {
+            foreach (var axis in axes)
+            {
+                var idle = 0;
+                if (sdk.GetIfIdle(cardHandle, axis, ref idle) != 0) return false;
+                if (idle == 0 && sdk.SingleCancel(cardHandle, axis, 2) != 0) return false;
+            }
+            return true;
+        }
+
+        /// <summary>轮询物理轴 Loaded 至非零,超时 FrameTimeOut 返回 false(对齐源端 :2799-2813)。</summary>
+        private bool WaitRealAxisLoaded(int axis)
+        {
+            // 进入逆解模式后需等待 2ms 以上再发运动指令(对齐源端 :2797-2798)
+            System.Threading.Thread.Sleep(10);
+            var start = DateTime.Now;
+            while (true)
+            {
+                var loaded = 0;
+                if (sdk.GetLoaded(cardHandle, axis, ref loaded) != 0) return false;
+                if (loaded != 0) return true;
+                if (DateTime.Now.Subtract(start).TotalMilliseconds > FrameTimeOut) return false;
+                System.Threading.Thread.Sleep(10);
+            }
+        }
+
+        #endregion
 
         public bool ConfigureRtcp(FiveAxisRtcpConfig config)
         {

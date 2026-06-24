@@ -98,6 +98,32 @@ namespace Luster.SimDevice.MotionCard.ZMotion
             response = builder.ToString();
             return result;
         }
+
+        // —— ADR-TES-110 五轴 Frame/FrameCal 卡端原语 ——
+        public int SetTable(IntPtr handle, int startAddr, int count, float[] data)
+        {
+            return zmcaux.ZAux_Direct_SetTable(handle, startAddr, count, data);
+        }
+
+        public int GetTable(IntPtr handle, int startAddr, int count, float[] data)
+        {
+            return zmcaux.ZAux_Direct_GetTable(handle, startAddr, count, data);
+        }
+
+        public int ConnFrame(IntPtr handle, int realCount, int[] realAxes, int frame, int paraAddr, int virCount, int[] virAxes)
+        {
+            return zmcaux.ZAux_Direct_Connframe(handle, realCount, realAxes, frame, paraAddr, virCount, virAxes);
+        }
+
+        public int GetLoaded(IntPtr handle, int axis, ref int loaded)
+        {
+            return zmcaux.ZAux_Direct_GetLoaded(handle, axis, ref loaded);
+        }
+
+        public int CancelAxisList(IntPtr handle, int count, int[] axes, int mode)
+        {
+            return zmcaux.ZAux_Direct_CancelAxisList(handle, count, axes, mode);
+        }
     }
 
     internal static class zmcaux
@@ -155,5 +181,22 @@ namespace Luster.SimDevice.MotionCard.ZMotion
 
         [DllImport("cszmcaux.dll", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
         public static extern int ZAux_DirectCommand(IntPtr handle, string command, StringBuilder response, int responseLength);
+
+        // —— ADR-TES-110 五轴 Frame/FrameCal 卡端原语（对齐源端 Zmcaux.cs 签名）——
+
+        [DllImport("cszmcaux.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int ZAux_Direct_SetTable(IntPtr handle, int startAddr, int count, float[] data);
+
+        [DllImport("cszmcaux.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int ZAux_Direct_GetTable(IntPtr handle, int startAddr, int count, float[] data);
+
+        [DllImport("cszmcaux.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int ZAux_Direct_Connframe(IntPtr handle, int realCount, int[] realAxes, int frame, int paraAddr, int virCount, int[] virAxes);
+
+        [DllImport("cszmcaux.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int ZAux_Direct_GetLoaded(IntPtr handle, int axis, ref int loaded);
+
+        [DllImport("cszmcaux.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int ZAux_Direct_CancelAxisList(IntPtr handle, int count, int[] axes, int mode);
     }
 }

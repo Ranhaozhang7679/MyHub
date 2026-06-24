@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Luster.Motion.DataStruct.Real;
 using Luster.Motion.FiveAxis.Data.Calibration;
 using Luster.Motion.FiveAxis.Kinematics;
 using Luster.Motion.FiveAxis.Position;
@@ -6,6 +7,7 @@ using Luster.Motion.FiveAxis.Service;
 using Luster.Motion.FiveAxis.Utils;
 using NUnit.Framework;
 using System;
+using System.Collections.Generic;
 
 namespace Luster.Module.Motion.FiveAxis.Tests
 {
@@ -224,22 +226,134 @@ namespace Luster.Module.Motion.FiveAxis.Tests
 
         #endregion
 
-        #region 精标 AccurateCalibrate(阻塞,待 FrameCal ADR)
+        #region 精标 AccurateCalibrate(ADR-TES-110 卡端 FrameCal 编排)
 
         /// <summary>
-        /// 精标阻塞:源端核心 station.FrameCal 为运动卡 SDK 卡端调用,非纯 C#。
-        /// ADR 落地前抛 NotSupportedException,不编造卡端算法。
+        /// 精标编排:成功路径严格按 ExitFrame→Frame→FrameCal→ExitFrame(必退)调用,回填 Accurate5Para + ZeroRx + CirPulses。
+        /// 用 RecordingFrame(实现 IFiveAxisFrame)记录调用顺序,断言 R-F2 try/finally 保证最终 ExitFrame。
         /// </summary>
         [Test]
-        public void AccurateCalibrate_BlockedUntilFrameCalAdr_ThrowsNotSupported()
+        public void AccurateCalibrate_Success_CallsLifecycleInOrder_AndFillsResult()
         {
             var accurate = new AccurateCaliResult();
-            var rough5Para = new Coord5Axis();
+            accurate.ResultFirstPosi = new PositionXYZRxRyRz { X = 1, Y = 2, Z = 3, RX = 0.1, RY = 0, RZ = 0.2 };
+            accurate.ResultRxPosiLis.Add(new PositionXYZRxRyRz { X = 4, Y = 5, Z = 6, RX = 1, RY = 0, RZ = 0 });
+            accurate.ResultRzPosiLis.Add(new PositionXYZRxRyRz { X = 7, Y = 8, Z = 9, RX = 0, RY = 0, RZ = 1 });
 
-            Action act = () => _service.AccurateCalibrate(accurate, rough5Para, ballRadius: 12.7, mrxPulses: 360000, mrzPulses: 720000);
+            var rough5Para = new Coord5Axis
+            {
+                ACenter = new PositionXYZ(0, 10, 5),
+                ADir = new PositionXYZ(1, 0, 0),
+                CCenter = new PositionXYZ(3, 4, 0),
+                CDir = new PositionXYZ(0, 0, 1),
+            };
+            var frame = new RecordingFrame(success: true);
+            var ctx = new AccurateCalibrateContext
+            {
+                Frame = frame,
+                CrdIndex = 1,
+                RealAxisList = new List<int> { 1, 2, 3, 4, 5 },
+                VirAxisList = new List<int> { 101, 102, 103, 104, 105 },
+                Rough5Para = rough5Para,
+                MrxPulses = 360000,
+                MrzPulses = 720000,
+            };
 
-            act.Should().Throw<NotSupportedException>()
-                .WithMessage("*FrameCal*");
+            bool ok = _service.AccurateCalibrate(accurate, ctx);
+
+            ok.Should().BeTrue();
+            // 严格顺序:ExitFrame(清残留) → Frame(粗标) → FrameCal → ExitFrame(必退)
+            frame.Calls.Should().Equal("ExitFrame", "Frame", "FrameCal", "ExitFrame");
+            // FrameCal 实轴取前 3 轴(源端 Take(3))
+            frame.LastFrameCalRealAxes.Should().Equal(1, 2, 3);
+            // 采样点 = FirstPosi + RxLis + RzLis,共 3 点,每点 5 轴脉冲
+            frame.LastFrameCalAxisPosi.Should().HaveCount(3);
+            frame.LastFrameCalAxisPosi[0].Should().Equal(1.0, 2.0, 3.0, 0.1, 0.2); // To5AxisLis {X,Y,Z,RX,RZ}
+            // 回填:ZeroRx + Accurate5Para + CirPulses
+            accurate.ZeroRx.Should().Be(RecordingFrame.StubAZero);
+            accurate.Accurate5Para.ACirPulses.Should().Be(360000);
+            accurate.Accurate5Para.CCirPulses.Should().Be(720000);
+            accurate.Accurate5Para.ACenter.X.Should().Be(RecordingFrame.StubPara.ACenterX);
+        }
+
+        /// <summary>
+        /// R-F2 缓解验证:FrameCal 失败时,finally 仍保证 ExitFrame 调用(必退),返回 false,不回填结果。
+        /// </summary>
+        [Test]
+        public void AccurateCalibrate_FrameCalFails_StillExitFrameInFinally_ReturnsFalse()
+        {
+            var accurate = new AccurateCaliResult();
+            accurate.ResultFirstPosi = new PositionXYZRxRyRz { X = 1, Y = 2, Z = 3 };
+            var frame = new RecordingFrame(success: false); // FrameCal 返回 false
+            var ctx = new AccurateCalibrateContext
+            {
+                Frame = frame,
+                CrdIndex = 1,
+                RealAxisList = new List<int> { 1, 2, 3, 4, 5 },
+                VirAxisList = new List<int> { 101, 102, 103, 104, 105 },
+                Rough5Para = new Coord5Axis(),
+            };
+
+            bool ok = _service.AccurateCalibrate(accurate, ctx);
+
+            ok.Should().BeFalse();
+            // 即使 FrameCal 失败,也必须 ExitFrame→Frame→FrameCal(失败)→ExitFrame(必退)
+            frame.Calls.Should().Equal("ExitFrame", "Frame", "FrameCal", "ExitFrame");
+            accurate.Accurate5Para.ACirPulses.Should().Be(0); // 未回填
+        }
+
+        /// <summary>
+        /// 非五轴卡(ctx.Frame 为 null)优雅退出返回 false,不抛异常(ADR 骨架 motionCard is not IFiveAxisFrame return false)。
+        /// </summary>
+        [Test]
+        public void AccurateCalibrate_NullFrame_ReturnsFalseGracefully()
+        {
+            var accurate = new AccurateCaliResult();
+            var ctx = new AccurateCalibrateContext { Frame = null };
+
+            bool ok = _service.AccurateCalibrate(accurate, ctx);
+
+            ok.Should().BeFalse();
+        }
+
+        /// <summary>记录 IFiveAxisFrame 调用顺序的测试替身,成功/失败可配。</summary>
+        private class RecordingFrame : IFiveAxisFrame
+        {
+            public const double StubAZero = 1.234;
+            public static readonly FiveAxisFramePara StubPara = new FiveAxisFramePara
+            {
+                ACenterX = 0, ACenterY = 10, ACenterZ = 5,
+                ADirX = 1, ADirY = 0, ADirZ = 0,
+                CCenterX = 3, CCenterY = 4, CCenterZ = 0,
+                CDirX = 0, CDirY = 0, CDirZ = 1,
+            };
+
+            private readonly bool _success;
+            public readonly List<string> Calls = new List<string>();
+            public List<int> LastFrameCalRealAxes;
+            public List<double[]> LastFrameCalAxisPosi;
+
+            public RecordingFrame(bool success) { _success = success; }
+
+            public bool ConfigureFrameTableAddr(int crdIndex, FiveAxisFrameTableAddr addr) { Calls.Add("ConfigureFrameTableAddr"); return true; }
+            public bool Frame(int crdIndex, IReadOnlyList<int> realAxisList, IReadOnlyList<int> virAxisList, FiveAxisFramePara para) { Calls.Add("Frame"); return true; }
+            public bool Reframe(int crdIndex, IReadOnlyList<int> realAxisList, IReadOnlyList<int> virAxisList, FiveAxisFramePara para) { throw new NotSupportedException(); }
+            public bool ExitFrame(IReadOnlyList<int> realAxisList, IReadOnlyList<int> virAxisList) { Calls.Add("ExitFrame"); return true; }
+            public bool FrameCal(int crdIndex, IReadOnlyList<int> realAxisList, IReadOnlyList<double[]> axisPosi, out double aZero, out FiveAxisFramePara para)
+            {
+                Calls.Add("FrameCal");
+                LastFrameCalRealAxes = new List<int>(realAxisList);
+                LastFrameCalAxisPosi = new List<double[]>(axisPosi);
+                aZero = StubAZero;
+                para = new FiveAxisFramePara();
+                para.ACenterX = StubPara.ACenterX; para.ACenterY = StubPara.ACenterY; para.ACenterZ = StubPara.ACenterZ;
+                para.ADirX = StubPara.ADirX; para.ADirY = StubPara.ADirY; para.ADirZ = StubPara.ADirZ;
+                para.ACirPulses = StubPara.ACirPulses;
+                para.CCenterX = StubPara.CCenterX; para.CCenterY = StubPara.CCenterY; para.CCenterZ = StubPara.CCenterZ;
+                para.CDirX = StubPara.CDirX; para.CDirY = StubPara.CDirY; para.CDirZ = StubPara.CDirZ;
+                para.CCirPulses = StubPara.CCirPulses;
+                return _success;
+            }
         }
 
         #endregion

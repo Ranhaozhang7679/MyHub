@@ -113,5 +113,52 @@ namespace Luster.SimDevice.MotionCard.Tests
             Action callPdo = () => { card.PDOWrite(1, 0x6040, 0x00, 1, 16); var v = 0; card.PDORead(1, 0x6040, 0x00, 16, ref v, 1); };
             callPdo.Should().NotThrow<NotImplementedException>();
         }
+
+        [Test]
+        public void ZMotionMotionCard_ImplementsFiveAxisFrameContract()
+        {
+            var card = new ZMotionMotionCard { SimulationMode = true };
+            card.Should().BeAssignableTo<IFiveAxisFrame>();
+        }
+
+        /// <summary>
+        /// ADR-TES-110:SimulationMode 下 Frame 生命周期编排可跑通(进/退/解算短路返回 true,对齐源端 VIRTUAL_MODE)。
+        /// 不触达卡端 SDK,无需硬件。FrameCal 输出零值默认 para。
+        /// </summary>
+        [Test]
+        public void FiveAxisFrame_SimulationMode_LifecycleRunsAndShortCircuits()
+        {
+            var card = new ZMotionMotionCard { SimulationMode = true, AxisCount = 8 };
+            card.InitApi();
+            var frame = (IFiveAxisFrame)card;
+            var realLis = new List<int> { 1, 2, 3, 4, 5 };
+            var virLis = new List<int> { 101, 102, 103, 104, 105 };
+            var para = new FiveAxisFramePara { ACenterX = 0, ACenterY = 10, ACenterZ = 5, ADirX = 1, ACirPulses = 360000, CCirPulses = 720000 };
+
+            // 表地址配置(SimulationMode 下不实际使用,但契约可调)
+            frame.ConfigureFrameTableAddr(1, new FiveAxisFrameTableAddr { Axis5ParaAddr = 1000, InAxisPosiTb = 1100, InExtendTb = 1200, OutZeroTb = 1300, OutRobotTb = 1400 }).Should().BeTrue();
+            // 严格生命周期:ExitFrame → Frame → FrameCal → ExitFrame
+            frame.ExitFrame(realLis, virLis).Should().BeTrue();
+            frame.Frame(1, realLis, virLis, para).Should().BeTrue();
+            var axisPosi = new List<double[]> { new double[] { 1, 2, 3, 0, 0 }, new double[] { 4, 5, 6, 1, 0 } };
+            frame.FrameCal(1, realLis.Take(3).ToList(), axisPosi, out var aZero, out var outPara).Should().BeTrue();
+            frame.ExitFrame(realLis, virLis).Should().BeTrue();
+            // SimulationMode 输出零值默认
+            aZero.Should().Be(0);
+            outPara.ACenterX.Should().Be(0);
+        }
+
+        /// <summary>Reframe 本期留签名抛 NotSupportedException(ADR-TES-110,待后续正解 Issue)。</summary>
+        [Test]
+        public void FiveAxisFrame_Reframe_ThrowsNotSupported_StubOnly()
+        {
+            var card = new ZMotionMotionCard { SimulationMode = true };
+            card.InitApi();
+            var frame = (IFiveAxisFrame)card;
+
+            Action act = () => frame.Reframe(1, new List<int> { 1, 2, 3 }, new List<int> { 101, 102, 103 }, new FiveAxisFramePara());
+
+            act.Should().Throw<NotSupportedException>();
+        }
     }
 }

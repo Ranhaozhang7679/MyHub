@@ -2,7 +2,10 @@ using Luster.Motion.FiveAxis.Data.Calibration;
 using Luster.Motion.FiveAxis.Kinematics;
 using Luster.Motion.FiveAxis.Position;
 using Luster.Motion.FiveAxis.Utils;
+using Luster.Motion.DataStruct.Real;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Luster.Motion.FiveAxis.Service
 {
@@ -19,10 +22,9 @@ namespace Luster.Motion.FiveAxis.Service
     ///   由下游 <see cref="CalibratedCoord5Axis"/> 按需派生(源端存 BaseProfile.CameraOffset,本数据模型存 LaserPosi/CameraPosi)。
     /// - <see cref="CalibrateWorkOrigin"/>:工件原点示教,纯 C# 几何,对应 <c>btnWorkCalculateFromTeach</c>(Form5Cali.cs:1757)——
     ///   调 <see cref="TeachWorkOriginResult.CalculateOriginOffset"/> 算原点偏移,写入 <c>RltTool2Work.Trans</c>。
-    /// - <see cref="AccurateCalibrate"/>:精标,⚠️ <b>阻塞</b>——源端核心 <c>frameCal</c>(Form5Cali.cs:1312)的
-    ///   <c>station.FrameCal(...)</c> 为运动卡 SDK 卡端调用(需先 Frame 进逆解模式),非纯 C#,软件层无法复现。
-    ///   实现待 FrameCal ADR 落地(倾向 P0-A ZMotion 适配器暴露新 <c>IFiveAxisFrameCal</c>,R1 非侵入),此处抛
-    ///   <see cref="NotSupportedException"/> 明确阻塞,不猜测/不编造卡端算法。
+    /// - <see cref="AccurateCalibrate"/>:精标,卡端 FrameCal(ADR-TES-110 已就位)——经 <see cref="IFiveAxisFrame"/> 旁路接口
+    ///   编排 Frame 生命周期(ExitFrame→Frame(粗标)→FrameCal→ExitFrame,try/finally 保证必退 R-F2)。算法在卡端 Basic 固件,
+    ///   PC 侧无可剥离 C#;同卡同固件输入相同采样点 → 输出一致,diff≤1e-6 自然满足。精标 diff 真机验收 ⚠️ 待人类现场验证(R-F4)。
     ///
     /// <b>R1 非侵入</b>:改动全在 FiveAxis 叶子模块,平台主干(IMotionCard/Luster.Prism/Luster.TaskFlow.Common)零改动。
     /// </remarks>
@@ -84,17 +86,85 @@ namespace Luster.Motion.FiveAxis.Service
         }
 
         /// <summary>
-        /// 精标:球心采样 + 卡端 FrameCal,写入 <c>accurate.Accurate5Para</c> + <c>ZeroRx</c>。
-        /// ⚠️ <b>阻塞</b>:源端核心 <c>station.FrameCal(...)</c>(Form5Cali.cs:1334)为运动卡 SDK 卡端调用,非纯 C#,
-        /// 软件层无法复现。实现待 FrameCal ADR(倾向 P0-A ZMotion 适配器暴露 <c>IFiveAxisFrameCal</c>)。
-        /// 在 ADR 落地前抛 <see cref="NotSupportedException"/>,不猜测/不编造卡端算法。
+        /// 精标:球心采样点经卡端 FrameCal 解算,写入 <c>accurate.Accurate5Para</c> + <c>ZeroRx</c>。
+        /// 严格对齐源端 <c>Form5Cali.frameCal()</c>(Form5Cali.cs:1322-1376)编排顺序:
+        /// <c>ExitFrame</c>(清残留)→ <c>Frame(粗标 Rough5Para)</c> → <c>FrameCal</c> → <c>ExitFrame</c>(必退)。
+        /// Frame 生命周期由 try/finally 保证 <c>ExitFrame</c>(R-F2 缓解,接口不自动清理)。
+        /// 卡端解算经 <see cref="IFiveAxisFrame"/> 旁路接口(ADR-TES-110);非五轴卡(ctx.Frame 为 null)优雅退出返回 false。
         /// </summary>
-        public bool AccurateCalibrate(AccurateCaliResult accurate, Coord5Axis rough5Para, double ballRadius, double mrxPulses, double mrzPulses)
+        public bool AccurateCalibrate(AccurateCaliResult accurate, AccurateCalibrateContext ctx)
         {
-            throw new NotSupportedException(
-                "精标 AccurateCalibrate 阻塞:源端核心 station.FrameCal(...) 为运动卡 SDK 卡端调用(Form5Cali.cs:1334)," +
-                "非纯 C#,软件层无法复现。实现待 FrameCal ADR 落地(倾向 P0-A ZMotion 适配器暴露 IFiveAxisFrameCal,R1 非侵入)。" +
-                "见 TES-111 决策 A / 验收「精标:⚠️ 待人类现场验证」。");
+            if (accurate == null) throw new ArgumentNullException(nameof(accurate));
+            if (ctx == null) throw new ArgumentNullException(nameof(ctx));
+            // 非五轴卡(无 IFiveAxisFrame 能力)优雅退出,不抛异常(对齐 ADR 骨架 motionCard is not IFiveAxisFrame return false)
+            if (ctx.Frame == null) return false;
+
+            var frame = ctx.Frame;
+            var realLis = ctx.RealAxisList ?? new List<int>();
+            var virLis = ctx.VirAxisList ?? new List<int>();
+
+            // 采样点 = ResultFirstPosi + ResultRxPosiLis + ResultRzPosiLis,转 5 轴脉冲数组(源端 :1315-1318 + MotorPosiHelper.To5AxisLis)
+            var totalLis = new List<double[]> { To5Axis(accurate.ResultFirstPosi) };
+            foreach (var p in accurate.ResultRxPosiLis) totalLis.Add(To5Axis(p));
+            foreach (var p in accurate.ResultRzPosiLis) totalLis.Add(To5Axis(p));
+
+            var roughPara = ToFramePara(ctx.Rough5Para);
+            try
+            {
+                if (!frame.ExitFrame(realLis, virLis)) return false;                              // 先退(防残留,源端 :1322)
+                if (!frame.Frame(ctx.CrdIndex, realLis, virLis, roughPara)) return false;         // 进粗标逆解模式(源端 :1328)
+                if (!frame.FrameCal(ctx.CrdIndex, realLis.Take(3).ToList(), totalLis, out var aZero, out var accurateFramePara))
+                    return false;                                                                  // 卡端解算(源端 :1334,实轴取前 3 轴)
+
+                // 回填:ZeroRx + Accurate5Para(源端 :1340-1343),CirPulses 由 getCirPulse(MRx/MRz) 覆盖
+                accurate.ZeroRx = aZero;
+                var ap = FromFramePara(accurateFramePara);
+                ap.ACirPulses = ctx.MrxPulses;
+                ap.CCirPulses = ctx.MrzPulses;
+                accurate.Accurate5Para.CopyFrom(ap);
+            }
+            finally
+            {
+                // 必退:保卡端 Connframe 状态干净(R-F2,源端 :1371)
+                frame.ExitFrame(realLis, virLis);
+            }
+            return true;
+        }
+
+        /// <summary>PositionXYZRxRyRz → 5 轴脉冲数组 {X,Y,Z,RX,RZ}(原样迁自源端 MotorPosiHelper.To5AxisLis)。</summary>
+        private static double[] To5Axis(PositionXYZRxRyRz posi)
+        {
+            if (posi == null) return new double[5];
+            return new double[] { posi.X, posi.Y, posi.Z, posi.RX, posi.RZ };
+        }
+
+        /// <summary>Coord5Axis → FiveAxisFramePara(接口落点 DataStruct 不能引用 Coord5Axis,Service 侧互转)。</summary>
+        private static FiveAxisFramePara ToFramePara(Coord5Axis para)
+        {
+            if (para == null) return new FiveAxisFramePara();
+            return new FiveAxisFramePara
+            {
+                ACenterX = para.ACenter.X, ACenterY = para.ACenter.Y, ACenterZ = para.ACenter.Z,
+                ADirX = para.ADir.X, ADirY = para.ADir.Y, ADirZ = para.ADir.Z,
+                ACirPulses = para.ACirPulses,
+                CCenterX = para.CCenter.X, CCenterY = para.CCenter.Y, CCenterZ = para.CCenter.Z,
+                CDirX = para.CDir.X, CDirY = para.CDir.Y, CDirZ = para.CDir.Z,
+                CCirPulses = para.CCirPulses,
+            };
+        }
+
+        /// <summary>FiveAxisFramePara → Coord5Axis(卡端 FrameCal 输出回填 FiveAxis 数据模型)。</summary>
+        private static Coord5Axis FromFramePara(FiveAxisFramePara para)
+        {
+            return new Coord5Axis
+            {
+                ACenter = new PositionXYZ(para.ACenterX, para.ACenterY, para.ACenterZ),
+                ADir = new PositionXYZ(para.ADirX, para.ADirY, para.ADirZ),
+                ACirPulses = para.ACirPulses,
+                CCenter = new PositionXYZ(para.CCenterX, para.CCenterY, para.CCenterZ),
+                CDir = new PositionXYZ(para.CDirX, para.CDirY, para.CDirZ),
+                CCirPulses = para.CCirPulses,
+            };
         }
 
         /// <summary>
