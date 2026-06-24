@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net472</TargetFramework>
+        <PlatformTarget>x64</PlatformTarget>
+        <RootNamespace>Luster.Tools.DiffRegression</RootNamespace>
+        <AssemblyName>Luster.Tools.DiffRegression</AssemblyName>
+        <!-- 工具工程，不参与主干契约，禁用文档生成与代码风格强制以保持非侵入 -->
+        <GenerateDocumentationFile>false</GenerateDocumentationFile>
+        <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+        <Nullable>disable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Newtonsoft.Json" />
+    </ItemGroup>
+
+</Project>
