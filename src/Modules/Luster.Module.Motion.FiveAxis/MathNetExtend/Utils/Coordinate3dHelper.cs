@@ -1,9 +1,9 @@
-﻿using MathNetExtend.Model.Position;
+﻿using Luster.Motion.FiveAxis.Position;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;
 using System;
 
-namespace MathNetExtend.Utils
+namespace Luster.Motion.FiveAxis.Utils
 {
     public class Coordinate3dHelper
     {

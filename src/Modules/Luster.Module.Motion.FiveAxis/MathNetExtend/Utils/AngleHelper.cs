@@ -1,11 +1,11 @@
-using MathNetExtend.Model.Position;
+﻿using Luster.Motion.FiveAxis.Position;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MathNetExtend.Utils
+namespace Luster.Motion.FiveAxis.Utils
 {
     /// <summary>
     /// 角度转换帮助类
