@@ -2871,6 +2871,12 @@
   <data name="CableSNManager" xml:space="preserve">
     <value>CableSNManager</value>
   </data>
+  <data name="CopyFile" xml:space="preserve">
+    <value>CopyFile</value>
+  </data>
+  <data name="PressurizeChart" xml:space="preserve">
+    <value>PressurizeChart</value>
+  </data>
   <data name="TimerJudge" xml:space="preserve">
     <value>TimerJudge</value>
   </data>

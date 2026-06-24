@@ -17,7 +17,7 @@
         <converter:EnumLangConverter x:Key="MultiLangConverter" />
         <converter:ColorToBrush x:Key="ColorConverter" />
     </UserControl.Resources>
-    <Grid Background="#F0F2F5" IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Engineer}">
+    <Grid Background="#F0F2F5" IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Integrator}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="320" />
             <ColumnDefinition Width="*" />
@@ -251,7 +251,7 @@
                                     <ToggleButton
                                         Margin="20,9"
                                         HorizontalAlignment="Center"
-                                        IsChecked="{Binding IsEnableSafetyDoor}"
+                                        IsChecked="{Binding IsEnableSaftyDoor}"
                                         IsEnabled="{Binding IsEdit}"
                                         Style="{StaticResource ToggleButtonSwitch}">
                                         <hc:Interaction.Triggers>

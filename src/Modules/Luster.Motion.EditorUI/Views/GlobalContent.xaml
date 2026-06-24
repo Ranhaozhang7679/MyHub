@@ -35,7 +35,7 @@
         </Style>
         <converter:Object2StringTypeConveter x:Key="Object2StringTypeConveter" />
     </UserControl.Resources>
-    <Grid IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Engineer}">
+    <Grid IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Integrator}">
         <!--Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />

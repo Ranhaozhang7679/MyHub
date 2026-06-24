@@ -14,7 +14,7 @@
     Background="{DynamicResource SecondaryRegionBrush}"
     mc:Ignorable="d">
 
-    <Grid IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Engineer}">
+    <Grid IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Integrator}">
         <Grid.RowDefinitions>
             <RowDefinition Height="30" />
             <RowDefinition Height="Auto" />
@@ -383,7 +383,7 @@
             Margin="20,10,20,15"
             Background="White"
             CornerRadius="5">
-            <ScrollViewer IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Engineer}">
+            <ScrollViewer IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Integrator}">
                 <StackPanel Margin="15,25,15,0">
                     <TextBlock
                         VerticalAlignment="Center"
