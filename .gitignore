@@ -3,6 +3,9 @@ artifacts/
 # 本地 NuGet 包缓存（NuGet.config globalPackagesFolder=.\packages，勿提交）
 packages/
 
+# NuGet 还原目录(nuget.config globalPackagesFolder + 本地源,不应入库)
+packages/
+
 # 暂时性忽略一些AI的输出文件
 # .claude：忽略本地配置(settings.local.json 等)，放行团队共享的 skills
 .claude/
