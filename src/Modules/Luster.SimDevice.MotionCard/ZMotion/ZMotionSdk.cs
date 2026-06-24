@@ -98,6 +98,68 @@ namespace Luster.SimDevice.MotionCard.ZMotion
             response = builder.ToString();
             return result;
         }
+
+        // ===== 连续插补 + 高速锁存(P5-3) =====
+
+        public int SetMerge(IntPtr handle, int axis, int value)
+        {
+            return zmcaux.ZAux_Direct_SetMerge(handle, axis, value);
+        }
+
+        public int SetCornerMode(IntPtr handle, int axis, int value)
+        {
+            return zmcaux.ZAux_Direct_SetCornerMode(handle, axis, value);
+        }
+
+        public int SetZsmooth(IntPtr handle, int axis, float value)
+        {
+            return zmcaux.ZAux_Direct_SetZsmooth(handle, axis, value);
+        }
+
+        public int SetDecelAngle(IntPtr handle, int axis, float value)
+        {
+            return zmcaux.ZAux_Direct_SetDecelAngle(handle, axis, value);
+        }
+
+        public int SetStopAngle(IntPtr handle, int axis, float value)
+        {
+            return zmcaux.ZAux_Direct_SetStopAngle(handle, axis, value);
+        }
+
+        public int SetMovemark(IntPtr handle, int axis, int value)
+        {
+            return zmcaux.ZAux_Direct_SetMovemark(handle, axis, value);
+        }
+
+        public int GetMoveCurmark(IntPtr handle, int axis, ref int value)
+        {
+            return zmcaux.ZAux_Direct_GetMoveCurmark(handle, axis, ref value);
+        }
+
+        public int MoveOp(IntPtr handle, int axis, int ioIndex, int value)
+        {
+            return zmcaux.ZAux_Direct_MoveOp(handle, axis, ioIndex, value);
+        }
+
+        public int MoveTable(IntPtr handle, uint baseAxis, uint tableNum, float value)
+        {
+            return zmcaux.ZAux_Direct_MoveTable(handle, baseAxis, tableNum, value);
+        }
+
+        public int MoveDelay(IntPtr handle, int axis, int ms)
+        {
+            return zmcaux.ZAux_Direct_MoveDelay(handle, axis, ms);
+        }
+
+        public int GetTable(IntPtr handle, int tableStart, int numes, float[] values)
+        {
+            return zmcaux.ZAux_Direct_GetTable(handle, tableStart, numes, values);
+        }
+
+        public int GetRemainBuffer(IntPtr handle, int axis, ref int value)
+        {
+            return zmcaux.ZAux_Direct_GetRemain_Buffer(handle, axis, ref value);
+        }
     }
 
     internal static class zmcaux
@@ -155,5 +217,43 @@ namespace Luster.SimDevice.MotionCard.ZMotion
 
         [DllImport("cszmcaux.dll", CallingConvention = CallingConvention.StdCall, CharSet = CharSet.Ansi)]
         public static extern int ZAux_DirectCommand(IntPtr handle, string command, StringBuilder response, int responseLength);
+
+        // ===== 连续插补 + 高速锁存(P5-3,签名对齐源端 Zmcaux.cs) =====
+
+        [DllImport("cszmcaux.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int ZAux_Direct_SetMerge(IntPtr handle, int iaxis, int iValue);
+
+        [DllImport("cszmcaux.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int ZAux_Direct_SetCornerMode(IntPtr handle, int iaxis, int piValue);
+
+        [DllImport("cszmcaux.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int ZAux_Direct_SetZsmooth(IntPtr handle, int iaxis, float fValue);
+
+        [DllImport("cszmcaux.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int ZAux_Direct_SetDecelAngle(IntPtr handle, int iaxis, float fValue);
+
+        [DllImport("cszmcaux.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int ZAux_Direct_SetStopAngle(IntPtr handle, int iaxis, float fValue);
+
+        [DllImport("cszmcaux.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int ZAux_Direct_SetMovemark(IntPtr handle, int iaxis, int iValue);
+
+        [DllImport("cszmcaux.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int ZAux_Direct_GetMoveCurmark(IntPtr handle, int iaxis, ref int piValue);
+
+        [DllImport("cszmcaux.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int ZAux_Direct_MoveOp(IntPtr handle, int iaxis, int ioutnum, int ivalue);
+
+        [DllImport("cszmcaux.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int ZAux_Direct_MoveTable(IntPtr handle, uint base_axis, uint table_num, float fvalue);
+
+        [DllImport("cszmcaux.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int ZAux_Direct_MoveDelay(IntPtr handle, int iaxis, int itimems);
+
+        [DllImport("cszmcaux.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int ZAux_Direct_GetTable(IntPtr handle, int tabstart, int numes, float[] pfValue);
+
+        [DllImport("cszmcaux.dll", CallingConvention = CallingConvention.StdCall)]
+        public static extern int ZAux_Direct_GetRemain_Buffer(IntPtr handle, int iaxis, ref int piValue);
     }
 }

@@ -12,7 +12,7 @@ namespace Luster.SimDevice.MotionCard.ZMotion
     /// <summary>
     /// 正运动 ZMotion 运动控制卡。
     /// </summary>
-    public class ZMotionMotionCard : MotionCardBase, IMotionCard, IFiveAxisRTCP
+    public class ZMotionMotionCard : MotionCardBase, IMotionCard, IFiveAxisRTCP, IFiveAxisContiInterp, IFiveAxisLatch
     {
         private readonly IZMotionSdk sdk;
         private readonly Dictionary<int, double> currentPositions = new Dictionary<int, double>();
@@ -26,6 +26,17 @@ namespace Luster.SimDevice.MotionCard.ZMotion
         private readonly Dictionary<string, int> pdoValues = new Dictionary<string, int>();
         private IntPtr cardHandle = IntPtr.Zero;
         private bool interpolationDone = true;
+
+        // ===== P5-3 连续插补 + 高速锁存状态 =====
+        // 连续插补器数据表起始地址(对应源端 GetCrdProfile().CrdAddr.MoveOpAddr)。lmv 侧不维护完整 CrdProfile,
+        // 用一个固定数据表基地址承载 ReadContiOutFlag/锁存计数回读(与源端 ZMCMotion GetTable 调用同构)。
+        private const int ContiMoveOpTableBase = 0;
+        // 锁存数据表布局:[0]=已锁存计数,[1..]=锁存位置序列(对齐源端 GetHighLatchedCount/GetHighLatchedValue)。
+        private const int LatchCountTableBase = 100;
+        // 虚拟分支:锁存触发点回放队列(按注入点位递增),key=latchIndex。
+        private readonly Dictionary<int, Queue<double>> virtualLatchQueues = new Dictionary<int, Queue<double>>();
+        // 虚拟分支:连续插补输出标志回读计数(按注入点位递增,ADR v2 确定性桩值)。
+        private int virtualContiOutFlagIndex;
 
         public ZMotionMotionCard() : this(new ZMotionSdk())
         {
@@ -476,6 +487,328 @@ namespace Luster.SimDevice.MotionCard.ZMotion
             return true;
         }
 
+        #region IFiveAxisContiInterp —— 连续插补旁路(P5-3,对齐源端 ZMCMotion IoperateCrd 实现)
+
+        /// <summary>
+        /// 打开连续插补模式(源端 OpenCrdConti,底层 SetMerge=1)。
+        /// </summary>
+        public bool CrdContiOpen(int crd, int[] axisList, CrdMode mode)
+        {
+            CheckInit();
+            if (axisList == null || axisList.Length == 0)
+            {
+                throw new ArgumentException("连续插补轴列表不能为空", nameof(axisList));
+            }
+
+            virtualContiOutFlagIndex = 0;
+            if (SimulationMode) return true;
+
+            SafeNativeMethod(() => sdk.SetMerge(cardHandle, crd, 1) == 0, $"开启连续插补失败,crd={crd}");
+            return true;
+        }
+
+        public bool CrdContiStart(int crd)
+        {
+            CheckInit();
+            // 源端 StartCrdConti 仅校验环境(SetMerge 已在 Open 配置),lmv 同构。
+            return true;
+        }
+
+        /// <summary>
+        /// 追加直线插补(源端 AddContiLine,底层 SetMovemark + MoveAbsSp/MoveSp)。
+        /// </summary>
+        public bool CrdContiAddLine(int crd, double[] endPos, ContiMoveMode mode)
+        {
+            CheckInit();
+            if (endPos == null || endPos.Length == 0)
+            {
+                throw new ArgumentException("连续插补终点位置不能为空", nameof(endPos));
+            }
+
+            // 记录最后一个轴目标到虚拟位置(虚拟模式下轨迹推进可见)
+            SetAxisPosition(crd, endPos[endPos.Length - 1]);
+            if (SimulationMode) return true;
+
+            SafeNativeMethod(() => sdk.SetMovemark(cardHandle, crd, 0) == 0, $"设置运动标记失败,crd={crd}");
+            var axes = Enumerable.Range(0, endPos.Length).Select(_ => crd).ToArray();
+            var positions = endPos.Select(item => (float)item).ToArray();
+            SafeNativeMethod(() =>
+                (mode == ContiMoveMode.Absolute ? sdk.MoveAbsSp(cardHandle, axes.Length, axes, positions) : sdk.MoveSp(cardHandle, axes.Length, axes, positions)) == 0,
+                $"追加连续插补直线失败,crd={crd}");
+            return true;
+        }
+
+        /// <summary>
+        /// 追加延时(源端 AddContiDelay,底层 SetMovemark + MoveDelay)。
+        /// </summary>
+        public bool CrdContiAddDelay(int crd, int delayMs, int markIndex)
+        {
+            CheckInit();
+            if (SimulationMode) return true;
+
+            SafeNativeMethod(() => sdk.SetMovemark(cardHandle, crd, markIndex) == 0, $"设置运动标记失败,crd={crd},mark={markIndex}");
+            SafeNativeMethod(() => sdk.MoveDelay(cardHandle, crd, delayMs) == 0, $"追加连续插补延时失败,crd={crd},ms={delayMs}");
+            return true;
+        }
+
+        /// <summary>
+        /// 追加同步输出(源端 AddContiOutput + AddContiOutFlag,底层 MoveOp + MoveTable)。
+        /// </summary>
+        public bool CrdContiAddOutput(int crd, int ioIndex, bool level, int markIndex)
+        {
+            CheckInit();
+            if (SimulationMode)
+            {
+                virtualContiOutFlagIndex = markIndex;
+                return true;
+            }
+
+            SafeNativeMethod(() => sdk.MoveOp(cardHandle, crd, ioIndex, level ? 1 : 0) == 0, $"追加连续插补输出失败,crd={crd},io={ioIndex}");
+            SafeNativeMethod(() => sdk.MoveTable(cardHandle, (uint)crd, (uint)ContiMoveOpTableBase, markIndex) == 0, $"追加输出标志表项失败,crd={crd},mark={markIndex}");
+            return true;
+        }
+
+        /// <summary>
+        /// 回读比较输出触发标志(源端 ReadContiOutFlag,底层 GetTable)。
+        /// </summary>
+        public bool ReadContiOutFlag(int crd, ref int index)
+        {
+            CheckInit();
+            if (SimulationMode)
+            {
+                // 虚拟分支确定性桩值:按注入点位递增(ADR v2),让 LatchedOffset 计算链可跑通。
+                index = virtualContiOutFlagIndex;
+                return true;
+            }
+
+            var vs = new float[1];
+            SafeNativeMethod(() => sdk.GetTable(cardHandle, ContiMoveOpTableBase, 1, vs) == 0, $"回读输出标志失败,crd={crd}");
+            index = (int)vs[0];
+            return true;
+        }
+
+        /// <summary>
+        /// 查询插补器剩余缓冲空间(源端 GetContiRemainSpace,底层 GetRemain_Buffer)。
+        /// </summary>
+        public bool GetContiRemainSpace(int crd, out int space)
+        {
+            CheckInit();
+            if (SimulationMode)
+            {
+                // 虚拟分支确定性桩值:返回充足(ADR v2),背压检查链不阻塞。
+                space = 4096;
+                return true;
+            }
+
+            space = 0;
+            var remain = 0;
+            SafeNativeMethod(() => sdk.GetRemainBuffer(cardHandle, crd, ref remain) == 0, $"查询插补剩余缓冲失败,crd={crd}");
+            space = remain;
+            return true;
+        }
+
+        /// <summary>
+        /// 等待连续插补完成(底层 GetIfIdle 轮询)。
+        /// </summary>
+        public bool WaitCrdDone(int crd, int timeoutMs)
+        {
+            CheckInit();
+            if (SimulationMode) return true;
+
+            var deadline = timeoutMs <= 0 ? long.MaxValue : Environment.TickCount + timeoutMs;
+            while (Environment.TickCount < deadline)
+            {
+                var idle = 0;
+                if (sdk.GetIfIdle(cardHandle, crd, ref idle) == 0 && idle != 0)
+                {
+                    return true;
+                }
+                System.Threading.Thread.Sleep(5);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 停止连续插补(源端 StopCrdConti,底层 Single_Cancel)。
+        /// ⚠️ 节点级 try/finally 必须调用(M-13 finally 契约)。
+        /// </summary>
+        public bool CrdContiStop(int crd)
+        {
+            CheckInit();
+            if (SimulationMode) return true;
+
+            SafeNativeMethod(() => sdk.SingleCancel(cardHandle, crd, 2) == 0, $"停止连续插补失败,crd={crd}");
+            return true;
+        }
+
+        /// <summary>
+        /// 关闭连续插补模式(源端 CloseCrdConti,底层 SetMerge=0)。
+        /// ⚠️ 节点级 try/finally 必须调用(M-13 finally 契约)。
+        /// </summary>
+        public bool CrdContiClose(int crd)
+        {
+            CheckInit();
+            if (SimulationMode) return true;
+
+            SafeNativeMethod(() => sdk.SetMerge(cardHandle, crd, 0) == 0, $"关闭连续插补失败,crd={crd}");
+            return true;
+        }
+
+        /// <summary>
+        /// 配置速度前瞻/平滑参数(源端 CrdSetSmoothProfile,底层 SetCornerMode/SetZsmooth/SetDecelAngle/SetStopAngle)。
+        /// </summary>
+        public bool SetSmoothProfile(int crd, SmoothProfile profile)
+        {
+            CheckInit();
+            if (profile == null)
+            {
+                throw new ArgumentNullException(nameof(profile));
+            }
+
+            if (SimulationMode) return true;
+
+            SafeNativeMethod(() => sdk.SetCornerMode(cardHandle, crd, profile.CornerMode) == 0, $"设置拐角模式失败,crd={crd}");
+            SafeNativeMethod(() => sdk.SetZsmooth(cardHandle, crd, (float)profile.CornerRadius) == 0, $"设置拐角半径失败,crd={crd}");
+            SafeNativeMethod(() => sdk.SetDecelAngle(cardHandle, crd, (float)AngleToRad(profile.DecelAngle)) == 0, $"设置减速角度失败,crd={crd}");
+            SafeNativeMethod(() => sdk.SetStopAngle(cardHandle, crd, (float)AngleToRad(profile.StopAngle)) == 0, $"设置停止角度失败,crd={crd}");
+            return true;
+        }
+
+        #endregion
+
+        #region IFiveAxisLatch —— 高速锁存旁路(P5-3,对齐源端 ZMCMotion IoperateHighLatcher 实现)
+
+        /// <summary>
+        /// 启动高速锁存(源端 ResetHighLatcher,底层 REGIST 指令配置触发源/边沿/缓存)。
+        /// </summary>
+        public bool StartLatch(int axis, LatchTrigger trigger)
+        {
+            CheckInit();
+            if (trigger == null)
+            {
+                throw new ArgumentNullException(nameof(trigger));
+            }
+
+            if (SimulationMode)
+            {
+                // 虚拟分支:清空回放队列,准备接收注入点位。
+                var key = trigger.LatchIndex;
+                virtualLatchQueues[key] = new Queue<double>();
+                return true;
+            }
+
+            // 源端 REGIST 指令:mode = ContiMode?100:0 + (FallingEdge?4:3);BASE(axis) REGIST(mode,addr,maxlen,source)
+            var mode = (trigger.ContinuousMode ? 100 : 0) + (trigger.TriggerEdge == LatchTriggerEdge.FallingEdge ? 4 : 3);
+            var addr = LatchCountTableBase + trigger.LatchIndex * trigger.MaxLength;
+            var command = $"BASE({axis}) REGIST({mode},{addr},{trigger.MaxLength},{trigger.SourceIndex})";
+            var response = string.Empty;
+            SafeNativeMethod(() => sdk.DirectCommand(cardHandle, command, out response, 0) == 0, $"启动高速锁存失败,axis={axis},cmd={command}");
+            return true;
+        }
+
+        /// <summary>
+        /// 批量等待锁存到位(v2 主路径,源端 WaitLatched(axis,count,out value))。
+        /// timeoutMs 为整批超时(与源端 RunAction 循环对齐)。
+        /// </summary>
+        public bool WaitLatched(int axis, int count, int timeoutMs, out double[] latchedPos)
+        {
+            CheckInit();
+            latchedPos = new double[count];
+            if (count <= 0) return true;
+
+            if (SimulationMode)
+            {
+                // 虚拟分支:按注入点位回放(ADR v2)。队列不足时以当前轴位置补齐,保证链路不阻塞。
+                var queue = virtualLatchQueues.Values.FirstOrDefault();
+                for (var i = 0; i < count; i++)
+                {
+                    latchedPos[i] = queue != null && queue.Count > 0 ? queue.Dequeue() : GetAxisPosition(axis);
+                }
+                return true;
+            }
+
+            // 真机:轮询已锁存计数,达到 count 后批量读位置(源端 GetHighLatchedCount + GetHighLatchedValue 同构)。
+            var deadline = timeoutMs <= 0 ? long.MaxValue : Environment.TickCount + timeoutMs;
+            while (Environment.TickCount < deadline)
+            {
+                var countBuf = new float[1];
+                if (sdk.GetTable(cardHandle, LatchCountTableBase, 1, countBuf) != 0) return false;
+                if ((int)countBuf[0] >= count)
+                {
+                    var valueBuf = new float[count];
+                    SafeNativeMethod(() => sdk.GetTable(cardHandle, LatchCountTableBase + 1, count, valueBuf) == 0, $"读取锁存值失败,axis={axis}");
+                    for (var i = 0; i < count; i++) latchedPos[i] = valueBuf[i];
+                    return true;
+                }
+                System.Threading.Thread.Sleep(5);
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 单值便利重载(转调批量 count=1)。
+        /// </summary>
+        public bool WaitLatched(int axis, int timeoutMs, out double latchedPos)
+        {
+            var ok = WaitLatched(axis, 1, timeoutMs, out var arr);
+            latchedPos = ok && arr.Length > 0 ? arr[0] : 0;
+            return ok;
+        }
+
+        /// <summary>
+        /// 读取单点锁存位置(源端 GetHighLatchedValue count=1)。
+        /// </summary>
+        public bool ReadLatch(int axis, out double latchedPos)
+        {
+            CheckInit();
+            if (SimulationMode)
+            {
+                var queue = virtualLatchQueues.Values.FirstOrDefault();
+                latchedPos = queue != null && queue.Count > 0 ? queue.Dequeue() : GetAxisPosition(axis);
+                return true;
+            }
+
+            var valueBuf = new float[1];
+            SafeNativeMethod(() => sdk.GetTable(cardHandle, LatchCountTableBase + 1, 1, valueBuf) == 0, $"读取锁存值失败,axis={axis}");
+            latchedPos = valueBuf[0];
+            return true;
+        }
+
+        /// <summary>
+        /// 清除锁存缓存(源端 ResetHighLatcher 重置)。
+        /// ⚠️ 节点级 try/finally 必须调用(M-13 finally 契约)。
+        /// </summary>
+        public bool ClearLatch(int axis)
+        {
+            CheckInit();
+            if (SimulationMode)
+            {
+                foreach (var queue in virtualLatchQueues.Values) queue.Clear();
+                return true;
+            }
+
+            // 真机:重置锁存计数表项为 0(与源端 ResetHighLatcher 通过 REGIST 重置同效)。
+            SafeNativeMethod(() => sdk.MoveTable(cardHandle, (uint)axis, (uint)LatchCountTableBase, 0) == 0, $"清除锁存缓存失败,axis={axis}");
+            return true;
+        }
+
+        /// <summary>
+        /// 虚拟分支注入锁存点位(供 P5-4 虚拟端到端链回放飞拍触发点)。
+        /// 真机模式此方法无效(锁存值由卡端硬件捕获)。
+        /// </summary>
+        public void InjectVirtualLatchPoints(int latchIndex, IEnumerable<double> points)
+        {
+            if (!SimulationMode || points == null) return;
+            if (!virtualLatchQueues.TryGetValue(latchIndex, out var queue))
+            {
+                queue = new Queue<double>();
+                virtualLatchQueues[latchIndex] = queue;
+            }
+            foreach (var p in points) queue.Enqueue(p);
+        }
+
+        #endregion
+
         protected override void Dispose(bool isDispose)
         {
             if (cardHandle != IntPtr.Zero)
@@ -522,6 +855,12 @@ namespace Luster.SimDevice.MotionCard.ZMotion
         private static double ToPulse(double position, double perPulse)
         {
             return position * (perPulse == 0 ? 1 : perPulse);
+        }
+
+        // 度→弧度(对齐源端 MathNetExtend AngleHelper.AngleToRad,平滑参数角度阈值用)。
+        private static double AngleToRad(double angle)
+        {
+            return angle * Math.PI / 180.0;
         }
 
         private static string BuildKey(short axis, short index, short subindex, short dataSize)
