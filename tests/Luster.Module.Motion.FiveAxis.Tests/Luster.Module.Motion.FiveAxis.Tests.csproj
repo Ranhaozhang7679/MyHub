@@ -15,6 +15,16 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\src\Modules\Luster.Module.Motion.FiveAxis\Luster.Module.Motion.FiveAxis.csproj" />
+		<!-- P5-7(TES-116):虚拟端到端跑通用 ZMotionMotionCard(SimulationMode)做卡端旁路虚拟后端 -->
+		<ProjectReference Include="..\..\src\Modules\Luster.SimDevice.MotionCard\Luster.SimDevice.MotionCard.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- 可运行 recipe 拷贝到测试输出目录,供 LoadRecipe 加载校验 -->
+		<Content Include="..\..\src\Modules\Luster.Module.Motion.FiveAxis\Recipes\AOI1_ThreeSegment.runtime.recipe.xml">
+			<Link>Recipes\AOI1_ThreeSegment.runtime.recipe.xml</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
 	</ItemGroup>
 
 </Project>

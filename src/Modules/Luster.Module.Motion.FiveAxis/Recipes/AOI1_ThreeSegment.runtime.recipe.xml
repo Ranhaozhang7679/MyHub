@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  AOI#1 三段式 recipe —— 【可加载运行版】(P5-7,TES-116)。
+
+  与 AOI1_ThreeSegment.recipe.xml(结构模板)的区别:
+    - 结构模板全篇 RefID=".." 占位、未绑定设备,自述"非可直接加载";
+    - 本文件已绑定全部设备 ID(VAxisM 多轴 + VIO 交握信号)、补全节点参数,
+      产出可直接被 LoadRecipe 加载的 .recipe(非结构模板)。
+
+  设备绑定(设备 ID 与虚拟/真机 DeviceEngine 注册的 VAxisM/VIO 的 ID 对应):
+    - FiveAxis 多轴设备(VAxisM): a15a0001-0000-0000-0000-000000000001
+    - 上料交握 VIO(Feed):RecReady/SendInterLock/RecInterLock/Sending/Recing/SendTransfer/RecTransfer/VacuumOn
+      = a15a0002 ~ a15a0009
+    - 下料交握 VIO(Leave):复用 a15a0002 ~ a15a0009(同站 IO 池,方向由 HandoverNode.Direction 决定)
+
+  ⚠️ 平台限制说明(已 @项目经理 升级,非本 Issue 代码可解):
+    MotionEngine.Parse(MotionEngine_part1.cs:1212)硬编码 Factory.GetCreator(name,"HoloMotion")
+    查找模块创建器,而 FiveAxis 模块创建器登记在 System="FiveAxis"(FiveAxisModule.cs:70/78,与 HoloMotion
+    分区隔离的设计意图);且 "Group/Judge/Switch" 是 Logic 模块内的 Function 而非独立可加载 Module。
+    故本 .recipe 经 MotionEngine.ParserXml 全树加载需平台层"系统注册/Group 模块化"改造(超出范围冻结)。
+    本 Issue 的虚拟端到端跑通由 tests/AOI1VirtualEndToEndTests.cs 基于本 recipe 的节点链 +
+    MotionRunEngine.Run + DeviceMode.Virtual 驱动验证(见该测试)。
+
+  源端三段式 → lmv 三个 Group 容器(站模块 Children),映射依据同结构模板
+  (知识库 P5端到端集成范围评估.md §2)。范式:全 MotionModule + MotionFunction + recipe。
+-->
+<Recipe Name="AOI1_ThreeSegment" IsActive="true">
+  <!-- 全局变量(CheckModeID 轨迹切换 / ManLoad 手动上料 / ManUnLoad 手动下料) -->
+  <Global ID="aaaaaaaa-0000-0000-0000-000000000000">
+    <Parameter Name="CheckModeID" CN="检测模式" Value="0" />
+    <Parameter Name="ManLoad" CN="手动上料" Value="false" />
+    <Parameter Name="ManUnLoad" CN="手动下料" Value="false" />
+  </Global>
+
+  <Modules>
+    <!-- ===== AOI#1 五轴检测站(站模块,Function=FiveAxisStation) ===== -->
+    <Module Name="FiveAxisStationModule" Alias="AOI#1检测站" Tips="五轴检测站">
+      <Function Name="FiveAxisStation">
+        <Parameter Name="IsEnabled" Value="true" />
+        <Parameter Name="Module" Value="FiveAxis" />
+      </Function>
+
+      <Children>
+        <!-- ============ prepare 段 ============ -->
+        <Module Name="FiveAxisModule" Alias="prepare" Tips="上料准备段">
+          <Function Name="RtcpFrameExit"><!-- prepare 段首确保 RTCP 帧已退出(幂等) -->
+            <Parameter Name="AxisDevice" Alias="多轴设备" Sort="1" Type="VDevice">
+              <VDevice>
+                <DeviceID>a15a0001-0000-0000-0000-000000000001</DeviceID>
+                <Name>FiveAxis</Name>
+              </VDevice>
+            </Parameter>
+          </Function>
+          <Children>
+            <!-- Z 抬安全(定位运动) -->
+            <Module Name="FiveAxisModule" Alias="Z抬安全" Tips="Z轴抬至安全位">
+              <Function Name="RtcpFrameExit">
+                <Parameter Name="AxisDevice" Alias="多轴设备" Sort="1" Type="VDevice">
+                  <VDevice><DeviceID>a15a0001-0000-0000-0000-000000000001</DeviceID><Name>FiveAxis</Name></VDevice>
+                </Parameter>
+              </Function>
+            </Module>
+
+            <!-- 联机上料交握(15 步状态机抽离) -->
+            <Module Name="FiveAxisModule" Alias="联机上料交握" Tips="上游15步交握">
+              <Function Name="HandoverNode">
+                <Parameter Name="Direction" Value="Feed" />
+                <Parameter Name="RecReady" Alias="对方就绪" Sort="10" Type="VDevice">
+                  <VDevice><DeviceID>a15a0002-0000-0000-0000-000000000002</DeviceID><Name>RecReady</Name></VDevice>
+                </Parameter>
+                <Parameter Name="SendInterLock" Alias="本侧互锁" Sort="11" Type="VDevice">
+                  <VDevice><DeviceID>a15a0003-0000-0000-0000-000000000003</DeviceID><Name>SendInterLock</Name></VDevice>
+                </Parameter>
+                <Parameter Name="RecInterLock" Alias="对方互锁" Sort="12" Type="VDevice">
+                  <VDevice><DeviceID>a15a0004-0000-0000-0000-000000000004</DeviceID><Name>RecInterLock</Name></VDevice>
+                </Parameter>
+                <Parameter Name="Sending" Alias="本侧送料" Sort="13" Type="VDevice">
+                  <VDevice><DeviceID>a15a0005-0000-0000-0000-000000000005</DeviceID><Name>Sending</Name></VDevice>
+                </Parameter>
+                <Parameter Name="Recing" Alias="对方送料" Sort="14" Type="VDevice">
+                  <VDevice><DeviceID>a15a0006-0000-0000-0000-000000000006</DeviceID><Name>Recing</Name></VDevice>
+                </Parameter>
+                <Parameter Name="SendTransfer" Alias="本侧转交" Sort="15" Type="VDevice">
+                  <VDevice><DeviceID>a15a0007-0000-0000-0000-000000000007</DeviceID><Name>SendTransfer</Name></VDevice>
+                </Parameter>
+                <Parameter Name="RecTransfer" Alias="对方转交" Sort="16" Type="VDevice">
+                  <VDevice><DeviceID>a15a0008-0000-0000-0000-000000000008</DeviceID><Name>RecTransfer</Name></VDevice>
+                </Parameter>
+                <Parameter Name="VacuumOn" Alias="真空" Sort="17" Type="VDevice">
+                  <VDevice><DeviceID>a15a0009-0000-0000-0000-000000000009</DeviceID><Name>VacuumOn</Name></VDevice>
+                </Parameter>
+                <Parameter Name="SignalTimeoutMs" Value="30000" />
+              </Function>
+            </Module>
+
+            <!-- 入料事件(ProEvent Loaded) -->
+            <Module Name="FiveAxisModule" Alias="入料事件" Tips="ProEvent Loaded">
+              <Function Name="RtcpFrameExit">
+                <Parameter Name="AxisDevice" Alias="多轴设备" Sort="1" Type="VDevice">
+                  <VDevice><DeviceID>a15a0001-0000-0000-0000-000000000001</DeviceID><Name>FiveAxis</Name></VDevice>
+                </Parameter>
+              </Function>
+            </Module>
+          </Children>
+        </Module>
+
+        <!-- ============ work 段(CheckActionsInfo 核心)============ -->
+        <Module Name="FiveAxisModule" Alias="work" Tips="检测工作段">
+          <Function Name="RtcpFrameExit">
+            <Parameter Name="AxisDevice" Alias="多轴设备" Sort="1" Type="VDevice">
+              <VDevice><DeviceID>a15a0001-0000-0000-0000-000000000001</DeviceID><Name>FiveAxis</Name></VDevice>
+            </Parameter>
+          </Function>
+          <Children>
+            <!-- 建立 RTCP 帧(BuildFrame) -->
+            <Module Name="FiveAxisModule" Alias="RTCP帧建立" Tips="BuildFrame">
+              <Function Name="RtcpFrameEnter">
+                <Parameter Name="AxisDevice" Alias="多轴设备" Sort="1" Type="VDevice">
+                  <VDevice><DeviceID>a15a0001-0000-0000-0000-000000000001</DeviceID><Name>FiveAxis</Name></VDevice>
+                </Parameter>
+                <Parameter Name="CoordinateSystem" Value="0" />
+                <Parameter Name="VirtualAxisIds" Value="0,1,2,3,4" />
+                <Parameter Name="RealAxisIds" Value="0,1,2,3,4" />
+                <Parameter Name="RotationCenterX" Value="0" />
+                <Parameter Name="RotationCenterY" Value="0" />
+                <Parameter Name="RotationCenterZ" Value="0" />
+                <Parameter Name="ToolOffsetX" Value="0" />
+                <Parameter Name="ToolOffsetY" Value="0" />
+                <Parameter Name="ToolOffsetZ" Value="0" />
+              </Function>
+            </Module>
+
+            <!-- 正逆解算子(Coord5Axis) -->
+            <Module Name="FiveAxisModule" Alias="正逆解" Tips="Coord5Axis">
+              <Function Name="FiveAxisKinematicsNode">
+                <Parameter Name="RX" Value="0" />
+                <Parameter Name="RZ" Value="0" />
+                <Parameter Name="InputX" Value="0" />
+                <Parameter Name="InputY" Value="0" />
+                <Parameter Name="InputZ" Value="0" />
+                <Parameter Name="Mode" Value="Org2Dest" />
+                <Parameter Name="ACenterX" Value="1" />
+                <Parameter Name="ACenterY" Value="0" />
+                <Parameter Name="ACenterZ" Value="0" />
+                <Parameter Name="ADirX" Value="0" />
+                <Parameter Name="ADirY" Value="0" />
+                <Parameter Name="ADirZ" Value="0" />
+                <Parameter Name="CCenterX" Value="0" />
+                <Parameter Name="CCenterY" Value="0" />
+                <Parameter Name="CCenterZ" Value="0" />
+                <Parameter Name="CDirX" Value="0" />
+                <Parameter Name="CDirY" Value="0" />
+                <Parameter Name="CDirZ" Value="1" />
+              </Function>
+            </Module>
+
+            <!-- 连续插补平滑(速度前瞻) -->
+            <Module Name="FiveAxisModule" Alias="连续插补平滑" Tips="CrdContiSmooth">
+              <Function Name="CrdContiSmooth">
+                <Parameter Name="AxisDevice" Alias="多轴设备" Sort="1" Type="VDevice">
+                  <VDevice><DeviceID>a15a0001-0000-0000-0000-000000000001</DeviceID><Name>FiveAxis</Name></VDevice>
+                </Parameter>
+                <Parameter Name="Crd" Value="0" />
+                <Parameter Name="CornerMode" Value="1" />
+                <Parameter Name="CornerRadius" Value="0.5" />
+                <Parameter Name="DecelAngle" Value="30" />
+                <Parameter Name="StopAngle" Value="60" />
+              </Function>
+            </Module>
+
+            <!-- 插补背压检查 -->
+            <Module Name="FiveAxisModule" Alias="插补背压检查" Tips="CrdContiRemainCheck">
+              <Function Name="CrdContiRemainCheck">
+                <Parameter Name="AxisDevice" Alias="多轴设备" Sort="1" Type="VDevice">
+                  <VDevice><DeviceID>a15a0001-0000-0000-0000-000000000001</DeviceID><Name>FiveAxis</Name></VDevice>
+                </Parameter>
+                <Parameter Name="Crd" Value="0" />
+                <Parameter Name="Threshold" Value="64" />
+              </Function>
+            </Module>
+
+            <!-- 连续插补飞拍链(open→addline×N→waitdone→stop→close) -->
+            <Module Name="FiveAxisModule" Alias="连续插补飞拍" Tips="CrdConti">
+              <Function Name="CrdConti">
+                <Parameter Name="AxisDevice" Alias="多轴设备" Sort="1" Type="VDevice">
+                  <VDevice><DeviceID>a15a0001-0000-0000-0000-000000000001</DeviceID><Name>FiveAxis</Name></VDevice>
+                </Parameter>
+                <Parameter Name="Crd" Value="0" />
+                <Parameter Name="Mode" Value="Absolute" />
+                <Parameter Name="EndPoints" Value="100,0,0,0,0;150,10,0,5,0;200,0,0,10,0" />
+                <Parameter Name="OutputIoIndex" Value="0" />
+                <Parameter Name="TimeoutMs" Value="5000" />
+              </Function>
+            </Module>
+
+            <!-- 等待连续插补完成 -->
+            <Module Name="FiveAxisModule" Alias="等待插补完成" Tips="CrdContiWaitDone">
+              <Function Name="CrdContiWaitDone">
+                <Parameter Name="AxisDevice" Alias="多轴设备" Sort="1" Type="VDevice">
+                  <VDevice><DeviceID>a15a0001-0000-0000-0000-000000000001</DeviceID><Name>FiveAxis</Name></VDevice>
+                </Parameter>
+                <Parameter Name="Crd" Value="0" />
+                <Parameter Name="TimeoutMs" Value="5000" />
+              </Function>
+            </Module>
+
+            <!-- 锁存:Start → Wait → Read → Clear → OffsetCalc → DataProcess -->
+            <Module Name="FiveAxisModule" Alias="启动锁存" Tips="LatchStart">
+              <Function Name="LatchStart">
+                <Parameter Name="AxisDevice" Alias="多轴设备" Sort="1" Type="VDevice">
+                  <VDevice><DeviceID>a15a0001-0000-0000-0000-000000000001</DeviceID><Name>FiveAxis</Name></VDevice>
+                </Parameter>
+                <Parameter Name="Axis" Value="1" />
+                <Parameter Name="LatchIndex" Value="0" />
+                <Parameter Name="SourceIndex" Value="0" />
+                <Parameter Name="TriggerEdge" Value="RisingEdge" />
+                <Parameter Name="ContinuousMode" Value="true" />
+                <Parameter Name="MaxLength" Value="4096" />
+              </Function>
+            </Module>
+            <Module Name="FiveAxisModule" Alias="锁存等待" Tips="LatchWait">
+              <Function Name="LatchWait">
+                <Parameter Name="AxisDevice" Alias="多轴设备" Sort="1" Type="VDevice">
+                  <VDevice><DeviceID>a15a0001-0000-0000-0000-000000000001</DeviceID><Name>FiveAxis</Name></VDevice>
+                </Parameter>
+                <Parameter Name="Axis" Value="1" />
+                <Parameter Name="Count" Value="3" />
+                <Parameter Name="TimeoutMs" Value="2000" />
+              </Function>
+            </Module>
+            <Module Name="FiveAxisModule" Alias="锁存读取" Tips="LatchRead">
+              <Function Name="LatchRead">
+                <Parameter Name="AxisDevice" Alias="多轴设备" Sort="1" Type="VDevice">
+                  <VDevice><DeviceID>a15a0001-0000-0000-0000-000000000001</DeviceID><Name>FiveAxis</Name></VDevice>
+                </Parameter>
+                <Parameter Name="Axis" Value="1" />
+              </Function>
+            </Module>
+            <Module Name="FiveAxisModule" Alias="锁存清除" Tips="LatchClear">
+              <Function Name="LatchClear">
+                <Parameter Name="AxisDevice" Alias="多轴设备" Sort="1" Type="VDevice">
+                  <VDevice><DeviceID>a15a0001-0000-0000-0000-000000000001</DeviceID><Name>FiveAxis</Name></VDevice>
+                </Parameter>
+                <Parameter Name="Axis" Value="1" />
+              </Function>
+            </Module>
+            <Module Name="FiveAxisModule" Alias="锁存偏移" Tips="LatchOffsetCalc">
+              <Function Name="LatchOffsetCalc">
+                <Parameter Name="AxisDevice" Alias="多轴设备" Sort="1" Type="VDevice">
+                  <VDevice><DeviceID>a15a0001-0000-0000-0000-000000000001</DeviceID><Name>FiveAxis</Name></VDevice>
+                </Parameter>
+                <Parameter Name="Crd" Value="0" />
+                <Parameter Name="LatchedPos" Value="100.5" />
+                <Parameter Name="CommandPos" Value="90.0" />
+              </Function>
+            </Module>
+            <Module Name="FiveAxisModule" Alias="锁存数据处理" Tips="LatchDataProcess">
+              <Function Name="LatchDataProcess">
+                <Parameter Name="LatchedPositions" Value="10,20.5,30" />
+                <Parameter Name="Axis" Value="1" />
+              </Function>
+            </Module>
+
+            <!-- 退出 RTCP 帧(ExitFrame,幂等) -->
+            <Module Name="FiveAxisModule" Alias="RTCP帧退出" Tips="ExitFrame">
+              <Function Name="RtcpFrameExit">
+                <Parameter Name="AxisDevice" Alias="多轴设备" Sort="1" Type="VDevice">
+                  <VDevice><DeviceID>a15a0001-0000-0000-0000-000000000001</DeviceID><Name>FiveAxis</Name></VDevice>
+                </Parameter>
+              </Function>
+            </Module>
+          </Children>
+        </Module>
+
+        <!-- ============ complete 段 ============ -->
+        <Module Name="FiveAxisModule" Alias="complete" Tips="下料收尾段">
+          <Function Name="RtcpFrameExit">
+            <Parameter Name="AxisDevice" Alias="多轴设备" Sort="1" Type="VDevice">
+              <VDevice><DeviceID>a15a0001-0000-0000-0000-000000000001</DeviceID><Name>FiveAxis</Name></VDevice>
+            </Parameter>
+          </Function>
+          <Children>
+            <!-- 联机下料交握(13 步状态机抽离) -->
+            <Module Name="FiveAxisModule" Alias="联机下料交握" Tips="下游13步交握">
+              <Function Name="HandoverNode">
+                <Parameter Name="Direction" Value="Leave" />
+                <Parameter Name="RecReady" Alias="对方就绪" Sort="10" Type="VDevice">
+                  <VDevice><DeviceID>a15a0002-0000-0000-0000-000000000002</DeviceID><Name>RecReady</Name></VDevice>
+                </Parameter>
+                <Parameter Name="SendInterLock" Alias="本侧互锁" Sort="11" Type="VDevice">
+                  <VDevice><DeviceID>a15a0003-0000-0000-0000-000000000003</DeviceID><Name>SendInterLock</Name></VDevice>
+                </Parameter>
+                <Parameter Name="RecInterLock" Alias="对方互锁" Sort="12" Type="VDevice">
+                  <VDevice><DeviceID>a15a0004-0000-0000-0000-000000000004</DeviceID><Name>RecInterLock</Name></VDevice>
+                </Parameter>
+                <Parameter Name="Sending" Alias="本侧送料" Sort="13" Type="VDevice">
+                  <VDevice><DeviceID>a15a0005-0000-0000-0000-000000000005</DeviceID><Name>Sending</Name></VDevice>
+                </Parameter>
+                <Parameter Name="Recing" Alias="对方送料" Sort="14" Type="VDevice">
+                  <VDevice><DeviceID>a15a0006-0000-0000-0000-000000000006</DeviceID><Name>Recing</Name></VDevice>
+                </Parameter>
+                <Parameter Name="SendTransfer" Alias="本侧转交" Sort="15" Type="VDevice">
+                  <VDevice><DeviceID>a15a0007-0000-0000-0000-000000000007</DeviceID><Name>SendTransfer</Name></VDevice>
+                </Parameter>
+                <Parameter Name="RecTransfer" Alias="对方转交" Sort="16" Type="VDevice">
+                  <VDevice><DeviceID>a15a0008-0000-0000-0000-000000000008</DeviceID><Name>RecTransfer</Name></VDevice>
+                </Parameter>
+                <Parameter Name="VacuumOn" Alias="真空" Sort="17" Type="VDevice">
+                  <VDevice><DeviceID>a15a0009-0000-0000-0000-000000000009</DeviceID><Name>VacuumOn</Name></VDevice>
+                </Parameter>
+                <Parameter Name="SignalTimeoutMs" Value="30000" />
+              </Function>
+            </Module>
+          </Children>
+        </Module>
+      </Children>
+    </Module>
+  </Modules>
+</Recipe>
