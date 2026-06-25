@@ -85,5 +85,14 @@ namespace Luster.Module.Motion.Handover.Signals
         public const int Auto = 5;
         /// <summary>允许初始化(位偏移 6)</summary>
         public const int AllowInit = 6;
+
+        /// <summary>
+        /// 位偏移 → 16 位掩码(TES-55 补:供 HandoverAutoSignalService 边沿监听按位与判断)。
+        /// <para>AutoReadSignal 是 16 位 ushort,故返回 ushort;与 0350a14e 那条线
+        /// <c>HandoverSignalBit.Mask(int) => 1u &lt;&lt; bit</c>(返回 uint)同款,仅返回类型对齐 16 位信号字。</para>
+        /// </summary>
+        /// <param name="bit">位偏移(0-6)</param>
+        /// <returns>该位的 16 位掩码</returns>
+        public static ushort Mask(int bit) => (ushort)(1 << bit);
     }
 }

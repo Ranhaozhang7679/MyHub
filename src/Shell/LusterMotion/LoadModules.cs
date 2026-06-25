@@ -24,9 +24,11 @@
 using Luster.Common.Assets;
 using Luster.Common.DataAccess.Factory;
 using Luster.Common.Tools;
+using Luster.Module.Motion.Handover.Services;
 using Luster.Motion.CommonUI;
 using Luster.Motion.CommonUI.Events;
 using Luster.Motion.DataStruct;
+using Luster.Motion.DataStruct.VDevice;
 using Luster.Motion.EditorUI;
 using Luster.Motion.TaskFlow.Engine;
 using Luster.TaskFlow.Common;
@@ -86,6 +88,19 @@ namespace LusterMotion
         private IDBFactory _dbFactory;
 
         /// <summary>
+        /// 自动信号命令派发器（TES-55 DeviceEngine 接线）。
+        /// 持引用防 GC：AutoCommandDispatcher 构造时订阅了 OnAutoCommand，被回收会断链。
+        /// 生命周期跟随 LoadModules（Shell 启动期构造，进程级单例）。
+        /// </summary>
+        private AutoCommandDispatcher _autoSignalDispatcher;
+
+        /// <summary>
+        /// 自动信号字寄存器地址（TES-55）。
+        /// 生产配置来源（SystemConfig/工程约定）待 TES-37-7 Client 接线接入；
+        /// 本 issue 仅接通生产路径骨架（委托指向真实 VModbusServer.ReadRegister）。
+        /// </summary>
+        private const int AutoSignalRegisterAddress = 0;
+        /// <summary>
         /// 加载动画模块
         /// </summary>
         /// <param name="deviceEngine"></param>
@@ -118,6 +133,11 @@ namespace LusterMotion
             LoadingEvent?.Invoke(20, "驱动程序加载中...");
             _deviceEngine.LoadDrivers();
 
+            // TES-55 DeviceEngine 接线：在 Initialize(InitSolution 内触发) 之前订阅 InitializedEvent,
+            // 回调里 VModbusServer 已就绪 → 构造读取委托注入 HandoverAutoSignalService → Configure + 派发器。
+            // 服务侧已用注入式委托解耦,本处仅薄适配,不改 IHandoverAutoSignalService/AutoCommandDispatcher 契约。
+            WireHandoverAutoSignal();
+
             // 2.只加载一次工程
             LoadingEvent?.Invoke(40, "加载工程信息...");
             _commonBus.InitSolution(SolutionConfig);
@@ -144,6 +164,45 @@ namespace LusterMotion
             // 3.模块配方
             LoadingEvent?.Invoke(100, "程序启动中...");
             System.Threading.Thread.Sleep(500);
+        }
+
+        /// <summary>
+        /// Handover 自动信号 DeviceEngine 生产接线（TES-55）。
+        /// <para>订阅 <see cref="IDeviceEngine.InitializedEvent"/>:Initialize 完成、VModbusServer 已入表后,
+        /// 取 VModbusServer 实例 → 构造 <c>Func&lt;ushort&gt;</c> 读取委托(<c>server.ReadRegister(address)</c>)
+        /// 注入 <see cref="HandoverAutoSignalService"/> → <see cref="IHandoverAutoSignalService.Configure"/> +
+        /// <see cref="AutoCommandDispatcher"/> 订阅派发 → <see cref="IHandoverAutoSignalService.Start"/>。</para>
+        /// <para>容错:工程未含 VModbusServer 时跳过(不抛);Start 早于 Home 时 Server 未启动,
+        /// HandoverAutoSignalService.ScanOnce 内 try/catch 容忍、Home 后自动恢复采样。</para>
+        /// </summary>
+        private void WireHandoverAutoSignal()
+        {
+            _deviceEngine.InitializedEvent += (engine, task) =>
+            {
+                // 工程未配置 VModbusServer 时跳过接线(不阻断其他设备初始化)
+                var server = engine.GetVDevices<VModbusServer>().FirstOrDefault();
+                if (server == null)
+                {
+                    return;
+                }
+
+                // 读取委托:指向真实 VModbusServer.ReadRegister,生产路径连通
+                int address = AutoSignalRegisterAddress;
+                Func<ushort> readAutoSignal = () => server.ReadRegister(address);
+
+                var service = new HandoverAutoSignalService(readAutoSignal);
+                service.Configure(server.Name, address);
+
+                // 派发器订阅 OnAutoCommand → IMotionController 命令(仅上升沿),生命周期由本类持有防 GC
+                var app = (Application.Current as App) as PrismApplication;
+                var controller = app?.Container.Resolve<IMotionController>();
+                if (controller != null)
+                {
+                    _autoSignalDispatcher = new AutoCommandDispatcher(service, controller);
+                }
+
+                service.Start();
+            };
         }
 
         /// <summary>
