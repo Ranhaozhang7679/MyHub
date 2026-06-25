@@ -1,0 +1,193 @@
+<UserControl
+    x:Class="Luster.Motion.EditorUI.Views.FiveAxisManualControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:lang="clr-namespace:Luster.Motion.Assests.Langs;assembly=Luster.Motion.Assests"
+    xmlns:local="clr-namespace:Luster.Motion.EditorUI.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:param="clr-namespace:Luster.Control.Wpf.Motion;assembly=Luster.Control.Wpf.Motion"
+    xmlns:prism="http://prismlibrary.com/"
+    d:DesignHeight="450"
+    d:DesignWidth="600"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{DynamicResource RegionBrush}"
+    mc:Ignorable="d">
+    <!--
+        五轴手动控制 UserControl（TES-131/138 XAML 骨架）
+        范围：主面板容器 + X/Y/Z/A/C 五轴 Jog 按钮组（10 按钮，±方向 × 5 轴）
+        不含（TES-139）：坐标系选择器 / 模式开关 / 步距输入 —— 顶部已预留区域
+        不含（TES-132）：VM 逻辑 / press-hold 接线 —— 本骨架只声明 {Binding}
+        轴语义：A≡MRx（绕X转）、C≡MRz（绕Z转），UI 层不处理，归 TES-124
+    -->
+    <Border
+        BorderBrush="{DynamicResource BorderBrush}"
+        BorderThickness="1"
+        CornerRadius="4"
+        Padding="8">
+        <Grid>
+            <Grid.RowDefinitions>
+                <!-- 顶部：标题 + TES-139 预留区（坐标系/模式/步距，本骨架不实际放置控件）-->
+                <RowDefinition Height="Auto" />
+                <!-- Jog 按钮组 -->
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- 顶部标题 + TES-139 预留区 -->
+            <Grid Grid.Row="0" Margin="0,0,0,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    FontSize="14"
+                    FontWeight="Bold"
+                    Text="五轴手动控制" />
+                <!-- TODO TES-139: 坐标系选择器（SelectedCoordinateFrame）+ 模式开关（IsJogMode）+ 步距/速度输入（MovePara）放置于此 -->
+                <TextBlock
+                    Grid.Column="1"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Center"
+                    Foreground="{DynamicResource SecondaryTextBrush}"
+                    Text="(坐标系/模式/步距 待 TES-139 接入)" />
+            </Grid>
+
+            <!-- Jog 按钮组：5 行 × 3 列（轴名 | - | +） -->
+            <Grid Grid.Row="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <!-- 轴名 -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- - 按钮 -->
+                    <ColumnDefinition Width="*" />
+                    <!-- + 按钮 -->
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- 行 1：X 轴 -->
+                <TextBlock
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    Margin="0,0,12,0"
+                    VerticalAlignment="Center"
+                    FontWeight="Bold"
+                    Text="X" />
+                <!-- TODO TES-132: 改 PreviewMouseDown/Up press-hold（参照 VAxisMContent.xaml:286-308 hc:EventToCommand） -->
+                <Button
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Margin="2"
+                    Command="{Binding JogXMinusCommand}"
+                    Content="-X" />
+                <!-- TODO TES-132: 改 PreviewMouseDown/Up press-hold -->
+                <Button
+                    Grid.Row="0"
+                    Grid.Column="2"
+                    Margin="2"
+                    Command="{Binding JogXPlusCommand}"
+                    Content="+X" />
+
+                <!-- 行 2：Y 轴 -->
+                <TextBlock
+                    Grid.Row="1"
+                    Grid.Column="0"
+                    Margin="0,0,12,0"
+                    VerticalAlignment="Center"
+                    FontWeight="Bold"
+                    Text="Y" />
+                <!-- TODO TES-132: 改 PreviewMouseDown/Up press-hold -->
+                <Button
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Margin="2"
+                    Command="{Binding JogYMinusCommand}"
+                    Content="-Y" />
+                <!-- TODO TES-132: 改 PreviewMouseDown/Up press-hold -->
+                <Button
+                    Grid.Row="1"
+                    Grid.Column="2"
+                    Margin="2"
+                    Command="{Binding JogYPlusCommand}"
+                    Content="+Y" />
+
+                <!-- 行 3：Z 轴 -->
+                <TextBlock
+                    Grid.Row="2"
+                    Grid.Column="0"
+                    Margin="0,0,12,0"
+                    VerticalAlignment="Center"
+                    FontWeight="Bold"
+                    Text="Z" />
+                <!-- TODO TES-132: 改 PreviewMouseDown/Up press-hold -->
+                <Button
+                    Grid.Row="2"
+                    Grid.Column="1"
+                    Margin="2"
+                    Command="{Binding JogZMinusCommand}"
+                    Content="-Z" />
+                <!-- TODO TES-132: 改 PreviewMouseDown/Up press-hold -->
+                <Button
+                    Grid.Row="2"
+                    Grid.Column="2"
+                    Margin="2"
+                    Command="{Binding JogZPlusCommand}"
+                    Content="+Z" />
+
+                <!-- 行 4：A 轴（A≡MRx，绕 X 转）-->
+                <TextBlock
+                    Grid.Row="3"
+                    Grid.Column="0"
+                    Margin="0,0,12,0"
+                    VerticalAlignment="Center"
+                    FontWeight="Bold"
+                    Text="A" />
+                <!-- TODO TES-132: 改 PreviewMouseDown/Up press-hold -->
+                <Button
+                    Grid.Row="3"
+                    Grid.Column="1"
+                    Margin="2"
+                    Command="{Binding JogAMinusCommand}"
+                    Content="-A" />
+                <!-- TODO TES-132: 改 PreviewMouseDown/Up press-hold -->
+                <Button
+                    Grid.Row="3"
+                    Grid.Column="2"
+                    Margin="2"
+                    Command="{Binding JogAPlusCommand}"
+                    Content="+A" />
+
+                <!-- 行 5：C 轴（C≡MRz，绕 Z 转）-->
+                <TextBlock
+                    Grid.Row="4"
+                    Grid.Column="0"
+                    Margin="0,0,12,0"
+                    VerticalAlignment="Center"
+                    FontWeight="Bold"
+                    Text="C" />
+                <!-- TODO TES-132: 改 PreviewMouseDown/Up press-hold -->
+                <Button
+                    Grid.Row="4"
+                    Grid.Column="1"
+                    Margin="2"
+                    Command="{Binding JogCMinusCommand}"
+                    Content="-C" />
+                <!-- TODO TES-132: 改 PreviewMouseDown/Up press-hold -->
+                <Button
+                    Grid.Row="4"
+                    Grid.Column="2"
+                    Margin="2"
+                    Command="{Binding JogCPlusCommand}"
+                    Content="+C" />
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>
