@@ -25,6 +25,21 @@ namespace Luster.Module.Motion.TestToolchain.Simulation
             return config != null && config.RunMode == DeviceMode.Virtual;
         }
 
+        /// <summary>
+        /// 切换虚拟/实机模式（TES-68 P9-C 验收点：VIRTUAL_MODE 全局开关可正常切换）。
+        /// 源端 <c>ProfilePluginManager.VIRTUAL_MODE</c>（static bool）在 lmv 对应
+        /// <c>SystemConfig.RunMode == DeviceMode.Virtual</c>，本方法提供与源端等价的切换接口。
+        /// </summary>
+        /// <param name="config">系统配置（null 时安全跳过，对齐 IsVirtualMode 的 null 容错语义）。</param>
+        /// <param name="enabled">true→Virtual（离线仿真）；false→Real（实机）。</param>
+        public static void SetVirtualMode(SystemConfig config, bool enabled)
+        {
+            if (config != null)
+            {
+                config.RunMode = enabled ? DeviceMode.Virtual : DeviceMode.Real;
+            }
+        }
+
         /// <summary>源端开关：ProfilePluginManager.VIRTUAL_MODE（static bool，PluginComponent.Start() 置 true）</summary>
         public const string SourceVirtualModeSwitch = "ProfilePluginManager.VIRTUAL_MODE";
 

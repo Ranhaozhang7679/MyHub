@@ -9,6 +9,7 @@ namespace Luster.Module.Motion.TestToolchainTests
     /// TES-34 P9-C 单测：OpticalSimulator 脉宽→灰度算法 + SimulationProfile 几何结构 +
     /// VirtualModeMapping 虚拟模式映射。
     /// </summary>
+    [Trait("Category", "SmokeTest")]
     public class SimulationTests
     {
         #region OpticalSimulator
@@ -108,6 +109,17 @@ namespace Luster.Module.Motion.TestToolchainTests
         public void VirtualModeMapping_null配置返回false()
         {
             Assert.False(VirtualModeMapping.IsVirtualMode(null));
+        }
+
+        [Fact]
+        public void SetVirtualMode_切换Virtual与Real往返有效()
+        {
+            // 验收点：VIRTUAL_MODE 全局开关可正常切换（对应源端 ProfilePluginManager.VIRTUAL_MODE = true/false）
+            var config = new SystemConfig();
+            VirtualModeMapping.SetVirtualMode(config, true);
+            Assert.True(VirtualModeMapping.IsVirtualMode(config));
+            VirtualModeMapping.SetVirtualMode(config, false);
+            Assert.False(VirtualModeMapping.IsVirtualMode(config));
         }
 
         #endregion
