@@ -158,7 +158,7 @@ namespace Luster.TaskFlow.Common.Models
                     result = result.Replace($"{{{i}}}", vals[i]?.ToString());
                 }
 
-                return result;
+                return GetReplace(result);
             }
         }
 

@@ -19,7 +19,7 @@ namespace Luster.Motion.Assests.Langs {
     // 类通过类似于 ResGen 或 Visual Studio 的工具自动生成的。
     // 若要添加或移除成员，请编辑 .ResX 文件，然后重新运行 ResGen
     // (以 /str 作为命令选项)，或重新生成 VS 项目。
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class Lang {
@@ -421,6 +421,15 @@ namespace Luster.Motion.Assests.Langs {
         }
         
         /// <summary>
+        ///   查找类似 模拟量获取并记录进csv文件 的本地化字符串。
+        /// </summary>
+        public static string AnalogConvertChart {
+            get {
+                return ResourceManager.GetString("AnalogConvertChart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 角度测量 的本地化字符串。
         /// </summary>
         public static string AngleMeasure {
@@ -682,15 +691,6 @@ namespace Luster.Motion.Assests.Langs {
         }
         
         /// <summary>
-        ///   查找类似 点位运动 的本地化字符串。
-        /// </summary>
-        public static string AxisPosMove {
-            get {
-                return ResourceManager.GetString("AxisPosMove", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   查找类似 双轴点位阵列 的本地化字符串。
         /// </summary>
         public static string AxisPosArray {
@@ -698,25 +698,16 @@ namespace Luster.Motion.Assests.Langs {
                 return ResourceManager.GetString("AxisPosArray", resourceCulture);
             }
         }
-
+        
         /// <summary>
-        ///   查找类似 大寰音圈电机 的本地化字符串。
+        ///   查找类似 点位运动 的本地化字符串。
         /// </summary>
-        public static string DHRoboticsVCM {
+        public static string AxisPosMove {
             get {
-                return ResourceManager.GetString("DHRoboticsVCM", resourceCulture);
+                return ResourceManager.GetString("AxisPosMove", resourceCulture);
             }
         }
-
-        /// <summary>
-        ///   查找类似 钧舵音圈电机 的本地化字符串。
-        /// </summary>
-        public static string JunRudderVCM {
-            get {
-                return ResourceManager.GetString("JunRudderVCM", resourceCulture);
-            }
-        }
-
+        
         /// <summary>
         ///   查找类似 轴优先级 的本地化字符串。
         /// </summary>
@@ -903,6 +894,15 @@ namespace Luster.Motion.Assests.Langs {
         public static string Buzzer {
             get {
                 return ResourceManager.GetString("Buzzer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 排线SN管理 的本地化字符串。
+        /// </summary>
+        public static string CableSNManager {
+            get {
+                return ResourceManager.GetString("CableSNManager", resourceCulture);
             }
         }
         
@@ -1627,6 +1627,15 @@ namespace Luster.Motion.Assests.Langs {
         }
         
         /// <summary>
+        ///   查找类似 复制文件 的本地化字符串。
+        /// </summary>
+        public static string CopyFile {
+            get {
+                return ResourceManager.GetString("CopyFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 复制需要选中模块[根节点不支持复制] 的本地化字符串。
         /// </summary>
         public static string CopySelectedModule {
@@ -2037,6 +2046,33 @@ namespace Luster.Motion.Assests.Langs {
         public static string DeviceType {
             get {
                 return ResourceManager.GetString("DeviceType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 拟合计算大寰K和B 的本地化字符串。
+        /// </summary>
+        public static string DHCalcu {
+            get {
+                return ResourceManager.GetString("DHCalcu", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 大寰音圈电机 的本地化字符串。
+        /// </summary>
+        public static string DHRoboticsVCM {
+            get {
+                return ResourceManager.GetString("DHRoboticsVCM", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   查找类似 大寰音圈电机曲线监控 的本地化字符串。
+        /// </summary>
+        public static string DHVCMMonitor {
+            get {
+                return ResourceManager.GetString("DHVCMMonitor", resourceCulture);
             }
         }
         
@@ -4093,6 +4129,15 @@ namespace Luster.Motion.Assests.Langs {
         }
         
         /// <summary>
+        ///   查找类似 钧舵音圈电机 的本地化字符串。
+        /// </summary>
+        public static string JunRudderVCM {
+            get {
+                return ResourceManager.GetString("JunRudderVCM", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 关键物料查询 的本地化字符串。
         /// </summary>
         public static string KeyMaterialQuery {
@@ -4469,16 +4514,7 @@ namespace Luster.Motion.Assests.Langs {
                 return ResourceManager.GetString("LSMesUnLoad", resourceCulture);
             }
         }
-
-        /// <summary>
-        ///   查找类似 排线SN管理 的本地化字符串。
-        /// </summary>
-        public static string CableSNManager {
-            get {
-                return ResourceManager.GetString("CableSNManager", resourceCulture);
-            }
-        }
-
+        
         /// <summary>
         ///   查找类似 智能驾驶舱 的本地化字符串。
         /// </summary>
@@ -5893,6 +5929,15 @@ namespace Luster.Motion.Assests.Langs {
         }
         
         /// <summary>
+        ///   查找类似 保压并生成曲线 的本地化字符串。
+        /// </summary>
+        public static string PressurizeChart {
+            get {
+                return ResourceManager.GetString("PressurizeChart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 上游有料 的本地化字符串。
         /// </summary>
         public static string PrevHave {
@@ -6314,7 +6359,7 @@ namespace Luster.Motion.Assests.Langs {
                 return ResourceManager.GetString("ReadPlc", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   查找类似 读取机械手速度 的本地化字符串。
         /// </summary>
@@ -6323,7 +6368,7 @@ namespace Luster.Motion.Assests.Langs {
                 return ResourceManager.GetString("ReadRobotSpeed", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   查找类似 加载STL 的本地化字符串。
         /// </summary>
@@ -8040,15 +8085,6 @@ namespace Luster.Motion.Assests.Langs {
         public static string TaikeAnnotatedCurve {
             get {
                 return ResourceManager.GetString("TaikeAnnotatedCurve", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   查找类似 大寰音圈电机曲线监控 的本地化字符串。
-        /// </summary>
-        public static string DHVCMMonitor {
-            get {
-                return ResourceManager.GetString("DHVCMMonitor", resourceCulture);
             }
         }
         

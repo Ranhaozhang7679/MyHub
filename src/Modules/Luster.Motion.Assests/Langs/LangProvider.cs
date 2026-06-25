@@ -3536,6 +3536,16 @@ namespace Luster.Motion.Assests.Langs
 		public string CableSNManager => Lang.CableSNManager;
 
         /// <summary>
+        ///   查找类似 复制文件 的本地化字符串。
+        /// </summary>
+        public string CopyFile => Lang.CopyFile;
+
+        /// <summary>
+        ///   查找类似 保压后生成压力曲线 的本地化字符串。
+        /// </summary>
+        public string PressurizeChart => Lang.PressurizeChart;
+
+        /// <summary>
         ///   查找类似 智能驾驶舱 的本地化字符串。
         /// </summary>
 		public string LusterSmartCockpit => Lang.LusterSmartCockpit;
@@ -6255,6 +6265,15 @@ namespace Luster.Motion.Assests.Langs
         /// </summary>
 		public string ZoomOut => Lang.ZoomOut;
 
+        /// <summary>
+        ///   查找模拟量生成csv 的本地化字符串。
+        /// </summary>
+        public static string AnalogConvertChart => Lang.AnalogConvertChart;
+
+        /// <summary>
+        ///   查找拟合计算大寰K和B 的本地化字符串。
+        /// </summary>
+        public static string DHCalcu => Lang.DHCalcu;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -8703,6 +8722,16 @@ namespace Luster.Motion.Assests.Langs
         ///   查找类似 排线SN管理 的本地化字符串。
         /// </summary>
 		public static string CableSNManager = nameof(CableSNManager);
+
+        /// <summary>
+        ///   查找类似 复制文件 的本地化字符串。
+        /// </summary>
+        public static string CopyFile = nameof(CopyFile);
+
+        /// <summary>
+        ///   查找类似 保压后生成压力曲线 的本地化字符串。
+        /// </summary>
+        public static string PressurizeChart = nameof(PressurizeChart);
 
         /// <summary>
         ///   查找类似 智能驾驶舱 的本地化字符串。
@@ -11424,5 +11453,14 @@ namespace Luster.Motion.Assests.Langs
         /// </summary>
 		public static string ZoomOut = nameof(ZoomOut);
 
+        /// <summary>
+        ///   查找类似 模拟量生成csv 的本地化字符串。
+        /// </summary>
+        public static string AnalogConvertChart = nameof(AnalogConvertChart);
+
+        /// <summary>
+        ///   查找类似 模拟量生成csv 的本地化字符串。
+        /// </summary>
+        public static string DHCalcu = nameof(DHCalcu);
     }
 }

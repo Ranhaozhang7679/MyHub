@@ -1104,6 +1104,7 @@ namespace Luster.Module.Motion.Business.Functions
                     {
                         string[] DHpicList = Directory.GetFiles(srcCSVFolder, "*.jpg")
                                                    .Concat(Directory.GetFiles(srcCSVFolder, "*.png"))
+                                                   .Concat(Directory.GetFiles(srcCSVFolder, "*.jpeg"))
                                                    .ToArray();
                         foreach (var fPath in DHpicList)
                         {

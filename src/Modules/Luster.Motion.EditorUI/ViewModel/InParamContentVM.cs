@@ -34,6 +34,7 @@ using Luster.Motion.DataStruct.Enums;
 using Luster.Motion.DataStruct.Real;
 using Luster.Motion.DataStruct.Virtual;
 using Luster.Motion.EditorUI.Events;
+using Luster.Motion.EditorUI.UndoCommands;
 using Luster.Motion.EditorUI.Extensions;
 using Luster.Motion.TaskFlow.Engine;
 using Luster.TaskFlow.Common.Attributes;
@@ -61,6 +62,7 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using Luster.Motion.DataStruct;
 using System.Threading;
+using System.Xml.Linq;
 using Luster.Motion.DataStruct.VDevice;
 using Prism.Regions;
 using System.Windows;
@@ -351,6 +353,51 @@ namespace Luster.Motion.EditorUI.ViewModel
         }
 
         /// <summary>
+        /// 同步 Switch 子节点（不产生撤销记录，供 BranchModifyCommand 使用）
+        /// </summary>
+        private void SyncSwitchChildren(IMotionModule module, LCondition newCondition, int oldCount)
+        {
+            if (oldCount == 0)
+            {
+                // 全新创建
+                foreach (var item in newCondition)
+                {
+                    var group = _engine.CreateByName("Logic", "Group");
+                    group.Alias = item.Name;
+                    _engine.Insert(group, module.Children.Count, module);
+                }
+            }
+            else if (oldCount <= newCondition.Count)
+            {
+                // 更新或添加
+                for (int j = 0; j < newCondition.Count; j++)
+                {
+                    if (oldCount > j)
+                    {
+                        module.Children[j].Alias = newCondition[j].Name;
+                    }
+                    else
+                    {
+                        var group = _engine.CreateByName("Logic", "Group");
+                        group.Alias = newCondition[j].Name;
+                        _engine.Insert(group, module.Children.Count, module);
+                    }
+                }
+            }
+            else
+            {
+                // 删除多余分支（直接操作，不走 OnRemoveModule 避免产生撤销记录）
+                var names = newCondition.Select(u => u.Name).ToList();
+                var toRemove = module.Children.Where(u => !names.Contains(u.Alias)).ToList();
+                foreach (var item in toRemove)
+                {
+                    module.Children.Remove(item);
+                    eventBus.RemoveModuleInternal(item);
+                }
+            }
+        }
+
+        /// <summary>
         /// 构造动态条件
         /// </summary>
         private void BuildDynBranch(ParameterAttribute p, LExpression expression, IMotionModule module)
@@ -565,9 +612,62 @@ namespace Luster.Motion.EditorUI.ViewModel
                 {
                     if (r.Result == ButtonResult.OK && r.Parameters.TryGetValue<LCondition>("Condition", out var con))
                     {
-                        args.Paramter.Value = con;
-                        args.Paramter.Owner.UpdateReferences();
-                        BuildDynCondtion(args.Paramter, con, module);
+                        if (module.TaskFunction is ISwitch && con.Count > 0)
+                        {
+                            // ===== 增量式撤销记录 =====
+
+                            // 1. 记录旧条件值
+                            var oldConditionXml = (args.Paramter.Value as LCondition)?.ExportXml();
+                            var newConditionXml = con.ExportXml();
+
+                            int oldCount = module.Children.Count;
+                            var oldChildIDs = module.Children.Select(c => c.ID).ToHashSet();
+
+                            // 2. 记录改名
+                            var renamedOld = new List<(Guid ID, string OldAlias)>();
+                            var renamedNew = new List<(Guid ID, string NewAlias)>();
+                            for (int j = 0; j < Math.Min(oldCount, con.Count); j++)
+                            {
+                                if (module.Children[j].Alias != con[j].Name)
+                                {
+                                    renamedOld.Add((module.Children[j].ID, module.Children[j].Alias));
+                                    renamedNew.Add((module.Children[j].ID, con[j].Name));
+                                }
+                            }
+
+                            // 3. 记录被删分支的快照（在删除之前保存）
+                            var newNames = con.Select(u => u.Name).ToList();
+                            var toRemove = module.Children.Where(u => !newNames.Contains(u.Alias)).ToArray();
+                            var removedXmls = toRemove.Select(m => m.ExportXml()).ToArray();
+                            var removedSorts = toRemove.Select(m => m.Sort).ToArray();
+
+                            // 4. 执行变更
+                            args.Paramter.Value = con;
+                            args.Paramter.Owner.UpdateReferences();
+                            SyncSwitchChildren(module, con, oldCount);
+
+                            // 5. 记录新增分支的 ID 和快照
+                            var addedIDs = module.Children
+                                .Where(c => !oldChildIDs.Contains(c.ID))
+                                .Select(c => c.ID).ToArray();
+                            var addedXmls = module.Children
+                                .Where(c => !oldChildIDs.Contains(c.ID))
+                                .Select(c => c.ExportXml()).ToArray();
+
+                            // 6. 创建增量式撤销命令
+                            eventBus.OnRecipeChanged(new BranchModifyCommand(
+                                module.ID, oldConditionXml, newConditionXml,
+                                renamedOld.ToArray(), renamedNew.ToArray(),
+                                addedIDs, addedXmls,
+                                removedXmls, removedSorts));
+                        }
+                        else
+                        {
+                            // 非 Switch 或空条件，走原有逻辑
+                            args.Paramter.Value = con;
+                            args.Paramter.Owner.UpdateReferences();
+                            BuildDynCondtion(args.Paramter, con, module);
+                        }
                     }
                     var src = ModuleObj; ModuleObj = null; ModuleObj = src;
                 });
@@ -615,8 +715,22 @@ namespace Luster.Motion.EditorUI.ViewModel
                 {
                     if (r.Parameters.TryGetValue<LExpression>("Express", out var strEx))
                     {
-                        args.Paramter.Value = strEx;
-                        args.Paramter.Owner.UpdateReferences();
+                        var module = args.Paramter.Owner as IMotionModule;
+
+                        // 对 Branch（Judge）模块的表达式修改录入撤销
+                        if (module != null && module.TaskFunction is IBranch)
+                        {
+                            var oldXml = module.ExportXml();
+                            args.Paramter.Value = strEx;
+                            args.Paramter.Owner.UpdateReferences();
+                            var newXml = module.ExportXml();
+                            eventBus.OnRecipeChanged(new BranchModifyCommand(module.ID, oldXml, newXml));
+                        }
+                        else
+                        {
+                            args.Paramter.Value = strEx;
+                            args.Paramter.Owner.UpdateReferences();
+                        }
                     }
                     var src = ModuleObj; ModuleObj = null; ModuleObj = src;
                 });
