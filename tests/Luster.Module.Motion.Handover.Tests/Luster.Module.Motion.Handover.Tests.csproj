@@ -9,6 +9,10 @@
 		<CopyToMotionsFolder>false</CopyToMotionsFolder>
 		<!-- 测试工程排除 NonNullable 警告干扰 -->
 		<Nullable>disable</Nullable>
+		<!-- TES-133: 自动生成 binding redirect,使 bin\*.exe.config 的 newVersion
+		     与 bin 实际 dll 版本一致,避免 xunit host 崩溃 / NUnit FileLoadException -->
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+		<GenerateBindingRedirects>true</GenerateBindingRedirects>
 	</PropertyGroup>
 
 	<ItemGroup>
