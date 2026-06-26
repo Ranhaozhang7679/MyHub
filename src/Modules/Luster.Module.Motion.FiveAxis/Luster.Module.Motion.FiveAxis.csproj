@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- 启用统一拷贝功能:编译产物自动进 Motions\,被 ModuleFactory 反射自动加载(Shell 零改动) -->
+		<CopyToMotionsFolder>true</CopyToMotionsFolder>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- 五轴运动学模块依赖运控功能节点基类 MotionModule / MotionModuleCreator -->
+		<ProjectReference Include="..\Luster.TaskFlow.Motion\Luster.TaskFlow.Motion.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- 路 X 决策:原样迁 MathNet.Numerics 5.0.0(Coord5Axis 用 Matrix<double>/Vector<double>),不重写自研矩阵 -->
+		<PackageReference Include="MathNet.Numerics" />
+		<PackageReference Include="MinVer" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- MathNetExtend 子集原样迁:
+		     PositionBase 继承 RpcLibrary.Components.FieldToPropertyTypeDescriptor,
+		     PositionCustom 用 [RpcLibrary.Attr.Permission(RpcLibrary.Users.UserRoleTypeEnum.Administrator)],
+		     故按"直接引用 dll"既定处理引入 RpcLibrary.dll
+		     (源端 SP-2025140 MathNetExtend.csproj 亦以 ..\vendor\Release\RpcLibrary.dll 引用同一二进制) -->
+		<Reference Include="RpcLibrary">
+			<HintPath>libs\RpcLibrary.dll</HintPath>
+			<Private>true</Private>
+		</Reference>
+		<Reference Include="System.ComponentModel.DataAnnotations" />
+		<Reference Include="System.Drawing" />
+		<Reference Include="System.Windows.Forms" />
+	</ItemGroup>
+
+</Project>
