@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net472</TargetFramework>
+		<IsPackable>false</IsPackable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" />
+		<PackageReference Include="xunit" />
+		<PackageReference Include="xunit.runner.visualstudio" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Modules\Luster.Module.Motion.TestToolchain\Luster.Module.Motion.TestToolchain.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- TES-68 P9-C: ManualStackTests 属 P9-B 手动操作栈测试，依赖未实现的 P9-A DebugProfile/SystemConfig.DebugSetting，暂排除出编译，待 P9-A/B 实现后恢复 -->
+		<Compile Remove="ManualStackTests.cs" />
+	</ItemGroup>
+
+</Project>

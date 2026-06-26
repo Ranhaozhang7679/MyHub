@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<!-- 启用统一拷贝功能，编译产物自动进 Motions\ 目录 -->
+		<CopyToMotionsFolder>true</CopyToMotionsFolder>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Luster.Motion.CommonUI\Luster.Motion.CommonUI.csproj" />
+		<ProjectReference Include="..\Luster.Common.Authorization\Luster.Common.Authorization.csproj" />
+		<ProjectReference Include="..\Luster.Motion.TaskFlow.Engine\Luster.Motion.TaskFlow.Engine.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="MinVer" />
+	</ItemGroup>
+
+</Project>
