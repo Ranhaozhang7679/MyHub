@@ -12,11 +12,12 @@ namespace Luster.Motion.FiveAxis.Service
     /// - 粗标 RoughCalibrate:纯 C# 几何(AngleHelper.CalculateRoateCenter 由三点示教结果算旋转中心),软件可验。
     /// - 激光标定 LaserCalibrate:纯 C# 计算(两点激光读数+Z 高度 → LinearConverter + CameraOffset),软件可验。
     /// - 工件原点示教 CalibrateWorkOrigin:纯 C# 几何(见 TeachWorkOriginResult.CalculateOriginOffset),软件可验。
-    /// - 精标 AccurateCalibrate:⚠️ 源端核心 = station.FrameCal(...) 为**运动卡 SDK 卡端调用**(需先 Frame 进逆解模式),
-    ///   非纯 C#,软件不可复现。实现待 P5-5b:需决策"卡端 FrameCal 接口如何暴露(P0-A ZMotion 适配器?新 IFiveAxisFrameCal?)"。
+    /// - 精标 AccurateCalibrate:卡端 FrameCal 接入(ADR-TES-110 已落地)。严格按源端 frameCal(Form5Cali.cs:1312-1376)
+    ///   顺序编排 IFiveAxisFrame 生命周期(ExitFrame→Frame(粗标)→FrameCal→ExitFrame,try/finally 保证 ExitFrame)。
+    ///   精标 diff ⚠️ 待人类现场验证(卡端 FrameCal + 硬件采点,软件层无法 diff)。
     ///
-    /// 「标定输出参数 diff(源端 vs 迁移后)」验收需源端参考标定输出做基准,且精标依赖卡端 FrameCal ——
-    /// 两者均待项目经理/人类决策,故本接口仅定义契约,实现随 P5-5b 落地。
+    /// 「标定输出参数 diff(源端 vs 迁移后)」验收:精标依赖卡端 FrameCal + 硬件采点,⚠️ 待人类现场验证;
+    /// 纯 C# 三阶段软件可 diff,但需源端标定输出基准(基准来源待人类决策)。
     /// </summary>
     public interface IFiveAxisCalibrationService
     {
@@ -31,10 +32,12 @@ namespace Luster.Motion.FiveAxis.Service
 
         /// <summary>
         /// 精标:由采样球心点列表(accurate.ResultFirstPosi + ResultRxPosiLis + ResultRzPosiLis)+ 粗标参数 + 球半径,
-        /// 计算 accurate.Accurate5Para + ZeroRx。对应源端 Form5Cali.frameCal(:1312)。
-        /// ⚠️ 源端核心计算 station.FrameCal 为运动卡 SDK 卡端调用,实现待 P5-5b 卡端接口决策。
+        /// 计算 accurate.Accurate5Para + ZeroRx。对应源端 Form5Cali.frameCal(:1312-1376)。
+        /// 卡端 FrameCal 接入见 ADR-TES-110(IFiveAxisFrame 旁路接口);严格 Frame 生命周期编排,try/finally 保证 ExitFrame。
+        /// 精标 diff ⚠️ 待人类现场验证(卡端 + 硬件采点)。
         /// </summary>
-        bool AccurateCalibrate(AccurateCaliResult accurate, Coord5Axis rough5Para, double ballRadius, double mrxPulses, double mrzPulses);
+        bool AccurateCalibrate(FiveAxisFrameProfile frameProfile, AccurateCaliResult accurate, Coord5Axis rough5Para,
+            double ballRadius, double mrxPulses, double mrzPulses);
 
         /// <summary>
         /// 激光标定:由两点激光读数+Z 高度 + 标准值 + 激光/相机示教位置,

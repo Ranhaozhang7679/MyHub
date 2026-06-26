@@ -1,6 +1,8 @@
 using FluentAssertions;
 using Luster.Motion.DataStruct.Enums;
 using Luster.Motion.DataStruct.Real;
+using Luster.Motion.FiveAxis.Device;
+using Luster.Motion.FiveAxis.Kinematics;
 using Luster.SimDevice.MotionCard.ZMotion;
 using NUnit.Framework;
 using System;
@@ -19,6 +21,7 @@ namespace Luster.SimDevice.MotionCard.Tests
 
             card.Should().BeAssignableTo<IMotionCard>();
             card.Should().BeAssignableTo<IFiveAxisRTCP>();
+            card.Should().BeAssignableTo<IFiveAxisFrame>();
             card.Brand.Should().Be("正运动");
         }
 
@@ -115,65 +118,38 @@ namespace Luster.SimDevice.MotionCard.Tests
         }
 
         [Test]
-        public void ZMotionMotionCard_ImplementsContiInterpAndLatchBypassContracts()
+        public void FiveAxisFrame_SimulationMode_OrchestratesFrameLifecycleWithoutHardware()
         {
-            // R1 非侵入验证:旁路接口与 IFiveAxisRTCP 同层,仅 ZMotion 五轴适配器实现。
-            var card = new ZMotionMotionCard { SimulationMode = true };
-            card.Should().BeAssignableTo<IFiveAxisContiInterp>();
-            card.Should().BeAssignableTo<IFiveAxisLatch>();
+            // ADR-TES-110:IFiveAxisFrame 卡端实现。SimulationMode 下短路返回 true,供软件层编排联调。
+            var frame = new ZMotionMotionCard { SimulationMode = true, AxisCount = 8 };
+            frame.InitApi();
+            var realLis = new List<int> { 1, 2, 3, 4, 5 };
+            var virLis = new List<int> { 6, 7, 8, 9, 10 };
+            var para = new Coord5Axis();
+
+            frame.ExitFrame(realLis, virLis).Should().BeTrue();
+            frame.Frame(crdIndex: 1, realLis, virLis, para).Should().BeTrue();
+            var axisPosi = new List<double[]>
+            {
+                new double[] { 1, 2, 3, 10, 20 },
+                new double[] { 4, 5, 6, 30, 40 },
+            };
+            var ok = frame.FrameCal(crdIndex: 1, realLis.Take(3).ToList(), axisPosi, out var aZero, out var accuratePara);
+
+            ok.Should().BeTrue();
+            aZero.Should().Be(0);                       // 模拟模式给默认零点(真机精度见 R-F4)
+            accuratePara.Should().NotBeNull();
         }
 
         [Test]
-        public void SimulationMode_ContiInterpRunsFullLifecycleWithDeterministicStubs()
+        public void FiveAxisFrame_Reframe_ThrowsNotImplemented_AsContractStub()
         {
-            // ADR v2 虚拟分支确定性桩值:ReadContiOutFlag 按注入点位递增、GetContiRemainSpace 返回充足,
-            // 让虚拟端到端链跑通;M-13 finally 关闭契约由节点层保证,此处验证卡端 Open/Add/Stop/Close 不抛异常。
-            var card = new ZMotionMotionCard { SimulationMode = true, AxisCount = 5 };
-            card.InitApi();
-            var conti = (IFiveAxisContiInterp)card;
+            // ADR-TES-110 范围冻结:Reframe 只留签名,本期不实现,抛 NotImplementedException。
+            var frame = new ZMotionMotionCard { SimulationMode = true, AxisCount = 8 };
+            frame.InitApi();
 
-            conti.CrdContiOpen(0, new[] { 1, 2, 3, 4, 5 }, CrdMode.Absolute).Should().BeTrue();
-            conti.CrdContiStart(0).Should().BeTrue();
-            conti.CrdContiAddLine(0, new[] { 100.0, 0, 0, 0, 0 }, ContiMoveMode.Absolute).Should().BeTrue();
-            conti.CrdContiAddOutput(0, 1, true, 0).Should().BeTrue();
-
-            conti.GetContiRemainSpace(0, out var space).Should().BeTrue();
-            space.Should().BeGreaterThan(0, "虚拟分支应返回充足背压");
-
-            var flag = 0;
-            conti.ReadContiOutFlag(0, ref flag).Should().BeTrue();
-            flag.Should().Be(0, "虚拟分支 ReadContiOutFlag 回读注入的标记号");
-
-            conti.WaitCrdDone(0, 100).Should().BeTrue();
-            conti.CrdContiStop(0).Should().BeTrue();
-            conti.CrdContiClose(0).Should().BeTrue();
-
-            conti.SetSmoothProfile(0, new SmoothProfile { CornerMode = 1, CornerRadius = 0.5, DecelAngle = 30, StopAngle = 60 }).Should().BeTrue();
-        }
-
-        [Test]
-        public void SimulationMode_LatchBatchWaitAndClearWithReplayedPoints()
-        {
-            // ADR v2 虚拟分支:锁存值按注入点位回放;WaitLatched count 批量重载为主路径。
-            var card = new ZMotionMotionCard { SimulationMode = true, AxisCount = 5 };
-            card.InitApi();
-            var latch = (IFiveAxisLatch)card;
-
-            latch.StartLatch(1, new LatchTrigger { LatchIndex = 0, SourceIndex = 0, TriggerEdge = LatchTriggerEdge.RisingEdge, ContinuousMode = true }).Should().BeTrue();
-            // StartLatch 后注入虚拟飞拍触发点(模拟轨迹推进中被锁存的点位)。
-            card.InjectVirtualLatchPoints(0, new[] { 10.0, 20.0, 30.0 });
-
-            latch.WaitLatched(1, 3, 1000, out var positions).Should().BeTrue();
-            positions.Should().HaveCount(3);
-            positions[0].Should().BeApproximately(10.0, 1e-9);
-            positions[2].Should().BeApproximately(30.0, 1e-9);
-
-            // 单值便利重载转调 count=1
-            card.InjectVirtualLatchPoints(0, new[] { 42.0 });
-            latch.WaitLatched(1, 100, out var single).Should().BeTrue();
-            single.Should().BeApproximately(42.0, 1e-9);
-
-            latch.ClearLatch(1).Should().BeTrue();
+            Action act = () => frame.Reframe(crdIndex: 1, new List<int> { 1, 2, 3 }, new List<int> { 4, 5 }, new Coord5Axis());
+            act.Should().Throw<NotImplementedException>();
         }
     }
 }
