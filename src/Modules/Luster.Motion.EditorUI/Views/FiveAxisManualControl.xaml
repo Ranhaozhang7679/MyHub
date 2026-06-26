@@ -15,11 +15,11 @@
     Background="{DynamicResource RegionBrush}"
     mc:Ignorable="d">
     <!--
-        五轴手动控制 UserControl（TES-131/138/139 XAML 骨架）
+        五轴手动控制 UserControl（TES-131/138/139/132 XAML + VM）
         范围：主面板容器 + X/Y/Z/A/C 五轴 Jog 按钮组（10 按钮，±方向 × 5 轴）
         已含（TES-139）：坐标系选择器（SelectedCoordinateFrame）/ 模式开关（IsJogMode）/ 步距/速度输入（MovePara）
-        不含（TES-132）：VM 逻辑 / press-hold 接线 —— 本骨架只声明 {Binding}
-        轴语义：A≡MRx（绕X转）、C≡MRz（绕Z转），UI 层不处理，归 TES-124
+        已含（TES-132）：VM 逻辑 + 10 Jog 命令接线（占位，不接真运动）
+        待办（TES-124）：press-hold 接线 + 真运动调度；轴语义 A≡MRx、C≡MRz 归 TES-124
     -->
     <Border
         BorderBrush="{DynamicResource BorderBrush}"
@@ -69,17 +69,15 @@
                     Margin="8,0,4,0"
                     VerticalAlignment="Center"
                     Text="坐标系" />
+                <!-- 坐标系：ItemsSource 绑 VM.CoordinateFrameOptions（Value=enum,Display=中文），SelectedValue 直绑 enum -->
                 <ComboBox
                     Grid.Column="2"
                     MinWidth="80"
                     Margin="2"
-                    SelectedIndex="0"
-                    SelectedItem="{Binding SelectedCoordinateFrame}">
-                    <ComboBoxItem Content="机械" />
-                    <ComboBoxItem Content="粗略" />
-                    <ComboBoxItem Content="精确" />
-                    <ComboBoxItem Content="工件" />
-                </ComboBox>
+                    DisplayMemberPath="Display"
+                    ItemsSource="{Binding CoordinateFrameOptions}"
+                    SelectedValue="{Binding SelectedCoordinateFrame}"
+                    SelectedValuePath="Value" />
                 <!-- 模式开关：Jog/Step 互斥 RadioButton，绑定 IsJogMode（true=频率Jog，false=步进Step） -->
                 <TextBlock
                     Grid.Column="3"
@@ -98,28 +96,22 @@
                     Margin="2"
                     VerticalAlignment="Center"
                     Content="步进"
-                    GroupName="JogMode" />
+                    GroupName="JogMode"
+                    IsChecked="{Binding IsStepMode, Mode=OneWay}" />
                 <!-- 步距/速度输入：7 档预设，绑定 MovePara（double）。Tips：频率模式=速度，步进模式=步距 -->
                 <TextBlock
                     Grid.Column="6"
                     Margin="16,0,4,0"
                     VerticalAlignment="Center"
                     Text="运行参数" />
+                <!-- 运行参数：ItemsSource 绑 VM.MoveParaOptions（double 集合），SelectedItem 直绑 double -->
                 <ComboBox
                     Grid.Column="7"
                     MinWidth="80"
                     Margin="2"
-                    SelectedIndex="3"
-                    ToolTip="频率模式=速度（mm/s），步进模式=步距（mm）"
-                    SelectedItem="{Binding MovePara}">
-                    <ComboBoxItem Content="0.01" />
-                    <ComboBoxItem Content="0.05" />
-                    <ComboBoxItem Content="0.1" />
-                    <ComboBoxItem Content="0.5" />
-                    <ComboBoxItem Content="1" />
-                    <ComboBoxItem Content="2" />
-                    <ComboBoxItem Content="5" />
-                </ComboBox>
+                    ItemsSource="{Binding MoveParaOptions}"
+                    SelectedItem="{Binding MovePara}"
+                    ToolTip="频率模式=速度（mm/s），步进模式=步距（mm）" />
             </Grid>
 
             <!-- Jog 按钮组：5 行 × 3 列（轴名 | - | +） -->
