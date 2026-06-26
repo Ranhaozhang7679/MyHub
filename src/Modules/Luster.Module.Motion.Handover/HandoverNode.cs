@@ -12,7 +12,6 @@
 
 using Luster.Common.DataStruct.Attributes;
 using Luster.Common.DataStruct.Enums;
-using Luster.Motion.DataStruct.Checkpoint;
 using Luster.Motion.DataStruct.DataModels;
 using Luster.Motion.DataStruct.Enums;
 using Luster.Motion.DataStruct.VDevice;
@@ -20,7 +19,6 @@ using Luster.Module.Motion.Handover.Signals;
 using Luster.TaskFlow.Common.Attributes;
 using Luster.TaskFlow.Motion;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 
 namespace Luster.Module.Motion.Handover
@@ -51,7 +49,7 @@ namespace Luster.Module.Motion.Handover
     /// 位含义引用 <see cref="HandoverSignalBit"/> 字典。</para>
     /// <para><b>不侵入红线</b>:不改 <c>MotionFunction</c> / 既有节点契约,只新增。</para>
     /// </summary>
-    public abstract class HandoverNode : MotionFunction, Luster.Motion.DataStruct.Interfaces.IHandoverSnapshotProvider
+    public abstract class HandoverNode : MotionFunction
     {
         /// <summary>状态机完成步号(对齐源端 step==100 退出)</summary>
         public const int StepDone = 100;
@@ -336,70 +334,6 @@ namespace Luster.Module.Motion.Handover
                 errMsg = $"交握状态机异常:{ex.Message}";
                 MyOwner.OnLog(LogType.Error, errMsg);
                 ClearSignals();
-                return false;
-            }
-        }
-
-        #endregion
-
-        #region checkpoint 快照 seam(ADR-TES-28 ADR-B 补遗,只读采集,不改状态机)
-
-        /// <summary>
-        /// 供 checkpoint 采集的只读快照(ADR-TES-28 ADR-B 要求)。
-        /// <para>读 <see cref="Address"/> 当前配置的握手信号值,组装语义态
-        /// <see cref="HandoverStateSnapshot"/>——装语义态不装 raw uint,与线缆位布局解耦。</para>
-        /// <para><b>只读采集</b>:不改 <see cref="CurrentStep"/> / 不调 <see cref="StepMachine"/> /
-        /// 不写信号,仅经 <see cref="ReadSignal"/> 读当前值。断电恢复时由
-        /// <c>IRecoveryService</c> 据此快照判断交握断点。</para>
-        /// <para>产品位(ProductExist/OK/NG1/NG2)无独立字符串地址(源端为 32 位字内位),
-        /// 此处默认 false,站级若有产品位地址可 override <see cref="ReadProductSignals"/> 补充。</para>
-        /// </summary>
-        /// <returns>交握状态快照;地址未配置或读失败返回当前步号的占位快照</returns>
-        public virtual HandoverStateSnapshot GetSnapshot()
-        {
-            var signals = new HandoverSignalState(
-                ready: SafeRead(Address?.RecReadyAddress),
-                sending: SafeRead(Address?.SendingAddress),
-                transfer: SafeRead(Address?.RecTranSferAddress),
-                interLock: SafeRead(Address?.RecInterLockAddress),
-                heartbeat: SafeRead(Address?.RecHeartBeatAddress),
-                doorLock: SafeRead(Address?.SelfDoorLockAddress),
-                request: false,
-                ReadProductSignals().AsReadOnly(),
-                new List<bool> { false, false, false, false }.AsReadOnly(),
-                new List<bool> { false, false, false, false }.AsReadOnly(),
-                new List<bool> { false, false, false, false }.AsReadOnly());
-
-            bool isOnline = SafeRead(Address?.RecHeartBeatAddress) || SafeRead(Address?.SendHeartBeatAddress);
-
-            return new HandoverStateSnapshot(
-                role: Role.ToString(),
-                currentStep: CurrentStep,
-                isOnline: isOnline,
-                signals: signals,
-                peerStationId: CommDevice?.Name ?? string.Empty,
-                capturedAtUtc: DateTime.UtcNow);
-        }
-
-        /// <summary>
-        /// 读产品在籍信号(站级 override 补充)。
-        /// <para>基类默认返回 4 个 false(无独立产品位地址);站级若有产品 Exist 地址可 override。</para>
-        /// </summary>
-        protected virtual List<bool> ReadProductSignals()
-        {
-            return new List<bool> { false, false, false, false };
-        }
-
-        /// <summary>只读信号读取(空地址/异常返回 false,不触发报警,避免采集干扰状态机)</summary>
-        private bool SafeRead(string address)
-        {
-            if (string.IsNullOrWhiteSpace(address)) return false;
-            try
-            {
-                return ReadSignal(address);
-            }
-            catch
-            {
                 return false;
             }
         }

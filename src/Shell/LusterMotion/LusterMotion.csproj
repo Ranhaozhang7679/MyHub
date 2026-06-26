@@ -78,6 +78,9 @@
         <ProjectReference Include="..\..\Modules\Luster.Common.DataAccess\Luster.Common.DataAccess.csproj" />
         <ProjectReference Include="..\..\Modules\Luster.SimDevice\Luster.SimDevice.csproj" />
         <ProjectReference Include="..\..\Modules\Luster.Motion.DigitalSetup\Luster.Motion.DigitalSetup.csproj" />
+        <!-- TES-55 DeviceEngine 接线：解析 VModbusServer 实例 + 注入读取委托给 HandoverAutoSignalService -->
+        <ProjectReference Include="..\..\Modules\Luster.Motion.DataStruct\Luster.Motion.DataStruct.csproj" />
+        <ProjectReference Include="..\..\Modules\Luster.Module.Motion.Handover\Luster.Module.Motion.Handover.csproj" />
         <ProjectReference Include="..\..\Modules\Luster.Common.Assets\Luster.Common.Assets.csproj" />
         <ProjectReference Include="..\..\Modules\Luster.Control.Wpf.Motion\Luster.Control.Wpf.Motion.csproj" />
         <ProjectReference Include="..\..\Modules\Luster.Motion.AlarmUI\Luster.Motion.AlarmUI.csproj" />

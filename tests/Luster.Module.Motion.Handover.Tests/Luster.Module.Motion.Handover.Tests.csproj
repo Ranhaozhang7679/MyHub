@@ -13,13 +13,20 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.NET.Test.Sdk" />
+		<!-- xunit：Feed/Leave/ICW 状态机单测 (TES-46/47) -->
 		<PackageReference Include="xunit.v3" />
 		<PackageReference Include="xunit.runner.visualstudio" />
 		<PackageReference Include="coverlet.collector" />
+		<!-- NUnit + Moq：HandoverAutoSignalService 单测 (TES-37-6) -->
+		<PackageReference Include="NUnit" />
+		<PackageReference Include="NUnit3TestAdapter" />
+		<PackageReference Include="Moq" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\src\Modules\Luster.Module.Motion.Handover\Luster.Module.Motion.Handover.csproj" />
+		<!-- AutoCommandDispatcher 派发到 IMotionController，单测 mock 之 -->
+		<ProjectReference Include="..\..\src\Modules\Luster.Motion.TaskFlow.Engine\Luster.Motion.TaskFlow.Engine.csproj" />
 	</ItemGroup>
 
 </Project>
