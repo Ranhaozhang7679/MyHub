@@ -1572,7 +1572,7 @@ namespace Luster.Motion.Integration.Web
             }
             var errorData = new
             {
-                message = string.IsNullOrEmpty(errInfo) ? "Stopped for repair" : errInfo,
+                message = string.IsNullOrEmpty(errInfo) ? "Unknown" : errInfo,
                 //sequence = sysConfig.UniteCode,
                 code = string.IsNullOrEmpty(errCode) ? "F99OOOO-01" : errCode,
                 severity = currentSeverity,
@@ -2366,7 +2366,8 @@ namespace Luster.Motion.Integration.Web
             {
                 if (arg1.Result.IsToss && !arg1.Result.Result && !arg1.Result.IsPreviousStationUndo)
                 {
-                    AlarmEvent("tossing", arg1.Result.NgCode, arg1.Result.ErrMsg);
+                    var msg1 = arg1.Result.ErrMsg ?? string.Empty;
+                    AlarmEvent("tossing", arg1.Result.NgCode, msg1.IndexOf('@') >= 0 ? msg1.Substring(msg1.IndexOf('@') + 1) : msg1); //   arg1.Result.ErrMsg
                 }
             }
         }
@@ -2375,7 +2376,8 @@ namespace Luster.Motion.Integration.Web
         {
             if (!stationResult.IsPreviousStationUndo)
             {
-                AlarmEvent("tossing", stationResult.NgCode, stationResult.ErrMsg);
+                var msg1 = stationResult.ErrMsg ?? string.Empty;
+                AlarmEvent("tossing", stationResult.NgCode, msg1.IndexOf('@') >= 0 ? msg1.Substring(msg1.IndexOf('@') + 1) : msg1); // stationResult.ErrMsg
             }
 
         }

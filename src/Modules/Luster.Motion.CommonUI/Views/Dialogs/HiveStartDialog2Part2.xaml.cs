@@ -101,5 +101,37 @@ namespace Luster.Motion.CommonUI.Views.Dialogs
             PopAction.IsOpen = !PopAction.IsOpen;
         }
 
+        private void Arrow_Tool_Click(object sender, RoutedEventArgs e)
+        {
+            PopTool.IsOpen = !PopTool.IsOpen;
+        }
+
+        private void LbTool_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (LbTool.SelectedItem is { } item)
+            {
+                var desc = item.GetType().GetProperty("Desc")?.GetValue(item)?.ToString();
+                if (desc != null)
+                    VM.Tool = desc;
+                PopTool.IsOpen = false;
+            }
+        }
+
+        private void Arrow_Setting_Click(object sender, RoutedEventArgs e)
+        {
+            PopSetting.IsOpen = !PopSetting.IsOpen;
+        }
+
+        private void LbSetting_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (LbSetting.SelectedItem is { } item)
+            {
+                var desc = item.GetType().GetProperty("Desc")?.GetValue(item)?.ToString();
+                if (desc != null)
+                    VM.Setting = desc;
+                PopSetting.IsOpen = false;
+            }
+        }
+
     }
 }
