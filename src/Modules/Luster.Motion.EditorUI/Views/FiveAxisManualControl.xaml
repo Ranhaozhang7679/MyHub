@@ -46,13 +46,61 @@
                     FontSize="14"
                     FontWeight="Bold"
                     Text="五轴手动控制" />
-                <!-- TODO TES-139: 坐标系选择器（SelectedCoordinateFrame）+ 模式开关（IsJogMode）+ 步距/速度输入（MovePara）放置于此 -->
-                <TextBlock
+                <!-- TES-139 已接入：坐标系选择器 / 模式开关 / 步距-速度输入（VM/enum 归 TES-132） -->
+                <StackPanel
                     Grid.Column="1"
                     HorizontalAlignment="Right"
                     VerticalAlignment="Center"
-                    Foreground="{DynamicResource SecondaryTextBrush}"
-                    Text="(坐标系/模式/步距 待 TES-139 接入)" />
+                    Orientation="Horizontal">
+                    <!-- 坐标系：SelectedCoordinateFrame（enum {Machine,Rough,Accurate,Workpiece}，string↔enum 内置转换） -->
+                    <TextBlock VerticalAlignment="Center" Text="坐标系:" />
+                    <hc:ComboBox
+                        Width="120"
+                        Margin="4,0"
+                        SelectedValue="{Binding SelectedCoordinateFrame}"
+                        SelectedValuePath="Content">
+                        <ComboBoxItem Content="Machine" />
+                        <ComboBoxItem Content="Rough" />
+                        <ComboBoxItem Content="Accurate" />
+                        <ComboBoxItem Content="Workpiece" />
+                    </hc:ComboBox>
+
+                    <!-- 模式：IsJogMode（bool，true=速率Jog / false=步进Step，直绑 IsChecked 无需 Converter） -->
+                    <TextBlock
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        Text="模式:" />
+                    <ToggleButton
+                        Margin="4,0"
+                        VerticalAlignment="Center"
+                        Content="速率 Jog"
+                        IsChecked="{Binding IsJogMode}" />
+
+                    <!-- 步距/速度：MovePara（double，7档；string↔double 内置转换） -->
+                    <TextBlock
+                        Margin="8,0,0,0"
+                        VerticalAlignment="Center"
+                        Text="步距/速度:" />
+                    <hc:ComboBox
+                        Width="80"
+                        Margin="4,0"
+                        SelectedValue="{Binding MovePara}"
+                        SelectedValuePath="Content">
+                        <ComboBoxItem Content="0.01" />
+                        <ComboBoxItem Content="0.05" />
+                        <ComboBoxItem Content="0.1" />
+                        <ComboBoxItem Content="0.5" />
+                        <ComboBoxItem Content="1" />
+                        <ComboBoxItem Content="2" />
+                        <ComboBoxItem Content="5" />
+                    </hc:ComboBox>
+                    <!-- 双语义提示：速率模式=mm/s，步进模式=mm -->
+                    <TextBlock
+                        Margin="4,0,0,0"
+                        VerticalAlignment="Center"
+                        Opacity="0.6"
+                        Text="(速率模式=mm/s, 步进模式=mm)" />
+                </StackPanel>
             </Grid>
 
             <!-- Jog 按钮组：5 行 × 3 列（轴名 | - | +） -->
