@@ -602,7 +602,8 @@ namespace Luster.Motion.ReportUI.ViewModel
             if (curveIndex == _hoveredCurveIndex) return;
             _hoveredCurveIndex = curveIndex;
             IsCurveHovered = curveIndex >= 0;
-            if (IsMergedView && _rawDataCache.Count > 0)
+            // 两种视图共用 _hoveredCurveIndex：合并视图走 BuildMergedLineSeries、分开视图走 RedrawSplit 都消费此状态
+            if (_rawDataCache.Count > 0)
                 RedrawChart();
         }
 
@@ -1184,35 +1185,43 @@ namespace Luster.Motion.ReportUI.ViewModel
         // === 分开模式：左右双子图，共享 Time X 轴 ===
         private void RedrawSplit(double timeMax, double pressMin, double pressMax, double positionMin, double positionMax, double pressAbsMax)
         {
-            // 左侧子图：Time-Press（红）
+            // 左侧子图：Time-Press（红）。两条分支都跳过 _hiddenCurveIndices、按 _hoveredCurveIndex 高亮、Name 携带索引供 View 命中检测反查
             var chart1Series = new List<ISeries>();
             if (_smoothCurveProcessingsEnabled)
             {
-                foreach (var cachedValues in _rawDataCache1)
+                for (int i = 0; i < _rawDataCache1.Count; i++)
                 {
+                    if (_hiddenCurveIndices.Contains(i)) continue;
+                    bool highlight = _hoveredCurveIndex == i;
                     var line = new LineSeries<ObservablePoint>();
-                    line.Stroke = new SolidColorPaint(Colors.Red.ToSKColor(), 1);
+                    line.Stroke = new SolidColorPaint(
+                        highlight ? HighlightColor : Colors.Red.ToSKColor(),
+                        highlight ? HighlightStrokeWidth : NormalStrokeWidth);
                     line.LineSmoothness = 0;
                     line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
                     line.GeometrySize = 0;
                     line.MiniatureShapeSize = 0;
-                    line.Name = null;
-                    line.Values = new List<ObservablePoint>(cachedValues);
+                    line.Name = $"{CurveNamePrefix}{i}";
+                    line.Values = new List<ObservablePoint>(_rawDataCache1[i]);
                     chart1Series.Add(line);
                 }
             }
             else
             {
-                foreach (var cachedValues in _rawDataCache)
+                for (int i = 0; i < _rawDataCache.Count; i++)
                 {
+                    if (_hiddenCurveIndices.Contains(i)) continue;
+                    bool highlight = _hoveredCurveIndex == i;
                     var line = new LineSeries<ObservablePoint>();
-                    line.Stroke = new SolidColorPaint(Colors.Red.ToSKColor(), 1);
+                    line.Stroke = new SolidColorPaint(
+                        highlight ? HighlightColor : Colors.Red.ToSKColor(),
+                        highlight ? HighlightStrokeWidth : NormalStrokeWidth);
                     line.LineSmoothness = 0;
                     line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
                     line.GeometrySize = 0;
                     line.MiniatureShapeSize = 0;
-                    line.Name = null;
-                    line.Values = new List<ObservablePoint>(cachedValues);
+                    line.Name = $"{CurveNamePrefix}{i}";
+                    line.Values = new List<ObservablePoint>(_rawDataCache[i]);
                     chart1Series.Add(line);
                 }
             }
@@ -1257,18 +1266,22 @@ namespace Luster.Motion.ReportUI.ViewModel
 
             DrawStepAnnotations(chart1Series, _steps, pressMax, xMax);
 
-            // 右侧子图：Time-Position（蓝，共享 Time X 轴）
+            // 右侧子图：Time-Position（蓝，共享 Time X 轴）。同索引配对：左图删除/高亮第 i 条 → 右图同步
             var chart2Series = new List<ISeries>();
-            foreach (var cachedValues in _rawTimePositionCache)
+            for (int i = 0; i < _rawTimePositionCache.Count; i++)
             {
+                if (_hiddenCurveIndices.Contains(i)) continue;
+                bool highlight = _hoveredCurveIndex == i;
                 var line = new LineSeries<ObservablePoint>();
-                line.Stroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
+                line.Stroke = new SolidColorPaint(
+                    highlight ? HighlightColor : Colors.Blue.ToSKColor(),
+                    highlight ? HighlightStrokeWidth : NormalStrokeWidth);
                 line.LineSmoothness = 0;
                 line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
                 line.GeometrySize = 0;
                 line.MiniatureShapeSize = 0;
-                line.Name = null;
-                line.Values = new List<ObservablePoint>(cachedValues);
+                line.Name = $"{CurveNamePrefix}{i}";
+                line.Values = new List<ObservablePoint>(_rawTimePositionCache[i]);
                 chart2Series.Add(line);
             }
 

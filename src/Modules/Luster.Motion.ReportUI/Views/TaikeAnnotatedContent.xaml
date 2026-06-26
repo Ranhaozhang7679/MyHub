@@ -156,12 +156,20 @@
                         </Grid.RowDefinitions>
                         <TextBlock Grid.Row="0" Text="Force_Arc (Time-Press)" FontWeight="Bold"
                                    HorizontalAlignment="Center" FontSize="13" Margin="0,2" />
-                        <chart:CartesianChart Grid.Row="1"
+                        <chart:CartesianChart x:Name="SplitChartLeft" Grid.Row="1"
                             Series="{Binding Series}"
                             XAxes="{Binding XAxes}"
                             YAxes="{Binding YAxes}"
                             LegendPosition="Hidden"
-                            TooltipPosition="Hidden" />
+                            TooltipPosition="Hidden">
+                            <chart:CartesianChart.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="删除该曲线"
+                                              Command="{Binding DeleteHoveredCurveCommand}"
+                                              IsEnabled="{Binding IsCurveHovered}" />
+                                </ContextMenu>
+                            </chart:CartesianChart.ContextMenu>
+                        </chart:CartesianChart>
                     </Grid>
                 </Border>
 
@@ -175,12 +183,20 @@
                         </Grid.RowDefinitions>
                         <TextBlock Grid.Row="0" Text="Move_Arc (Time-Position)" FontWeight="Bold"
                                    HorizontalAlignment="Center" FontSize="13" Margin="0,2" />
-                        <chart:CartesianChart Grid.Row="1"
+                        <chart:CartesianChart x:Name="SplitChartRight" Grid.Row="1"
                             Series="{Binding Series2}"
                             XAxes="{Binding XAxes2}"
                             YAxes="{Binding YAxes2}"
                             LegendPosition="Hidden"
-                            TooltipPosition="Hidden" />
+                            TooltipPosition="Hidden">
+                            <chart:CartesianChart.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="删除该曲线"
+                                              Command="{Binding DeleteHoveredCurveCommand}"
+                                              IsEnabled="{Binding IsCurveHovered}" />
+                                </ContextMenu>
+                            </chart:CartesianChart.ContextMenu>
+                        </chart:CartesianChart>
                     </Grid>
                 </Border>
             </Grid>
