@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="HandyControl" />
+    <PackageReference Include="Luster.Prism" />
+    <PackageReference Include="MinVer" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- MotionVM / SysRole / RoleChangeEvent / 权限门控（CommonUI 传递带入 TaskFlow.Engine、Assets、Authorization.Client） -->
+    <ProjectReference Include="..\Luster.Motion.CommonUI\Luster.Motion.CommonUI.csproj" />
+    <!-- ParamGrid 控件 -->
+    <ProjectReference Include="..\Luster.Control.Wpf.Motion\Luster.Control.Wpf.Motion.csproj" />
+    <!-- IDeviceEngine / ILightController / IDevice 设备契约 -->
+    <ProjectReference Include="..\Luster.Motion.DataStruct\Luster.Motion.DataStruct.csproj" />
+    <!-- OverTimeFunction（ParamGrid SelectedObject 数据契约基类，[Parameter] 反射源） -->
+    <ProjectReference Include="..\Luster.TaskFlow.Motion\Luster.TaskFlow.Motion.csproj" />
+  </ItemGroup>
+
+</Project>
