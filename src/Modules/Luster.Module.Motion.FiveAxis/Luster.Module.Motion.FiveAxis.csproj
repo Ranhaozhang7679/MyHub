@@ -8,6 +8,8 @@
 	<ItemGroup>
 		<!-- 五轴运动学模块依赖运控功能节点基类 MotionModule / MotionModuleCreator -->
 		<ProjectReference Include="..\Luster.TaskFlow.Motion\Luster.TaskFlow.Motion.csproj" />
+		<!-- P5-5:标定/配置数据模型实现 IXMLParser(平台 XElement round-trip 约定),需平台数据结构接口 -->
+		<ProjectReference Include="..\Luster.Common.DataStruct\Luster.Common.DataStruct.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
