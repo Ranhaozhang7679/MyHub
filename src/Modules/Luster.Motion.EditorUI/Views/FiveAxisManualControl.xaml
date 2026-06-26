@@ -15,9 +15,9 @@
     Background="{DynamicResource RegionBrush}"
     mc:Ignorable="d">
     <!--
-        五轴手动控制 UserControl（TES-131/138 XAML 骨架）
+        五轴手动控制 UserControl（TES-131/138/139 XAML 骨架）
         范围：主面板容器 + X/Y/Z/A/C 五轴 Jog 按钮组（10 按钮，±方向 × 5 轴）
-        不含（TES-139）：坐标系选择器 / 模式开关 / 步距输入 —— 顶部已预留区域
+        已含（TES-139）：坐标系选择器（SelectedCoordinateFrame）/ 模式开关（IsJogMode）/ 步距/速度输入（MovePara）
         不含（TES-132）：VM 逻辑 / press-hold 接线 —— 本骨架只声明 {Binding}
         轴语义：A≡MRx（绕X转）、C≡MRz（绕Z转），UI 层不处理，归 TES-124
     -->
@@ -34,25 +34,92 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <!-- 顶部标题 + TES-139 预留区 -->
+            <!-- 顶部标题 + TES-139 控件区（坐标系/模式/步距） -->
             <Grid Grid.Row="0" Margin="0,0,0,8">
                 <Grid.ColumnDefinitions>
+                    <!-- 标题 -->
                     <ColumnDefinition Width="Auto" />
+                    <!-- 坐标系 Label -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- 坐标系 ComboBox -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- 模式 Label -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- 模式 RadioButton：频率（Jog） -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- 模式 RadioButton：步进（Step） -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- 运行参数 Label -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- 运行参数 ComboBox -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- 右侧弹性占位 -->
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
                 <TextBlock
                     Grid.Column="0"
+                    Margin="0,0,16,0"
                     VerticalAlignment="Center"
                     FontSize="14"
                     FontWeight="Bold"
                     Text="五轴手动控制" />
-                <!-- TODO TES-139: 坐标系选择器（SelectedCoordinateFrame）+ 模式开关（IsJogMode）+ 步距/速度输入（MovePara）放置于此 -->
+                <!-- 坐标系选择器：4 档（机械/粗略/精确/工件），绑定 SelectedCoordinateFrame -->
                 <TextBlock
                     Grid.Column="1"
-                    HorizontalAlignment="Right"
+                    Margin="8,0,4,0"
                     VerticalAlignment="Center"
-                    Foreground="{DynamicResource SecondaryTextBrush}"
-                    Text="(坐标系/模式/步距 待 TES-139 接入)" />
+                    Text="坐标系" />
+                <ComboBox
+                    Grid.Column="2"
+                    MinWidth="80"
+                    Margin="2"
+                    SelectedIndex="0"
+                    SelectedItem="{Binding SelectedCoordinateFrame}">
+                    <ComboBoxItem Content="机械" />
+                    <ComboBoxItem Content="粗略" />
+                    <ComboBoxItem Content="精确" />
+                    <ComboBoxItem Content="工件" />
+                </ComboBox>
+                <!-- 模式开关：Jog/Step 互斥 RadioButton，绑定 IsJogMode（true=频率Jog，false=步进Step） -->
+                <TextBlock
+                    Grid.Column="3"
+                    Margin="16,0,4,0"
+                    VerticalAlignment="Center"
+                    Text="模式" />
+                <RadioButton
+                    Grid.Column="4"
+                    Margin="2"
+                    VerticalAlignment="Center"
+                    Content="频率"
+                    GroupName="JogMode"
+                    IsChecked="{Binding IsJogMode}" />
+                <RadioButton
+                    Grid.Column="5"
+                    Margin="2"
+                    VerticalAlignment="Center"
+                    Content="步进"
+                    GroupName="JogMode" />
+                <!-- 步距/速度输入：7 档预设，绑定 MovePara（double）。Tips：频率模式=速度，步进模式=步距 -->
+                <TextBlock
+                    Grid.Column="6"
+                    Margin="16,0,4,0"
+                    VerticalAlignment="Center"
+                    Text="运行参数" />
+                <ComboBox
+                    Grid.Column="7"
+                    MinWidth="80"
+                    Margin="2"
+                    SelectedIndex="3"
+                    ToolTip="频率模式=速度（mm/s），步进模式=步距（mm）"
+                    SelectedItem="{Binding MovePara}">
+                    <ComboBoxItem Content="0.01" />
+                    <ComboBoxItem Content="0.05" />
+                    <ComboBoxItem Content="0.1" />
+                    <ComboBoxItem Content="0.5" />
+                    <ComboBoxItem Content="1" />
+                    <ComboBoxItem Content="2" />
+                    <ComboBoxItem Content="5" />
+                </ComboBox>
             </Grid>
 
             <!-- Jog 按钮组：5 行 × 3 列（轴名 | - | +） -->

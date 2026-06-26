@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net472</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>Luster.Tools.UIHost</AssemblyName>
+    <RootNamespace>Luster.Tools.UIHost</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Modules\Luster.Motion.EditorUI\Luster.Motion.EditorUI.csproj" />
+  </ItemGroup>
+
+</Project>
