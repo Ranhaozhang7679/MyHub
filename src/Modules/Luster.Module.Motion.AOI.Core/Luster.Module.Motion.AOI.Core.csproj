@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+        <CopyToMotionsFolder>true</CopyToMotionsFolder>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Luster.TaskFlow.Motion\Luster.TaskFlow.Motion.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="MinVer" />
+	</ItemGroup>
+
+	<!-- Copy site-profile sample configs to output -->
+	<Target Name="CopySiteProfiles" AfterTargets="Build">
+		<ItemGroup>
+			<SiteProfileFiles Include="$(MSBuildProjectDirectory)\SiteProfiles\**\*" />
+		</ItemGroup>
+		<Copy SourceFiles="@(SiteProfileFiles)"
+			  DestinationFolder="$(OutputPath)SiteProfiles\%(RecursiveDir)"
+			  SkipUnchangedFiles="true" />
+	</Target>
+
+</Project>
