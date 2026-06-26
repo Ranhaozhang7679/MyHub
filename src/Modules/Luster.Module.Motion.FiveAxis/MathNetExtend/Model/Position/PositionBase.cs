@@ -1,16 +1,13 @@
-using RpcLibrary.Components;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MathNetExtend.Model.Position
+namespace Luster.Motion.FiveAxis.Position
 {
     [Serializable]
-    [TypeConverter(typeof(ExpandableObjectConverter))]
-    public class PositionBase : FieldToPropertyTypeDescriptor
+    public class PositionBase
     {
         public PositionBase()
         {

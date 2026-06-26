@@ -1,18 +1,15 @@
-using MathNetExtend.Converter;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MathNetExtend.Model.Position
+namespace Luster.Motion.FiveAxis.Position
 {
     /// <summary>
     /// 包括XYZ的坐标类型
     /// </summary>
     [Serializable]
-    [TypeConverter(typeof(PositionXYZConverter))]
     public class PositionXYZ : PositionXY
     {
         public PositionXYZ()
