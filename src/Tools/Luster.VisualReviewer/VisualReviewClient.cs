@@ -24,10 +24,7 @@ namespace Luster.VisualReviewer
         }
 
         /// <summary>评审截图;失败降级返回 Degraded 报告,不抛</summary>
-        /// <remarks>contract 参数保留向后兼容(调用方 Program.cs 仍读契约文件传入),
-        /// 但优化 prompt 不再依赖契约全文——像素可见维度已自包含在 prompt 里。
-        /// 源码级合规(契约里的 hc:前缀/资源键/校验样式)另走 XAML 静态分析,不在此评。</remarks>
-        public ReviewReport Review(byte[] png, string contract, string viewName)
+        public ReviewReport Review(byte[] png, string viewName)
         {
             try
             {

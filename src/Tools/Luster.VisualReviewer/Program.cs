@@ -7,7 +7,7 @@ namespace Luster.VisualReviewer
 {
     /// <summary>
     /// VisualReviewer 命令行入口:
-    /// VisualReviewer.exe --screenshot &lt;png&gt; --report &lt;out.json&gt; [--contract &lt;md&gt;] [--view &lt;名&gt;]
+    /// VisualReviewer.exe --screenshot &lt;png&gt; --report &lt;out.json&gt; [--view &lt;名&gt;]
     /// 评阅截图 → 写 JSON 报告 → 追加工作区 View 级 + 根级 index.md
     /// 退出码:0=成功,1=参数错误,2=视觉模型不可达(降级,仍落盘截图+报告)
     /// </summary>
@@ -24,14 +24,12 @@ namespace Luster.VisualReviewer
             {
                 Console.Error.WriteLine(
                     "用法: VisualReviewer --screenshot <png> --report <out.json> " +
-                    "[--contract <md>] [--view <名>]");
+                    "[--view <名>]");
                 return 1;
             }
 
             string shot = map["screenshot"];
             string reportPath = map["report"];
-            // 契约默认 docs/wpf-design-contract.md(由 Task 8 创建);缺失返回空串,不阻塞
-            string contract = ContractReader.Read(map.TryGetValue("contract", out var c) ? c : "docs/wpf-design-contract.md");
             string viewName = map.TryGetValue("view", out var v) ? v : Path.GetFileNameWithoutExtension(shot);
 
             // 安全修正:API key 仅从环境变量读取,缺失不 fallback 硬编码 key;
@@ -43,7 +41,7 @@ namespace Luster.VisualReviewer
                 byte[] png = File.ReadAllBytes(shot);
 
                 var client = new VisualReviewClient(apiKey);
-                var report = client.Review(png, contract, viewName);
+                var report = client.Review(png, viewName);
                 report.Screenshot = shot;
 
                 // 落盘 JSON 报告(确保目录存在)

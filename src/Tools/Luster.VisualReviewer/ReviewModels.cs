@@ -47,6 +47,6 @@ namespace Luster.VisualReviewer
     public interface IVisualReviewClient
     {
         /// <summary>评审截图,返回结构化报告;失败降级不抛</summary>
-        ReviewReport Review(byte[] png, string contract, string viewName);
+        ReviewReport Review(byte[] png, string viewName);
     }
 }

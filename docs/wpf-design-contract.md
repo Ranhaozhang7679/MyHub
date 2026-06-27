@@ -177,11 +177,12 @@ VisualReviewer 调用视觉模型时,以下维度作为评阅 checklist,每项�
 |------|--------|--------------------|
 | **overlap** | 控件无重叠、无遮挡 | 文字被图标盖住、按钮互相压、表格列内容被截断 |
 | **spacing** | 留白/间距一致、无突兀 | 同行控件间距不一、Margin 负值导致贴边、分区无间距挤成一团 |
-| **control-lib** | 用 HandyControl/Luster 控件库 + 资源键 | 裸 `Button`/`TextBox`/`Border` 自绘、写死 hex 颜色、写死像素高度/圆角 |
 | **font** | 字号走三档(20/14/12)或图标档(16/28/32) | 出现 13/15/18 等非档位字号、标题不够大、正文过小 |
 | **layout** | 三分区清晰、对齐、紧凑 | 主操作区与状态区混淆、控件基线不齐、固定像素宽度在缩放下溢出 |
 
-> 评阅输出 JSON,字段:`overlap` / `spacing` / `control-lib` / `font` / `layout`,每项 `{verdict, evidence}`;任一 fail 则整体不通过,回写 Issue 到工作区索引供下游修复。
+> 源码级维度(控件库前缀 `hc:`、资源键 `{StaticResource}`、写死值、字号档位字面值)不在视觉模型评阅范围——视觉模型从像素看不到这些。源码级检查由 `Luster.XamlLinter` 静态解析覆盖,见 SKILL.md Step 4。
+
+> 评阅输出 JSON,字段:`overlap` / `spacing` / `font` / `layout`,每项 `{verdict, evidence}`;任一 fail 则整体不通过,回写 Issue 到工作区索引供下游修复。
 
 ---
 
