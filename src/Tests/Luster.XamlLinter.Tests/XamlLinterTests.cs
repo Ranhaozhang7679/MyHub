@@ -214,5 +214,31 @@ namespace Luster.XamlLinter.Tests
             var report = XamlLinter.Lint(xaml, "V");
             Assert.Contains(report.Issues, i => i.Rule == "inline-template");
         }
+
+        [Fact]
+        public void HcAttachedSize_TitleWidth_Reports()
+        {
+            // 契约§4:hc:InfoElement.TitleWidth 写死像素值应引 Sizes.xaml Key(M1 补的 hc: 附加属性盲区)
+            string xaml = @"<UserControl xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation""
+                xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml""
+                xmlns:hc=""https://handyorg.github.io/handycontrol"">
+                <hc:TextBox hc:InfoElement.TitleWidth=""80""/>
+            </UserControl>";
+            var report = XamlLinter.Lint(xaml, "V");
+            Assert.Contains(report.Issues, i => i.Rule == "hardcoded-size"
+                && i.Description.Contains("TitleWidth"));
+        }
+
+        [Fact]
+        public void HcAttachedSize_Binding_NoIssue()
+        {
+            string xaml = @"<UserControl xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation""
+                xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml""
+                xmlns:hc=""https://handyorg.github.io/handycontrol"">
+                <hc:TextBox hc:InfoElement.TitleWidth=""{Binding W}""/>
+            </UserControl>";
+            var report = XamlLinter.Lint(xaml, "V");
+            Assert.DoesNotContain(report.Issues, i => i.Description.Contains("TitleWidth"));
+        }
     }
 }

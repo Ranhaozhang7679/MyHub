@@ -33,7 +33,8 @@ namespace Luster.VisualReviewer
         /// <summary>评分 0-10;降级时为 -1</summary>
         public int Score;
 
-        /// <summary>设计契约是否提供: present / missing</summary>
+        /// <summary>设计时数据(mock VM)是否就绪: present / missing。由 PreviewHost sidecar 透传,
+        /// Reviewer 从像素无法判断,无 sidecar 时默认 present(向后兼容)。</summary>
         public string DesignData = "present";
 
         /// <summary>降级标记:网络/key 失败为 true</summary>

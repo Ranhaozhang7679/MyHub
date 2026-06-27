@@ -39,6 +39,14 @@ namespace Luster.XamlLinter
             "MinWidth", "MinHeight", "MaxWidth", "MaxHeight"
         };
 
+        /// <summary>契约 §4:HandyControl 附加属性里的尺寸类(写死像素值也应引 Sizes.xaml Key)。
+        /// 这些是 hc: 附加属性,Member.LocalName 去掉 owner 前缀,故用短名匹配 + ns==HandyControlNs 判断。
+        /// 例:hc:InfoElement.TitleWidth / hc:TitleElement.TitleWidth / hc:InfoElement.TitlePlacement</summary>
+        public static readonly HashSet<string> HcAttachedSizeProperties = new HashSet<string>
+        {
+            "TitleWidth", "TitlePlacement"
+        };
+
         /// <summary>契约 §3 字号三档(标题20/正文14/标签12),图标字号 16/28/32 另算不算正文</summary>
         public static readonly HashSet<int> ValidFontSizes = new HashSet<int> { 12, 14, 20 };
 

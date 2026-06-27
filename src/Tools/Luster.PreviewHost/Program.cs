@@ -83,6 +83,10 @@ namespace Luster.PreviewHost
                 }
                 Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(opts.Out)));
                 File.WriteAllBytes(opts.Out, result.PngBytes);
+                // 落 sidecar <png>.meta.json:记录设计时数据是否就绪,供 Reviewer 读取设 DesignData 字段
+                // (Reviewer 无法从像素判断 mock VM 是否填充,需 PreviewHost 透传该信号)
+                File.WriteAllText(opts.Out + ".meta.json",
+                    "{ \"DesignDataPresent\": " + (result.DesignDataPresent ? "true" : "false") + " }");
                 string warning = !result.DesignDataPresent
                     ? (designDataMissing
                         ? " [警告: 无设计时数据(d:DesignInstance 别名不可解析或 VM 类型未找到)]"

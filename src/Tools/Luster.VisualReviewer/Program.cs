@@ -43,6 +43,9 @@ namespace Luster.VisualReviewer
                 var client = new VisualReviewClient(apiKey);
                 var report = client.Review(png, viewName);
                 report.Screenshot = shot;
+                // 读 PreviewHost 落的 sidecar <png>.meta.json,据此设 DesignData(present/missing)。
+                // 无 sidecar(旧截图/手制截图)时保持 "present"(向后兼容,不阻塞评阅)。
+                report.DesignData = ReadDesignDataPresent(shot) ? "present" : "missing";
 
                 // 落盘 JSON 报告(确保目录存在)
                 Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(reportPath)));
@@ -70,6 +73,23 @@ namespace Luster.VisualReviewer
             {
                 Console.Error.WriteLine("VisualReviewer 异常: " + ex.GetType().Name + ": " + ex.Message);
                 return 1;
+            }
+        }
+
+        /// <summary>读 PreviewHost 落的 sidecar &lt;png&gt;.meta.json 的 DesignDataPresent;
+        /// 无 sidecar 或解析失败返回 true(向后兼容,默认按有数据评阅,不阻塞)。</summary>
+        private static bool ReadDesignDataPresent(string screenshotPath)
+        {
+            try
+            {
+                string metaPath = screenshotPath + ".meta.json";
+                if (!File.Exists(metaPath)) return true;
+                var jo = Newtonsoft.Json.Linq.JObject.Parse(File.ReadAllText(metaPath));
+                return (bool)jo["DesignDataPresent"];
+            }
+            catch
+            {
+                return true;
             }
         }
     }

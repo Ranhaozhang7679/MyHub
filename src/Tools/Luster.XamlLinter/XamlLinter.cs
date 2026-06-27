@@ -104,6 +104,19 @@ namespace Luster.XamlLinter
                                 Location = "L" + currentLine
                             });
                         }
+                        // hc: 附加属性里的尺寸类(契约§4:hc:InfoElement.TitleWidth 等写死值也应引 Sizes.xaml Key)
+                        else if (currentMemberNs == RuleConfig.HandyControlNs
+                                 && RuleConfig.HcAttachedSizeProperties.Contains(currentMemberName)
+                                 && IsNumericValue(val))
+                        {
+                            report.Issues.Add(new LintIssue
+                            {
+                                Severity = "medium",
+                                Rule = "hardcoded-size",
+                                Description = $"hc: 附加属性 {currentMemberName} 写死 {val},应引用 Sizes.xaml Key",
+                                Location = "L" + currentLine
+                            });
+                        }
                         // 字号三档:FontSize 不在 12/14/20 内(标题20/正文14/标签12)
                         else if (currentMemberName == "FontSize" && int.TryParse(val, out int fs)
                                  && !RuleConfig.ValidFontSizes.Contains(fs))
