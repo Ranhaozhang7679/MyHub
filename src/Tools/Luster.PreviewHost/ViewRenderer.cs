@@ -33,8 +33,23 @@ namespace Luster.PreviewHost
         public static RenderResult Render(RenderRequest req)
         {
             var result = new RenderResult();
+            // 主题(App.xaml)在主 STA 线程加载,View 也须在同一线程实例化,
+            // 否则引用未冻结主题画刷/控件时跨线程访问抛 InvalidOperationException,
+            // 且工作线程无 Dispatcher 消息循环致绑定/布局不完整。
+            // 故:当前已是 STA(如 Program.Main)→ 直接同线程渲染,共享主线程 Dispatcher 上下文;
+            //     否则(MTA/测试线程)→ 退回新建 STA 线程(保留向后兼容)。
+            if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
+            {
+                try { RenderCore(req, result); }
+                catch (Exception ex)
+                {
+                    result.Success = false;
+                    result.Error = ex.GetType().Name + ": " + ex.Message;
+                }
+                return result;
+            }
+
             Exception workerError = null;
-            // WPF 要求 STA 线程
             var thread = new Thread(() =>
             {
                 try { RenderCore(req, result); }

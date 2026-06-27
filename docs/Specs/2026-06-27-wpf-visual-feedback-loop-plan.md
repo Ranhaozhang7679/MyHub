@@ -1183,7 +1183,7 @@ namespace Luster.VisualReviewer
             byte[] png = File.ReadAllBytes(shot);
             // API key 从环境变量取,避免入库
             string apiKey = Environment.GetEnvironmentVariable("SILICONFLOW_API_KEY")
-                            ?? "sk-leqnhfzfndjoamnpnruragqmvhpamdgoaqcnrktgvyovgjix";
+                            ?? "<从 SILICONFLOW_API_KEY 环境变量取,缺失则空串走降级>";
             var client = new VisualReviewClient(apiKey);
             var report = client.Review(png, contract, viewName);
             report.Screenshot = shot;
