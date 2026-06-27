@@ -6,7 +6,8 @@ packages/
 
 # 暂时性忽略一些AI的输出文件
 # .claude：忽略本地配置(settings.local.json 等)，放行团队共享的 skills
-.claude/
+.claude/*
+!.claude/skills/
 openspec/
 docs/superpowers/
 CLAUDE.md
