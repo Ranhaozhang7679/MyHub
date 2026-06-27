@@ -38,6 +38,17 @@ namespace Luster.XamlLinter
                                 Location = "L" + line
                             });
                         }
+                        // 内联 Style:View 内 <Style> 应进资源字典,View 内只 {StaticResource} 引用
+                        if (xt.PreferredXamlNamespace == RuleConfig.PresentationNs && xt.Name == "Style")
+                        {
+                            report.Issues.Add(new LintIssue
+                            {
+                                Severity = "medium",
+                                Rule = "inline-style",
+                                Description = "View 内联 <Style> 应进资源字典,View 内只 {StaticResource} 引用",
+                                Location = "L" + LineOf(reader)
+                            });
+                        }
                     }
                     else if (reader.NodeType == System.Xaml.XamlNodeType.StartMember)
                     {
@@ -75,6 +86,18 @@ namespace Luster.XamlLinter
                                 Severity = "medium",
                                 Rule = "hardcoded-size",
                                 Description = $"{currentMemberName} 写死 {val},应引用 Sizes.xaml Key",
+                                Location = "L" + currentLine
+                            });
+                        }
+                        // 字号三档:FontSize 不在 12/14/20 内(标题20/正文14/标签12)
+                        else if (currentMemberName == "FontSize" && int.TryParse(val, out int fs)
+                                 && !RuleConfig.ValidFontSizes.Contains(fs))
+                        {
+                            report.Issues.Add(new LintIssue
+                            {
+                                Severity = "low",
+                                Rule = "font-size-tier",
+                                Description = $"FontSize={fs} 不在三档(12/14/20)",
                                 Location = "L" + currentLine
                             });
                         }

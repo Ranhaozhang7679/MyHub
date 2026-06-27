@@ -130,5 +130,41 @@ namespace Luster.XamlLinter.Tests
             Assert.True(report.Issues.Where(i => i.Rule == "hardcoded-size").Count() >= 3,
                 $"应至少报 3 个 hardcoded-size(Padding/Margin/CornerRadius),实际 {report.Issues.Where(i => i.Rule == "hardcoded-size").Count()}");
         }
+
+        [Fact]
+        public void InlineStyle_Reported()
+        {
+            string xaml = @"<UserControl xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation""
+                xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml"">
+                <UserControl.Resources>
+                    <Style TargetType=""Button""/>
+                </UserControl.Resources>
+                <Grid></Grid>
+            </UserControl>";
+            var report = XamlLinter.Lint(xaml, "V");
+            Assert.Contains(report.Issues, i => i.Rule == "inline-style");
+        }
+
+        [Fact]
+        public void FontSize_OutOfTier_ReportsLow()
+        {
+            string xaml = @"<UserControl xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation""
+                xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml"">
+                <TextBlock FontSize=""16""/>
+            </UserControl>";
+            var report = XamlLinter.Lint(xaml, "V");
+            Assert.Contains(report.Issues, i => i.Rule == "font-size-tier" && i.Severity == "low");
+        }
+
+        [Fact]
+        public void FontSize_InTier_NoIssue()
+        {
+            string xaml = @"<UserControl xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation""
+                xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml"">
+                <TextBlock FontSize=""14""/>
+            </UserControl>";
+            var report = XamlLinter.Lint(xaml, "V");
+            Assert.DoesNotContain(report.Issues, i => i.Rule == "font-size-tier");
+        }
     }
 }
