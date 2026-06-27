@@ -2,6 +2,13 @@
 
     <PropertyGroup>
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <!-- 缺失 UseWPF 导致 <Page> XAML 不编译为 BAML,运行时 pack URI 解析不到资源
+             (如 /Luster.Controls.Wpf;component/Themes/Generic.xaml)。
+             兄弟模块(Luster.Common.Assets 等)均显式启用,此处补齐。Task4 冒烟时发现并修复。 -->
+        <UseWPF>true</UseWPF>
+        <!-- 本 csproj 用显式 <Page Include> 列表管理 XAML(不同于兄弟模块的自动包含),
+             关闭默认 Page 自动包含以避免 NETSDK1022 重复项。 -->
+        <EnableDefaultPageItems>false</EnableDefaultPageItems>
     </PropertyGroup>
 
     <ItemGroup>
