@@ -187,6 +187,10 @@ namespace Luster.Motion.CommonUI.Models
                               Name = "Project" ,page_IsSelected=false,Region="ProjectContent",
                               Iconfont="\xe61c",page_IsVisible=true,page_IsEnabled=true,
                               AuthItemName="VizPageProject" },
+                          new PageModel() {
+                              Name = "LightTuning" ,page_IsSelected=false,Region="LightTuningContent",
+                              Iconfont="\xe6b6",page_IsVisible=true,page_IsEnabled=true,
+                              AuthItemName="VizPageLightTuning" },
 
                     };
 
