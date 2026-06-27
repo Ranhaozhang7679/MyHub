@@ -57,5 +57,17 @@ namespace Luster.VisualReviewer.Tests
             Assert.True(report.Degraded);
             Assert.Empty(report.Issues);
         }
+
+        [Fact]
+        public void Review_EmptyApiKey_DegradesViaProductionCatch()
+        {
+            // 空 key → CallModel 守卫抛 InvalidOperationException → Review 的 catch 捕获 → Degraded 报告
+            // 直接走 production VisualReviewClient.Review,不触网,验证真实降级路径
+            var client = new VisualReviewClient("");
+            var report = client.Review(new byte[0], "契约", "YyyView");
+            Assert.True(report.Degraded);
+            Assert.Equal(-1, report.Score);
+            Assert.Empty(report.Issues);
+        }
     }
 }
