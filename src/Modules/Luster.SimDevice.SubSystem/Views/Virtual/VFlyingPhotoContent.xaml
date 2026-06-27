@@ -685,21 +685,21 @@
                                                     Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.MoveTeachCommand}"
                                                     CommandParameter="{Binding}"
                                                     Content="{lang:Lang Key={x:Static lang:LangKeys.Move}}"
-                                                    IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Integrator}"
+                                                    IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Engineer}"
                                                     Style="{StaticResource ButtonSuccess.Small}" />
                                                 <Button
                                                     Margin="0"
                                                     Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.UpdateTeachCommand}"
                                                     CommandParameter="{Binding}"
                                                     Content="{lang:Lang Key={x:Static lang:LangKeys.Update}}"
-                                                    IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Integrator}"
+                                                    IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Engineer}"
                                                     Style="{StaticResource ButtonWarning.Small}" />
                                                 <Button
                                                     Margin="0"
                                                     Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.RemovePositionCommand}"
                                                     CommandParameter="{Binding}"
                                                     Content="{lang:Lang Key={x:Static lang:LangKeys.Delete}}"
-                                                    IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Integrator}"
+                                                    IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Engineer}"
                                                     Style="{StaticResource ButtonDanger.Small}" />
                                             </hc:ElementGroup>
                                         </DataTemplate>

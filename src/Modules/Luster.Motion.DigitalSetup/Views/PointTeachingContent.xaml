@@ -174,7 +174,7 @@
                                     Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.MoveTeachCommand}"
                                     CommandParameter="{Binding}"
                                     Content="{lang1:Lang Key={x:Static lang1:LangKeys.Move}}"
-                                    IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Integrator}"
+                                    IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Engineer}"
                                     Style="{StaticResource ButtonSuccess.Small}" />
                                     </hc:ElementGroup>
                                 </DataTemplate>
@@ -246,7 +246,7 @@
                                         Command="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext.MoveTeachCommand}"
                                         CommandParameter="{Binding}"
                                         Content="{lang1:Lang Key={x:Static lang1:LangKeys.Move}}"
-                                        IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Integrator}"
+                                        IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Engineer}"
                                         Style="{StaticResource ButtonSuccess.Small}" />
                                 </hc:ElementGroup>
                             </DataTemplate>
