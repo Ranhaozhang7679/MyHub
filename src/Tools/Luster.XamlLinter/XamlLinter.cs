@@ -52,6 +52,18 @@ namespace Luster.XamlLinter
                                 Location = "L" + LineOf(reader)
                             });
                         }
+                        // 内联模板:View 内 <ControlTemplate>/<DataTemplate> 等自绘应进资源字典(契约§1禁自绘/§6模板进字典)
+                        if (xt.PreferredXamlNamespace == RuleConfig.PresentationNs
+                            && RuleConfig.InlineTemplateNames.Contains(xt.Name))
+                        {
+                            report.Issues.Add(new LintIssue
+                            {
+                                Severity = "medium",
+                                Rule = "inline-template",
+                                Description = $"View 内联 <{xt.Name}> 应进资源字典,View 内只 {{StaticResource}} 引用",
+                                Location = "L" + LineOf(reader)
+                            });
+                        }
                     }
                     else if (reader.NodeType == System.Xaml.XamlNodeType.StartMember)
                     {

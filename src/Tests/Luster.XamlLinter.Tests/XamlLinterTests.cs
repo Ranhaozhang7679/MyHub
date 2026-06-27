@@ -185,5 +185,34 @@ namespace Luster.XamlLinter.Tests
             int line = int.Parse(lineStr);
             Assert.True(line > 0, $"行号应 > 0,实际 {line}");
         }
+
+        [Fact]
+        public void InlineTemplate_ControlTemplate_Reports()
+        {
+            // 契约§1禁自绘/§6模板进资源字典:View 内联 ControlTemplate 应报
+            string xaml = @"<UserControl xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation""
+                xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml"">
+                <UserControl.Resources>
+                    <ControlTemplate TargetType=""Button""><Border/></ControlTemplate>
+                </UserControl.Resources>
+                <Grid></Grid>
+            </UserControl>";
+            var report = XamlLinter.Lint(xaml, "V");
+            Assert.Contains(report.Issues, i => i.Rule == "inline-template" && i.Severity == "medium");
+        }
+
+        [Fact]
+        public void InlineTemplate_DataTemplate_Reports()
+        {
+            string xaml = @"<UserControl xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation""
+                xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml"">
+                <UserControl.Resources>
+                    <DataTemplate><TextBlock/></DataTemplate>
+                </UserControl.Resources>
+                <Grid></Grid>
+            </UserControl>";
+            var report = XamlLinter.Lint(xaml, "V");
+            Assert.Contains(report.Issues, i => i.Rule == "inline-template");
+        }
     }
 }

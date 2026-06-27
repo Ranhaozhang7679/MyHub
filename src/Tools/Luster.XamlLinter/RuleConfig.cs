@@ -41,5 +41,11 @@ namespace Luster.XamlLinter
 
         /// <summary>契约 §3 字号三档(标题20/正文14/标签12),图标字号 16/28/32 另算不算正文</summary>
         public static readonly HashSet<int> ValidFontSizes = new HashSet<int> { 12, 14, 20 };
+
+        /// <summary>契约 §1/§6:View 内禁自绘的模板元素(presentation ns),应进资源字典</summary>
+        public static readonly HashSet<string> InlineTemplateNames = new HashSet<string>
+        {
+            "ControlTemplate", "DataTemplate", "ItemsPanelTemplate", "HierarchicalDataTemplate"
+        };
     }
 }

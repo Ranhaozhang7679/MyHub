@@ -8,7 +8,7 @@ namespace Luster.VisualReviewer
         /// <summary>严重度: high / medium / low</summary>
         public string Severity;
 
-        /// <summary>问题分类: overlap / spacing / control-lib / font / ...</summary>
+        /// <summary>问题分类: overlap / spacing / layout / font(像素可见维度;源码级维度由 XamlLinter 覆盖)</summary>
         public string Category;
 
         /// <summary>问题描述</summary>

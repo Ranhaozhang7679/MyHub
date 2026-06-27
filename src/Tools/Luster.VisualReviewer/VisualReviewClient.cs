@@ -119,8 +119,9 @@ namespace Luster.VisualReviewer
    - layout:控件对齐、分区是否清晰、信息密度是否合理
    - font:字号视觉大小是否协调(标题>正文>标签)、有无过小看不清的文字
 4. score 0-10,10=视觉无瑕疵。issues 只列 warn/fail 项(pass 项不进 issues)。
-5. 只返回 JSON,不要 markdown 包裹:
-{""summary"":"""",""score"":0,""issues"":[{""severity"":"""",""category"":"""",""description"":"""",""location"":""""}]}";
+5. summary 必填,用一句中文总结整体观感(不得为空串)。若 score≥9 且 issues 为空,summary 必须说明判定无瑕的具体依据(如分区清晰、字号协调、无重叠);若 score≤6,summary 须点出主要扣分项。
+6. 只返回 JSON,不要 markdown 包裹:
+{""summary"":""一句整体观感"",""score"":0,""issues"":[{""severity"":"""",""category"":"""",""description"":"""",""location"":""""}]}";
             var body = new
             {
                 model = Model,

@@ -1,6 +1,6 @@
 # WPF 页面设计契约(LMV-2026)
 
-> 人读规范 + 视觉模型评阅 prompt 双用途。VisualReviewer 调用视觉模型时,本文档作为评阅标准加载;开发人员新增/修改 View 时,本文档为硬性约束。改动需同步 PreviewHost / VisualReviewer。
+> 人读规范 + 视觉模型评阅维度来源。VisualReviewer 的 prompt 自包含像素可见维度(见 §7),**不加载本文档全文**;开发人员新增/修改 View 时,本文档为硬性约束。维度变更需同步 §8 清单所列三处。
 
 > 资源键来源:`src/Modules/Luster.Common.Assets/Themes/` 与 `src/Modules/Luster.Motion.Assests/Themes/`,由 Shell `App.xaml` 全局合并(含 HandyControl `SkinDefault.xaml` + `Theme.xaml`)。本文档所述 Key 均为实际扫描结果,非占位。
 
@@ -191,4 +191,8 @@ VisualReviewer 调用视觉模型时,以下维度作为评阅 checklist,每项�
 - **新增资源键**:先在对应 `Basic/*.xaml` 或 `Styles/Style.xaml` 定义,再回填本文档 §2 对应小节,最后在 View 引用。三步缺一即视为违反契约。
 - **删除/改名资源键**:全局 `Grep` 确认无引用,同步更新本文档,避免 View 引用悬空导致 `StaticResource` 解析异常(运行时白屏)。
 - **亮/暗皮肤**:颜色键必须同时提供 `Colors.xaml`(亮)与 `ColorsDark.xaml`(暗)两份;画刷用 `DynamicResource` 绑定 Color,保证皮肤切换生效。
-- **契约与 PreviewHost/VisualReviewer 同步**:本文档结构变更(如新增评阅维度)须同步检查 `ContractReader` 解析逻辑与视觉模型 prompt 模板。
+- **契约与 PreviewHost/VisualReviewer/XamlLinter 同步**(防漂移):本文档维度变更(如新增/移除评阅维度、改禁裸清单、改字号档位)须同步检查以下三处,缺一即视为违反契约:
+  1. `src/Tools/Luster.VisualReviewer/VisualReviewClient.cs` 的 `CallModel` prompt 模板(像素可见维度);
+  2. `src/Tools/Luster.XamlLinter/RuleConfig.cs` 规则清单(源码级维度:禁裸控件/颜色属性/尺寸属性/字号档位);
+  3. 本节(§8)及 §7。
+  > 历史曾因改 prompt 未同步契约导致 `control-lib` 维度漂移(视觉模型套模板瞎报源码级假问题),故立此清单。`ContractReader` 已于 P1 移除(prompt 不再加载契约全文),勿再引用。
