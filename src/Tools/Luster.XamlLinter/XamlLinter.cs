@@ -11,8 +11,11 @@ namespace Luster.XamlLinter
         public static LintReport Lint(string xamlContent, string viewName)
         {
             var report = new LintReport { View = viewName, Xaml = "(inline)" };
-            using (var reader = new System.Xaml.XamlXmlReader(XmlReader.Create(
-                new System.IO.StringReader(xamlContent))))
+            // 开启 ProvideLineInfo:默认 XamlXmlReader 不带 IXamlLineInfo,LineOf 会返回 0 → Location 全 L0
+            // net472 System.Xaml 无 XamlXmlReader.Create 静态方法,改用 TextReader + XamlXmlReaderSettings 构造重载
+            var settings = new System.Xaml.XamlXmlReaderSettings { ProvideLineInfo = true };
+            using (var reader = new System.Xaml.XamlXmlReader(
+                new System.IO.StringReader(xamlContent), settings))
             {
                 // 状态机:StartMember 记录当前属性名/命名空间/行号,Value 据此判断写死值。
                 // currentMemberName == null 表示当前属性应跳过(d: 设计时属性 / 非 XAML 标准属性)。

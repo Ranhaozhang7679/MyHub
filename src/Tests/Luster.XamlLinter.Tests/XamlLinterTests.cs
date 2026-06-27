@@ -166,5 +166,24 @@ namespace Luster.XamlLinter.Tests
             var report = XamlLinter.Lint(xaml, "V");
             Assert.DoesNotContain(report.Issues, i => i.Rule == "font-size-tier");
         }
+
+        [Fact]
+        public void Issue_HasLineNumber()
+        {
+            // 裸控件应报出真实行号(Location 非 L0)
+            string xaml = @"<UserControl xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation""
+                xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml"">
+                <Grid>
+                    <Button Content=""ok""/>
+                </Grid>
+            </UserControl>";
+            var report = XamlLinter.Lint(xaml, "V");
+            var issue = Assert.Single(report.Issues);
+            // Location 应为 "L<行号>",行号 > 0(Button 在第 4 行附近)
+            Assert.StartsWith("L", issue.Location);
+            var lineStr = issue.Location.Substring(1);
+            int line = int.Parse(lineStr);
+            Assert.True(line > 0, $"行号应 > 0,实际 {line}");
+        }
     }
 }
