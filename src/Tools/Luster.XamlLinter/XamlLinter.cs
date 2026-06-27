@@ -98,8 +98,8 @@ namespace Luster.XamlLinter
         private static bool IsHexColor(string val)
             => System.Text.RegularExpressions.Regex.IsMatch(val, @"^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$");
 
-        /// <summary>判断是否为裸数值(像素值,如 30 / 80 / 1.5),非 Auto/NaN/标记扩展</summary>
+        /// <summary>判断是否为裸数值或逗号分隔多值(像素值,如 30 / 1.5 / "5,2" / "5,2,5,2"),非 Auto/NaN/标记扩展</summary>
         private static bool IsNumericValue(string val)
-            => System.Text.RegularExpressions.Regex.IsMatch(val, @"^-?[0-9]+(\.[0-9]+)?$");
+            => System.Text.RegularExpressions.Regex.IsMatch(val, @"^-?[0-9]+(\.[0-9]+)?(,-?[0-9]+(\.[0-9]+)?)*$");
     }
 }

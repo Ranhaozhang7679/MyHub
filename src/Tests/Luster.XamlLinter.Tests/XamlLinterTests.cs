@@ -1,4 +1,5 @@
 using Luster.XamlLinter;
+using System.Linq;
 using Xunit;
 
 namespace Luster.XamlLinter.Tests
@@ -113,6 +114,21 @@ namespace Luster.XamlLinter.Tests
             </UserControl>";
             var report = XamlLinter.Lint(xaml, "V");
             Assert.DoesNotContain(report.Issues, i => i.Rule == "hardcoded-size");
+        }
+
+        [Fact]
+        public void HardcodedSize_MultiValue_Reports()
+        {
+            // 契约 §2.4 原例:Padding="5,2" / Margin="5,2,5,2" / CornerRadius="4,2,4,2" 也是写死值,应报 hardcoded-size
+            string xaml = @"<UserControl xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation""
+                xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml"">
+                <Border Padding=""5,2"" Margin=""5,2,5,2"" CornerRadius=""4,2,4,2""/>
+            </UserControl>";
+            var report = XamlLinter.Lint(xaml, "V");
+            // 三处写死尺寸都应报(Padding/Margin/CornerRadius)
+            Assert.Contains(report.Issues, i => i.Rule == "hardcoded-size");
+            Assert.True(report.Issues.Where(i => i.Rule == "hardcoded-size").Count() >= 3,
+                $"应至少报 3 个 hardcoded-size(Padding/Margin/CornerRadius),实际 {report.Issues.Where(i => i.Rule == "hardcoded-size").Count()}");
         }
     }
 }
