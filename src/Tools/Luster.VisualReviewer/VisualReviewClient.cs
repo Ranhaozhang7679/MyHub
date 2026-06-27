@@ -101,7 +101,7 @@ namespace Luster.VisualReviewer
         /// <summary>调 siliconflow OpenAI 兼容接口,返回 choices[0].message.content</summary>
         /// <remarks>不再接 contract:优化 prompt 自包含像素可见维度,不依赖契约全文。
         /// 契约含源码级维度(hc:前缀/资源键/校验样式),视觉模型从像素看不到,
-        /// 套契约条款只会瞎猜源码级假问题。源码级合规另走 XAML 静态分析(未来工具)。</remarks>
+        /// 套契约条款只会瞎猜源码级假问题。源码级合规另走 Luster.XamlLinter 静态解析。</remarks>
         private string CallModel(byte[] png)
         {
             if (string.IsNullOrEmpty(_apiKey))
