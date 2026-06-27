@@ -594,9 +594,9 @@ namespace Luster.PreviewHost.Tests
     /// <summary>进程级 CLI 集成测试:跑实际 exe 验退出码与产物</summary>
     public class ProgramCliTests
     {
+        // 测试工程 ProjectReference PreviewHost,exe 与测试 dll 同输出目录(artifacts/bin/net472/)
         private static string ExePath =>
-            Path.Combine(System.AppContext.BaseDirectory, "..", "..", "..", "..",
-                "artifacts", "bin", "net472", "Luster.PreviewHost.exe");
+            Path.Combine(System.AppContext.BaseDirectory, "Luster.PreviewHost.exe");
 
         [Fact(Skip = "集成测试:需先 build,手动启用")]
         public void Cli_RendersSampleView_ToPng()
@@ -651,6 +651,8 @@ namespace Luster.PreviewHost
                 var app = System.Windows.Application.Current ?? new App();
                 // 触发主题加载(确保资源字典就绪)
                 _ = app.TryFindResource("null_sentinel") == null; // no-op,触发合并
+                // 注:实际实现须调 app.InitializeComponent() 才能触发 App.xaml 主题字典合并,
+                // 仅 new App() 不会加载主题(Task4 实现时修正)
 
                 // 解析 --xaml 拿 d:DesignInstance(若未显式给 --designvm)
                 string designVm = opts.DesignVm;
@@ -689,7 +691,7 @@ namespace Luster.PreviewHost
                                   (result.DesignDataPresent ? "" : " [警告: 无设计时数据]"));
                 return 0;
             }
-            catch (System.Windows.Markup.XamlException ex)
+            catch (System.Windows.Markup.XamlParseException ex) // net472 用 XamlParseException,XamlException 不存在
             {
                 Console.Error.WriteLine("主题加载失败: " + ex.Message);
                 return 3;
