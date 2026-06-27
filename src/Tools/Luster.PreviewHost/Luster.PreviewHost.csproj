@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <UseWPF>true</UseWPF>
+    <PlatformTarget>x64</PlatformTarget>
+    <AssemblyName>Luster.PreviewHost</AssemblyName>
+    <RootNamespace>Luster.PreviewHost</RootNamespace>
+    <!-- WinExe 默认入口是 App,改用 Program.Main 作为命令行入口(Task 4 填充实现) -->
+    <StartupObject>Luster.PreviewHost.Program</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="HandyControl" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Modules\Luster.Common.Assets\Luster.Common.Assets.csproj" />
+    <ProjectReference Include="..\..\Modules\Luster.Motion.Assests\Luster.Motion.Assests.csproj" />
+    <ProjectReference Include="..\..\Modules\Luster.Controls.Wpf\Luster.Controls.Wpf.csproj" />
+    <ProjectReference Include="..\..\Modules\Luster.Control.Wpf.Motion\Luster.Control.Wpf.Motion.csproj" />
+    <ProjectReference Include="..\..\Modules\Luster.SimDevice.SubSystem\Luster.SimDevice.SubSystem.csproj" />
+  </ItemGroup>
+</Project>

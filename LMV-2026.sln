@@ -168,6 +168,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Luster.Module.Motion.FiveAx
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Luster.Module.Motion.Handover.Tests", "tests\Luster.Module.Motion.Handover.Tests\Luster.Module.Motion.Handover.Tests.csproj", "{8A54E0F2-641D-4ACF-B465-5B5D2DD0FF84}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Luster.PreviewHost", "src\Tools\Luster.PreviewHost\Luster.PreviewHost.csproj", "{D6034A9E-6DA4-42FA-9C0D-083FBA1DD623}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -958,6 +960,18 @@ Global
 		{8A54E0F2-641D-4ACF-B465-5B5D2DD0FF84}.Release|x64.Build.0 = Release|Any CPU
 		{8A54E0F2-641D-4ACF-B465-5B5D2DD0FF84}.Release|x86.ActiveCfg = Release|Any CPU
 		{8A54E0F2-641D-4ACF-B465-5B5D2DD0FF84}.Release|x86.Build.0 = Release|Any CPU
+		{D6034A9E-6DA4-42FA-9C0D-083FBA1DD623}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D6034A9E-6DA4-42FA-9C0D-083FBA1DD623}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D6034A9E-6DA4-42FA-9C0D-083FBA1DD623}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{D6034A9E-6DA4-42FA-9C0D-083FBA1DD623}.Debug|x64.Build.0 = Debug|Any CPU
+		{D6034A9E-6DA4-42FA-9C0D-083FBA1DD623}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D6034A9E-6DA4-42FA-9C0D-083FBA1DD623}.Debug|x86.Build.0 = Debug|Any CPU
+		{D6034A9E-6DA4-42FA-9C0D-083FBA1DD623}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D6034A9E-6DA4-42FA-9C0D-083FBA1DD623}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D6034A9E-6DA4-42FA-9C0D-083FBA1DD623}.Release|x64.ActiveCfg = Release|Any CPU
+		{D6034A9E-6DA4-42FA-9C0D-083FBA1DD623}.Release|x64.Build.0 = Release|Any CPU
+		{D6034A9E-6DA4-42FA-9C0D-083FBA1DD623}.Release|x86.ActiveCfg = Release|Any CPU
+		{D6034A9E-6DA4-42FA-9C0D-083FBA1DD623}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1033,5 +1047,6 @@ Global
 		{9DE74D32-1FFD-4072-A7D7-1BFEEA9AE959} = {963873D2-1889-445B-8662-AB04E890FC26}
 		{FBB06AA8-CD79-4279-BB67-8B6925DA07DB} = {963873D2-1889-445B-8662-AB04E890FC26}
 		{8A54E0F2-641D-4ACF-B465-5B5D2DD0FF84} = {963873D2-1889-445B-8662-AB04E890FC26}
+		{D6034A9E-6DA4-42FA-9C0D-083FBA1DD623} = {BE3BB9E3-F1B7-4D12-8DA0-A9EE9E686A98}
 	EndGlobalSection
 EndGlobal
