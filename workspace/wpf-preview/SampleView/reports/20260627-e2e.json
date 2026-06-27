@@ -1,0 +1,16 @@
+{
+  "View": "SampleView",
+  "Screenshot": "workspace/wpf-preview/SampleView/runs/20260627-e2e.png",
+  "Summary": "",
+  "Score": 0,
+  "DesignData": "present",
+  "Degraded": false,
+  "Issues": [
+    {
+      "Severity": "fail",
+      "Category": "control-lib",
+      "Description": "截图为空白，无法评估控件库使用情况、资源键引用、样式规范等设计契约要求。",
+      "Location": "整个截图区域"
+    }
+  ]
+}
