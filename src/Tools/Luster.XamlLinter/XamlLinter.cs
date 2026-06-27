@@ -14,6 +14,12 @@ namespace Luster.XamlLinter
             using (var reader = new System.Xaml.XamlXmlReader(XmlReader.Create(
                 new System.IO.StringReader(xamlContent))))
             {
+                // 状态机:StartMember 记录当前属性名/命名空间/行号,Value 据此判断写死值。
+                // currentMemberName == null 表示当前属性应跳过(d: 设计时属性 / 非 XAML 标准属性)。
+                string currentMemberName = null;
+                string currentMemberNs = null;
+                int currentLine = 0;
+
                 while (reader.Read())
                 {
                     if (reader.NodeType == System.Xaml.XamlNodeType.StartObject)
@@ -33,6 +39,46 @@ namespace Luster.XamlLinter
                             });
                         }
                     }
+                    else if (reader.NodeType == System.Xaml.XamlNodeType.StartMember)
+                    {
+                        currentMemberName = reader.Member.Name;
+                        // 依赖属性:DeclaringType 非 null,取其 ns;附加属性/普通属性退回 Member 自身 ns
+                        currentMemberNs = reader.Member.DeclaringType != null
+                            ? reader.Member.DeclaringType.PreferredXamlNamespace
+                            : reader.Member.PreferredXamlNamespace;
+                        currentLine = LineOf(reader);
+                        // d: 设计时属性(d:DesignHeight 等)跳过,不报 hardcoded-*
+                        if (currentMemberNs == RuleConfig.DesignNs)
+                        {
+                            currentMemberName = null;
+                        }
+                    }
+                    else if (reader.NodeType == System.Xaml.XamlNodeType.Value && currentMemberName != null)
+                    {
+                        string val = (reader.Value ?? "").ToString().Trim();
+                        // 标记扩展 {StaticResource}/{Binding}/{DynamicResource}/{x:Static} 不报
+                        if (val.StartsWith("{")) { /* skip */ }
+                        else if (RuleConfig.ColorProperties.Contains(currentMemberName) && IsHexColor(val))
+                        {
+                            report.Issues.Add(new LintIssue
+                            {
+                                Severity = "medium",
+                                Rule = "hardcoded-color",
+                                Description = $"{currentMemberName} 写死 {val},应 {{StaticResource}} 引用主题色键",
+                                Location = "L" + currentLine
+                            });
+                        }
+                        else if (RuleConfig.SizeProperties.Contains(currentMemberName) && IsNumericValue(val))
+                        {
+                            report.Issues.Add(new LintIssue
+                            {
+                                Severity = "medium",
+                                Rule = "hardcoded-size",
+                                Description = $"{currentMemberName} 写死 {val},应引用 Sizes.xaml Key",
+                                Location = "L" + currentLine
+                            });
+                        }
+                    }
                 }
             }
             report.IssueCount = report.Issues.Count;
@@ -47,5 +93,13 @@ namespace Luster.XamlLinter
             var li = reader as System.Xaml.IXamlLineInfo;
             return (li != null && li.HasLineInfo) ? li.LineNumber : 0;
         }
+
+        /// <summary>判断是否为 #hex 颜色值(支持 #RGB/#RRGGBB/#AARRGGBB)</summary>
+        private static bool IsHexColor(string val)
+            => System.Text.RegularExpressions.Regex.IsMatch(val, @"^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$");
+
+        /// <summary>判断是否为裸数值(像素值,如 30 / 80 / 1.5),非 Auto/NaN/标记扩展</summary>
+        private static bool IsNumericValue(string val)
+            => System.Text.RegularExpressions.Regex.IsMatch(val, @"^-?[0-9]+(\.[0-9]+)?$");
     }
 }

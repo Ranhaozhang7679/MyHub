@@ -54,5 +54,65 @@ namespace Luster.XamlLinter.Tests
             var report = XamlLinter.Lint(xaml, "V");
             Assert.Empty(report.Issues);
         }
+
+        [Fact]
+        public void HardcodedColor_Hex_ReportsMedium()
+        {
+            string xaml = @"<UserControl xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation""
+                xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml"">
+                <TextBlock Background=""#1ba1e2""/>
+            </UserControl>";
+            var report = XamlLinter.Lint(xaml, "V");
+            Assert.Contains(report.Issues, i => i.Rule == "hardcoded-color" && i.Severity == "medium");
+        }
+
+        [Fact]
+        public void HardcodedColor_StaticResource_NoIssue()
+        {
+            string xaml = @"<UserControl xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation""
+                xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml"">
+                <TextBlock Background=""{StaticResource PrimaryBrush}""/>
+            </UserControl>";
+            var report = XamlLinter.Lint(xaml, "V");
+            Assert.DoesNotContain(report.Issues, i => i.Rule == "hardcoded-color");
+        }
+
+        [Fact]
+        public void HardcodedSize_PixelValue_ReportsMedium()
+        {
+            string xaml = @"<UserControl xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation""
+                xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml"">
+                <TextBlock Height=""30"" Width=""80""/>
+            </UserControl>";
+            var report = XamlLinter.Lint(xaml, "V");
+            Assert.Contains(report.Issues, i => i.Rule == "hardcoded-size");
+        }
+
+        [Fact]
+        public void HardcodedSize_Binding_NoIssue()
+        {
+            string xaml = @"<UserControl xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation""
+                xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml"">
+                <TextBlock Height=""{Binding H}""/>
+            </UserControl>";
+            var report = XamlLinter.Lint(xaml, "V");
+            Assert.DoesNotContain(report.Issues, i => i.Rule == "hardcoded-size");
+        }
+
+        [Fact]
+        public void DesignAttribute_Skipped()
+        {
+            // d:DesignHeight 是设计时属性,不报 hardcoded-size
+            string xaml = @"<UserControl xmlns=""http://schemas.microsoft.com/winfx/2006/xaml/presentation""
+                xmlns:x=""http://schemas.microsoft.com/winfx/2006/xaml""
+                xmlns:d=""http://schemas.microsoft.com/expression/blend/2008""
+                xmlns:mc=""http://schemas.openxmlformats.org/markup-compatibility/2006""
+                mc:Ignorable=""d""
+                d:DesignHeight=""450"">
+                <Grid></Grid>
+            </UserControl>";
+            var report = XamlLinter.Lint(xaml, "V");
+            Assert.DoesNotContain(report.Issues, i => i.Rule == "hardcoded-size");
+        }
     }
 }
