@@ -17,7 +17,7 @@
         <converter:EnumLangConverter x:Key="MultiLangConverter" />
         <converter:ColorToBrush x:Key="ColorConverter" />
     </UserControl.Resources>
-    <Grid Background="#F0F2F5" IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Integrator}">
+    <Grid Background="#F0F2F5" IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Engineer}">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="320" />
             <ColumnDefinition Width="*" />

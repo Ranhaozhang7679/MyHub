@@ -129,13 +129,13 @@
                 Command="{Binding ApplyCommand}"
                 Content="Apply"
                 DockPanel.Dock="Right"
-                IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Integrator}" />
+                IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Engineer}" />
         </Grid>
         <ScrollViewer Grid.Row="1">
             <param:ParamGrid
                 MinHeight="120"
                 Margin="0"
-                HasPermission="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Integrator}"
+                HasPermission="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Engineer}"
                 PreviewMouseDown="Preview_LeftButtonDown"
                 SelectedObject="{Binding ModuleObj}">
                 <hc:Interaction.Triggers>

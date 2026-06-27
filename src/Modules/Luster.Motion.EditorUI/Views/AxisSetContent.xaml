@@ -99,7 +99,7 @@
                         </Grid>
                     </GroupBox.Header>
                     <ScrollViewer Grid.Row="1">
-                        <ItemsControl IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Integrator}" ItemsSource="{Binding HasAxisDatas}">
+                        <ItemsControl IsEnabled="{Binding SysRole, Converter={StaticResource RoleEnabledCoverter}, ConverterParameter=Engineer}" ItemsSource="{Binding HasAxisDatas}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
                                     <hc:UniformSpacingPanel
