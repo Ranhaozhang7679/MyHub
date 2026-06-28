@@ -5,6 +5,7 @@ using Luster.Motion.EditorUI.ViewModel;
 using Luster.Motion.EditorUI.ViewModel.Dialogs;
 using Luster.Motion.EditorUI.Views;
 using Luster.Motion.EditorUI.Views.Dialogs;
+using Luster.Motion.FiveAxis.Service;
 using Luster.Motion.TaskFlow.Engine;
 using Prism.Ioc;
 using Prism.Modularity;
@@ -68,6 +69,10 @@ namespace Luster.Motion.EditorUI
 
             // 注册配置导页面
             containerRegistry.RegisterForNavigation<FlowContent, FlowContentVM>();
+            // FiveAxis 标定服务(激光/粗标/精标/原点),LaserCaliTabViewModel 依赖
+            containerRegistry.RegisterSingleton<IFiveAxisCalibrationService, FiveAxisCalibrationService>();
+            // 激光标定 Tab 导航宿主(AutoWireViewModel 自动接 LaserCaliTabViewModel)
+            containerRegistry.RegisterForNavigation<LaserCaliTabView>();
         }
     }
 }
