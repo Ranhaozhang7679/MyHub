@@ -26,7 +26,7 @@ namespace Luster.Motion.EditorUI.ViewModel
     /// 匹配 TES-140 留下的 LaserCaliTabView.xaml 绑定契约:
     /// 激光↔Z 轴两点定标(LaserStandard/LaserMap.Map1|Map2.DirectValue|UnitValue)+ 激光/相机示教位置
     /// (LaserPosi/CameraPosi)+ 实时读取(RealtimeLaserValue)+ 各点位更新按钮(6 个 DelegateCommand)。
-    /// VM 只做设备取数 + 写回模型,不调 LaserCalibrate(标定执行属其它 issue)。
+    /// VM 做设备取数 + 写回模型,并通过 ApplyCalibrateCommand 调 Service.LaserCalibrate 求解(UI/算法解耦)。
     /// 实时读时序 / 轴名映射 / 单值提取 ⚠️ 待人类现场验证。
     /// </summary>
     public class LaserCaliTabViewModel : MotionPageVM, IDisposable
