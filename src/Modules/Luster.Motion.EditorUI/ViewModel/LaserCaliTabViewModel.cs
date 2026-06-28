@@ -31,6 +31,7 @@ namespace Luster.Motion.EditorUI.ViewModel
     public class LaserCaliTabViewModel : MotionPageVM, IDisposable
     {
         // 标定 Service 注入保留,供后续标定执行 issue 调 LaserCalibrate 使用(本 issue 不调)。
+        // 即便调用,frame=null 仅阻塞精标 AccurateCalibrate,激光/粗标/原点三阶段可用;精标 frame 由精标执行 issue 运行时从 IDeviceEngine 取卡注入。
         private readonly IFiveAxisCalibrationService _caliService;
         private readonly IDeviceEngine _deviceEngine;
 
