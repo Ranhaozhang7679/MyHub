@@ -41,10 +41,11 @@ namespace Luster.Module.Motion.FiveAxis.Tests
     [TestFixture]
     public class LaserCaliTabViewModelTests
     {
-        private static LaserCaliTabViewModel CreateVm(FakeDeviceEngine engine = null)
+        private static LaserCaliTabViewModel CreateVm(FakeDeviceEngine engine = null, FakeCalibrationService service = null)
         {
             engine = engine ?? new FakeDeviceEngine();
-            return new LaserCaliTabViewModel(new FakeCommonBus(), new FakeCalibrationService(), engine);
+            service = service ?? new FakeCalibrationService();
+            return new LaserCaliTabViewModel(new FakeCommonBus(), service, engine);
         }
 
         [Test]
@@ -64,6 +65,9 @@ namespace Luster.Module.Motion.FiveAxis.Tests
             vm.RefreshPoint2Command.Should().NotBeNull();
             vm.RefreshLaserPosiCommand.Should().NotBeNull();
             vm.RefreshCameraPosiCommand.Should().NotBeNull();
+            vm.ApplyCalibrateCommand.Should().NotBeNull();
+            vm.SaveCommand.Should().NotBeNull();
+            vm.LoadCommand.Should().NotBeNull();
         }
 
         [Test]
@@ -214,16 +218,129 @@ namespace Luster.Module.Motion.FiveAxis.Tests
             act.Should().NotThrow();
         }
 
+        // ===== 验收标准 #2:VM 调 Service =====
+
+        /// <summary>
+        /// ApplyCalibrateCommand 应调 Service.LaserCalibrate,传入当前两点激光读数+Z 高度+标准值,
+        /// 并由 Service 写回 _result(走 Service 路径,非 VM 内联)。
+        /// </summary>
+        [Test]
+        public void ApplyCalibrateCommand_ShouldInvokeServiceWithCurrentValuesAndWriteBack()
+        {
+            var service = new FakeCalibrationService();
+            var vm = CreateVm(service: service);
+            vm.LaserStandard = 5.0;
+            vm.RealtimeLaserValue = "1.1";
+            vm.RefreshPoint1Command.Execute();
+            vm.RealtimeLaserValue = "2.2";
+            vm.RefreshPoint2Command.Execute();
+
+            vm.ApplyCalibrateCommand.Execute();
+
+            service.LaserCalibrateCalled.Should().BeTrue();
+            service.CapturedLaser1.Should().Be(1.1);
+            service.CapturedZ1.Should().Be(0);
+            service.CapturedLaser2.Should().Be(2.2);
+            service.CapturedZ2.Should().Be(0);
+            service.CapturedLaserStandard.Should().Be(5.0);
+            // Service 写回路径:_result 字段被填回
+            vm.LaserMap.Map1.DirectValue.Should().Be(1.1);
+            vm.LaserMap.Map2.DirectValue.Should().Be(2.2);
+            vm.LaserStandard.Should().Be(5.0);
+            vm.Message.Should().Contain("已完成");
+        }
+
+        /// <summary>Service 返回 false 时,ApplyCalibrateCommand 应写失败 Message</summary>
+        [Test]
+        public void ApplyCalibrateCommand_WhenServiceReturnsFalse_ShouldWriteFailureMessage()
+        {
+            var service = new FakeCalibrationService { LaserCalibrateReturn = false };
+            var vm = CreateVm(service: service);
+
+            vm.ApplyCalibrateCommand.Execute();
+
+            service.LaserCalibrateCalled.Should().BeTrue();
+            vm.Message.Should().Contain("失败");
+        }
+
+        // ===== 验收标准 #3:XML 往返 =====
+
+        /// <summary>Save→Load 内存往返后,LaserStandard/Map1/Map2 字段值应一致(ExportXml→ParserXml)</summary>
+        [Test]
+        public void SaveLoadCommand_XmlRoundTrip_ShouldPreserveLaserFields()
+        {
+            var vm = CreateVm();
+            vm.LaserStandard = 7.5;
+            vm.RealtimeLaserValue = "3.3";
+            vm.RefreshPoint1Command.Execute();
+            vm.RealtimeLaserValue = "4.4";
+            vm.RefreshPoint2Command.Execute();
+
+            vm.SaveCommand.Execute();
+
+            // 改乱当前值
+            vm.LaserStandard = 0;
+            vm.LaserMap.Map1.DirectValue = 0;
+            vm.LaserMap.Map1.UnitValue = 99;
+            vm.LaserMap.Map2.DirectValue = 0;
+            vm.LaserMap.Map2.UnitValue = 99;
+
+            vm.LoadCommand.Execute();
+
+            // XML 往返后字段恢复(ExportXml→ParserXml)
+            vm.LaserStandard.Should().Be(7.5);
+            vm.LaserMap.Map1.DirectValue.Should().Be(3.3);
+            vm.LaserMap.Map1.UnitValue.Should().Be(0);
+            vm.LaserMap.Map2.DirectValue.Should().Be(4.4);
+            vm.LaserMap.Map2.UnitValue.Should().Be(0);
+        }
+
+        /// <summary>未先 Save 直接 Load,应写"无可加载"提示</summary>
+        [Test]
+        public void LoadCommand_WithoutSave_ShouldWriteNoDataMessage()
+        {
+            var vm = CreateVm();
+            vm.LoadCommand.Execute();
+            vm.Message.Should().Contain("无可加载");
+        }
+
         // ===== 手写 fake =====
 
-        /// <summary>最小 fake IFiveAxisCalibrationService(空实现,本 issue VM 不调标定执行)</summary>
+        /// <summary>
+        /// 手写 fake IFiveAxisCalibrationService:LaserCalibrate 记录调用 + 可配置返回值 + 写回 laser
+        /// (对齐 FiveAxisCalibrationService.LaserCalibrate 赋值语义,验证 VM↔Service 写回路径通);其余方法空实现。
+        /// </summary>
         private class FakeCalibrationService : IFiveAxisCalibrationService
         {
+            public bool LaserCalibrateCalled;
+            public bool LaserCalibrateReturn = true;
+            public double CapturedLaser1, CapturedZ1, CapturedLaser2, CapturedZ2, CapturedLaserStandard;
+            public PositionXYZ CapturedLaserPosi, CapturedCameraPosi;
+
             public bool RoughCalibrate(RoughCaliResult rough, double mrxPulses, double mrzPulses) => false;
             public bool AccurateCalibrate(FiveAxisFrameProfile frameProfile, AccurateCaliResult accurate, Coord5Axis rough5Para,
                 double ballRadius, double mrxPulses, double mrzPulses) => false;
             public bool LaserCalibrate(LaserCaliResult laser, double laser1, double z1, double laser2, double z2,
-                double laserStandard, PositionXYZ laserPosi, PositionXYZ cameraPosi) => false;
+                double laserStandard, PositionXYZ laserPosi, PositionXYZ cameraPosi)
+            {
+                LaserCalibrateCalled = true;
+                CapturedLaser1 = laser1; CapturedZ1 = z1;
+                CapturedLaser2 = laser2; CapturedZ2 = z2;
+                CapturedLaserStandard = laserStandard;
+                CapturedLaserPosi = laserPosi; CapturedCameraPosi = cameraPosi;
+                if (LaserCalibrateReturn && laser != null)
+                {
+                    // 写回(对齐 FiveAxisCalibrationService.LaserCalibrate 赋值语义)
+                    laser.LaserStandard = laserStandard;
+                    laser.LaserMap.Map1.DirectValue = laser1;
+                    laser.LaserMap.Map1.UnitValue = z1;
+                    laser.LaserMap.Map2.DirectValue = laser2;
+                    laser.LaserMap.Map2.UnitValue = z2;
+                    laser.LaserPosi = laserPosi;
+                    laser.CameraPosi = cameraPosi;
+                }
+                return LaserCalibrateReturn;
+            }
             public bool CalibrateWorkOrigin(TeachWorkOriginResult origin) => false;
         }
 

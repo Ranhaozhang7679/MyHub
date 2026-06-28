@@ -15,6 +15,7 @@ using System;
 using System.ComponentModel; // PropertyChangedEventArgs(NotifyProperty)
 using System.Linq;
 using System.Threading; // Timer
+using System.Xml.Linq; // XElement(XML 往返)
 
 namespace Luster.Motion.EditorUI.ViewModel
 {
@@ -30,12 +31,25 @@ namespace Luster.Motion.EditorUI.ViewModel
     /// </summary>
     public class LaserCaliTabViewModel : MotionPageVM, IDisposable
     {
-        // 标定 Service 注入保留,供后续标定执行 issue 调 LaserCalibrate 使用(本 issue 不调)。
         private readonly IFiveAxisCalibrationService _caliService;
         private readonly IDeviceEngine _deviceEngine;
 
-        /// <summary>标定结果数据 owner(代理目标,落盘由上层负责)</summary>
-        private readonly LaserCaliResult _result = new LaserCaliResult();
+        /// <summary>五轴标定配置根模型(激光标定 XML 往返容器,_result 挂在其 LaserCali 上)</summary>
+        private readonly FiveAxisCaliProfile _profile;
+
+        /// <summary>标定结果数据 owner(代理目标,挂到 _profile.LaserCali;SaveCommand 走 profile.ExportXml 落盘)</summary>
+        private readonly LaserCaliResult _result;
+
+        /// <summary>XML 往返内存载体(TODO: 落盘路径待上层配置,当前内存往返证明序列化通,不引入文件 IO 强依赖)</summary>
+        private XElement _lastSavedXml;
+
+        /// <summary>标定执行/保存/加载的结果消息(OneWay,UI 提示用)</summary>
+        private string _message;
+        public string Message
+        {
+            get => _message;
+            set => SetProperty(ref _message, value);
+        }
 
         // ===== 实时读取状态 =====
         private bool _isRealtimeReading;
@@ -45,12 +59,15 @@ namespace Luster.Motion.EditorUI.ViewModel
         /// <summary>
         /// 构造:ICommonBus 走基类 MotionVM.commonBus 字段(基类构造需要 EventBus 非 null,
         /// 生产环境注入真实 ICommonBus;单测注入 FakeCommonBus)。IDeviceEngine 注入用于真实设备取数。
+        /// _result 挂到 FiveAxisCaliProfile.LaserCali,让 XML 往返有容器(验收标准 #3)。
         /// </summary>
         public LaserCaliTabViewModel(ICommonBus commonBus, IFiveAxisCalibrationService caliService, IDeviceEngine deviceEngine)
             : base(commonBus)
         {
             _caliService = caliService;
             _deviceEngine = deviceEngine;
+            _profile = new FiveAxisCaliProfile();
+            _result = _profile.LaserCali;
         }
 
         protected override void RegisterEvent(IEventAggregator bus)
@@ -153,6 +170,18 @@ namespace Luster.Motion.EditorUI.ViewModel
         /// <summary>更新相机位置:取当前 X/Y/Z 轴位置→CameraPosi</summary>
         private DelegateCommand _refreshCameraPosiCommand;
         public DelegateCommand RefreshCameraPosiCommand => _refreshCameraPosiCommand ?? (_refreshCameraPosiCommand = new DelegateCommand(RefreshCameraPosi));
+
+        /// <summary>执行激光标定:调 IFiveAxisCalibrationService.LaserCalibrate 求解,失败写 Message(验收标准 #2)</summary>
+        private DelegateCommand _applyCalibrateCommand;
+        public DelegateCommand ApplyCalibrateCommand => _applyCalibrateCommand ?? (_applyCalibrateCommand = new DelegateCommand(ApplyCalibrate));
+
+        /// <summary>保存标定结果:走 FiveAxisCaliProfile.ExportXml 落盘往返(验收标准 #3 XML 部分)</summary>
+        private DelegateCommand _saveCommand;
+        public DelegateCommand SaveCommand => _saveCommand ?? (_saveCommand = new DelegateCommand(Save));
+
+        /// <summary>加载标定结果:走 FiveAxisCaliProfile.ParserXml 回填(验收标准 #3 XML 部分)</summary>
+        private DelegateCommand _loadCommand;
+        public DelegateCommand LoadCommand => _loadCommand ?? (_loadCommand = new DelegateCommand(Load));
 
         // ===== 命令实现(真实 VAxis/ILineLaser 绑定)=====
 
@@ -260,6 +289,89 @@ namespace Luster.Motion.EditorUI.ViewModel
         private void RefreshCameraPosi()
         {
             CameraPosi = new PositionXYZ(GetAxisPos('X'), GetAxisPos('Y'), GetAxisPos('Z'));
+        }
+
+        /// <summary>
+        /// 执行激光标定:把当前两点激光读数+Z 高度+标准值+示教位置喂给 Service.LaserCalibrate,
+        /// 由 Service 写回 _result(UI/算法解耦:RefreshPoint1/2 只负责采点,求解走 Service)。
+        /// 成功刷新绑定属性,失败/异常写 Message。
+        /// </summary>
+        private void ApplyCalibrate()
+        {
+            try
+            {
+                var ok = _caliService?.LaserCalibrate(
+                    _result,
+                    _result.LaserMap.Map1.DirectValue,
+                    _result.LaserMap.Map1.UnitValue,
+                    _result.LaserMap.Map2.DirectValue,
+                    _result.LaserMap.Map2.UnitValue,
+                    _result.LaserStandard,
+                    _result.LaserPosi,
+                    _result.CameraPosi);
+                if (ok ?? false)
+                {
+                    // Service 写回 _result 后刷新绑定,让 UI 重读 LaserStandard/LaserMap/LaserPosi/CameraPosi
+                    NotifyProperty(nameof(LaserStandard));
+                    NotifyProperty(nameof(LaserMap));
+                    NotifyProperty(nameof(LaserPosi));
+                    NotifyProperty(nameof(CameraPosi));
+                    Message = "激光标定已完成";
+                }
+                else
+                {
+                    Message = "激光标定失败:Service 返回 false";
+                }
+            }
+            catch (Exception ex)
+            {
+                Message = "激光标定异常:" + ex.Message;
+            }
+        }
+
+        /// <summary>
+        /// 保存标定结果:走 FiveAxisCaliProfile.ExportXml() 产出 XElement。
+        /// TODO(落盘路径待配置): 当前用内存往返(_lastSavedXml)证明 XML 序列化通,不引入文件 IO 强依赖(单测可跑);
+        /// 落盘路径确定后改写文件(上层配方路径 / Profile 管理器)。
+        /// </summary>
+        private void Save()
+        {
+            try
+            {
+                _lastSavedXml = _profile.ExportXml();
+                Message = "标定结果已保存(内存往返,落盘路径待配置)";
+            }
+            catch (Exception ex)
+            {
+                Message = "保存异常:" + ex.Message;
+            }
+        }
+
+        /// <summary>
+        /// 加载标定结果:走 FiveAxisCaliProfile.ParserXml(XElement) 就地回填 _profile.LaserCali(= _result),
+        /// 回填后刷新绑定属性让 UI 重读。
+        /// </summary>
+        private void Load()
+        {
+            try
+            {
+                if (_lastSavedXml == null)
+                {
+                    Message = "无可加载的标定数据(请先保存)";
+                    return;
+                }
+                _profile.ParserXml(_lastSavedXml);
+                // _result 是 _profile.LaserCali 同一引用,ParserXml 就地填充字段,刷新绑定让 UI 重读
+                NotifyProperty(nameof(LaserStandard));
+                NotifyProperty(nameof(LaserMap));
+                NotifyProperty(nameof(LaserPosi));
+                NotifyProperty(nameof(CameraPosi));
+                Message = "标定结果已加载";
+            }
+            catch (Exception ex)
+            {
+                Message = "加载异常:" + ex.Message;
+            }
         }
 
         // ===== 设备辅助 =====
