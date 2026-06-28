@@ -83,7 +83,9 @@ namespace Luster.Module.Motion.Business.Functions
             [Description("CG5Flex绑定CG_68")]
             CG5Flex绑定CG_68,
             [Description("CG5通过WIP查询排线SN")]
-            O
+            O,
+            [Description("通过WIP查询LCFM")]
+            QueryLCFMByWIP
         }
 
         public enum CheckFlag
@@ -199,6 +201,7 @@ namespace Luster.Module.Motion.Business.Functions
         [DependOn("SfcMode", SFCType.J)]
         [DependOn("SfcMode", SFCType.K)]
         [DependOn("SfcMode", SFCType.QueryBlackMaterial)]
+        [DependOn("SfcMode", SFCType.QueryLCFMByWIP)]
         [Parameter("stationID", 12, CN = "stationID", CanRef = ParamRef.Ref)]
         public string stationID { get; set; }
 
@@ -327,9 +330,17 @@ namespace Luster.Module.Motion.Business.Functions
         [Parameter("CableSN", 20, CN = "排线SN", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
         public string CableSN { get; set; }
 
+        [DependOn("SfcMode", SFCType.QueryLCFMByWIP)]
+        [Parameter("LCFMResult", 20, CN = "LCFM码", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
+        public string LCFMResult { get; set; }
+
         [DependOn("SfcMode", SFCType.O)]
         [Parameter("排线SN长度", 9, CN = "排线SN长度", DefaultV = 24)]
         public int CableSNLength { get; set; }
+
+        [DependOn("SfcMode", SFCType.QueryLCFMByWIP)]
+        [Parameter("LCFM码长度", 9, CN = "LCFM码长度", DefaultV = 98)]
+        public int LCFMLength { get; set; }
 
         [DependOn("SfcMode", SFCType.B)]
         [Parameter("上传/不上传", 20, CN = "查询卷料是否上传", ParamType = TaskFlow.Common.Enums.ParamType.OUT)]
@@ -977,6 +988,22 @@ namespace Luster.Module.Motion.Business.Functions
                         return true;
                     }
                     Result = !string.IsNullOrEmpty(CableSN);
+                    break;
+                // 通过WIP查询LCFM
+                case SFCType.QueryLCFMByWIP:
+                    Wip = _sfcHelper.GetWip(SN, WipLength, out errMsg);
+                    if (!string.IsNullOrEmpty(errMsg))
+                    {
+                        MyOwner.OnAlarm(AlarmType.InfoTip, errMsg, AlarmCode);
+                        return true;
+                    }
+                    LCFMResult = _sfcHelper.QueryLCFMByWIP(Wip, stationID, LCFMLength, out errMsg);
+                    if (!string.IsNullOrEmpty(errMsg))
+                    {
+                        MyOwner.OnAlarm(AlarmType.InfoTip, errMsg, AlarmCode);
+                        return true;
+                    }
+                    Result = !string.IsNullOrEmpty(LCFMResult);
                     break;
             }
 
