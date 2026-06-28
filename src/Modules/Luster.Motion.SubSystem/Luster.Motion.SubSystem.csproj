@@ -48,6 +48,8 @@
 	  <ProjectReference Include="..\Luster.Common.Assets\Luster.Common.Assets.csproj" />
 	  <ProjectReference Include="..\Luster.Motion.Assests\Luster.Motion.Assests.csproj" />
 	  <ProjectReference Include="..\Luster.Motion.EditorUI\Luster.Motion.EditorUI.csproj" />
+		  <!-- 五轴标定向导（TES-158）：IFiveAxisCalibrationService 标定 Service 契约 -->
+		  <ProjectReference Include="..\Luster.Module.Motion.FiveAxis\Luster.Module.Motion.FiveAxis.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>	  <Reference Include="Microsoft.VisualBasic" />

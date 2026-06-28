@@ -191,6 +191,10 @@ namespace Luster.Motion.CommonUI.Models
                               Name = "LightTuning" ,page_IsSelected=false,Region="LightTuningContent",
                               Iconfont="\xe6b6",page_IsVisible=true,page_IsEnabled=true,
                               AuthItemName="VizPageLightTuning" },
+                          new PageModel() {
+                              Name = "FiveAxisCalib" ,page_IsSelected=false,Region="FiveAxisCalibContent",
+                              Iconfont="\xe6b7",page_IsVisible=true,page_IsEnabled=true,
+                              AuthItemName="VizPageFiveAxisCalib" },
 
                     };
 
