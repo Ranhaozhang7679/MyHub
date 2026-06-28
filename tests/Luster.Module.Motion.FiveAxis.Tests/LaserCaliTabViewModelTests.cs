@@ -2,6 +2,8 @@ using FluentAssertions;
 using Luster.Common.DataStruct;
 using Luster.Common.DataStruct.DataModels;
 using Luster.Common.DataStruct.Enums;
+using Luster.Motion.CommonUI;
+using Luster.Motion.CommonUI.Models;
 using Luster.Motion.DataStruct;
 using Luster.Motion.DataStruct.DataModels;
 using Luster.Motion.DataStruct.Enums;
@@ -14,17 +16,26 @@ using Luster.Motion.FiveAxis.Device;
 using Luster.Motion.FiveAxis.Kinematics;
 using Luster.Motion.FiveAxis.Position;
 using Luster.Motion.FiveAxis.Service;
+using Luster.Motion.Integration.WorkCardVerify;
+using Luster.Motion.SubSystem.Models;
+using Luster.Motion.TaskFlow.Engine;
+using Luster.Motion.TaskFlow.Engine.Models;
+using Luster.TaskFlow.Motion;
+using Luster.TaskFlow.Motion.Interfaces;
 using NUnit.Framework;
+using Prism.Events;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Reflection;
 using System.Xml.Linq;
 
 namespace Luster.Module.Motion.FiveAxis.Tests
 {
     /// <summary>
-    /// LaserCaliTabViewModel 单测(TES-163)。
-    /// 无 Moq → 手写 fake:IFiveAxisCalibrationService(空实现)+ IDeviceEngine(仅 GetVDevices&lt;T&gt; 返回空列表,
-    /// 其余成员返回默认值/空实现)。ICommonBus 传 null(VM 内部 null 安全)。
+    /// LaserCaliTabViewModel 单测(TES-163 嫁接版)。
+    /// 嫁接后 VM 基类为 MotionPageVM(基类构造需要 ICommonBus.EventBus 非 null)→ 手写 FakeCommonBus
+    /// (EventBus 返回真实 Prism EventAggregator,CurrentUser 返回 null)。IDeviceEngine 仍用空列表 fake。
     /// 设备交互路径(实时读时序/轴名映射/单值提取)⚠️ 待人类现场验证,此处只测 VM 纯逻辑分支与状态机。
     /// </summary>
     [TestFixture]
@@ -33,7 +44,7 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         private static LaserCaliTabViewModel CreateVm(FakeDeviceEngine engine = null)
         {
             engine = engine ?? new FakeDeviceEngine();
-            return new LaserCaliTabViewModel(null, new FakeCalibrationService(), engine);
+            return new LaserCaliTabViewModel(new FakeCommonBus(), new FakeCalibrationService(), engine);
         }
 
         [Test]
@@ -152,6 +163,7 @@ namespace Luster.Module.Motion.FiveAxis.Tests
 
             vm.CameraPosi.Should().NotBeNull();
             vm.CameraPosi.X.Should().Be(0);
+            vm.CameraPosi.Y.Should().Be(0);
             vm.CameraPosi.Z.Should().Be(0);
         }
 
@@ -169,8 +181,13 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         public void LaserStandard_SetShouldRaiseAndPersist()
         {
             var vm = CreateVm();
+            var changed = new List<string>();
+            ((INotifyPropertyChanged)vm).PropertyChanged += (s, e) => changed.Add(e.PropertyName);
+
             vm.LaserStandard = 9.9;
+
             vm.LaserStandard.Should().Be(9.9);
+            changed.Should().Contain(nameof(LaserCaliTabViewModel.LaserStandard));
         }
 
         [Test]
@@ -179,6 +196,21 @@ namespace Luster.Module.Motion.FiveAxis.Tests
             var vm = CreateVm();
             vm.ToggleRealtimeReadCommand.Execute();
             Action act = () => vm.Dispose();
+            act.Should().NotThrow();
+        }
+
+        /// <summary>
+        /// 离页退订(嫁接新增价值):OnNavigatedFrom 调 StopRealtimeRead,防 ScanFinishEvent 重复订阅泄漏。
+        /// 空设备下未实际订阅,验证离页路径不崩即可。
+        /// </summary>
+        [Test]
+        public void OnNavigatedFrom_AfterToggle_ShouldNotThrow()
+        {
+            var vm = CreateVm();
+            vm.ToggleRealtimeReadCommand.Execute();
+
+            Action act = () => vm.OnNavigatedFrom(null);
+
             act.Should().NotThrow();
         }
 
@@ -300,6 +332,65 @@ namespace Luster.Module.Motion.FiveAxis.Tests
             public void RaiseAlarmCodeChangedEvent(string oldCode, string newCode) { }
             public void RaiseVDeviceChangedEvent() { }
             public void Dispose() { }
+        }
+
+        /// <summary>
+        /// ICommonBus 手写最小 fake(适配 MotionPageVM 基类构造链):EventBus 返回真实 Prism EventAggregator
+        /// (基类 RegisterEvent 需要),CurrentUser 返回 null(RegisterEvent 跳过 SysRole 赋值),
+        /// 其余成员空实现/默认值(构造期不调用)。照抄 ICommonBus.cs 签名实现为空体,避免 Moq 依赖。
+        /// </summary>
+        private sealed class FakeCommonBus : ICommonBus
+        {
+            public IEventAggregator EventBus { get; set; } = new EventAggregator();
+            public UserModel CurrentUser { get; set; } = null;
+
+            public event Action<XElement> LoadRecipeEvent { add { } remove { } }
+            public bool IsNeedSave { get; set; }
+            public int EditCount => 0;
+            public EngineStatus GetStatus() => default(EngineStatus);
+            public PageModel CurrentPage { get; set; }
+            public void OnNavigate(PageModel pageModel) { }
+            public void OnLog(LogInfo logInfo) { }
+            public void OnLog(LogType logType, string logInfo, string logThreadNo = "") { }
+            public void OnSaveSystem(string sysConfig = "") { }
+            public void OnSaveError(string sysConfig = "") { }
+            public void OnLoadSystem(string sysConfig = "") { }
+            public void OnActiveRecipe(Recipe recipe) { }
+            public void OnSaveRecipe(string saveRecipe = "") { }
+            public void OnBackUpRecipe(bool IsMaual = false) { }
+            public void OnSaveDevice() { }
+            public void PublishEvent<T, K>(K eventData) where T : PubSubEvent<K>, new() { }
+            public Recipe CurrentRecipe { get; set; }
+            public UserConfig UserConfig { get; set; }
+            public ProjectInfo ProjInfo { get; set; }
+            public BarcodeConfig BarConfig { get; set; }
+            public void OnUserLogin(UserModel model) { }
+            public void OnUserRoleChange(UserInfo userInfo) { }
+            public void OnRemainTimeChange(int remainTime) { }
+            public void OnAvalonLayoutSave() { }
+            public List<ProjectInfo> ProjectList { get; set; } = new List<ProjectInfo>();
+            public string L(string key) => key;
+            public void ChangeDeviceMode(DeviceMode deviceMode) { }
+            public List<LNode> GetOutDataTree() => new List<LNode>();
+            public List<MapData> GetMapDatas() => new List<MapData>();
+            public void UpdayeMapDataSource(List<MapData> mapData, List<MapData> newMapDatas, List<MapData> removeMapData) { }
+            public void OnChangeRecord(OperationType changeType, string module, string prop, string content) { }
+            public void InitSolution(string solution = "") { }
+            public void AddProject(string projName, string slnPath, string recipe) { }
+            public void RemoveProject(string projName) { }
+            public void OpenExistProj(string projName, string slnPath) { }
+            public void SaveSolution(string solution = "") { }
+            public void CheckBackUpFile() { }
+            public void ChangeLanguage() { }
+            public void SaveChartConfig(string chartconfig, List<ChartDataModel> chartList) { }
+            public List<ChartDataModel> LoadChartList() => new List<ChartDataModel>();
+            public void NewOrOpenHolo3D(IMotionModule holoModule, string taskName, bool isNew = true) { }
+            public void RegisterSystemDll() { }
+            public Type GetUiModuleType() => null;
+            public Type GetMainContentType() => null;
+            public Type GetToolbarContentType() => null;
+            public void StartHistoryFileDelete() { }
+            public string PickAvailableDrive() => null;
         }
     }
 }

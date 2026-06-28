@@ -72,7 +72,7 @@ namespace Luster.Motion.EditorUI
             // FiveAxis 标定服务(激光/粗标/精标/原点),LaserCaliTabViewModel 依赖
             containerRegistry.RegisterSingleton<IFiveAxisCalibrationService, FiveAxisCalibrationService>();
             // 激光标定 Tab 导航宿主(AutoWireViewModel 自动接 LaserCaliTabViewModel)
-            containerRegistry.RegisterForNavigation<LaserCaliTabView>();
+            containerRegistry.RegisterForNavigation<LaserCaliTabView, LaserCaliTabViewModel>();
         }
     }
 }

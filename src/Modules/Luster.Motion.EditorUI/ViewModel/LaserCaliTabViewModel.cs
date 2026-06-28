@@ -1,6 +1,7 @@
-using Luster.Common.DataStruct.DataModels; // LineLaser(点云结构)
+using Luster.Common.DataStruct.DataModels; // LineLaser(点云结构,OnScanFinish 参数)
 using Luster.Common.DataStruct.Enums; // LogType
-using Luster.Motion.CommonUI; // ICommonBus
+using Luster.Motion.CommonUI; // ICommonBus(基类 commonBus 字段类型)
+using Luster.Motion.CommonUI.ViewModel; // MotionPageVM(基类)
 using Luster.Motion.DataStruct; // VLineLaser, IDeviceEngine
 using Luster.Motion.DataStruct.DataModels; // VAxis
 using Luster.Motion.DataStruct.Real; // ILineLaser
@@ -8,62 +9,88 @@ using Luster.Motion.FiveAxis.Data.Calibration; // LaserCaliResult, LinearConvert
 using Luster.Motion.FiveAxis.Position; // PositionXYZ
 using Luster.Motion.FiveAxis.Service; // IFiveAxisCalibrationService
 using Prism.Commands;
-using Prism.Mvvm;
+using Prism.Events; // IEventAggregator(RegisterEvent override)
+using Prism.Regions; // NavigationContext(override OnNavigatedFrom)
 using System;
+using System.ComponentModel; // PropertyChangedEventArgs(NotifyProperty)
 using System.Linq;
-using System.Threading;
+using System.Threading; // Timer
 
 namespace Luster.Motion.EditorUI.ViewModel
 {
     /// <summary>
-    /// 激光标定 Tab 视图模型(TES-163)。
+    /// 激光标定 Tab 视图模型(TES-163 嫁接版,单一权威版本)。
+    /// 嫁接:前端 MotionPageVM 脚手架(基类/构造/绑定属性代理范式)+ 全栈 6 命令真实 VAxis/ILineLaser 绑定 +
+    /// Service 容器注册 + 单测,消除与 github/tes-144-laser-cali-vm stub 版并存。
     /// 匹配 TES-140 留下的 LaserCaliTabView.xaml 绑定契约:
     /// 激光↔Z 轴两点定标(LaserStandard/LaserMap.Map1|Map2.DirectValue|UnitValue)+ 激光/相机示教位置
     /// (LaserPosi/CameraPosi)+ 实时读取(RealtimeLaserValue)+ 各点位更新按钮(6 个 DelegateCommand)。
     /// VM 只做设备取数 + 写回模型,不调 LaserCalibrate(标定执行属其它 issue)。
     /// 实时读时序 / 轴名映射 / 单值提取 ⚠️ 待人类现场验证。
     /// </summary>
-    public class LaserCaliTabViewModel : BindableBase, IDisposable
+    public class LaserCaliTabViewModel : MotionPageVM, IDisposable
     {
-        private readonly ICommonBus _commonBus;
         // 标定 Service 注入保留,供后续标定执行 issue 调 LaserCalibrate 使用(本 issue 不调)。
         private readonly IFiveAxisCalibrationService _caliService;
         private readonly IDeviceEngine _deviceEngine;
 
-        /// <summary>标定结果模型(VM 暴露其子属性供 XAML 绑定,落盘由上层负责)</summary>
-        private readonly LaserCaliResult _model = new LaserCaliResult();
+        /// <summary>标定结果数据 owner(代理目标,落盘由上层负责)</summary>
+        private readonly LaserCaliResult _result = new LaserCaliResult();
 
         // ===== 实时读取状态 =====
         private bool _isRealtimeReading;
         private Timer _softTriggerTimer;
         private ILineLaser _lineLaser;
 
+        /// <summary>
+        /// 构造:ICommonBus 走基类 MotionVM.commonBus 字段(基类构造需要 EventBus 非 null,
+        /// 生产环境注入真实 ICommonBus;单测注入 FakeCommonBus)。IDeviceEngine 注入用于真实设备取数。
+        /// </summary>
         public LaserCaliTabViewModel(ICommonBus commonBus, IFiveAxisCalibrationService caliService, IDeviceEngine deviceEngine)
+            : base(commonBus)
         {
-            _commonBus = commonBus;
             _caliService = caliService;
             _deviceEngine = deviceEngine;
-            // 与 _model 共享同一实例,保证 UI 编辑/命令写回同步到模型
-            _laserPosi = _model.LaserPosi;
-            _cameraPosi = _model.CameraPosi;
         }
 
-        /// <summary>激光标准值(TextBox 双向绑定)</summary>
-        private double _laserStandard;
+        protected override void RegisterEvent(IEventAggregator bus)
+        {
+            base.RegisterEvent(bus);
+        }
+
+        /// <summary>
+        /// 代理到 _result 的属性触发变更通知(基类 MotionVM→AuthViewModelBase 的 OnPropertyChanged
+        /// 接收 PropertyChangedEventArgs,非 Prism 标准 string,故统一走此辅助方法)。
+        /// </summary>
+        private void NotifyProperty(string propertyName)
+            => OnPropertyChanged(new PropertyChangedEventArgs(propertyName));
+
+        // ===== 块A:激光↔Z 轴映射标定参数(代理到 _result,可编辑)=====
+
+        /// <summary>激光标准值(TextBox 双向绑定,代理到 _result.LaserStandard)</summary>
         public double LaserStandard
         {
-            get => _laserStandard;
+            get => _result.LaserStandard;
             set
             {
-                if (SetProperty(ref _laserStandard, value))
-                    _model.LaserStandard = value;
+                if (_result.LaserStandard != value)
+                {
+                    _result.LaserStandard = value;
+                    NotifyProperty(nameof(LaserStandard));
+                }
             }
         }
 
-        /// <summary>激光↔Z 轴线性映射(两点定标)。子属性 Map1/Map2.DirectValue/UnitValue 由 XAML 直接绑定写回。</summary>
-        public LinearConverter LaserMap => _model.LaserMap;
+        /// <summary>
+        /// 激光↔Z 轴线性映射(两点定标,代理到 _result.LaserMap,只读暴露对象)。
+        /// XAML 路径绑定 LaserMap.Map1.DirectValue/Map1.UnitValue/Map2.DirectValue/Map2.UnitValue
+        /// (TwoWay TextBox 直接改对象字段)。VM 程序化刷新值后调 NotifyProperty(nameof(LaserMap)) 通知。
+        /// </summary>
+        public LinearConverter LaserMap => _result.LaserMap;
 
-        /// <summary>实时激光值(OneWay 只读,由 ScanFinishEvent 回调刷新)</summary>
+        // ===== 块B:实时激光值(只读 OneWay,由 ScanFinishEvent 回调刷新)=====
+
+        /// <summary>实时激光值(string,由 LaserGetPamas() 返回值占位;OneWay 只读)</summary>
         private string _realtimeLaserValue = "0";
         public string RealtimeLaserValue
         {
@@ -71,31 +98,37 @@ namespace Luster.Motion.EditorUI.ViewModel
             set => SetProperty(ref _realtimeLaserValue, value);
         }
 
-        /// <summary>激光示教位置(显示 X,Y,Z)</summary>
-        private PositionXYZ _laserPosi;
+        // ===== 块D:激光/相机示教位置(代理到 _result)=====
+
+        /// <summary>激光示教位置(代理到 _result.LaserPosi)</summary>
         public PositionXYZ LaserPosi
         {
-            get => _laserPosi;
+            get => _result.LaserPosi;
             set
             {
-                if (SetProperty(ref _laserPosi, value))
-                    _model.LaserPosi = value;
+                if (!ReferenceEquals(_result.LaserPosi, value))
+                {
+                    _result.LaserPosi = value;
+                    NotifyProperty(nameof(LaserPosi));
+                }
             }
         }
 
-        /// <summary>相机示教位置(显示 X,Y,Z)</summary>
-        private PositionXYZ _cameraPosi;
+        /// <summary>相机示教位置(代理到 _result.CameraPosi)</summary>
         public PositionXYZ CameraPosi
         {
-            get => _cameraPosi;
+            get => _result.CameraPosi;
             set
             {
-                if (SetProperty(ref _cameraPosi, value))
-                    _model.CameraPosi = value;
+                if (!ReferenceEquals(_result.CameraPosi, value))
+                {
+                    _result.CameraPosi = value;
+                    NotifyProperty(nameof(CameraPosi));
+                }
             }
         }
 
-        // ===== 命令(6 个 DelegateCommand)=====
+        // ===== 块C:命令(6 个 DelegateCommand)=====
 
         /// <summary>打开激光</summary>
         private DelegateCommand _openLaserCommand;
@@ -121,14 +154,14 @@ namespace Luster.Motion.EditorUI.ViewModel
         private DelegateCommand _refreshCameraPosiCommand;
         public DelegateCommand RefreshCameraPosiCommand => _refreshCameraPosiCommand ?? (_refreshCameraPosiCommand = new DelegateCommand(RefreshCameraPosi));
 
-        // ===== 命令实现 =====
+        // ===== 命令实现(真实 VAxis/ILineLaser 绑定)=====
 
         private void OpenLaser()
         {
             var lineLaser = ResolveLineLaser();
             if (lineLaser == null) return;
             lineLaser.LaserStart();
-            _commonBus?.OnLog(LogType.Debug, "激光已打开");
+            commonBus?.OnLog(LogType.Debug, "激光已打开");
         }
 
         private void ToggleRealtimeRead()
@@ -136,7 +169,7 @@ namespace Luster.Motion.EditorUI.ViewModel
             if (_isRealtimeReading)
             {
                 StopRealtimeRead();
-                _commonBus?.OnLog(LogType.Debug, "实时读取已停止");
+                commonBus?.OnLog(LogType.Debug, "实时读取已停止");
             }
             else
             {
@@ -163,7 +196,7 @@ namespace Luster.Motion.EditorUI.ViewModel
             }, null, 0, 200);
 
             _isRealtimeReading = true;
-            _commonBus?.OnLog(LogType.Debug, "实时读取已开启");
+            commonBus?.OnLog(LogType.Debug, "实时读取已开启");
         }
 
         private void StopRealtimeRead()
@@ -201,22 +234,22 @@ namespace Luster.Motion.EditorUI.ViewModel
             // 当前实时激光值 → Map1.DirectValue
             if (double.TryParse(RealtimeLaserValue, out var laserVal))
             {
-                LaserMap.Map1.DirectValue = laserVal;
+                _result.LaserMap.Map1.DirectValue = laserVal;
             }
             // 当前 Z 轴位置 → Map1.UnitValue
-            LaserMap.Map1.UnitValue = GetAxisPos('Z');
+            _result.LaserMap.Map1.UnitValue = GetAxisPos('Z');
             // LinearPointMap 为 POCO 无 INPC,手动触发 LaserMap 刷新让 TextBox 重读
-            RaisePropertyChanged(nameof(LaserMap));
+            NotifyProperty(nameof(LaserMap));
         }
 
         private void RefreshPoint2()
         {
             if (double.TryParse(RealtimeLaserValue, out var laserVal))
             {
-                LaserMap.Map2.DirectValue = laserVal;
+                _result.LaserMap.Map2.DirectValue = laserVal;
             }
-            LaserMap.Map2.UnitValue = GetAxisPos('Z');
-            RaisePropertyChanged(nameof(LaserMap));
+            _result.LaserMap.Map2.UnitValue = GetAxisPos('Z');
+            NotifyProperty(nameof(LaserMap));
         }
 
         private void RefreshLaserPosi()
@@ -237,13 +270,13 @@ namespace Luster.Motion.EditorUI.ViewModel
             var vLaser = _deviceEngine?.GetVDevices<VLineLaser>()?.FirstOrDefault();
             if (vLaser == null)
             {
-                _commonBus?.OnLog(LogType.Error, "未找到线激光设备(VLineLaser),请检查设备配置");
+                commonBus?.OnLog(LogType.Error, "未找到线激光设备(VLineLaser),请检查设备配置");
                 return null;
             }
             var lineLaser = vLaser.GetDevice() as ILineLaser;
             if (lineLaser == null)
             {
-                _commonBus?.OnLog(LogType.Error, "线激光设备未关联底层 ILineLaser");
+                commonBus?.OnLog(LogType.Error, "线激光设备未关联底层 ILineLaser");
             }
             return lineLaser;
         }
@@ -276,6 +309,18 @@ namespace Luster.Motion.EditorUI.ViewModel
             {
                 return 0;
             }
+        }
+
+        // ===== 生命周期:离页退订(嫁接新增,防 ScanFinishEvent 重复订阅泄漏)=====
+
+        /// <summary>
+        /// 离开页面时停止实时读取并退订 ScanFinishEvent,防止单例 VM 重复导航累积订阅泄漏。
+        /// (MotionPageVM.IsNavigationTarget 默认 true → VM 单例复用,必须靠离页退订清理订阅。)
+        /// </summary>
+        public override void OnNavigatedFrom(NavigationContext navigationContext)
+        {
+            base.OnNavigatedFrom(navigationContext);
+            StopRealtimeRead();
         }
 
         public void Dispose()
