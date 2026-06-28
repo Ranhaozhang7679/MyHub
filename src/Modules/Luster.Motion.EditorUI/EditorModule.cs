@@ -45,6 +45,7 @@ namespace Luster.Motion.EditorUI
             containerRegistry.RegisterForNavigation<ErrorConfigContent, ErrorConfigContentVM>();
             containerRegistry.RegisterForNavigation<FlowViewContent, FlowViewContentVM>();
             containerRegistry.RegisterForNavigation<SearchContent, SearchContentVM>();
+            containerRegistry.RegisterForNavigation<LaserCaliTabView, LaserCaliTabViewModel>();
 
             // 设备对话框
             containerRegistry.RegisterDialog<TextDialog, TextDialogVM>();           // 文本提示
