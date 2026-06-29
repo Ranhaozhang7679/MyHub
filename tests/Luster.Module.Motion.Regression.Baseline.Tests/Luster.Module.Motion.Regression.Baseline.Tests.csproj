@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net472</TargetFramework>
+		<OutputType>Exe</OutputType>
+		<IsPackable>false</IsPackable>
+		<IsTestProject>true</IsTestProject>
+		<!-- 测试工程不拷贝到 Motions 目录 -->
+		<CopyToMotionsFolder>false</CopyToMotionsFolder>
+		<!-- 测试工程排除 Nullable 警告干扰 -->
+		<Nullable>disable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" />
+		<!-- xunit.v3：AOI 自动化回归测试基线 (TES-165 P9-D) -->
+		<PackageReference Include="xunit.v3" />
+		<PackageReference Include="xunit.runner.visualstudio" />
+		<PackageReference Include="coverlet.collector" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- ②③ 模式切换 + IO 轴：VirtualModeMapping / ManualStack（传递 Engine/SystemConfig） -->
+		<ProjectReference Include="..\..\src\Modules\Luster.Module.Motion.TestToolchain\Luster.Module.Motion.TestToolchain.csproj" />
+		<!-- ④ 握手信号：HandoverNode 契约常量 -->
+		<ProjectReference Include="..\..\src\Modules\Luster.Module.Motion.Handover\Luster.Module.Motion.Handover.csproj" />
+		<!-- ⑤ 超时：OverTimeFunction 契约（传递 Common/RunStatus/ParameterAttribute） -->
+		<ProjectReference Include="..\..\src\Modules\Luster.TaskFlow.Motion\Luster.TaskFlow.Motion.csproj" />
+		<!-- ② SystemConfig.RunMode 默认 Virtual -->
+		<ProjectReference Include="..\..\src\Modules\Luster.Motion.TaskFlow.Engine\Luster.Motion.TaskFlow.Engine.csproj" />
+	</ItemGroup>
+
+</Project>

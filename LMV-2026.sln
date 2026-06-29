@@ -182,6 +182,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Luster.XamlLinter.Tests", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Luster.Motion.FiveAxis.UI", "src\Modules\Luster.Motion.FiveAxis.UI\Luster.Motion.FiveAxis.UI.csproj", "{F5C647B7-B157-4049-AA63-A6D13CCF7A7C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Luster.Module.Motion.Regression.Baseline.Tests", "tests\Luster.Module.Motion.Regression.Baseline.Tests\Luster.Module.Motion.Regression.Baseline.Tests.csproj", "{321283D9-EA4B-490E-B000-20BE85347AEE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -1056,6 +1058,18 @@ Global
 		{F5C647B7-B157-4049-AA63-A6D13CCF7A7C}.Release|x64.Build.0 = Release|Any CPU
 		{F5C647B7-B157-4049-AA63-A6D13CCF7A7C}.Release|x86.ActiveCfg = Release|Any CPU
 		{F5C647B7-B157-4049-AA63-A6D13CCF7A7C}.Release|x86.Build.0 = Release|Any CPU
+		{321283D9-EA4B-490E-B000-20BE85347AEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{321283D9-EA4B-490E-B000-20BE85347AEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{321283D9-EA4B-490E-B000-20BE85347AEE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{321283D9-EA4B-490E-B000-20BE85347AEE}.Debug|x64.Build.0 = Debug|Any CPU
+		{321283D9-EA4B-490E-B000-20BE85347AEE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{321283D9-EA4B-490E-B000-20BE85347AEE}.Debug|x86.Build.0 = Debug|Any CPU
+		{321283D9-EA4B-490E-B000-20BE85347AEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{321283D9-EA4B-490E-B000-20BE85347AEE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{321283D9-EA4B-490E-B000-20BE85347AEE}.Release|x64.ActiveCfg = Release|Any CPU
+		{321283D9-EA4B-490E-B000-20BE85347AEE}.Release|x64.Build.0 = Release|Any CPU
+		{321283D9-EA4B-490E-B000-20BE85347AEE}.Release|x86.ActiveCfg = Release|Any CPU
+		{321283D9-EA4B-490E-B000-20BE85347AEE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1138,5 +1152,6 @@ Global
 		{AC442A0B-3B77-4C76-B813-C871CF5FDB98} = {184DA593-972D-4910-8998-38FB42523586}
 		{37E4126A-C2ED-4BA2-9821-356F996A6BD9} = {184DA593-972D-4910-8998-38FB42523586}
 		{F5C647B7-B157-4049-AA63-A6D13CCF7A7C} = {EC447DCF-ABFA-6E24-52A5-D7FD48A5C558}
+		{321283D9-EA4B-490E-B000-20BE85347AEE} = {963873D2-1889-445B-8662-AB04E890FC26}
 	EndGlobalSection
 EndGlobal
