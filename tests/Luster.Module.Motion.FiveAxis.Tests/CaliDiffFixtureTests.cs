@@ -44,6 +44,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("DiffFixture")]
         public void Emit_RoughCalibrate_Fixtures()
         {
             // 已知几何:A 轴沿 X,绕 (Y=10,Z=5) 旋转 90°:(30,5)->(10,25)
@@ -82,6 +84,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("DiffFixture")]
         public void Emit_LaserCalibrate_Fixtures()
         {
             var laser = new LaserCaliResult();
@@ -123,6 +127,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("DiffFixture")]
         public void Emit_CalibrateWorkOrigin_Fixtures()
         {
             var origin = new TeachWorkOriginResult

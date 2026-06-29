@@ -98,6 +98,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void FiveAxisCaliProfile_RoundTrip_KeepsAllFields()
         {
             var src = BuildSampleProfile();
@@ -151,6 +153,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void FiveAxisPara_RoundTrip_MatchesCoord5AxisFields()
         {
             var src = new FiveAxisPara
@@ -175,6 +179,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void CoordTransForm_RoundTrip_AndKinematicsConsistency()
         {
             var src = new CoordTransForm
@@ -200,6 +206,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void CalibratedCoord5Axis_EffectiveParaIsTransFormedAndDelegates()
         {
             var acc = new Coord5Axis
@@ -226,6 +234,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void AccurateCaliResult_GetRxPosiLis_ReturnsExpectedCount()
         {
             var acc = new AccurateCaliResult
@@ -247,6 +257,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void LinearConverter_Convert_RoundTripMath()
         {
             var conv = new LinearConverter();

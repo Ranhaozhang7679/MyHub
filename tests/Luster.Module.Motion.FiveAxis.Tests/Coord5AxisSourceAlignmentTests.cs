@@ -42,6 +42,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
 
         /// <summary>E1:零旋转 → 单位阵(正逆解均为 I)。</summary>
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void E1_IdentityMatrix_AtZeroAngles()
         {
             var coord = CreateDefault();
@@ -60,6 +62,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         /// <summary>E2:仅 A 轴 rx=90° → Rz(0)·Rx(-90°) = Rx(-90°)。
         /// Rx(-90°) = [[1,0,0],[0,0,1],[0,-1,0]](cos(-90)=0,sin(-90)=-1)。</summary>
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void E2_RxMinus90_AtRx90()
         {
             var coord = CreateDefault();
@@ -79,6 +83,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         /// <summary>E3:仅 C 轴 rz=90° → Rz(-90°)·Rx(0) = Rz(-90°)。
         /// Rz(-90°) = [[0,1,0],[-1,0,0],[0,0,1]]。</summary>
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void E3_RzMinus90_AtRz90()
         {
             var coord = CreateDefault();
@@ -96,6 +102,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
 
         /// <summary>E4:rx=rz=90° → Rz(-90°)·Rx(-90°) = [[0,0,1],[-1,0,0],[0,-1,0]]。</summary>
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void E4_ComposedRxRz_AtRx90Rz90()
         {
             var coord = CreateDefault();
@@ -117,6 +125,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         /// E4:PointO2D(90,90,(1,0,0)) = Rz(-90°)·Rx(-90°)·(1,0,0,1) = (0,-1,0)。
         /// </summary>
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void E5_PointO2D_AlignsWithSourceDerivedValues()
         {
             var coord = CreateDefault();

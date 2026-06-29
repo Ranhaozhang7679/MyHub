@@ -60,6 +60,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
 
         /// <summary>recipe 加载 + 设备绑定完整性校验:无 RefID=".." 占位 + VDevice 绑定齐全。</summary>
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void LoadRecipe_RuntimeRecipeIsBound_NoPlaceholderRefs()
         {
             var root = LoadRecipe();
@@ -193,6 +195,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         /// grep 命中点:MotionRunEngine.Run —— 经运行器顺序驱动整条节点链。
         /// </summary>
         [Test]
+        [Category("Regression")]
+        [Category("StationStateMachine")]
         public void DeviceModeVirtual_EndToEnd_AOI1CapabilityChain_RunsGreenViaMotionRunEngine()
         {
             var vAxisM = BuildVirtualBackend(out var engine);
@@ -321,6 +325,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
 
         /// <summary>Coord5Axis 正逆解在虚拟链路中可被节点调用且输出有限(与源端对齐的运行级佐证)。</summary>
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void DeviceModeVirtual_KinematicsNode_ProducesFiniteSourceAlignedOutput()
         {
             var vAxisM = BuildVirtualBackend(out var engine);

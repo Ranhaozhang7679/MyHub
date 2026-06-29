@@ -37,6 +37,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         };
 
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void DoExcute_Org2Dest_MatchesCoord5AxisPointO2D()
         {
             var node = CreateNode();
@@ -59,6 +61,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void DoExcute_Dest2Org_MatchesCoord5AxisPointD2O()
         {
             var node = CreateNode();

@@ -47,6 +47,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         };
 
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void DefaultConstructor_ProducesFiniteMatrix_NoNaN()
         {
             var coord = new Coord5Axis();
@@ -65,6 +67,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void Dest2OrgMatrix_IsInverseOf_Org2DestMatrix()
         {
             var coord = CreateSample();
@@ -82,6 +86,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void PointO2D_PointD2O_RoundTrip_RestoresOriginal_Within1e6()
         {
             var coord = CreateSample();
@@ -100,6 +106,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void PoseO2D_PoseD2O_RoundTrip_RestoresOriginal_Within1e6()
         {
             var coord = CreateSample();
@@ -121,6 +129,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void RotateO2D_IsTranslationInvariant()
         {
             // RotateO2D = PointO2D(vec) - PointO2D(原点),应与平移无关(纯旋转)

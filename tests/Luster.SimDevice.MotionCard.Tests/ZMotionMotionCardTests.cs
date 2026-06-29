@@ -13,6 +13,8 @@ namespace Luster.SimDevice.MotionCard.Tests
     public class ZMotionMotionCardTests
     {
         [Test]
+        [Category("Regression")]
+        [Category("IOAxis")]
         public void ZMotionMotionCard_ImplementsMotionCardAndRtcpContracts()
         {
             var card = new ZMotionMotionCard { SimulationMode = true };
@@ -23,6 +25,8 @@ namespace Luster.SimDevice.MotionCard.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("IOAxis")]
         public void SimulationMode_SupportsHomeMoveLineContinuousAndIoWithoutHardware()
         {
             var card = new ZMotionMotionCard
@@ -64,6 +68,8 @@ namespace Luster.SimDevice.MotionCard.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("IOAxis")]
         public void FiveAxisRtcp_CanConfigureEnableDisableAndRejectIncompleteAxisMap()
         {
             var card = new ZMotionMotionCard { SimulationMode = true };
@@ -95,6 +101,8 @@ namespace Luster.SimDevice.MotionCard.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("IOAxis")]
         public void PublicMotionCardMethods_AreImplementedWithoutThrowingNotImplementedException()
         {
             var card = new ZMotionMotionCard { SimulationMode = true, AxisCount = 5, DigitalInCount = 1, DigitalOutCount = 1 };
@@ -115,6 +123,8 @@ namespace Luster.SimDevice.MotionCard.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("IOAxis")]
         public void ZMotionMotionCard_ImplementsContiInterpAndLatchBypassContracts()
         {
             // R1 非侵入验证:旁路接口与 IFiveAxisRTCP 同层,仅 ZMotion 五轴适配器实现。
@@ -124,6 +134,8 @@ namespace Luster.SimDevice.MotionCard.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("IOAxis")]
         public void SimulationMode_ContiInterpRunsFullLifecycleWithDeterministicStubs()
         {
             // ADR v2 虚拟分支确定性桩值:ReadContiOutFlag 按注入点位递增、GetContiRemainSpace 返回充足,
@@ -152,6 +164,8 @@ namespace Luster.SimDevice.MotionCard.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("IOAxis")]
         public void SimulationMode_LatchBatchWaitAndClearWithReplayedPoints()
         {
             // ADR v2 虚拟分支:锁存值按注入点位回放;WaitLatched count 批量重载为主路径。
@@ -177,6 +191,8 @@ namespace Luster.SimDevice.MotionCard.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("Timeout")]
         public void ZMotionMotionCard_ImplementsFiveAxisFrameContract()
         {
             var card = new ZMotionMotionCard { SimulationMode = true };
@@ -188,6 +204,8 @@ namespace Luster.SimDevice.MotionCard.Tests
         /// 不触达卡端 SDK,无需硬件。FrameCal 输出零值默认 para。
         /// </summary>
         [Test]
+        [Category("Regression")]
+        [Category("Timeout")]
         public void FiveAxisFrame_SimulationMode_LifecycleRunsAndShortCircuits()
         {
             var card = new ZMotionMotionCard { SimulationMode = true, AxisCount = 8 };
@@ -212,6 +230,8 @@ namespace Luster.SimDevice.MotionCard.Tests
 
         /// <summary>Reframe 本期留签名抛 NotSupportedException(ADR-TES-110,待后续正解 Issue)。</summary>
         [Test]
+        [Category("Regression")]
+        [Category("Timeout")]
         public void FiveAxisFrame_Reframe_ThrowsNotSupported_StubOnly()
         {
             var card = new ZMotionMotionCard { SimulationMode = true };

@@ -35,6 +35,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         };
 
         [Test]
+        [Category("Regression")]
+        [Category("IOAxis")]
         public void AllTenContiLatchNodes_AreInstantiable()
         {
             foreach (var type in ExpectedNodes)
@@ -45,6 +47,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("IOAxis")]
         public void EachNode_HasParameterAttributes_ForParamGrid()
         {
             // ParamGrid 范式:节点通过 [Parameter] 特性暴露参数,无 [Parameter] 的节点无法在 ParamGrid 编辑。
@@ -59,6 +63,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("Timeout")]
         public void CrdConti_DoExcuteHasTryFinally_ForM13CloseContract()
         {
             // M-13 finally 关闭契约(硬性验收项):CrdConti.Open 后 Stop/Close 必在 try/finally 中执行。
@@ -78,6 +84,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("Timeout")]
         public void LatchWait_DoExcuteHasTryFinally_ForM13ClearLatchContract()
         {
             // M-13 finally 关闭契约:LatchWait.ClearLatch 必在 try/finally 中执行。
@@ -87,6 +95,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("IOAxis")]
         public void LatchOffsetCalc_ComputesLatchedOffsetFromLatchedAndCommandPos()
         {
             // LatchOffsetCalc 不依赖卡端(ReadContiOutFlag 在虚拟分支给桩值),但需 VDevice。
@@ -101,6 +111,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("IOAxis")]
         public void LatchDataProcess_ParsesBatchPositionsFromString()
         {
             // LatchDataProcess 纯数据处理,不依赖卡端,可直接 DoExcute 验证。

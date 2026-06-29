@@ -30,6 +30,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         };
 
         [Test]
+        [Category("Regression")]
+        [Category("StationStateMachine")]
         public void AllNewStationNodes_AreInstantiable()
         {
             foreach (var type in NewStationNodes)
@@ -40,6 +42,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("StationStateMachine")]
         public void EachNewNode_HasParameterAttributes_ForParamGrid()
         {
             // ParamGrid 范式:节点通过 [Parameter] 特性暴露参数。
@@ -55,6 +59,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("StationStateMachine")]
         public void FiveAxisStation_ImplementsIFreeStation()
         {
             typeof(FiveAxisStation).GetInterfaces()
@@ -63,6 +69,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("StationStateMachine")]
         public void FiveAxisModule_RegistersNewStationNodes()
         {
             // FiveAxisModule 注册 P5-6 新节点(BuildFrame/ExitFrame/HandoverNode)。
@@ -78,6 +86,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("StationStateMachine")]
         public void FiveAxisStationModule_RegistersFiveAxisStation()
         {
             // FiveAxisStationModule(站骨架)注册 FiveAxisStation 站 Function。
@@ -91,6 +101,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("Timeout")]
         public void RtcpFrameExit_IsIdempotent_WhenNoDevice()
         {
             // RtcpFrameExit 幂等:无设备(虚拟/空跑)返回成功,不抛——保证急停/异常路径 complete 段清理不阻断。
@@ -101,6 +113,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("Timeout")]
         public void RtcpFrameEnter_ReturnsFalse_WhenNoDevice_ButDoesNotThrow()
         {
             // RtcpFrameEnter 无设备:结构化返回 false + errMsg(不静默吞错,不抛)。
@@ -113,6 +127,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("Handshake")]
         public void HandoverNode_FeedDirection_NoThrow_WhenSignalsUnconfigured()
         {
             // 交握节点信号未配置(全 null)时:WaitSignal/SetSignal 跳过,DoExcute 跑空状态机成功不抛。
@@ -129,6 +145,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("Handshake")]
         public void HandoverNode_LeaveDirection_NoThrow_WhenSignalsUnconfigured()
         {
             var node = new HandoverNode
@@ -142,6 +160,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("Handshake")]
         public void HandoverNode_HasBothFeedAndLeaveDirections()
         {
             // 方向枚举含 Feed(上游 15 步)/ Leave(下游 13 步)。
@@ -151,6 +171,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("Timeout")]
         public void RtcpFrameExit_DoExcuteHasTryCatch_ForStructuredCleanup()
         {
             // 异常结构化:RtcpFrameExit 用 try/catch 包裹退出逻辑(替代源端空 catch),
@@ -164,6 +186,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("Handshake")]
         public void HandoverNode_DoExcuteHasTryCatch_ForStructuredAlarm()
         {
             // 异常结构化:HandoverNode.DoExcute 用 try/catch 把交握异常转 OnAlarm 结构化报警

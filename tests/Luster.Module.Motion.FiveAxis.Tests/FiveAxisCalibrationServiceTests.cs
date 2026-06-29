@@ -34,6 +34,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         /// (30,5)→(10,25),断言 ACenter = (0, 10, 5)。验证 AngleHelper.CalculateRoateCenter 端到端几何正确。
         /// </summary>
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void RoughCalibrate_KnownCenterA_RecoversCenter()
         {
             var rough = new RoughCaliResult
@@ -66,6 +68,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         /// ADir=(1,0,0)/CDir=(0,0,1)/ACenter.X=0/CCenter.Z=0 结构不变,CirPulses 正确赋值。
         /// </summary>
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void RoughCalibrate_Wiring_MatchesCalculateRoateCenter()
         {
             var rough = new RoughCaliResult
@@ -98,6 +102,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void RoughCalibrate_NullArg_Throws()
         {
             Action act = () => _service.RoughCalibrate(null, 1, 1);
@@ -113,6 +119,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         /// LinearConverter 双向换算还原采点(直接值↔当量)。
         /// </summary>
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void LaserCalibrate_FillsMapAndPositions()
         {
             var laser = new LaserCaliResult();
@@ -145,6 +153,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         /// CameraOffset = CameraPosi - LaserPosi,由下游 CalibratedCoord5Axis 派生(源端 laserCaliApply 语义)。
         /// </summary>
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void LaserCalibrate_CameraOffsetDerivableByCalibratedCoord5Axis()
         {
             var laser = new LaserCaliResult();
@@ -161,6 +171,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void LaserCalibrate_NullArg_Throws()
         {
             Action act = () => _service.LaserCalibrate(null, 0, 0, 0, 0, 0, new PositionXYZ(), new PositionXYZ());
@@ -176,6 +188,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         /// 对应源端 btnWorkCalculateFromTeach(Form5Cali.cs:1757-1774)。
         /// </summary>
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void CalibrateWorkOrigin_OriginPosi_WritesTrans()
         {
             var origin = new TeachWorkOriginResult
@@ -199,6 +213,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         /// 原点示教(对角线中心):Trans 取 Origin/Diagonal 中点 + 长边方向角。
         /// </summary>
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void CalibrateWorkOrigin_DiagCenter_WritesMidpoint()
         {
             var origin = new TeachWorkOriginResult
@@ -218,6 +234,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         }
 
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void CalibrateWorkOrigin_NullArg_Throws()
         {
             Action act = () => _service.CalibrateWorkOrigin(null);
@@ -233,6 +251,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         /// 用 RecordingFrame(实现 IFiveAxisFrame)记录调用顺序,断言 R-F2 try/finally 保证最终 ExitFrame。
         /// </summary>
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void AccurateCalibrate_Success_CallsLifecycleInOrder_AndFillsResult()
         {
             var accurate = new AccurateCaliResult();
@@ -280,6 +300,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         /// R-F2 缓解验证:FrameCal 失败时,finally 仍保证 ExitFrame 调用(必退),返回 false,不回填结果。
         /// </summary>
         [Test]
+        [Category("Regression")]
+        [Category("Timeout")]
         public void AccurateCalibrate_FrameCalFails_StillExitFrameInFinally_ReturnsFalse()
         {
             var accurate = new AccurateCaliResult();
@@ -306,6 +328,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         /// 非五轴卡(ctx.Frame 为 null)优雅退出返回 false,不抛异常(ADR 骨架 motionCard is not IFiveAxisFrame return false)。
         /// </summary>
         [Test]
+        [Category("Regression")]
+        [Category("Timeout")]
         public void AccurateCalibrate_NullFrame_ReturnsFalseGracefully()
         {
             var accurate = new AccurateCaliResult();

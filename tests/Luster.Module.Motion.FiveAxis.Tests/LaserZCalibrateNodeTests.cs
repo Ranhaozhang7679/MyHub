@@ -21,6 +21,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         /// 断言 k/b 正确,且 LaserMap 往返一致(DirectValueToUnit(laser) == z)。
         /// </summary>
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void DoExcute_TwoPoints_ProducesCorrectLinearMap()
         {
             var node = new LaserZCalibrateNode
@@ -58,6 +60,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         /// 断言 k 为负且往返一致。
         /// </summary>
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void DoExcute_NegativeSlope_RoundTripsCorrectly()
         {
             var node = new LaserZCalibrateNode
@@ -78,6 +82,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         /// 两点激光读数相同 → 无法定标(LinearConverter 分母为 0),返回失败 + 明确错误。
         /// </summary>
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void DoExcute_IdenticalLaserReadings_Fails()
         {
             var node = new LaserZCalibrateNode
@@ -96,6 +102,8 @@ namespace Luster.Module.Motion.FiveAxis.Tests
         /// ILaserController 接口契约(P3-A):定义单点测距 GetDistance,区别于线扫 ILineLaser。
         /// </summary>
         [Test]
+        [Category("Regression")]
+        [Category("SourceAlignment")]
         public void ILaserController_DefinesSinglePointDistanceContract()
         {
             var t = typeof(ILaserController);
