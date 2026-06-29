@@ -1,4 +1,6 @@
 using Luster.Motion.CommonUI.ViewModel;
+using Luster.Module.Motion.Business;
+using Luster.Module.Motion.Business.Functions;
 
 namespace Luster.Motion.FiveAxis.UI.ViewModel
 {
@@ -18,13 +20,9 @@ namespace Luster.Motion.FiveAxis.UI.ViewModel
     /// 源端核心 Profile 锚点：AutoCaliProfile（球采样间距/标准球半径/标定延时/激光标定…）、
     ///   Check5AxisBaseProfile（安全位置/五轴模式/FiveAxisPara/Tool2Work/锁存参数…）。
     ///
-    /// ⚠️ 后端接口状态（阻塞项，已按派单"后端未就位先用 mock"处理）：
-    ///   ParamGrid.SelectedObject 需 TaskFlow IModule，其 Parameters 字典由引擎从所挂载 TaskFunction 的
-    ///   [Parameter] 反射填充（AbsModule.ctor → InitFunctions；ParameterAttribute 反射 module.TaskFunction）。
-    ///   真实五轴标定 [Parameter] 数据模型（对齐源端 AutoCaliProfile / Check5AxisBaseProfile 的
-    ///   IModule + TaskFunction）尚未由全栈工程师交付。当前 CaliParamModule 留空，View 显示占位提示；
-    ///   全栈交付后把实例赋给 CaliParamModule，ParamGrid 即自动生成面板——无需改 View/VM 装配代码。
-    ///   此为后端数据契约缺失，需 @项目经理 协调全栈（非前端可自主完成）。
+    /// ✅ 已接线（TES-70 P6-A 收尾）：Business.SetFunction(FiveAxisCaliParam) 触发 InitParameters
+    ///   反射填充 Parameters，产出可被 ParamGrid 接受的 TaskFlow IModule。裸 new FiveAxisCaliParam
+    ///   是 IFunction 非 IModule，ParamGrid as IModule=null 会拒绝——须经宿主 Business 挂载。
     /// </summary>
     public class FiveAxisContentVM : MotionVM
     {
@@ -33,7 +31,7 @@ namespace Luster.Motion.FiveAxis.UI.ViewModel
         /// <summary>
         /// ParamGrid 绑定的 [Parameter] 数据契约（TaskFlow IModule）。
         /// 类型用 object 对齐 InParamContentVM.ModuleObj 约定；运行时 ParamGrid 内部 as IModule。
-        /// 当前为 null（待全栈交付真实五轴标定数据模型）。
+        /// 已接线：构造时由 Business.SetFunction(FiveAxisCaliParam) 填充 Parameters。
         /// </summary>
         public object? CaliParamModule
         {
@@ -46,7 +44,11 @@ namespace Luster.Motion.FiveAxis.UI.ViewModel
 
         public FiveAxisContentVM()
         {
-            // 基建阶段留空。全栈交付五轴标定 [Parameter] IModule 后赋值即可。
+            // P6-A 收尾接线：宿主 Business 挂载 FiveAxisCaliParam 触发 InitParameters 反射填充 Parameters，
+            // 产出可被 ParamGrid 接受的 TaskFlow IModule（裸 new FiveAxisCaliParam 是 IFunction 非 IModule，ParamGrid 会拒绝）。
+            var biz = new Business();
+            biz.SetFunction(nameof(FiveAxisCaliParam));
+            CaliParamModule = biz;
         }
     }
 }

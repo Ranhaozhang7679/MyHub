@@ -15,6 +15,8 @@
         <ProjectReference Include="..\Luster.Motion.CommonUI\Luster.Motion.CommonUI.csproj" />
         <!-- Control.Wpf.Motion：ParamGrid 控件（param: 命名空间） -->
         <ProjectReference Include="..\Luster.Control.Wpf.Motion\Luster.Control.Wpf.Motion.csproj" />
+        <!-- Module.Motion.Business：五轴标定 [Parameter] 数据模型宿主（Business.SetFunction 触发 InitParameters 填充 Parameters） -->
+        <ProjectReference Include="..\Luster.Module.Motion.Business\Luster.Module.Motion.Business.csproj" />
     </ItemGroup>
 
 </Project>
