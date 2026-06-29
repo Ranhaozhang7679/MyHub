@@ -2212,6 +2212,7 @@ namespace Luster.Motion.Integration.Web
             List<object> tossingList = new List<object>();
 
             string tossSn = "";
+            var msg = stationResult.ErrMsg ?? string.Empty;
             if (stationResult.IsToss)
             {
                 tossSn += wip;
@@ -2219,7 +2220,7 @@ namespace Luster.Motion.Integration.Web
                 keypartsSnCount++;
                 tossingList.Add(new
                 {
-                    excepDesc = stationResult.ErrMsg,
+                    excepDesc = msg.IndexOf('@') >= 0 ? msg.Substring(msg.IndexOf('@') + 1) : msg,
                     tossingSnList = keypartsSn,
                     tossingSnCnt = "1",
                     snType = "Keypart"
@@ -2238,9 +2239,10 @@ namespace Luster.Motion.Integration.Web
                         if (!String.IsNullOrEmpty(snList))
                             keypartsSn = String.IsNullOrEmpty(keypartsSn) ? snList : keypartsSn + "," + snList;
                         keypartsSnCount += item.Value.Count();
+                        var msg1 = item.Key ?? string.Empty;
                         tossingList.Add(new
                         {
-                            excepDesc = item.Key,
+                            excepDesc = msg1.IndexOf('@') >= 0 ? msg1.Substring(msg1.IndexOf('@') + 1) : msg1,
                             tossingSnList = snList,
                             tossingSnCnt = item.Value.Count().ToString(),
                             snType = "Keypart"
@@ -2263,9 +2265,10 @@ namespace Luster.Motion.Integration.Web
                         if (!String.IsNullOrEmpty(snList))
                             lotsSn = String.IsNullOrEmpty(lotsSn) ? snList : lotsSn + "," + snList;
                         lotsSnCount += item.Value.Count();
+                        var msg1 = item.Key ?? string.Empty;
                         tossingList.Add(new
                         {
-                            excepDesc = item.Key,
+                            excepDesc = msg1.IndexOf('@') >= 0 ? msg1.Substring(msg1.IndexOf('@') + 1) : msg1,
                             tossingSnList = snList,
                             tossingSnCnt = item.Value.Count().ToString(),
                             snType = "LotNo"
@@ -2325,7 +2328,7 @@ namespace Luster.Motion.Integration.Web
                 cellId = "1",//工位序号
                 result = stationResult.Result ? "PASS" : "FAIL", // 去掉Tossing结果，stationResult.IsToss ? "TOSSING" : 
                 errorCode = stationResult.NgCode,//报错代码
-                errorDesc = stationResult.ErrMsg,//报错描述
+                errorDesc = msg.IndexOf('@') >= 0 ? msg.Substring(msg.IndexOf('@') + 1) : msg,//报错描述
                 startTime = stationResult.EnterTime == DateTime.MinValue ? DateTime.Now.AddSeconds(-10).ToString("yyyy-MM-dd HH:mm:ss.fff") :
                                                                         stationResult.EnterTime.ToString("yyyy-MM-dd HH:mm:ss.fff"),
                 endTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"),

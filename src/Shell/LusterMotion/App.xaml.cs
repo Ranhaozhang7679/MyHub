@@ -240,6 +240,8 @@ namespace LusterMotion
             moduleCatalog.AddModule<Luster.Motion.DigitalSetup.DigitalSetupModule>(); //数字架线
 
             moduleCatalog.AddModule<Luster.Motion.LightTuning.LightTuningModule>(); //光调 UI（TES-64 P6-F）
+            // P6-A：五轴 AOI UI 模块（可还原，移除本行 + LusterMotion.csproj 的 ProjectReference 即可，平台标准 UI 不受影响）
+            moduleCatalog.AddModule<Luster.Motion.FiveAxis.UI.FiveAxisUIModule>(); //五轴AOI UI
 
             // 注册动态页面
             var commBus = Container.Resolve<ICommonBus>();

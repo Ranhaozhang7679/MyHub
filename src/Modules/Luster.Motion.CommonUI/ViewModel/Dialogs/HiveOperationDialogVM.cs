@@ -259,7 +259,7 @@ namespace Luster.Motion.CommonUI.ViewModel.Dialogs
                         SendHiveMsg(cmdStr);
                         cardID = "";
 
-                        if (ret && (auth == "L1" || auth == "L2" || auth == "L3" || auth == "L6" /*|| auth == "L7" || auth == "L8"*/ || auth == "L9"))
+                        if (ret && (auth == "L1" || auth == "L2" || auth == "L3" || auth == "L6" || auth == "L7" || auth == "L8" || auth == "L9"))
                         {
                             // 刷卡成功，重置剩余次数
                             if (RemainingCount != 3)

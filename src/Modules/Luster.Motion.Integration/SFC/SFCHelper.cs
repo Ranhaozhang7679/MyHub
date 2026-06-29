@@ -1965,6 +1965,45 @@ namespace Luster.Motion.Integration.SFC
             return cableSN;
         }
 
+        /// <summary>
+        /// 通过WIP查询LCFM码
+        /// </summary>
+        /// <param name="wip">WIP码</param>
+        /// <param name="stationId">工站ID</param>
+        /// <param name="lcfmLength">LCFM码长度</param>
+        /// <param name="errMsg">错误信息</param>
+        /// <returns>LCFM码</returns>
+        public string QueryLCFMByWIP(string wip, string stationId, int lcfmLength, out string errMsg)
+        {
+            string lcfm = "";
+            string cmd = $"c=QUERY_RECORD&sn={wip}&p=lcfm_sn&station_id={stationId}";
+            errMsg = "";
+            const string keyName = "SFC_OK";
+            const string dataKey = "lcfm_sn=";
+            HttpSend(cmd, "通过WIP查询LCFM", r =>
+            {
+                if (r.Contains(keyName))
+                {
+                    int dataIndex = r.IndexOf(dataKey);
+                    if (dataIndex >= 0)
+                    {
+                        int startIndex = dataIndex + dataKey.Length;
+                        if (r.Length >= startIndex + lcfmLength)
+                        {
+                            lcfm = r.Substring(startIndex, lcfmLength).Trim();
+                            return string.Empty;
+                        }
+                    }
+                    return "LCFM码解析失败!";
+                }
+                else
+                {
+                    return "LCFM码查询失败!";
+                }
+            }, out errMsg);
+            return lcfm;
+        }
+
 
         /// <summary>
         /// CG5查询Flex黑名单

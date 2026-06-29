@@ -80,11 +80,20 @@
 
                             <!-- 多行输入框 -->
                             <TextBox x:Name="TbAction" Grid.Column="0" Text="{Binding ActionTaken, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                    AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Height="80" FontSize="16" Grid.ColumnSpan="2" Margin="0,0,19,0"/>
+                                    AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Height="80" FontSize="16" Grid.ColumnSpan="2" Margin="0,0,24,0"/>
 
                             <!-- 下拉箭头 -->
-                            <Button Grid.Column="1" Width="20" Height="80" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" Click="Arrow_Click">
-                                <Path Data="M0,0 L4,4 L8,0 Z" Fill="Black" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" Width="24" Height="80"
+                                    Background="#F0F0F0" BorderBrush="#CCCCCC"
+                                    Click="Arrow_Click"
+                                    ToolTip="选择检查步骤 / Pick action">
+                                <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="White" BorderBrush="#CCCCCC" BorderThickness="1">
+                                            <Path Data="M0,0 L7,7 L14,0" Stroke="#888888" StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
                             </Button>
 
                             <!-- 弹出列表（同之前） -->
@@ -100,25 +109,71 @@
                     </Border>
                     <Border Grid.Row="1" Grid.Column="1" Padding="5">
                         <!--<hc:ComboBox IsEditable="True" Height="80"  DisplayMemberPath="Desc" ItemsSource="{Binding ToolLists}" SelectedValue="{Binding Tool}"  HorizontalAlignment="Stretch" VerticalAlignment="Center"/>-->
-                        <ComboBox IsEditable="True"
-                                  DisplayMemberPath="Desc"
-                                  ItemsSource="{Binding ToolLists}"
-                                  Text="{Binding Tool, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                  HorizontalAlignment="Stretch"
-                                  VerticalAlignment="Center"
-                                  Height="80"
-                                  FontSize="16"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <!-- 输入框 -->
+                                <TextBox x:Name="TbTool" Grid.Column="0" Text="{Binding Tool, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                        AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Height="80" FontSize="16" Grid.ColumnSpan="2" Margin="0,0,24,0"/>
+                                <!-- 下拉箭头 -->
+                                <Button Grid.Column="1" Width="24" Height="80"
+                                        Background="#F0F0F0" BorderBrush="#CCCCCC"
+                                        Click="Arrow_Tool_Click"
+                                        ToolTip="选择用到工具 / Pick tool">
+                                    <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="White" BorderBrush="#CCCCCC" BorderThickness="1">
+                                            <Path Data="M0,0 L7,7 L14,0" Stroke="#888888" StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                                </Button>
+                                <!-- 弹出列表 -->
+                                <Popup x:Name="PopTool" Grid.Column="0" Grid.ColumnSpan="2"
+                                        PlacementTarget="{Binding ElementName=TbTool}"
+                                        Placement="Bottom" Width="{Binding ActualWidth, ElementName=TbTool}"
+                                        MaxHeight="120" IsOpen="False">
+                                    <ListBox x:Name="LbTool" ItemsSource="{Binding ToolLists}"
+                                             DisplayMemberPath="Desc" SelectedValuePath="Desc"
+                                             SelectionChanged="LbTool_SelectionChanged"/>
+                                </Popup>
+                            </Grid>
                     </Border>
                     <Border Grid.Row="1" Grid.Column="2" Padding="5">
                         <!--<hc:ComboBox IsEditable="True" Height="80"  DisplayMemberPath="Desc" ItemsSource="{Binding SettingLists}" SelectedValue="{Binding Setting}" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>-->
-                        <ComboBox IsEditable="True"
-                                  DisplayMemberPath="Desc"
-                                  ItemsSource="{Binding SettingLists}"
-                                  Text="{Binding Setting, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                  HorizontalAlignment="Stretch"
-                                  VerticalAlignment="Center"
-                                  Height="80"
-                                  FontSize="16"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <!-- 输入框 -->
+                                <TextBox x:Name="TbSetting" Grid.Column="0" Text="{Binding Setting, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                        AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Height="80" FontSize="16" Grid.ColumnSpan="2" Margin="0,0,24,0"/>
+                                <!-- 下拉箭头 -->
+                                <Button Grid.Column="1" Width="24" Height="80"
+                                        Background="#F0F0F0" BorderBrush="#CCCCCC"
+                                        Click="Arrow_Setting_Click"
+                                        ToolTip="选择调整参数 / Pick setting">
+                                    <Button.Template>
+                                    <ControlTemplate TargetType="Button">
+                                        <Border Background="White" BorderBrush="#CCCCCC" BorderThickness="1">
+                                            <Path Data="M0,0 L7,7 L14,0" Stroke="#888888" StrokeThickness="1.5" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </ControlTemplate>
+                                </Button.Template>
+                                </Button>
+                                <!-- 弹出列表 -->
+                                <Popup x:Name="PopSetting" Grid.Column="0" Grid.ColumnSpan="2"
+                                        PlacementTarget="{Binding ElementName=TbSetting}"
+                                        Placement="Bottom" Width="{Binding ActualWidth, ElementName=TbSetting}"
+                                        MaxHeight="120" IsOpen="False">
+                                    <ListBox x:Name="LbSetting" ItemsSource="{Binding SettingLists}"
+                                             DisplayMemberPath="Desc" SelectedValuePath="Desc"
+                                             SelectionChanged="LbSetting_SelectionChanged"/>
+                                </Popup>
+                            </Grid>
                     </Border>
                 </Grid>
             </Border>

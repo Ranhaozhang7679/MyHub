@@ -91,6 +91,8 @@
         <ProjectReference Include="..\..\Modules\Luster.Motion.SubSystem\Luster.Motion.SubSystem.csproj" />
         <ProjectReference Include="..\..\Modules\Luster.SimDevice.SubSystem\Luster.SimDevice.SubSystem.csproj" />
         <ProjectReference Include="..\..\Modules\Luster.Motion.LightTuning\Luster.Motion.LightTuning.csproj" />
+        <!-- P6-A：五轴 AOI UI 模块（可还原，移除本行 + App.xaml.cs 的 AddModule 即可） -->
+        <ProjectReference Include="..\..\Modules\Luster.Motion.FiveAxis.UI\Luster.Motion.FiveAxis.UI.csproj" />
     </ItemGroup>
 
     <ItemGroup>

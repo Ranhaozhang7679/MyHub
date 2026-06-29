@@ -39,6 +39,18 @@ namespace Luster.Motion.ReportUI.ViewModel
         private bool _isLoadingChartSettings;
         private DispatcherTimer _saveChartSettingsTimer;
 
+        // === 二合一曲线选中/删除交互（仅 IsMergedView 合并视图生效）===
+        // 当前悬停的配对索引；-1 = 无高亮。由 View 命中检测后调 SetHoveredCurveByIndex 设置
+        private int _hoveredCurveIndex = -1;
+        // 已被右键删除的配对索引集合（仅删当前显示，不动 _groupedCache / _raw*Cache / CSV）
+        private readonly HashSet<int> _hiddenCurveIndices = new HashSet<int>();
+        // 高亮色（橙）：红/蓝原色都能清晰区分；加粗到 3px 让选中曲线在多条叠加中可辨
+        private static readonly SKColor HighlightColor = Colors.Orange.ToSKColor();
+        private const int HighlightStrokeWidth = 3;
+        private const int NormalStrokeWidth = 1;
+        // Series.Name 前缀：红/蓝同索引共用 "tk-curve-{i}"，使命中后能从 Series 反查配对索引
+        private const string CurveNamePrefix = "tk-curve-";
+
         // 图表数据
         // 合并模式专用 Series（独立实例，避免与分开左图共享 Series 导致 LiveCharts 内部状态混乱）
         private List<ISeries> _seriesMerge = new List<ISeries>();
@@ -379,6 +391,10 @@ namespace Luster.Motion.ReportUI.ViewModel
             {
                 if (SetProperty(ref _removeAnomalyEnabled, value))
                 {
+                    // 切异常过滤会重建 _rawDataCache，索引语义漂移；清空删除状态保持一致
+                    _hiddenCurveIndices.Clear();
+                    _hoveredCurveIndex = -1;
+                    IsCurveHovered = false;
                     ScheduleSaveChartSettings();
                     ApplyGroupSelection();
                 }
@@ -434,7 +450,13 @@ namespace Luster.Motion.ReportUI.ViewModel
             set
             {
                 if (SetProperty(ref _selectedGroupKey, value))
+                {
+                    // 切换分组：清空删除/悬停状态（索引在新分组里指向不同曲线）
+                    _hiddenCurveIndices.Clear();
+                    _hoveredCurveIndex = -1;
+                    IsCurveHovered = false;
                     ApplyGroupSelection();
+                }
             }
         }
 
@@ -536,6 +558,54 @@ namespace Luster.Motion.ReportUI.ViewModel
                 IsMergedView = !IsMergedView;
             }));
 
+        // === 二合一曲线选中/删除交互（仅合并视图）===
+        // 是否有曲线被悬停。供 ContextMenu 的"删除该曲线"MenuItem IsEnabled 绑定。
+        private bool _isCurveHovered;
+        public bool IsCurveHovered
+        {
+            get => _isCurveHovered;
+            private set
+            {
+                if (SetProperty(ref _isCurveHovered, value))
+                    _deleteHoveredCurveCommand?.RaiseCanExecuteChanged();
+            }
+        }
+
+        private DelegateCommand _deleteHoveredCurveCommand;
+        /// <summary>
+        /// 通过右键菜单删除当前选中的配对曲线：从 SeriesMerge 临时移除（仅删当前显示，不动源数据）。
+        /// 选中由左键命中检测（View 层）写入 _hoveredCurveIndex；仅在 _hoveredCurveIndex ≥ 0 时可执行。
+        /// </summary>
+        public DelegateCommand DeleteHoveredCurveCommand =>
+            _deleteHoveredCurveCommand ?? (_deleteHoveredCurveCommand = new DelegateCommand(
+                ExecuteDeleteHoveredCurve,
+                () => _hoveredCurveIndex >= 0));
+
+        private void ExecuteDeleteHoveredCurve()
+        {
+            if (_hoveredCurveIndex < 0) return;
+            _hiddenCurveIndices.Add(_hoveredCurveIndex);
+            int removed = _hoveredCurveIndex;
+            _hoveredCurveIndex = -1;
+            IsCurveHovered = false;
+            RedrawChart();
+        }
+
+        /// <summary>
+        /// View 层命中检测后回调：更新当前选中的配对索引。
+        /// 传入 -1 表示未命中任何曲线。
+        /// 注意：LiveCharts2 只监听数据变更，修改 LineSeries.Stroke 不会触发重绘，
+        /// 所以必须 RedrawChart 重建 SeriesMerge，BuildMergedLineSeries 中才会按新 _hoveredCurveIndex 用橙色加粗。
+        /// </summary>
+        public void SetHoveredCurveByIndex(int curveIndex)
+        {
+            if (curveIndex == _hoveredCurveIndex) return;
+            _hoveredCurveIndex = curveIndex;
+            IsCurveHovered = curveIndex >= 0;
+            if (IsMergedView && _rawDataCache.Count > 0)
+                RedrawChart();
+        }
+
         #endregion
 
         #region CSV 导入
@@ -543,6 +613,11 @@ namespace Luster.Motion.ReportUI.ViewModel
         private void ImportCsvFiles()
         {
             if (_dispatcher == null) _dispatcher = Application.Current?.Dispatcher;
+
+            // 重新导入新数据：之前的"已删除"状态语义失效（索引对应的是旧分组），清空
+            _hiddenCurveIndices.Clear();
+            _hoveredCurveIndex = -1;
+            IsCurveHovered = false;
 
             // 选择文件夹：递归扫描该文件夹（含子文件夹）下所有 CSV
             var folderDialog = new System.Windows.Forms.FolderBrowserDialog();
@@ -992,49 +1067,25 @@ namespace Luster.Motion.ReportUI.ViewModel
             var chartSeries = new List<ISeries>();
             if (_smoothCurveProcessingsEnabled)
             {
-                foreach (var cachedValues in _rawDataCache1)
+                for (int i = 0; i < _rawDataCache1.Count; i++)
                 {
-                    var line = new LineSeries<ObservablePoint>();
-                    line.Stroke = new SolidColorPaint(Colors.Red.ToSKColor(), 1);
-                    line.LineSmoothness = 0;
-                    line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
-                    line.GeometrySize = 0;
-                    line.MiniatureShapeSize = 0;
-                    line.Name = null;
-                    line.Values = new List<ObservablePoint>(cachedValues);
-                    line.ScalesYAt = 0;
-                    chartSeries.Add(line);
+                    if (_hiddenCurveIndices.Contains(i)) continue;
+                    chartSeries.Add(BuildMergedLineSeries(_rawDataCache1[i], i, isPress: true));
                 }
             }
             else
             {
-                foreach (var cachedValues in _rawDataCache)
+                for (int i = 0; i < _rawDataCache.Count; i++)
                 {
-                    var line = new LineSeries<ObservablePoint>();
-                    line.Stroke = new SolidColorPaint(Colors.Red.ToSKColor(), 1);
-                    line.LineSmoothness = 0;
-                    line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
-                    line.GeometrySize = 0;
-                    line.MiniatureShapeSize = 0;
-                    line.Name = null;
-                    line.Values = new List<ObservablePoint>(cachedValues);
-                    line.ScalesYAt = 0;
-                    chartSeries.Add(line);
+                    if (_hiddenCurveIndices.Contains(i)) continue;
+                    chartSeries.Add(BuildMergedLineSeries(_rawDataCache[i], i, isPress: true));
                 }
             }
 
-            foreach (var cachedValues in _rawTimePositionCache)
+            for (int i = 0; i < _rawTimePositionCache.Count; i++)
             {
-                var line = new LineSeries<ObservablePoint>();
-                line.Stroke = new SolidColorPaint(Colors.Blue.ToSKColor(), 1);
-                line.LineSmoothness = 0;
-                line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
-                line.GeometrySize = 0;
-                line.MiniatureShapeSize = 0;
-                line.Name = null;
-                line.Values = new List<ObservablePoint>(cachedValues);
-                line.ScalesYAt = 1;
-                chartSeries.Add(line);
+                if (_hiddenCurveIndices.Contains(i)) continue;
+                chartSeries.Add(BuildMergedLineSeries(_rawTimePositionCache[i], i, isPress: false));
             }
 
             double xStep1 = XAxisStep > 0 ? XAxisStep : 50;
@@ -1108,6 +1159,26 @@ namespace Luster.Motion.ReportUI.ViewModel
                 YAxesMerge = new List<Axis> { axis_y_press, axis_y_position };
                 SeriesMerge = chartSeries;
             }));
+        }
+
+        // 构造合并视图的一条曲线 Series：Name 用 "tk-curve-{pairIndex}" 让红/蓝同索引配对；
+        // _hoveredCurveIndex 命中时改用橙色高亮 + 加粗，便于在密集叠加中辨识选中曲线
+        private LineSeries<ObservablePoint> BuildMergedLineSeries(List<ObservablePoint> values, int pairIndex, bool isPress)
+        {
+            bool highlight = _hoveredCurveIndex == pairIndex;
+            var baseColor = isPress ? Colors.Red.ToSKColor() : Colors.Blue.ToSKColor();
+            var line = new LineSeries<ObservablePoint>();
+            line.Stroke = new SolidColorPaint(
+                highlight ? HighlightColor : baseColor,
+                highlight ? HighlightStrokeWidth : NormalStrokeWidth);
+            line.LineSmoothness = 0;
+            line.Fill = new SolidColorPaint(Colors.Transparent.ToSKColor(), 1);
+            line.GeometrySize = 0;
+            line.MiniatureShapeSize = 0;
+            line.Name = $"{CurveNamePrefix}{pairIndex}";
+            line.Values = new List<ObservablePoint>(values);
+            line.ScalesYAt = isPress ? 0 : 1;
+            return line;
         }
 
         // === 分开模式：左右双子图，共享 Time X 轴 ===
