@@ -50,6 +50,8 @@ namespace DC.Authorization
         public static readonly AuthItem VizPageConfigure = new AuthItem("主页", "工具栏", "配置", "",7);
         public static readonly AuthItem VizPageIntegratedHardware = new AuthItem("主页", "工具栏", "软硬件调试", "",8);
         public static readonly AuthItem VizPageProject = new AuthItem("主页", "工具栏", "工程", "",9);
+        public static readonly AuthItem VizPageLightTuning = new AuthItem("主页", "工具栏", "光调", "",15);
+        public static readonly AuthItem VizPageFiveAxisCalib = new AuthItem("主页", "工具栏", "五轴标定", "",16);
         public static readonly AuthItem VizCmdStart = new AuthItem("主页", "工具栏", "启动", "",10);
         public static readonly AuthItem VizCmdReset = new AuthItem("主页", "工具栏", "复位", "",11);
         public static readonly AuthItem VizCmdPause = new AuthItem("主页", "工具栏", "暂停", "",12);

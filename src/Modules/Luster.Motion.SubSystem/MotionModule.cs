@@ -1,5 +1,6 @@
 using Luster.Motion.CommonUI.ViewModel.Dialogs;
 using Luster.Motion.CommonUI.Views.Dialogs;
+using Luster.Motion.FiveAxis.Service;
 using Luster.Motion.SubSystem.Dialog;
 using Luster.Motion.SubSystem.Dialogs;
 using Luster.Motion.SubSystem.ViewModel;
@@ -140,6 +141,10 @@ namespace Luster.Motion.SubSystem
 
             // Ӳ���������ü�������
             containerRegistry.RegisterForNavigation<IntegratedHardwareContent, IntegratedHardwareContentVM>();
+
+            // 五轴标定向导（TES-158）：顶级页 RegisterForNavigation + 标定 Service 入容器
+            containerRegistry.RegisterForNavigation<FiveAxisCalibContent, FiveAxisCalibContentVM>();
+            containerRegistry.RegisterSingleton<IFiveAxisCalibrationService, FiveAxisCalibrationService>();
 
             ////  ���ּ���
             //containerRegistry.RegisterForNavigation<DigitalAssContent, DigitalAssContentVM>();      //  ���ּ���һ���˵�����

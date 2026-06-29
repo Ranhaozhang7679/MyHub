@@ -1,0 +1,96 @@
+<UserControl
+    x:Class="Luster.Motion.SubSystem.Views.FiveAxisCalibContent"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:hc="https://handyorg.github.io/handycontrol"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:param="clr-namespace:Luster.Control.Wpf.Motion;assembly=Luster.Control.Wpf.Motion"
+    xmlns:prism="http://prismlibrary.com/"
+    d:DesignHeight="600"
+    d:DesignWidth="780"
+    prism:ViewModelLocator.AutoWireViewModel="True"
+    Background="{DynamicResource RegionBrush}"
+    mc:Ignorable="d">
+    <!--
+        五轴标定向导顶级页容器（TES-158 阶段 1：View/VM 骨架 + 占位 Tab）。
+        VM 由 Prism ViewModelLocator.AutoWireViewModel 自动注入 ViewModel.FiveAxisCalibContentVM。
+        本 issue 仅搭骨架：组A/组B 各自独立 TabItem，物理分隔，不绑 ParamGrid、不接命令（范围冻结）。
+        组A 6 个占位 TabItem（A1-A6）待 TES-75~80 实现；组B 占位 TES-61 既有标定 Tab（TES-61 View 未落地）。
+    -->
+    <Grid Margin="6">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 组A 五轴标定向导（ADR v2 A1-A6）-->
+        <GroupBox
+            Grid.Row="0"
+            Margin="0,0,0,6"
+            Header="五轴标定向导（ADR v2 A1-A6）">
+            <TabControl Margin="2">
+                <TabItem Header="A1 粗标">
+                    <Grid>
+                        <TextBlock
+                            Margin="8"
+                            Foreground="{DynamicResource InfoBrush}"
+                            Text="待 TES-75~80 实现" />
+                    </Grid>
+                </TabItem>
+                <TabItem Header="A2 精标">
+                    <Grid>
+                        <TextBlock
+                            Margin="8"
+                            Foreground="{DynamicResource InfoBrush}"
+                            Text="待 TES-75~80 实现" />
+                    </Grid>
+                </TabItem>
+                <TabItem Header="A3 激光标定">
+                    <Grid>
+                        <TextBlock
+                            Margin="8"
+                            Foreground="{DynamicResource InfoBrush}"
+                            Text="待 TES-75~80 实现" />
+                    </Grid>
+                </TabItem>
+                <TabItem Header="A4 工件原点示教">
+                    <Grid>
+                        <TextBlock
+                            Margin="8"
+                            Foreground="{DynamicResource InfoBrush}"
+                            Text="待 TES-75~80 实现" />
+                    </Grid>
+                </TabItem>
+                <TabItem Header="A5 五轴标定参数">
+                    <Grid>
+                        <TextBlock
+                            Margin="8"
+                            Foreground="{DynamicResource InfoBrush}"
+                            Text="待 TES-75~80 实现" />
+                    </Grid>
+                </TabItem>
+                <TabItem Header="A6 结果总览">
+                    <Grid>
+                        <TextBlock
+                            Margin="8"
+                            Foreground="{DynamicResource InfoBrush}"
+                            Text="待 TES-75~80 实现" />
+                    </Grid>
+                </TabItem>
+            </TabControl>
+        </GroupBox>
+
+        <!-- 组B TES-61 既有标定（View 未落地，占位）-->
+        <GroupBox
+            Grid.Row="1"
+            Margin="0,0,0,0"
+            Header="TES-61 既有标定">
+            <TabControl Margin="2">
+                <TabItem Header="TES-61 标定（待落地）">
+                    <ContentControl />
+                </TabItem>
+            </TabControl>
+        </GroupBox>
+    </Grid>
+</UserControl>

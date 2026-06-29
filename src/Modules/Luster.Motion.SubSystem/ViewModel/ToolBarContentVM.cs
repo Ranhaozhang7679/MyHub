@@ -2181,6 +2181,10 @@ namespace Luster.Motion.SubSystem.ViewModel
         private void AuthVizPageIntegratedHardware() { }
         [AuthVisibility(nameof(AuthDictionary.VizPageProject))]
         private void AuthVizPageProject() { }
+        [AuthVisibility(nameof(AuthDictionary.VizPageLightTuning))]
+        private void AuthVizPageLightTuning() { }
+        [AuthVisibility(nameof(AuthDictionary.VizPageFiveAxisCalib))]
+        private void AuthVizPageFiveAxisCalib() { }
 
         // ── 页面导航操作权限 ──
         [AuthRight(nameof(AuthDictionary.VizPageHome))]
@@ -2199,6 +2203,10 @@ namespace Luster.Motion.SubSystem.ViewModel
         private void AuthRightPageIntegratedHardware() { }
         [AuthRight(nameof(AuthDictionary.VizPageProject))]
         private void AuthRightPageProject() { }
+        [AuthRight(nameof(AuthDictionary.VizPageLightTuning))]
+        private void AuthRightPageLightTuning() { }
+        [AuthRight(nameof(AuthDictionary.VizPageFiveAxisCalib))]
+        private void AuthRightPageFiveAxisCalib() { }
 
         // ── 操作按钮可见性 ──
         [AuthVisibility(nameof(AuthDictionary.VizCmdStart))]
