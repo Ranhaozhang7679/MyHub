@@ -17,6 +17,8 @@
 		<PackageReference Include="xunit.v3" />
 		<PackageReference Include="xunit.runner.visualstudio" />
 		<PackageReference Include="coverlet.collector" />
+		<!-- Moq：CheckInterlock 互锁回归 Mock IMotionModule 捕获 OnAlarm (TES-165 P9-D ⑥ Safety) -->
+		<PackageReference Include="Moq" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -28,6 +30,8 @@
 		<ProjectReference Include="..\..\src\Modules\Luster.TaskFlow.Motion\Luster.TaskFlow.Motion.csproj" />
 		<!-- ② SystemConfig.RunMode 默认 Virtual -->
 		<ProjectReference Include="..\..\src\Modules\Luster.Motion.TaskFlow.Engine\Luster.Motion.TaskFlow.Engine.csproj" />
+		<!-- ⑥ 互锁矩阵：CheckInterlock + SafetyModule 静态注册表 (TES-165 P9-D Safety) -->
+		<ProjectReference Include="..\..\src\Modules\Luster.Module.Motion.Safety\Luster.Module.Motion.Safety.csproj" />
 	</ItemGroup>
 
 </Project>
