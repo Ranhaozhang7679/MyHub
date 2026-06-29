@@ -28,6 +28,8 @@
 		<ProjectReference Include="..\..\src\Modules\Luster.TaskFlow.Motion\Luster.TaskFlow.Motion.csproj" />
 		<!-- ② SystemConfig.RunMode 默认 Virtual -->
 		<ProjectReference Include="..\..\src\Modules\Luster.Motion.TaskFlow.Engine\Luster.Motion.TaskFlow.Engine.csproj" />
+		<!-- ⑤ 信号级真实 VIO 超时：DeviceEngine + VIO.WaitIO→DeviceTimeoutException (TES-165 验收点3) -->
+		<ProjectReference Include="..\..\src\Modules\Luster.SimDevice\Luster.SimDevice.csproj" />
 	</ItemGroup>
 
 </Project>
