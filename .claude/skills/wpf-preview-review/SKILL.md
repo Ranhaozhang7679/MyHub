@@ -1,18 +1,35 @@
 ---
 name: wpf-preview-review
-description: LMV-2026 项目的 WPF 页面视觉反馈闭环。当你在 LMV-2026 仓库里写/改 WPF View(XAML),或想知道 Agent 写的 WPF 页面长什么样、符不符合设计规范时,用这个 skill。它通过独立预览宿主(Luster.PreviewHost)把指定 View 连同真实主题渲染成 PNG 截图,再用视觉模型(Qwen3-VL)对照设计契约评阅,产出结构化问题报告。让"看不见渲染结果"的盲改变成有视觉反馈的迭代。涉及 WPF 页面、XAML、View 渲染、界面预览、UI 评审、截图自检、d:DesignInstance 设计时数据等场景都应触发。
+description: WPF 页面视觉反馈闭环。当你在任何 WPF 仓库里写/改 View(XAML),或想知道 Agent 写的 WPF 页面长什么样、符不符合设计规范时,用这个 skill。它通过独立预览宿主把指定 View 连同真实主题渲染成 PNG 截图,再用视觉模型(Qwen3-VL)对照设计契约评阅,产出结构化问题报告。让"看不见渲染结果"的盲改变成有视觉反馈的迭代。涉及 WPF 页面、XAML、View 渲染、界面预览、UI 评审、截图自检、d:DesignInstance 设计时数据等场景都应触发。
 ---
 
 # WPF 页面视觉反馈闭环
+
+## 通用性说明(先读)
+
+本 skill **通用,不绑定特定项目**——任何 WPF 项目都能用,只要把三个工具工程(`PreviewHost`/`VisualReviewer`/`XamlLinter`)搬进该项目的 `src/Tools/` 并 build 出 exe。
+
+下文出现的具体名字都是**本项目(lmv-2026)的示例值**,换项目时替换为你自己的:
+
+| 示例值(本项目) | 通用含义 | 换项目替换为 |
+|---|---|---|
+| `Luster.PreviewHost` / `Luster.VisualReviewer` / `Luster.XamlLinter` | 三个工具 exe | 你的工具名(或保持同名) |
+| `LMV-2026.sln` / `LusterMotion.exe` | 主 sln / 主 exe | 你的 sln / 主 exe |
+| `Luster.Controls.Wpf` / HandyControl / `hc:` 前缀 | 项目控件库及其 XAML 前缀 | 你的控件库(如 MaterialDesign/`md:`、MahApps/`mah:`、自研) |
+| `Luster.Common.Assets`/`Luster.Motion.Assests`/... | PreviewHost 直接引用的主题/资源模块 | 你的主题资源模块 |
+| `src/Modules/**/*.xaml` / `src/Tools/Luster.PreviewHost/Fixtures/` | View 与 mock VM 的目录约定 | 你的目录结构 |
+
+工具工程源码在 `src/Tools/` 下,随项目走(不抽成独立 nuget/仓库)。换项目时连工具工程一起搬。
 
 ## 这个 skill 解决什么
 
 Agent 写 WPF 页面最大的痛点是**看不见渲染结果**——写完 XAML 只能靠脑补布局,改一遍盲改一遍。Web 前端能 Playwright 截图自检,WPF 没有。本闭环补上这个缺口:一条命令把 View 连同项目真实主题渲染成截图,再用视觉模型按设计契约评阅,产出问题清单。
 
-两个工具(已在仓库 `feature/wpf-visual-feedback-loop` 分支实现):
+三个工具(本项目实现于 `feature/wpf-visual-feedback-loop` 分支,`src/Tools/` 下):
 
 - **`Luster.PreviewHost`** — 独立预览 exe,复用 Shell 主题字典,实例化指定 View + 设计时 mock VM,渲染成 PNG。
 - **`Luster.VisualReviewer`** — 评阅 console,读截图,调 siliconflow Qwen3-VL 评像素可见维度,出结构化 JSON 报告(prompt 自包含维度,不加载契约全文)。
+- **`Luster.XamlLinter`** — XAML 静态检查 console,解析源码级合规(裸控件/写死颜色尺寸/内联 Style/字号档位),离线、带行号。
 
 ## 命令运行环境
 
@@ -20,17 +37,17 @@ Agent 写 WPF 页面最大的痛点是**看不见渲染结果**——写完 XAML
 
 ## 前置条件
 
-1. **先 build**。两个 exe 是构建产物,不在 git 里。
+1. **先 build**。三个 exe 是构建产物,不在 git 里(`src/Tools/` 下是源码工程)。
    - 首次或拉取新代码后,整 sln build 一次:
      ```bash
-     dotnet build LMV-2026.sln
-     # 产物在 artifacts/bin/net472/Luster.PreviewHost.exe 和 Luster.VisualReviewer.exe
+     dotnet build LMV-2026.sln   # ← 换项目换成你的 sln
+     # 产物在 artifacts/bin/net472/Luster.PreviewHost.exe / Luster.VisualReviewer.exe / Luster.XamlLinter.exe
      ```
    - **若只是新增/改了 PreviewHost 的 mock VM**,不必整 sln,轻量 build 单工程即可(~6 秒):
      ```bash
      dotnet build src/Tools/Luster.PreviewHost/Luster.PreviewHost.csproj
      ```
-   注意:build 前确保 `LusterMotion.exe` 没在运行,否则会锁 DLL 导致 build 复制失败。
+   注意:build 前确保主 exe(`LusterMotion.exe`)没在运行,否则会锁 DLL 导致 build 复制失败。
 
 2. **视觉评阅需要 API key**(siliconflow)。设环境变量(不写进源码,安全):
    ```bash
@@ -45,21 +62,21 @@ Agent 写 WPF 页面最大的痛点是**看不见渲染结果**——写完 XAML
 
 ### Step 0: 挑选目标 View
 
-用 `Glob` 找 `src/Modules/**/*.xaml`,挑一个要预览的 View。挑选建议:
+用 `Glob` 找 View 源文件(本项目约定 `src/Modules/**/*.xaml`),挑一个要预览的 View。挑选建议:
 
 - 优先 `UserControl`(不要 `Window`——Window 有 chrome,离屏渲染易出异常)。
 - 内容明确(有几个控件,不是空 Grid),依赖尽量少。
 - 简单 View 先试,验证流程通了再上复杂 View。
-- 看清楚它所在的**程序集**(csproj 名/AssemblyName),`--view` 的"程序集"部分要填对。PreviewHost 直接引用了 `Luster.Common.Assets`/`Luster.Motion.Assests`/`Luster.Controls.Wpf`/`Luster.Control.Wpf.Motion`/`Luster.SimDevice.SubSystem`,这些模块的 View 可直接 `--view`;**其他模块的 View 必须加 `--assembly <dll路径>`**(见坑3)。
+- 看清楚它所在的**程序集**(csproj 名/AssemblyName),`--view` 的"程序集"部分要填对。PreviewHost 直接引用了项目的主题/资源/控件库模块(本项目:`Luster.Common.Assets`/`Luster.Motion.Assests`/`Luster.Controls.Wpf`/`Luster.Control.Wpf.Motion`/`Luster.SimDevice.SubSystem`),这些模块的 View 可直接 `--view`;**其他模块的 View 必须加 `--assembly <dll路径>`**(见坑3)。
 
 ### Step 1: 给 View 准备设计时数据(若还没有)
 
 PreviewHost 靠 mock VM 填充 View 的 DataContext(它**不走 Prism 的 ViewModelLocator**,DataContext 完全由 `--designvm` 决定,真实 VM 的逻辑/数据不会跑起来)。给 View 配一个设计时 VM。
 
-**mock VM 放哪里**:推荐放 `src/Tools/Luster.PreviewHost/Fixtures/`,namespace 用 `Luster.PreviewHost.Fixtures`——和夹具并列,零额外引用、不污染业务模块,`--designvm` 填 `Luster.PreviewHost.Fixtures.XxxDesignVm,Luster.PreviewHost`。这样不用 rebuild 业务模块。
+**mock VM 放哪里**:推荐放 PreviewHost 工程下的 Fixtures 目录(本项目 `src/Tools/Luster.PreviewHost/Fixtures/`,namespace `Luster.PreviewHost.Fixtures`)——和夹具并列,零额外引用、不污染业务模块,`--designvm` 填 `Luster.PreviewHost.Fixtures.XxxDesignVm,Luster.PreviewHost`。这样不用 rebuild 业务模块。
 (也可放 View 同程序集,但那要 rebuild 业务模块、且 mock VM 会进业务 DLL,不推荐。)
 
-mock VM 要求:public、无参构造、属性填示例值。例如 View 是 `Luster.Motion.DigitalSetup.Views.ParamView`,在 `src/Tools/Luster.PreviewHost/Fixtures/ParamDesignVm.cs` 写:
+mock VM 要求:public、无参构造、属性填示例值。例如 View 是 `Luster.Motion.DigitalSetup.Views.ParamView`(本项目示例),在 `src/Tools/Luster.PreviewHost/Fixtures/ParamDesignVm.cs` 写:
 
 ```csharp
 public class ParamDesignVm
@@ -170,7 +187,7 @@ artifacts/bin/net472/Luster.XamlLinter.exe \
 **检查规则(v1,5 条,对应契约源码级维度):**
 | 规则 | Severity | 说明 |
 |---|---|---|
-| `bare-control` | high | 裸 `<Button>`/`<TextBox>`/`<Border>` 等应改 `hc:` 或 Luster.Controls.Wpf 封装 |
+| `bare-control` | high | 裸 `<Button>`/`<TextBox>`/`<Border>` 等应改用项目控件库封装(本项目 `hc:` / `Luster.Controls.Wpf`) |
 | `hardcoded-color` | medium | 颜色属性写死 `#hex` 应 `{StaticResource}` 引主题色键 |
 | `hardcoded-size` | medium | 尺寸属性写死像素值(含 `Margin="5,2"` 多值)应引 Sizes.xaml Key |
 | `inline-style` | medium | View 内联 `<Style>` 应进资源字典 |
@@ -179,7 +196,7 @@ artifacts/bin/net472/Luster.XamlLinter.exe \
 - `d:` 设计时属性(如 `d:DesignHeight`)跳过;标记扩展(`{StaticResource}`/`{Binding}`)不报;注释/字符串里的 `<Button>` 不会误报(节点流天然过滤)。
 - **v1 不验 `{StaticResource Key}` 的 Key 是否存在**(键合法性留 v2,需反射加载主题字典)。
 
-> 上表 `bare-control` 正是补 Reviewer 的盲区:视觉模型从像素分不清裸 `Button` 与 `hc:Button`(都渲染成按钮),静态解析靠命名空间精确区分。实测 AddUserDialog 报出 6 个真裸控件(TextBox/PasswordBox/Button)而**不误报**其中的 `hc:ComboBox`。
+> 上表 `bare-control` 正是补 Reviewer 的盲区:视觉模型从像素分不清裸 `Button` 与项目控件库的 `Button`(都渲染成按钮),静态解析靠命名空间精确区分。本项目实测 AddUserDialog 报出 6 个真裸控件(TextBox/PasswordBox/Button)而**不误报**其中的 `hc:ComboBox`(项目控件库前缀)。换项目则规则按你的控件库前缀调整。
 
 ### Step 5: 按报告改 XAML,回到 Step 2
 
@@ -189,11 +206,11 @@ artifacts/bin/net472/Luster.XamlLinter.exe \
 
 ## 设计契约(`docs/wpf-design-contract.md`)
 
-人读规范 + 视觉模型评阅标准,双用途。改动契约会直接影响评阅结果。关键条款:
+人读规范 + 视觉模型评阅标准,双用途。改动契约会直接影响评阅结果。**契约内容是项目级约定**(本项目 lmv-2026 的契约在 `docs/wpf-design-contract.md`,换项目应有自己的契约文件)。关键条款(本项目示例):
 
-- **控件库**:一律用 HandyControl + `Luster.Controls.Wpf`,禁原生 `Button`/`TextBox`/`Border` 拼凑。
-- **资源键**:色/字号/间距用 `{StaticResource <Key>}` 引用(契约里列了 90+ 真实 Key),不写死值。
-- **字号档位**:标题/正文/标签三档。
+- **控件库**:一律用项目控件库(本项目 HandyControl + `Luster.Controls.Wpf`,XAML 前缀 `hc:`),禁原生 `Button`/`TextBox`/`Border` 拼凑。换项目则替换为你的控件库(如 MaterialDesign/`md:`、MahApps/`mah:`、自研)。
+- **资源键**:色/字号/间距用 `{StaticResource <Key>}` 引用(契约里列了项目主题真实 Key),不写死值。
+- **字号档位**:标题/正文/标签三档(本项目 12/14/20)。
 - **布局**:工业界面紧凑,主操作区/状态区/参数区分区。
 - **Blend**:鼓励用 Blend for Visual Studio 做可视化设计与样式微调;设计时数据用 `d:DesignInstance`,产物进资源字典不散落。
 
@@ -203,9 +220,9 @@ artifacts/bin/net472/Luster.XamlLinter.exe \
 
 1. **`d:DesignInstance="local:Vm"` 运行时解析不了**。`d:` 前缀带 `mc:Ignorable`,编译进 BAML 时被剥离;且 `local:` 是 XAML 别名,源文件解析也拿不到全名。所以**总用 `--designvm <全名,程序集>` 显式传**,不要指望 `--xaml` 自动解析。
 
-2. **跨线程渲染**。PreviewHost 在主 STA 线程加载主题并实例化 View(同线程,共享 Dispatcher),引用 HandyControl 未冻结画刷不会崩。**不要**把 ViewRenderer 改回新建工作线程渲染——会因线程亲和性抛 `InvalidOperationException` 且渲染空白。
+2. **跨线程渲染**。PreviewHost 在主 STA 线程加载主题并实例化 View(同线程,共享 Dispatcher),引用项目控件库(本项目 HandyControl)未冻结画刷不会崩。**不要**把 ViewRenderer 改回新建工作线程渲染——会因线程亲和性抛 `InvalidOperationException` 且渲染空白。
 
-3. **外部模块 View 找不到**。PreviewHost 直接引用了 `Luster.Common.Assets`/`Luster.Motion.Assests`/`Luster.Controls.Wpf` 等,这些模块的 View 可直接 `--view`。其他模块的 View 需 `--assembly <dll路径>` 让宿主加载(或给类型全名含程序集名让兜底解析)。
+3. **外部模块 View 找不到**。PreviewHost 直接引用了项目的主题/资源/控件库模块(本项目 `Luster.Common.Assets`/`Luster.Motion.Assests`/`Luster.Controls.Wpf` 等),这些模块的 View 可直接 `--view`。其他模块的 View 需 `--assembly <dll路径>` 让宿主加载(或给类型全名含程序集名让兜底解析)。
 
 4. **截图空白/近空白**。检查:① View 是否真有内容(不是空 Grid);② mock VM 是否填了数据(空集合会让列表塌缩);③ 主题是否加载成功(退出码 3?);④ 本地化文本空(见坑6)。PNG 字节数 > 5000 不能证明非空白(浅色近空白图压缩后也可能超)——**人工或视觉模型确认截图有内容再评阅**,否则 Reviewer 会瞎评(见 Step 3 预警)。
 
@@ -213,7 +230,7 @@ artifacts/bin/net472/Luster.XamlLinter.exe \
 
 6. **本地化 `{lang:Lang Key=...}` 未初始化致截图文本空**。PreviewHost 未初始化 `LangProvider`,含本地化标记的 View(按钮文字、部分标签)会渲染成空。**这是预期,评阅时别当成缺陷。** 若需要文字,可在 mock VM 里把关键文本当属性直接绑(绕过本地化),或接受空文本只看布局。
 
-7. **build 失败 "文件被另一个进程锁定"**。`LusterMotion.exe` 在运行,关掉再 build。
+7. **build 失败 "文件被另一个进程锁定"**。主 exe(本项目 `LusterMotion.exe`)在运行,关掉再 build。
 
 ## 与开发流水线集成
 

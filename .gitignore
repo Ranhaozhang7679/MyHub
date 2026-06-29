@@ -329,3 +329,9 @@ FodyWeavers.xsd
 # ignore such as zip
 *.7z
 *.zip
+
+# WPF 预览工作区:跟踪 index.md 索引与 SampleView e2e 样例组(plan Task9 故意提交作演示),
+# 忽略其余跑出来的产物(截图/评阅报告/lint 报告),可随时用 PreviewHost/VisualReviewer/XamlLinter 重跑。
+workspace/wpf-preview/*/runs/
+workspace/wpf-preview/*/reports/
+workspace/wpf-preview/*/lint-*.json
