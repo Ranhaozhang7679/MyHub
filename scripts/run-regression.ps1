@@ -30,7 +30,8 @@ $newSuites = @(
     @{ Suite="②模式切换"; Filter="Suite=ModeSwitch" },
     @{ Suite="③IO轴";     Filter="Suite=IOAxis" },
     @{ Suite="④握手";     Filter="Suite=Handshake" },
-    @{ Suite="⑤超时";     Filter="Suite=Timeout" }
+    @{ Suite="⑤超时";     Filter="Suite=Timeout" },
+    @{ Suite="⑥互锁";     Filter="Suite=Safety" }
 )
 
 function Invoke-DotnetTest {
@@ -64,7 +65,7 @@ function Invoke-DotnetTest {
 }
 
 $summary = @{}
-foreach ($s in @("①状态机","②模式切换","③IO轴","④握手","⑤超时")) {
+foreach ($s in @("①状态机","②模式切换","③IO轴","④握手","⑤超时","⑥互锁")) {
     $summary[$s] = @{ Passed=0; Failed=0; Total=0 }
 }
 
@@ -106,7 +107,7 @@ Write-Host ""
 Write-Host "=== 分类汇总 ===" -ForegroundColor Cyan
 $overallPass = $true
 $gP = 0; $gF = 0; $gT = 0
-foreach ($s in @("①状态机","②模式切换","③IO轴","④握手","⑤超时")) {
+foreach ($s in @("①状态机","②模式切换","③IO轴","④握手","⑤超时","⑥互锁")) {
     $p = $summary[$s].Passed; $f = $summary[$s].Failed; $t = $summary[$s].Total
     $gP += $p; $gF += $f; $gT += $t
     if ($f -ne 0) { $overallPass = $false }
