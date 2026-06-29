@@ -5,6 +5,9 @@ using Luster.Motion.DataStruct.Enums;
 using Luster.TaskFlow.Common.Attributes;
 using Luster.TaskFlow.Common.Enums;
 using Luster.TaskFlow.Motion;
+using Luster.SimDevice.Engine;
+using Luster.Motion.DataStruct.DataModels;
+using System.Diagnostics;
 using Xunit;
 
 namespace Luster.Module.Motion.Regression.Baseline.Tests
@@ -64,6 +67,38 @@ namespace Luster.Module.Motion.Regression.Baseline.Tests
         {
             Assert.True(Enum.IsDefined(typeof(RunStatus), "TimeOut"));
             Assert.Equal(RunStatus.TimeOut, (RunStatus)5);
+        }
+
+        /// <summary>
+        /// 信号级真实超时：DeviceEngine(Virtual)+VIO{Behavior=Input,Value=0} 注册后，
+        /// WaitIO(true,200ms) 永不满足 → CalcTime 超时抛 DeviceTimeoutException。
+        /// Stopwatch 锁 5s 上限(防挂起)/100ms 下限(确认真实等待非瞬时)。
+        /// 注：真实链路为 VIO.WaitIO→CalcTime→DeviceTimeoutException；
+        /// "DoExcute→OnAlarm(FailError)→return false" 在当前源码不存在
+        /// (运行器层 MotionModule 用 AlarmType.Timeout+RunStatus.Alarmed/Error)。
+        /// </summary>
+        [Fact]
+        public void VIO_WaitIO_RealTimeout_ThrowsDeviceTimeoutException_WithinBounds()
+        {
+            var engine = new DeviceEngine();                       // DeviceMode 默认 Virtual
+            var vio = new VIO
+            {
+                ID = Guid.NewGuid(),
+                Name = "vioTimeout",
+                Behavior = IOBehavior.Input,
+                Value = 0
+            };
+            engine.AddVirtual(vio);                                // 内部设 vio.Engine=engine、Mode=Virtual；DeviceID 留 Empty 故 motionCard 不绑定
+
+            Assert.False(vio.GetDigital());                        // Value=0 → 虚拟分支 Value>0 = false，永不满足
+
+            var sw = Stopwatch.StartNew();
+            var ex = Assert.Throws<DeviceTimeoutException>(() => vio.WaitIO(true, 200));  // timeout=200ms，timeAction=null → CalcTime 超时抛
+            sw.Stop();
+
+            Assert.True(sw.ElapsedMilliseconds >= 100, $"下限未达: {sw.ElapsedMilliseconds}ms");
+            Assert.True(sw.ElapsedMilliseconds <= 5000, $"上限超出(疑似挂起): {sw.ElapsedMilliseconds}ms");
+            Assert.Equal("N03OOOO-01", ex.AlarmCode);
         }
     }
 }

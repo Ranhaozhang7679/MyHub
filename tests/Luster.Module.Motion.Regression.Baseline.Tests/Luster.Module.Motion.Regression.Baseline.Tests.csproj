@@ -32,6 +32,8 @@
 		<ProjectReference Include="..\..\src\Modules\Luster.Motion.TaskFlow.Engine\Luster.Motion.TaskFlow.Engine.csproj" />
 		<!-- ⑥ 互锁矩阵：CheckInterlock + SafetyModule 静态注册表 (TES-165 P9-D Safety) -->
 		<ProjectReference Include="..\..\src\Modules\Luster.Module.Motion.Safety\Luster.Module.Motion.Safety.csproj" />
+		<!-- ⑤ 信号级真实 VIO 超时：DeviceEngine + VIO.WaitIO→DeviceTimeoutException (TES-165 验收点3) -->
+		<ProjectReference Include="..\..\src\Modules\Luster.SimDevice\Luster.SimDevice.csproj" />
 	</ItemGroup>
 
 </Project>
