@@ -9,15 +9,17 @@ namespace Luster.Motion.FiveAxis.Calibration
     /// 由 <c>FiveAxisCaliParam.DoExcute</c> 经宿主模块 Ioc 服务定位调用，把结果回写 OUT。
     /// </summary>
     /// <remarks>
-    /// ⚠️ 范围说明：本接口是“薄 Service 壳”。真正的标定数值求解（粗标/精标/激光/原点）仍在旧程序
-    /// Form5Cali/FrameCal/ZFrameCali，不在本仓库、不在本 issue 范围。实现内部仅用 <see cref="Coord5Axis"/>
-    /// 正逆解产出“可计算部分”的中间结果回写 OUT，标定求解本体留 TODO（待后续 issue 迁移）。
+    /// ⚠️ 范围说明：本接口是“薄 Service 壳”，采用诚实失败语义。真正的标定数值求解（粗标/精标/激光/原点）
+    /// 仍在旧程序 Form5Cali/FrameCal/ZFrameCali，不在本仓库、不在本 issue 范围。当前实现（<c>FiveAxisCalibrationService</c>）
+    /// 的 <c>Calibrate</c> 入口直接 <c>throw NotImplementedException</c>，不产出任何标定结果——算法本体待独立 issue
+    /// 迁移后接通。调用方据此明确感知“标定未实现”，避免 fake 中间结果误判标定成功（D2 精度项）。
     /// </remarks>
     public interface IFiveAxisCalibrationService
     {
         /// <summary>
-        /// 聚合标定：一次性产出粗标/精标/原点示教三个 OUT 结果。
-        /// 标定求解本体待迁移，此处用 Coord5Axis 正逆解产出可验证的运动学中间结果。
+        /// 聚合标定：对齐粗标/精标/原点示教三个 OUT 的契约入口。
+        /// ⚠️ 诚实失败：当前实现入口抛 <see cref="System.NotImplementedException"/>，不产出标定结果；
+        /// 算法本体待独立 issue 迁移后接通。
         /// </summary>
         CalibrationResult Calibrate(CalibrationInput input);
     }
