@@ -160,10 +160,11 @@ scripts/migrate-nuget/nuget.exe pack 包名.nuspec -OutputDirectory output/
 3. 上传：
 
 ```bash
-scripts/migrate-nuget/nuget.exe push output/包名.1.0.0.nupkg -Source "http://10.9.1.153:8687/api/v4/projects/33/packages/nuget/index.json" -ApiKey "Vg48Ep_Fexap8zgM74RL" -ConfigFile NuGet.config
+scripts/migrate-nuget/nuget.exe push output/包名.1.0.0.nupkg -Source "http://10.9.1.153:8687/api/v4/projects/33/packages/nuget/index.json" -ApiKey "%NUGET_GITLAB_TOKEN%" -ConfigFile NuGet.config
 ```
 
 > **注意**：必须使用 `-ConfigFile NuGet.config` 参数，否则 nuget.exe 会因 HTTP 源拒绝推送。
+> `-ApiKey` 通过环境变量 `%NUGET_GITLAB_TOKEN%` 注入，请勿在文档或命令历史中硬编码明文 Token；环境变量设置方式见 `docs/NuGet-gitlab-credentials.md`（TES-186 新增）。
 
 ### 更新包版本
 
