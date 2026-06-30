@@ -5,7 +5,6 @@ using Luster.Motion.EditorUI.ViewModel;
 using Luster.Motion.EditorUI.ViewModel.Dialogs;
 using Luster.Motion.EditorUI.Views;
 using Luster.Motion.EditorUI.Views.Dialogs;
-using Luster.Motion.FiveAxis.Service;
 using Luster.Motion.TaskFlow.Engine;
 using Prism.Ioc;
 using Prism.Modularity;
@@ -69,9 +68,6 @@ namespace Luster.Motion.EditorUI
 
             // 注册配置导页面
             containerRegistry.RegisterForNavigation<FlowContent, FlowContentVM>();
-            // FiveAxis 标定服务(激光/粗标/精标/原点),LaserCaliTabViewModel 依赖
-            // IFiveAxisFrame 不入容器(运行时反射设备实例,同 IFiveAxisRTCP 范式);frame=null 仅阻塞精标 AccurateCalibrate,激光/粗标/原点三阶段可用;精标 frame 由精标执行 issue 运行时从 IDeviceEngine 取卡注入。
-            containerRegistry.RegisterSingleton<IFiveAxisCalibrationService, FiveAxisCalibrationService>();
             // 激光标定 Tab 导航宿主(AutoWireViewModel 自动接 LaserCaliTabViewModel)
             containerRegistry.RegisterForNavigation<LaserCaliTabView, LaserCaliTabViewModel>();
         }

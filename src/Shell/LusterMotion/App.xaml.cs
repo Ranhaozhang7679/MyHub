@@ -8,6 +8,7 @@ using Luster.Motion.CommonUI;
 using Luster.Motion.DataStruct;
 using Luster.Motion.DataStruct.Interfaces;
 using Luster.Motion.DigitalSetup.Services;
+using Luster.Motion.FiveAxis.Service;
 using Luster.Motion.Integration.Web;
 using Luster.Motion.Integration.WorkCardVerify;
 using Luster.Motion.SubSystem.ViewModel;
@@ -105,6 +106,8 @@ namespace LusterMotion
             containerRegistry.Register<IRepository, Repository>();
             containerRegistry.Register<IDbHelper, DbHelper>();
             containerRegistry.RegisterSingleton<IMotionController, MotionController>();
+            // 五轴标定服务(平台级,单一注册落点;架构师 13:23 裁决,原 EditorModule.cs:74 注册迁此)
+            containerRegistry.RegisterSingleton<IFiveAxisCalibrationService, FiveAxisCalibrationService>();
 
             containerRegistry.RegisterSingleton(typeof(LoadModules));
             //containerRegistry.RegisterSingleton(typeof(ProductStat));

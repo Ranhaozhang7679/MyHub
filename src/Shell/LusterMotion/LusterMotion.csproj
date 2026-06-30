@@ -87,6 +87,8 @@
         <ProjectReference Include="..\..\Modules\Luster.Motion.Assests\Luster.Motion.Assests.csproj" />
         <ProjectReference Include="..\..\Modules\Luster.Motion.CommonUI\Luster.Motion.CommonUI.csproj" />
         <ProjectReference Include="..\..\Modules\Luster.Motion.EditorUI\Luster.Motion.EditorUI.csproj" />
+        <!-- TES-163 五轴标定服务注册落点(App.xaml.cs RegisterTypes),Shell 直接持有 FiveAxis 项目 -->
+        <ProjectReference Include="..\..\Modules\Luster.Module.Motion.FiveAxis\Luster.Module.Motion.FiveAxis.csproj" />
         <ProjectReference Include="..\..\Modules\Luster.Motion.ReportUI\Luster.Motion.ReportUI.csproj" />
         <ProjectReference Include="..\..\Modules\Luster.Motion.SubSystem\Luster.Motion.SubSystem.csproj" />
         <ProjectReference Include="..\..\Modules\Luster.SimDevice.SubSystem\Luster.SimDevice.SubSystem.csproj" />
