@@ -6,7 +6,7 @@ using System;
 namespace Luster.Module.Motion.IO
 {
     /// <summary>
-    /// Ëã·¨Ä£¿é
+    /// ï¿½ã·¨Ä£ï¿½ï¿½
     /// </summary>
     public class Device : MotionModule
     {
@@ -18,7 +18,7 @@ namespace Luster.Module.Motion.IO
             AddFunction<CheckIO>();
             AddFunction<SingleAxis>();
 
-            // ÖáµãÎ»ÔË¶¯
+            // ï¿½ï¿½ï¿½Î»ï¿½Ë¶ï¿½
             AddFunction<AxisPosMove>();
             AddFunction<AxisPosArray>();
             AddFunction<MultiAxis>();
@@ -30,77 +30,80 @@ namespace Luster.Module.Motion.IO
             AddFunction<IOSimulation>();
             AddFunction<LightFlashing>();
 
-            // »úÐµ±Û
+            // ï¿½ï¿½Ðµï¿½ï¿½
             //AddFunction<AxisArm>();
 
-            // ·É´ï
+            // ï¿½É´ï¿½
             //AddFunction<Feeder>();
 
-            // Ïà»úÓ²´¥·¢
+            // ï¿½ï¿½ï¿½Ó²ï¿½ï¿½ï¿½ï¿½
             AddFunction<CameraIO>();
 
-            // Á¦´«¸ÐËÅ·þÖá
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å·ï¿½ï¿½ï¿½
             AddFunction<ForceAxis>();
 
-            // ¼¤¹â²â¾à´«¸ÐÆ÷
+            // ï¿½ï¿½ï¿½ï¿½ï¿½à´«ï¿½ï¿½ï¿½ï¿½
             AddFunction<LaserSensor>();
 
 
-            // Ñ¹Á¦´«¸ÐÆ÷
+            // Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             AddFunction<PressureSensor>();
 
-            // Éè±¸Ä£ÄâÁ¿²É¼¯Óë×ª»»£º½«°å¿¨²É¼¯µÄÄ£ÄâÁ¿×ª»»³ÉÉè±¸ÕæÊµµÄÖµ
+            // ï¿½è±¸Ä£ï¿½ï¿½ï¿½ï¿½ï¿½É¼ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½å¿¨ï¿½É¼ï¿½ï¿½ï¿½Ä£ï¿½ï¿½ï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½ï¿½è±¸ï¿½ï¿½Êµï¿½ï¿½Öµ
             AddFunction<AnalogConvert>();
             AddFunction<AnalogConvertChart>();
-            //ÅÐ¶Ïµ±Ç°ÖáÊÇ·ñµ½Î»
+            //ï¿½Ð¶Ïµï¿½Ç°ï¿½ï¿½ï¿½Ç·ï¿½Î»
             AddFunction<AxisPos>();
 
-            //»úÆ÷ÈË
+            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             AddFunction<RobotMove>();
 
-            //SDO¶ÁÐ´
+            //SDOï¿½ï¿½Ð´
             AddFunction<SDOAction>();
 
-            //PDO¶ÁÐ´
+            //PDOï¿½ï¿½Ð´
             AddFunction<PDOAction>();
 
-            //·ÉÅÄÄ£¿é
+            //ï¿½ï¿½ï¿½ï¿½Ä£ï¿½ï¿½
             AddFunction<FlyingPhoto>();
             
-            //Ì«¿ÆµçÅúÄ£¿é
+            //Ì«ï¿½Æµï¿½ï¿½ï¿½Ä£ï¿½ï¿½
             AddFunction<TaiKeScrewDriver>();
-            //öÎ¾«³ÏÑ¹Á¦Ä£¿é
+            //ï¿½Î¾ï¿½ï¿½ï¿½Ñ¹ï¿½ï¿½Ä£ï¿½ï¿½
             AddFunction<XJCPressureSensor>();
-            //ModbusRTUÍ¨ÓÃ¶ÁÈ¡Ä£¿é
+            //ModbusRTUÍ¨ï¿½Ã¶ï¿½È¡Ä£ï¿½ï¿½
             AddFunction<ModbusRTU>();
 
-            //¶ÁÈ¡Ñ¹Á¦ÇúÏßÏÔÊ¾
+            //ï¿½ï¿½È¡Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾
             AddFunction<PressDriver>();
 
-            //Ôö¼Ó¼¤¹â¶ÁÊý
+            //ï¿½ï¿½ï¿½Ó¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             AddFunction<SerialPortDrive>();
 
-            //Ôö¼Ó»ñÈ¡ÖáÎ»ÖÃ»ùÔª
+            //ï¿½ï¿½ï¿½Ó»ï¿½È¡ï¿½ï¿½Î»ï¿½Ã»ï¿½Ôª
             AddFunction<GenAxisPos>();
 
-            //Á¦ÖµÊÕ¼¯
+            //ï¿½ï¿½Öµï¿½Õ¼ï¿½
             AddFunction<ForceCollect>();
 
             //SetAxisPos
             AddFunction<SetAxisPos>();
 
-            //öÎ¾«³Ï¶àÍ¨µÀÑ¹Á¦´«¸ÐÆ÷F600
+            //ï¿½Î¾ï¿½ï¿½Ï¶ï¿½Í¨ï¿½ï¿½Ñ¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½F600
             AddFunction<XJCPressureSensorF600>();
 
-            //ÒôÈ¦µç»ú
+            //ï¿½ï¿½È¦ï¿½ï¿½ï¿½
             AddFunction<JunRudderVCM>();
             AddFunction<DHRoboticsVCM>();
             AddFunction<DHCalcu>();
+
+            // P2-E: trajectory list transform node (Device module, avoid FiveAxisModule P5-3 conflict)
+            AddFunction<TrajectoryListTransformNode>();
         }
     }
 
     /// <summary>
-    /// Ä£¿é´´½¨
+    /// Ä£ï¿½é´´ï¿½ï¿½
     /// </summary>
     public class DeviceCreator : MotionModuleCreator<Device>
     {

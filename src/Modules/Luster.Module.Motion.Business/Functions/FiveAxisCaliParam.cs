@@ -1,3 +1,6 @@
+using Luster.Motion.FiveAxis.Calibration;
+using Luster.Motion.FiveAxis.Kinematics;
+using Luster.Motion.FiveAxis.Position;
 using Luster.TaskFlow.Common.Attributes;
 using Luster.TaskFlow.Common.Enums;
 using Luster.TaskFlow.Motion;
@@ -176,14 +179,65 @@ namespace Luster.Module.Motion.Business.Functions
         public override string[] NoteParams { get; set; } = new[] { nameof(VirMode) };
 
         /// <summary>
-        /// 标定算法执行占位。五轴标定算法（粗标/精标/激光/原点）属 P1 Coord5Axis（TES-29 已 done），
-        /// 本数据模型仅提供 ParamGrid 编辑契约，DoExcute 不实现标定算法（避免与 P1 耦合 + 范围冻结）。
-        /// 前端 P6-B 标定 UI 绑定本 IModule 后，标定按钮调 P1 Coord5Axis 服务。
+        /// 标定算法执行（TES-190 P2-B Service 化）：经宿主模块 Ioc 服务定位 <see cref="IFiveAxisCalibrationService"/>，
+        /// 把 [Parameter] 输入适配为 <see cref="CalibrationInput"/>，调用服务并把结果回写三个 OUT
+        /// （<see cref="Rough5Para"/>/<see cref="Accurate5Para"/>/<see cref="WorkOriginResult"/>）。
         /// </summary>
+        /// <remarks>
+        /// 本节点被 TaskFlow 引擎反射 new，无法构造注入，故走服务定位（<c>MyOwner.Ioc.Resolve</c>，对齐 SetMachineMode 范式）。
+        /// ⚠️ 标定数值求解本体（粗标/精标/激光/原点）仍在旧程序 Form5Cali/FrameCal/ZFrameCali，不在本 issue 范围——
+        /// Service 实现为诚实失败壳：<see cref="IFiveAxisCalibrationService.Calibrate"/> 抛 <see cref="NotImplementedException"/>，
+        /// 求解本体留待后续 issue 迁移（D2 精度 + 硬件验证），避免 fake 标定结果流入下游 recipe。
+        /// </remarks>
         public override bool DoExcute(out string errMsg)
         {
-            errMsg = "五轴标定参数数据模型，标定算法由 P1 Coord5Axis 服务执行（本节点不实现）";
+            errMsg = string.Empty;
+
+            // 经宿主模块 Ioc 服务定位取标定服务（对齐 SetMachineMode.cs:69 MyOwner.Ioc.Resolve 范式）。
+            var svc = MyOwner.Ioc.Resolve<IFiveAxisCalibrationService>();
+
+            var input = new CalibrationInput
+            {
+                FiveAxisPara = ParseCoord5Axis(this.FiveAxisPara),
+                RoughRx = this.RoughRx,
+                RoughRz = this.RoughRz,
+                ToolPose = ParseToolPose(this.Tool2Work),
+                OrgPosiType = this.OrgPosiType,
+            };
+
+            CalibrationResult result = svc.Calibrate(input);
+
+            // 回写 OUT（对齐 FiveAxisCaliParam 的三个结果字段）
+            this.Rough5Para = result.Rough5Para;
+            this.Accurate5Para = result.Accurate5Para;
+            this.WorkOriginResult = result.WorkOriginResult;
+
+            MyOwner?.OnLog(Luster.Common.DataStruct.Enums.LogType.Debug,
+                $"FiveAxisCali: rx/rz=({RoughRx},{RoughRz}) -> Rough5Para={Rough5Para} | Accurate5Para={Accurate5Para} | WorkOriginResult={WorkOriginResult}");
+
             return true;
+        }
+
+        /// <summary>
+        /// 解析 <see cref="FiveAxisPara"/>（源端 Coord5Axis 序列化字符串）为 <see cref="Coord5Axis"/>。
+        /// TODO: 对齐源端序列化格式（JSON/XmlSerializer）反序列化，空值用默认运动学参数。
+        /// </summary>
+        private static Coord5Axis ParseCoord5Axis(string fiveAxisPara)
+        {
+            if (string.IsNullOrWhiteSpace(fiveAxisPara)) return new Coord5Axis();
+            // TODO: 源端 Coord5Axis 序列化反序列化待迁移，暂用默认参数
+            return new Coord5Axis();
+        }
+
+        /// <summary>
+        /// 解析 <see cref="Tool2Work"/>（源端 CoordTransForm 序列化字符串）为 <see cref="PositionXYZRxRyRz"/>。
+        /// TODO: 对齐源端序列化格式反序列化，空值用默认姿态。
+        /// </summary>
+        private static PositionXYZRxRyRz ParseToolPose(string tool2Work)
+        {
+            if (string.IsNullOrWhiteSpace(tool2Work)) return new PositionXYZRxRyRz();
+            // TODO: 源端 CoordTransForm 序列化反序列化待迁移，暂用默认姿态
+            return new PositionXYZRxRyRz();
         }
     }
 }

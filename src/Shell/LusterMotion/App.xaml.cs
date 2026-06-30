@@ -8,6 +8,7 @@ using Luster.Motion.CommonUI;
 using Luster.Motion.DataStruct;
 using Luster.Motion.DataStruct.Interfaces;
 using Luster.Motion.DigitalSetup.Services;
+using Luster.Motion.FiveAxis.Calibration;
 using Luster.Motion.Integration.Web;
 using Luster.Motion.Integration.WorkCardVerify;
 using Luster.Motion.SubSystem.ViewModel;
@@ -129,6 +130,9 @@ namespace LusterMotion
             containerRegistry.RegisterSingleton<HiveAPI>();
             // 作业模式
             containerRegistry.RegisterSingleton<IAuthService, AuthService>();
+
+            // TES-190 P2-B: 五轴标定 Service 化（接口+实现在 Luster.Module.Motion.FiveAxis，Shell 容器统一注册，FiveAxisCaliParam.DoExcute 经 Ioc 服务定位）
+            containerRegistry.RegisterSingleton<IFiveAxisCalibrationService, FiveAxisCalibrationService>();
         }
 
         /// <summary>

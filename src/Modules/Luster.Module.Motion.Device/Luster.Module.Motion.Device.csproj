@@ -10,6 +10,8 @@
 	  <!--<ProjectReference Include="..\Luster.TaskFlow.Motion\Luster.TaskFlow.Motion.csproj" />-->
 	  <ProjectReference Include="..\Luster.Module.Motion.Logic\Luster.Module.Motion.Logic.csproj" />
 		  <ProjectReference Include="..\Luster.SimDevice.MotionCard\Luster.SimDevice.MotionCard.csproj" />
+		  <!-- P2-E: 轨迹列表坐标转换节点依赖 FiveAxis 的 Coord5Axis/PositionXYZRxRyRz(FiveAxis 不反向引用 Device,无循环) -->
+		  <ProjectReference Include="..\Luster.Module.Motion.FiveAxis\Luster.Module.Motion.FiveAxis.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

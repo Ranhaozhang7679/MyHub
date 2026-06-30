@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net472</TargetFramework>
+		<IsPackable>false</IsPackable>
+		<Nullable>disable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.NET.Test.Sdk" />
+		<PackageReference Include="NUnit" />
+		<PackageReference Include="NUnit3TestAdapter" />
+		<PackageReference Include="FluentAssertions" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- 被测节点所在模块(传递引用 FiveAxis,拿 Coord5Axis/PositionXYZRxRyRz) -->
+		<ProjectReference Include="..\..\src\Modules\Luster.Module.Motion.Device\Luster.Module.Motion.Device.csproj" />
+		<!-- 直接引用 FiveAxis,供单测与 Coord5Axis 算法本体直出对拍 -->
+		<ProjectReference Include="..\..\src\Modules\Luster.Module.Motion.FiveAxis\Luster.Module.Motion.FiveAxis.csproj" />
+	</ItemGroup>
+
+</Project>

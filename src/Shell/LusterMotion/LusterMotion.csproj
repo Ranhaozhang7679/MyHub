@@ -89,6 +89,8 @@
         <ProjectReference Include="..\..\Modules\Luster.SimDevice.SubSystem\Luster.SimDevice.SubSystem.csproj" />
         <!-- P6-A：五轴 AOI UI 模块（可还原，移除本行 + App.xaml.cs 的 AddModule 即可） -->
         <ProjectReference Include="..\..\Modules\Luster.Motion.FiveAxis.UI\Luster.Motion.FiveAxis.UI.csproj" />
+        <!-- TES-190 P2-B: 五轴标定 Service 在 Shell 容器统一注册，需直接引用 Luster.Module.Motion.FiveAxis 拿 IFiveAxisCalibrationService/FiveAxisCalibrationService 类型 -->
+        <ProjectReference Include="..\..\Modules\Luster.Module.Motion.FiveAxis\Luster.Module.Motion.FiveAxis.csproj" />
     </ItemGroup>
 
     <ItemGroup>

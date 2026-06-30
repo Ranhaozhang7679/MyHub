@@ -1,6 +1,10 @@
 using Luster.Module.Motion.Business.Functions;
+using Luster.Motion.DataStruct.Interfaces;
+using Luster.Motion.FiveAxis.Calibration;
 using Luster.TaskFlow.Common.Attributes;
 using Luster.TaskFlow.Common.Enums;
+using Luster.TaskFlow.Motion;
+using System;
 using System.Linq;
 using System.Reflection;
 using Xunit;
@@ -150,15 +154,31 @@ namespace Luster.Module.Motion.Business.Tests
 
         #endregion
 
-        #region DoExcute 占位（数据模型不实现标定算法）
+        #region DoExcute 经 Service 化接通（TES-190 P2-B，诚实失败语义）
 
         [Fact]
-        public void DoExcute_数据模型占位返回true()
+        public void Calibrate_服务壳直接调用抛NotImplementedException()
         {
-            var cali = new FiveAxisCaliParam();
-            bool ok = cali.DoExcute(out string errMsg);
-            Assert.True(ok);
-            Assert.Contains("P1 Coord5Axis", errMsg);
+            // Service 壳诚实失败：标定算法本体待迁移，不产出 fake 结果
+            var svc = new FiveAxisCalibrationService();
+            Assert.Throws<NotImplementedException>(() => { svc.Calibrate(new CalibrationInput()); });
+        }
+
+        [Fact]
+        public void DoExcute_经Ioc接通Service入口抛NotImplementedException()
+        {
+            var cali = new FiveAxisCaliParam
+            {
+                RoughRx = 30.0,
+                RoughRz = 60.0,
+            };
+            // 注入测试用宿主模块：Ioc 返回真实 FiveAxisCalibrationService；
+            // TaskFunction=cali 对齐生产装配（Module.TaskFunction=Function, Function.Owner=Module），
+            // 供 Owner setter 的 InitParameters → CreateByProperty 经 TaskFunction 反射读属性默认值
+            cali.Owner = new FakeMotionModule { Ioc = new StubIoc(), TaskFunction = cali };
+
+            // DoExcute 经 MyOwner.Ioc.Resolve 接通 Service，Calibrate 入口抛 NotImplementedException（诚实失败，不产出 fake 结果）
+            Assert.Throws<NotImplementedException>(() => { cali.DoExcute(out _); });
         }
 
         #endregion
@@ -188,6 +208,35 @@ namespace Luster.Module.Motion.Business.Tests
             var cali = new FiveAxisCaliParam();
             Assert.Equal(45.0, cali.RoughRx);          // 源端 Rx 旋转角度
             Assert.Equal(45.0, cali.RoughRz);
+        }
+
+        #endregion
+
+        #region 测试用宿主桩（DoExcute 服务定位接通）
+
+        /// <summary>
+        /// 测试用轻量 IMotionModule 桩：MotionModule 已实现 IMotionModule 全部成员，
+        /// 此处仅 override InitFunctions() 满足抽象契约；Ioc 由测试注入 StubIoc 返回真实 FiveAxisCalibrationService。
+        /// </summary>
+        private sealed class FakeMotionModule : MotionModule
+        {
+            public override void InitFunctions() { }
+        }
+
+        /// <summary>
+        /// 测试用 IIocManager 桩：Resolve&lt;IFiveAxisCalibrationService&gt; 返回真实 FiveAxisCalibrationService，
+        /// 供 DoExcute 经 MyOwner.Ioc.Resolve 接通后触发 Calibrate 的 NotImplementedException。
+        /// </summary>
+        private sealed class StubIoc : IIocManager
+        {
+            public T Resolve<T>()
+            {
+                if (typeof(T) == typeof(IFiveAxisCalibrationService))
+                {
+                    return (T)(object)new FiveAxisCalibrationService();
+                }
+                return default(T);
+            }
         }
 
         #endregion

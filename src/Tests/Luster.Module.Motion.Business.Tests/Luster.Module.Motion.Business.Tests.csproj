@@ -13,6 +13,8 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Modules\Luster.Module.Motion.Business\Luster.Module.Motion.Business.csproj" />
+		<!-- TES-190 P2-B:对拍单测直接 new Coord5Axis / FiveAxisCalibrationService -->
+		<ProjectReference Include="..\..\Modules\Luster.Module.Motion.FiveAxis\Luster.Module.Motion.FiveAxis.csproj" />
 	</ItemGroup>
 
 </Project>
