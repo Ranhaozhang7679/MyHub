@@ -15,6 +15,8 @@
         <ProjectReference Include="..\Luster.Motion.CommonUI\Luster.Motion.CommonUI.csproj" />
         <!-- Control.Wpf.Motion：ParamGrid 控件（param: 命名空间） -->
         <ProjectReference Include="..\Luster.Control.Wpf.Motion\Luster.Control.Wpf.Motion.csproj" />
+        <!-- Luster.Module.Motion.FiveAxis：五轴业务/Service 模块（TES-191 迁移） -->
+        <ProjectReference Include="..\Luster.Module.Motion.FiveAxis\Luster.Module.Motion.FiveAxis.csproj" />
     </ItemGroup>
 
 </Project>

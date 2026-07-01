@@ -1,3 +1,4 @@
+using Luster.Motion.FiveAxis.Service;
 using Luster.Motion.FiveAxis.UI.ViewModel;
 using Luster.Motion.FiveAxis.UI.Views;
 using Prism.Ioc;
@@ -20,8 +21,9 @@ namespace Luster.Motion.FiveAxis.UI
 
         public void RegisterTypes(IContainerRegistry containerRegistry)
         {
-            // 五轴标定参数面板注册到 MainRegion，可通过 RequestNavigate("MainRegion","FiveAxisContent") 导航
-            containerRegistry.RegisterForNavigation<FiveAxisContent, FiveAxisContentVM>();
+            // 五轴标定向导顶级页(FiveAxisCalibContent,TES-158 全4步)+ 标定 Service 入容器
+            containerRegistry.RegisterForNavigation<FiveAxisCalibContent, FiveAxisCalibContentVM>();
+            containerRegistry.RegisterSingleton<IFiveAxisCalibrationService, FiveAxisCalibrationService>();
         }
     }
 }
