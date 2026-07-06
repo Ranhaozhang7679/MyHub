@@ -18,6 +18,7 @@
         <ProjectReference Include="..\Luster.Motion.Assests\Luster.Motion.Assests.csproj" />
         <ProjectReference Include="..\Luster.Motion.CommonUI\Luster.Motion.CommonUI.csproj" />
         <ProjectReference Include="..\Luster.Common.Authorization\Luster.Common.Authorization.csproj" />
+        <ProjectReference Include="..\Luster.Module.Motion.FiveAxis\Luster.Module.Motion.FiveAxis.csproj" />
     </ItemGroup>
 
     <ItemGroup>

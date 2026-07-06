@@ -4,6 +4,7 @@
 		<TargetFramework>net472</TargetFramework>
 		<IsPackable>false</IsPackable>
 		<Nullable>disable</Nullable>
+		<UseWPF>true</UseWPF>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -15,6 +16,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\src\Modules\Luster.Module.Motion.FiveAxis\Luster.Module.Motion.FiveAxis.csproj" />
+		<ProjectReference Include="..\..\src\Modules\Luster.Motion.EditorUI\Luster.Motion.EditorUI.csproj" />
 	</ItemGroup>
 
 </Project>

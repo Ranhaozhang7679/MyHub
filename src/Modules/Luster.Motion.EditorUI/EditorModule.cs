@@ -68,6 +68,8 @@ namespace Luster.Motion.EditorUI
 
             // 注册配置导页面
             containerRegistry.RegisterForNavigation<FlowContent, FlowContentVM>();
+            // 激光标定 Tab 导航宿主(AutoWireViewModel 自动接 LaserCaliTabViewModel)
+            containerRegistry.RegisterForNavigation<LaserCaliTabView, LaserCaliTabViewModel>();
         }
     }
 }
